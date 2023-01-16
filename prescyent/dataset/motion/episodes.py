@@ -1,10 +1,12 @@
 from typing import List
 from enum import Enum
 
+
 class Mode(str, Enum):
     TRAIN = "train"
     TEST = "test"
     VAL = "val"
+
 
 class Episodes():
     train: list
@@ -26,4 +28,3 @@ class Episodes():
 
     def _all_len(self):
         return len(self.train) + len(self.test) + len(self.val)
-

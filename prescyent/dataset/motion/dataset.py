@@ -41,13 +41,11 @@ class MotionDataset(Dataset):
     def val_dataloader(self):
         return DataLoader(self.val_datasample, batch_size=self.batch_size)
 
-
     def __getitem__(self, index):
         return self.episodes_scaled[index]
 
     def __len__(self):
         return len(self.episodes_scaled)
-
 
     def scale(self, l_array):
         return self.scaler.transform(l_array.reshape(-1, 1)).flatten()

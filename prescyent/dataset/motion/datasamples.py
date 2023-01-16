@@ -1,5 +1,6 @@
 from torch import Tensor
 
+
 class MotionDataSamples():
     x: Tensor
     y: Tensor
