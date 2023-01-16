@@ -42,3 +42,11 @@ class LSTMPredictor(LightningPredictor):
     @classmethod
     def _load_from_checkpoint(cls, path: str, *args, **kwargs):
         return LSTMModule.load_from_checkpoint(path)
+
+    @classmethod
+    def _load_from_state_dict(cls, path: str, *args, **kwargs):
+        return LSTMModule.load_from_state_dict(path)
+
+    @classmethod
+    def _load_from_binary(cls, path: str, *args, **kwargs):
+        return LSTMModule.load_from_binary(path)

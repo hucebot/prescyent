@@ -31,15 +31,42 @@ class LightningPredictor(BasePredictor):
 
     @classmethod
     def _load_from_path(cls, path: str, module_class: Callable):
+        supported_extentions = [".ckpt", ".pb"]   # prefered order
         model_path = Path(path)
         if not model_path.exists():
             raise FileNotFoundError("No file or directory at %s" % model_path)
+
         if model_path.is_dir():
-            if not list(model_path.rglob('*.ckpt')):
-                # TODO add some loading from .pt or .pb files there.
-                raise FileNotFoundError("No .ckpt file was found in directory %s" % model_path)
-            model_path = sorted(model_path.rglob('*.ckpt'))[-1]   # WARNING : Taking last ckpt here
-        return cls._load_from_checkpoint(model_path, module_class)
+            found_model = None
+            for extention in supported_extentions:
+                if list(model_path.rglob(f'*{extention}')):
+                    # WARNING : Chosing last file if there are many
+                    found_model = sorted(model_path.rglob(f'*{extention}'))[-1]
+                    break
+            if found_model is None:
+                raise FileNotFoundError("No file matching %s was found in directory %s"
+                                        % (supported_extentions, model_path))
+            model_path = found_model
+
+        if model_path.suffix == ".ckpt":
+            return cls._load_from_checkpoint(model_path, module_class)
+        # TODO: State Dict loading not supported yet
+        # elif model_path.suffix == ".pt":
+        #     return cls._load_from_state_dict(model_path, module_class)
+        elif model_path.suffix == ".pb":
+            return cls._load_from_binary(model_path, module_class)
+        else:
+            raise NotImplementedError("Given file extention %s is not supported. "
+                                      "Models exported by this module and imported to it can be %s"
+                                      % (model_path.suffix, supported_extentions))
+
+    @classmethod
+    def _load_from_state_dict(cls, path: str, module_class: Callable):
+        return module_class.load_from_state_dict(path)
+
+    @classmethod
+    def _load_from_binary(cls, path: str, module_class: Callable):
+        return module_class.load_from_binary(path)
 
     @classmethod
     def _load_from_checkpoint(cls, path: str, module_class: Callable):

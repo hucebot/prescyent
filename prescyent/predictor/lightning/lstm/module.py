@@ -36,6 +36,7 @@ class LSTM(nn.Module):
         # we use the sequence of all the hidden state to predict the output
         # linear expect [batch_size, *, nb_features]
         self.linear = nn.Linear(hidden_size * output_size, output_size)
+        self.hidden = None
 
     def forward(self, x, hidden=None):
         batch_size = x.shape[0]
@@ -75,7 +76,29 @@ class LSTMModule(pl.LightningModule):
         self.criterion = nn.MSELoss()
         self.save_hyperparameters()
 
+    @classmethod
+    def load_from_state_dict(cls, path: str):
+        """Retrieve model infos from state dict"""
+        raise NotImplementedError("TODO: WIP")
+        state_dict = torch.load(path)
+        input_size, _ = state_dict['lstm.weight_ih_l0'].T.shape
+        hidden_size, output_size = state_dict['linear.weight'].T.shape
+        num_layers = (len(state_dict) - 4) // 2
+        # 4 = Input Bias + Input weight + Output Bias + Output weight
+        # We divide by 2 (weight and bias again) to get the number of hidden layers
+        lstm_module = cls(input_size, hidden_size, output_size, num_layers)
+        lstm_module.torch_model.load_state_dict(state_dict)
+
+    @classmethod
+    def load_from_binary(cls, path: str):
+        """Retrieve model infos from torch binary"""
+        model = torch.load(path)
+        lstm_module = cls(model.input_size, model.hidden_size, model.output_size, model.num_layers)
+        lstm_module.torch_model = model
+        return lstm_module
+
     def save(self, save_path: str):
+        """Export model to state_dict and torch binary"""
         torch.save(self.torch_model.state_dict(), save_path / "state_dict.pt")
         torch.save(self.torch_model, save_path / "model.pb")
 
