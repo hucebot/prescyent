@@ -40,9 +40,15 @@ class LSTMInitTests(CustomTestCase):
 
     # -- INIT FROM STATE
     def test_init_with_pathname(self):
-        LSTMPredictor(model_path="tests/mocking/lstm_model/version_3/checkpoints/")
-        LSTMPredictor(model_path="tests/mocking/lstm_model/version_3/checkpoints/"
-                      "epoch=0-step=1136.ckpt")
+        LSTMPredictor(model_path="tests/mocking/lstm_model/lstm_ver1_e2")
+        LSTMPredictor(model_path="tests/mocking/lstm_model/lstm_ver1_e2/trainer_checkpoint.ckpt")
+        LSTMPredictor(model_path="tests/mocking/lstm_model/lstm_ver1_e2/model.pb")
+        with self.assertRaises(NotImplementedError) as context:
+            LSTMPredictor(model_path="tests/mocking/lstm_model/lstm_ver1_e2/bad_model.bin")
+        self.assertTrue("Given file extention .bin is not supported" in str(context.exception))
+        with self.assertRaises(FileNotFoundError) as context:
+            LSTMPredictor(model_path="tests/mocking/lstm_model/lstm_ver1_e2/non_existing.bin")
+        self.assertTrue("No file or directory" in str(context.exception))
 
     def test_init_with_config_containing_path(self):
         input_size = 1
