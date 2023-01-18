@@ -5,6 +5,7 @@ from typing import Union, Dict
 
 from pathlib import Path
 
+from prescyent.logger import logger, DATASET
 from prescyent.dataset.motion.dataset import MotionDataset, Episodes
 from prescyent.utils.dataset_manipulation import split_array_with_ratios, pathfiles_to_array
 from prescyent.dataset.motion.teleop_icub.config import TeleopIcubDatasetConfig
@@ -38,8 +39,9 @@ class TeleopIcubDataset(MotionDataset):
     def _load_files(self):
         files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
         if len(files) == 0:
-            print("ERROR: no files matching '%s' rule for this path %s" %
-                  (self.config.glob_dir, self.config.data_path))
+            logger.error("No files matching '%s' rule for this path %s",
+                         self.config.glob_dir, self.config.data_path,
+                         group=DATASET)
             raise FileNotFoundError(self.config.data_path)
         train_files, test_files, val_files = split_array_with_ratios(files,
                                                                      self.config.ratio_train,

@@ -1,5 +1,5 @@
 """util functions for list, files and data"""
-
+from prescyent.logger import logger, DATASET
 from typing import List
 
 import numpy as np
@@ -11,12 +11,12 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
         raise ValueError("Can't split an empty array")
     if not isinstance(array, np.ndarray):
         array = np.array(array)
-    print(len(array))
 
     if shuffle:
         np.random.shuffle(array)
     if len(array) < 2:
-        print("WARNING: Only the first array could contain data")
+        logger.warning("Only the first array could contain data",
+                       group=DATASET)
         return array, list(), list()
     if not ratio3:
         len1 = round(len(array) * ratio1)
@@ -25,7 +25,8 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
         return array[:len1], array[len1:]
 
     if len(array) < 3:
-        print("WARNING: Only 2 firsts array could contain data")
+        logger.warning("Only 2 firsts array could contain data",
+                       group=DATASET)
         return array[0], array[1], list()
     len1 = round(len(array) * ratio1)
     len2 = round(len(array) * (ratio1 + ratio2))
@@ -57,7 +58,8 @@ def pathfiles_to_array(files: List,
     result_arrray = list()
     for file in files:
         if not file.exists():
-            print("ERROR, file does not exist:", file)
+            logger.error("file does not exist:", file,
+                         group=DATASET)
             raise FileNotFoundError(file)
         file_array = np.loadtxt(file, delimiter=delimiter)
         if end is None:

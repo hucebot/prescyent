@@ -1,5 +1,7 @@
 from torch import Tensor
 
+from prescyent.logger import logger, DATASET
+
 
 class MotionDataSamples():
     x: Tensor
@@ -10,7 +12,8 @@ class MotionDataSamples():
         self.x = x
         self.y = y
         self.len = self.x.shape[0]
-        print("Dataset loaded, length:", self.x.shape[0])
+        logger.info("Dataset loaded, length %d", self.x.shape[0],
+                    group=DATASET)
 
     def __getitem__(self, index):
         return self.x[index], self.y[index]
