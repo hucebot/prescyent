@@ -31,15 +31,15 @@ class MotionDataset(Dataset):
 
     @property
     def train_dataloader(self):
-        return DataLoader(self.train_datasample, batch_size=self.batch_size)
+        return DataLoader(self.train_datasample, batch_size=self.batch_size, shuffle=True)
 
     @property
     def test_dataloader(self):
-        return DataLoader(self.test_datasample, batch_size=self.batch_size)
+        return DataLoader(self.test_datasample, batch_size=self.batch_size, shuffle=True)
 
     @property
     def val_dataloader(self):
-        return DataLoader(self.val_datasample, batch_size=self.batch_size)
+        return DataLoader(self.val_datasample, batch_size=self.batch_size, shuffle=True)
 
     def __getitem__(self, index):
         return self.episodes_scaled[index]

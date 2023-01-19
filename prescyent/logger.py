@@ -6,10 +6,11 @@ import logging
 PRESCYENT = "prescyent"
 TRAINING = "training"
 TESTING = "testing"
+EVAL = "eval"
 DATASET = "dataset"
 PREDICTOR = "predictor"
 
-LOG_GROUPS = [PRESCYENT, TRAINING, TESTING, DATASET, PREDICTOR]
+LOG_GROUPS = [PRESCYENT, TRAINING, TESTING, EVAL, DATASET, PREDICTOR]
 
 
 class OneLineExceptionFormatter(logging.Formatter):

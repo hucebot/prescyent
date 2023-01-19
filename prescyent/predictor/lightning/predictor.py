@@ -3,6 +3,7 @@ from typing import Dict
 from pathlib import Path
 
 import pytorch_lightning as pl
+import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.training_config import TrainingConfig
@@ -50,7 +51,7 @@ class LightningPredictor(BasePredictor):
 
         if model_path.suffix == ".ckpt":
             return cls._load_from_checkpoint(model_path, module_class)
-        # TODO: State Dict loading not supported yet
+        #  TODO: State Dict loading not supported yet
         # elif model_path.suffix == ".pt":
         #     return cls._load_from_state_dict(model_path, module_class)
         elif model_path.suffix == ".pb":
@@ -91,10 +92,17 @@ class LightningPredictor(BasePredictor):
         self.trainer = pl.Trainer(devices=1)
         self.trainer.test(model=self.model, dataloaders=test_dataloader)
 
-    def run(self, input_batch: Iterable):
+    def run(self, input_batch: Iterable, get_hidden=False):
         """run method/model inference on the input batch"""
-        self.model.eval()
-        return self.model.torch_model(input_batch)
+        with torch.no_grad():
+            self.model.eval()
+            pred, hidden = self.model.torch_model(input_batch)
+            # for inference we remove batch if size is one
+            if list(pred.shape)[0] == 1:
+                pred = torch.squeeze(pred, dim=0)
+            if get_hidden:
+                return pred, hidden
+            return pred
 
     def save(self, save_path):
         """save model to path"""

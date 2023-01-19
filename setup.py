@@ -2,9 +2,10 @@ from setuptools import setup, find_packages
 from prescyent import __version__
 
 CORE_REQUIREMENTS = [
-        "pytorch_lightning",
-        "pydantic",
+        "matplotlib",
         "numpy",
+        "pydantic",
+        "pytorch_lightning",
         "scikit-learn"
 ]
 

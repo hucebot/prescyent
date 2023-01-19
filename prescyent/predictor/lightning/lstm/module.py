@@ -8,6 +8,8 @@ import pytorch_lightning as pl
 from torch import nn
 import torch.optim as optim
 
+from prescyent.evaluator.metrics import get_ade, get_fde
+
 
 class LSTM(nn.Module):
     """
@@ -39,8 +41,12 @@ class LSTM(nn.Module):
         self.hidden = None
 
     def forward(self, x, hidden=None):
-        batch_size = x.shape[0]
-        seq_length = x.shape[1]
+        try:
+            batch_size = x.shape[0]
+            seq_length = x.shape[1]
+        except IndexError:
+            batch_size = 1
+            seq_length = x.shape[0]
         if hidden is None:
             self.hidden = (torch.zeros(self.num_layers, batch_size, self.hidden_size).to(x),
                            torch.zeros(self.num_layers, batch_size, self.hidden_size).to(x))
@@ -118,9 +124,15 @@ class LSTMModule(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         # for test loop of the Trainer
-        loss = self.compute_loss(batch)
-        self.log("test_loss", loss)
-        return loss
+        sample, truth = batch
+        pred, _ = self.torch_model(sample)
+        loss = self.criterion(pred, truth)
+        ade = get_ade(truth, pred)
+        fde = get_fde(truth, pred)
+        self.log("MSE_loss", loss)
+        self.log("ADE", ade)
+        self.log("FDE", fde)
+        return loss, ade, fde
 
     def validation_step(self, batch, batch_idx):
         # for test loop of the Trainer
