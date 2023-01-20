@@ -6,5 +6,5 @@ class LSTMConfig(BaseModel):
     output_size: int
     identifier: str = "lstm"
     hidden_size: int = 10
-    model_path: str = None
+    model_path: str = "data/models/lstm"
     num_layers: int = 1

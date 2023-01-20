@@ -113,8 +113,10 @@ class LightningPredictor(BasePredictor):
             self.model.eval()
             return self.model.torch_model(input_batch)
 
-    def save(self, save_path):
+    def save(self, save_path=None):
         """save model to path"""
+        if save_path is None:
+            save_path = self.config.model_path
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)

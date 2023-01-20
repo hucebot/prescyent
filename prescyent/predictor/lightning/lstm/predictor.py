@@ -1,10 +1,11 @@
 """Pytorch module et Lightning module for LSTMs
 """
+from pathlib import Path
 from typing import Union
 import inspect
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
-from prescyent.predictor.lightning.lstm.module import LSTMModule, LSTM
+from prescyent.predictor.lightning.lstm.module import LSTMModule
 from prescyent.predictor.lightning.lstm.config import LSTMConfig
 
 
@@ -22,7 +23,7 @@ class LSTMPredictor(LightningPredictor):
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
-        self._init_logger(model_name=model_name)
+        self._init_logger(config.model_path, model_name=model_name)
         self._init_trainer()
 
     def _build_from_config(self, config: Union[dict, LSTMConfig]):
@@ -32,7 +33,7 @@ class LSTMPredictor(LightningPredictor):
         self.config = config
 
         # -- Check if a checkpoint or file exist:
-        if config.model_path:
+        if Path(config.model_path).exists():
             self.model = LSTMPredictor._load_from_path(config.model_path)
             return
 

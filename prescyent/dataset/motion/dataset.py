@@ -56,10 +56,10 @@ class MotionDataset(Dataset):
         return len(self.episodes_scaled)
 
     def scale(self, l_array):
-        return self.scaler.transform(l_array)
+        return torch.from_numpy(self.scaler.transform(l_array))
 
     def unscale(self, l_array):
-        return self.scaler.inverse_transform(l_array)
+        return torch.from_numpy(self.scaler.inverse_transform(l_array))
 
     # scale all the episodes (same scaling for all the data)
     def _scale_episodes(self, other_scaler):

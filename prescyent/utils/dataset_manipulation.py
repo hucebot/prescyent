@@ -65,7 +65,6 @@ def pathfiles_to_array(files: List,
         if end is None:
             end = len(file_array)
         if dimensions is not None:
-            # TODO FIX THIS
             result_arrray += [file_array[start:end:subsampling_step, dimensions]]
         else:
             result_arrray += [file_array[start:end:subsampling_step]]
