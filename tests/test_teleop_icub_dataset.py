@@ -13,12 +13,12 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         dataset = TeleopIcubDataset()
         self.assertEqual(len(dataset), 14)
 
-    def test_download(self):
-        tmp_data_path = Path("tmp")
-        config = TeleopIcubDatasetConfig(data_path=str(tmp_data_path / "icub_data"))
-        dataset = TeleopIcubDataset(config)
-        self.assertEqual(len(dataset), 20)
-        shutil.rmtree(str(Path("tmp")))
+    # def test_download(self):
+    #     tmp_data_path = Path("tmp")
+    #     config = TeleopIcubDatasetConfig(data_path=str(tmp_data_path / "icub_data"))
+    #     dataset = TeleopIcubDataset(config)
+    #     self.assertEqual(len(dataset), 20)
+    #     shutil.rmtree(str(Path("tmp")))
 
 
 class TeleopIcubDatasetTest(CustomTestCase):

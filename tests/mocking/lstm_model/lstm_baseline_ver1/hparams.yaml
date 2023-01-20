@@ -1,0 +1,4 @@
+feature_size: 3
+hidden_size: 100
+num_layers: 1
+output_size: 10
