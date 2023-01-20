@@ -31,8 +31,8 @@ class TeleopIcubDataset(MotionDataset):
         if isinstance(config, dict):
             config = TeleopIcubDatasetConfig(**config)
         self.config = config
-        self.input_length = config.input_length
-        self.output_length = config.output_length
+        self.input_size = config.input_size
+        self.output_size = config.output_size
         self.batch_size = config.batch_size
 
     # load a set of trajectory, keeping them separate
@@ -49,14 +49,15 @@ class TeleopIcubDataset(MotionDataset):
                                                                      self.config.ratio_val,
                                                                      shuffle=self.config.shuffle)
         train_data = pathfiles_to_array(train_files,
-                                        skip_data=self.config.skip_data,
-                                        column=self.config.column)
+                                        subsampling_step=self.config.subsampling_step,
+                                        dimensions=self.config.dimensions)
         test_data = pathfiles_to_array(test_files,
-                                       skip_data=self.config.skip_data,
-                                       column=self.config.column)
+                                       subsampling_step=self.config.subsampling_step,
+                                       dimensions=self.config.dimensions)
         val_data = pathfiles_to_array(val_files,
-                                      skip_data=self.config.skip_data,
-                                      column=self.config.column)
+                                      subsampling_step=self.config.subsampling_step,
+                                      dimensions=self.config.dimensions)
+        self.feature_size = train_data[0].shape[1]        
         return Episodes(train_data, test_data, val_data)
 
     def _get_from_web(self):

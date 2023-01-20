@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class LSTMConfig(BaseModel):
-    input_size: int
+    feature_size: int
     output_size: int
     identifier: str = "lstm"
     hidden_size: int = 10

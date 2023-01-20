@@ -1,8 +1,10 @@
 from collections.abc import Iterable, Callable
+import inspect
 from typing import Dict
 from pathlib import Path
 
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
@@ -15,6 +17,7 @@ class LightningPredictor(BasePredictor):
     model: pl.LightningModule
     training_config: TrainingConfig
     trainer: pl.Trainer = None
+    logger: pl
 
     def __call__(self, input_batch):
         return self.run(input_batch)
@@ -29,6 +32,17 @@ class LightningPredictor(BasePredictor):
         if isinstance(config, dict):
             config = TrainingConfig(**config)
         self.training_config = config
+
+    def _init_logger(self, log_path="lightning_logs", model_name="default"):
+        self.tb_logger = TensorBoardLogger(log_path, name=model_name)
+
+    def _init_trainer(self, training_config=None):
+        if training_config is None:
+            training_config = TrainingConfig()
+        self._init_training_config(training_config)
+        self.trainer = pl.Trainer(logger=self.tb_logger,
+                                  **training_config.dict(
+                                      include=set(inspect.getfullargspec(pl.Trainer)[0])))
 
     @classmethod
     def _load_from_path(cls, path: str, module_class: Callable):
@@ -89,20 +103,15 @@ class LightningPredictor(BasePredictor):
 
     def test(self, test_dataloader: Iterable):
         """test the model"""
-        self.trainer = pl.Trainer(devices=1)
+        if self.trainer is None:
+            self.trainer = pl.Trainer(devices=1)
         self.trainer.test(model=self.model, dataloaders=test_dataloader)
 
-    def run(self, input_batch: Iterable, get_hidden=False):
+    def run(self, input_batch: Iterable):
         """run method/model inference on the input batch"""
         with torch.no_grad():
             self.model.eval()
-            pred, hidden = self.model.torch_model(input_batch)
-            # for inference we remove batch if size is one
-            if list(pred.shape)[0] == 1:
-                pred = torch.squeeze(pred, dim=0)
-            if get_hidden:
-                return pred, hidden
-            return pred
+            return self.model.torch_model(input_batch)
 
     def save(self, save_path):
         """save model to path"""

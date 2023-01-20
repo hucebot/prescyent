@@ -37,18 +37,18 @@ def pathfiles_to_array(files: List,
                        delimiter: str = ',',
                        start: int = None,
                        end: int = None,
-                       skip_data: int = 0,
-                       column: int = 0) -> list:
+                       subsampling_step: int = 0,
+                       dimensions: List[int] = None) -> list:
     """util method to turn a list of pathfiles to a list of their data
 
     :param files: list of files
     :type files: List
     :param delimiter: delimiter to split the data on, defaults to ','
     :type delimiter: str, optional
-    :param skip_data: the step used for final list, allows to skip data, defaults to 0
-    :type skip_data: int, optional
-    :param column: _description_, defaults to 0
-    :type column: int, optional
+    :param subsampling_step: the step used for final list, allows to skip data, defaults to 0
+    :type subsampling_step: int, optional
+    :param dimensions: _description_, defaults to 0
+    :type dimensions: List[int], optional, defaults to None
     :raises FileNotFoundError: _description_
     :return: the data of the dataset, grouped per file
     :rtype: list
@@ -64,8 +64,9 @@ def pathfiles_to_array(files: List,
         file_array = np.loadtxt(file, delimiter=delimiter)
         if end is None:
             end = len(file_array)
-        if column is not None:
-            result_arrray += [file_array[start:end:skip_data, column]]
+        if dimensions is not None:
+            # TODO FIX THIS
+            result_arrray += [file_array[start:end:subsampling_step, dimensions]]
         else:
-            result_arrray += [file_array[start:end:skip_data]]
+            result_arrray += [file_array[start:end:subsampling_step]]
     return result_arrray

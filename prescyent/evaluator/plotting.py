@@ -26,11 +26,20 @@ def plot_datasample(data_sample: Tuple[torch.Tensor, torch.Tensor], savefig_path
         save_fig_util(savefig_path)
 
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor], pred:torch.Tensor, savefig_path=None):
+    plt.clf()   # clear just in case
     sample, truth = data_sample
-    x = range(len(sample) + len(truth))
-    plt.clf()
-    plt.plot(x, torch.cat((sample, truth)), linewidth=2, color='#B22400')
-    plt.plot(x[len(sample):], pred, linewidth=2, linestyle='--', color='#006BB2')
+    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
+    sample = torch.swapaxes(sample, 0, 1)
+    truth = torch.swapaxes(truth, 0, 1)
+    pred = torch.swapaxes(pred, 0, 1)
+    x = range(len(sample[0]) + len(truth[0]))
+    fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
+    fig.suptitle('Motion Prediction plots')
+    for i, axe in enumerate(axes):
+        axe.plot(x, torch.cat((sample[i], truth[i])), linewidth=2)
+        axe.plot(x[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
+    # plt.plot(x, torch.cat((sample, truth)), linewidth=2, color='#B22400')
+    # plt.plot(x[len(sample):], pred, linewidth=2, linestyle='--', color='#006BB2')
     legend = plt.legend(["Truth", "Prediction"], loc=3)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')

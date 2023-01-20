@@ -14,11 +14,16 @@ class LSTMPredictor(LightningPredictor):
     def __init__(self, model_path=None, config=None):
         if model_path is not None:
             self.model = self._load_from_path(model_path)
+            # reload a config instead
+            model_name = "lstm"
         elif config is not None:
             self._build_from_config(config)
+            model_name = config.identifier
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
+        self._init_logger(model_name=model_name)
+        self._init_trainer()
 
     def _build_from_config(self, config: Union[dict, LSTMConfig]):
         # -- We check that the input config is valid through pydantic model
@@ -33,7 +38,7 @@ class LSTMPredictor(LightningPredictor):
 
         # -- Build from Scratch
         # The relevant items from "config" are passed as the args for the pytorch module
-        self.model = LSTMModule(**config.dict(include=set(inspect.getfullargspec(LSTM)[0])))
+        self.model = LSTMModule(**config.dict(include=set(inspect.getfullargspec(LSTMModule)[0])))
 
     @classmethod
     def _load_from_path(cls, path: str, *args, **kwargs):

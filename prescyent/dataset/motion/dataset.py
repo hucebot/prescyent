@@ -12,11 +12,19 @@ from prescyent.dataset.motion.episodes import Episodes
 from prescyent.dataset.motion.datasamples import MotionDataSamples
 
 
+def _scale_episodes(episode_array, scaler):
+    res_array = list()
+    for episode in episode_array:
+        scaled_tensor = torch.FloatTensor(scaler.transform(episode))
+        res_array.append(scaled_tensor)
+    return res_array
+
+
 class MotionDataset(Dataset):
     scaler: StandardScaler
     batch_size: int
-    input_length: int
-    output_length: int
+    input_size: int
+    output_size: int
     episodes: Episodes
     episodes_scaled: Episodes
     train_datasample: MotionDataSamples
@@ -48,39 +56,32 @@ class MotionDataset(Dataset):
         return len(self.episodes_scaled)
 
     def scale(self, l_array):
-        return self.scaler.transform(l_array.reshape(-1, 1)).flatten()
+        return self.scaler.transform(l_array)
 
     def unscale(self, l_array):
-        return self.scaler.inverse_transform(l_array.reshape(-1, 1)).flatten()
+        return self.scaler.inverse_transform(l_array)
 
     # scale all the episodes (same scaling for all the data)
     def _scale_episodes(self, other_scaler):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            train_all = np.array([])
+            train_all = np.empty((1, self.episodes.train[0].shape[1]))
             for episode in self.episodes.train:
                 train_all = np.concatenate((train_all, episode))    # useful for normalization
             scaler = StandardScaler()
-            scaler.fit(train_all.reshape(-1, 1))
+            scaler.fit(train_all)
         else:
             scaler = other_scaler
 
-        # scale each episode
-        # episodes_scaled = []
-        # for l_array in self.episodes:
-        #     scaled = scaler.transform(l_array.reshape(-1, 1))
-        #     episodes_scaled += [torch.FloatTensor(scaled).view(-1)]
-        train_data = [torch.FloatTensor(scaler.transform(l_array.reshape(-1, 1))).view(-1)
-                      for l_array in self.episodes.train]
-        test_data = [torch.FloatTensor(scaler.transform(l_array.reshape(-1, 1))).view(-1)
-                     for l_array in self.episodes.test]
-        val_data = [torch.FloatTensor(scaler.transform(l_array.reshape(-1, 1))).view(-1)
-                    for l_array in self.episodes.val]
+        # scale each episode of each subset
+        train_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.train]
+        test_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.test]
+        val_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.val]
         return Episodes(train_data, test_data, val_data), scaler
 
     def _make_datasample(self, scaled_episode):
-        x = torch.FloatTensor([])
+        x = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
         y = torch.FloatTensor([])
         for ep in scaled_episode:
             x_ep, y_ep = self._make_x_y_pairs(ep)
@@ -90,10 +91,10 @@ class MotionDataset(Dataset):
 
     # This could use padding to get recognition from the first time-steps
     def _make_x_y_pairs(self, ep):
-        x = [ep[i:i + self.input_length]
-             for i in range(len(ep) - self.input_length - self.output_length)]
-        y = [ep[i + self.input_length:i + self.input_length + self.output_length]
-             for i in range(len(ep) - self.input_length - self.output_length)]
+        x = [ep[i:i + self.input_size]
+             for i in range(len(ep) - self.input_size - self.output_size)]
+        y = [ep[i + self.input_size:i + self.input_size + self.output_size]
+             for i in range(len(ep) - self.input_size - self.output_size)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         x = torch.stack(x)
