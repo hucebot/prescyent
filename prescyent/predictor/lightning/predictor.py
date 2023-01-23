@@ -1,6 +1,8 @@
 from collections.abc import Iterable, Callable
 import inspect
-from typing import Dict
+import json
+import shutil
+from typing import Dict, Union
 from pathlib import Path
 
 import pytorch_lightning as pl
@@ -9,18 +11,32 @@ import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.logger import logger, PREDICTOR
 
 
 class LightningPredictor(BasePredictor):
     """Predictor to run any lightning module
+    This class should not be called as is
+    You must instanciate a class from wich LightningPredictor is a parent
     """
     model: pl.LightningModule
     training_config: TrainingConfig
-    trainer: pl.Trainer = None
-    logger: pl
+    trainer: pl.Trainer
+    tb_logger: TensorBoardLogger
 
-    def __call__(self, input_batch):
-        return self.run(input_batch)
+    def __init__(self, model, root_path = "lightning_logs") -> None:
+        super().__init__()
+        # root path must have been previously resolved from attribute, config or default
+        self.root_path = root_path
+        # a LightningModule must have been initialised as "model"
+        self.model = model
+
+        if not hasattr(self, "training_config"):
+            self.training_config = None
+        if not hasattr(self, "trainer"):
+            self.trainer = None
+        self._init_logger(log_path=root_path)
+        self._init_trainer()
 
     def _build_from_id(self, identifier: str):
         raise NotImplementedError()
@@ -28,21 +44,6 @@ class LightningPredictor(BasePredictor):
     def _build_from_config(self, config: Dict):
         raise NotImplementedError()
 
-    def _init_training_config(self, config):
-        if isinstance(config, dict):
-            config = TrainingConfig(**config)
-        self.training_config = config
-
-    def _init_logger(self, log_path="lightning_logs", model_name="default"):
-        self.tb_logger = TensorBoardLogger(log_path, name=model_name)
-
-    def _init_trainer(self, training_config=None):
-        if training_config is None:
-            training_config = TrainingConfig()
-        self._init_training_config(training_config)
-        self.trainer = pl.Trainer(logger=self.tb_logger,
-                                  **training_config.dict(
-                                      include=set(inspect.getfullargspec(pl.Trainer)[0])))
 
     @classmethod
     def _load_from_path(cls, path: str, module_class: Callable):
@@ -54,9 +55,9 @@ class LightningPredictor(BasePredictor):
         if model_path.is_dir():
             found_model = None
             for extention in supported_extentions:
-                if list(model_path.rglob(f'*{extention}')):
+                if list(model_path.glob(f'*{extention}')):
                     # WARNING : Chosing last file if there are many
-                    found_model = sorted(model_path.rglob(f'*{extention}'))[-1]
+                    found_model = sorted(model_path.glob(f'*{extention}'))[-1]
                     break
             if found_model is None:
                 raise FileNotFoundError("No file matching %s was found in directory %s"
@@ -65,8 +66,6 @@ class LightningPredictor(BasePredictor):
 
         if model_path.suffix == ".ckpt":
             return cls._load_from_checkpoint(model_path, module_class)
-        #  TODO: State Dict loading not supported yet
-        # elif model_path.suffix == ".pt":
         #     return cls._load_from_state_dict(model_path, module_class)
         elif model_path.suffix == ".pb":
             return cls._load_from_binary(model_path, module_class)
@@ -76,10 +75,6 @@ class LightningPredictor(BasePredictor):
                                       % (model_path.suffix, supported_extentions))
 
     @classmethod
-    def _load_from_state_dict(cls, path: str, module_class: Callable):
-        return module_class.load_from_state_dict(path)
-
-    @classmethod
     def _load_from_binary(cls, path: str, module_class: Callable):
         return module_class.load_from_binary(path)
 
@@ -87,24 +82,65 @@ class LightningPredictor(BasePredictor):
     def _load_from_checkpoint(cls, path: str, module_class: Callable):
         return module_class.load_from_checkpoint(path)
 
+
+    def _init_training_config(self, config):
+        if isinstance(config, dict):
+            config = TrainingConfig(**config)
+        self.training_config = config
+
+    def _init_logger(self, log_path: str):
+        self.tb_logger = TensorBoardLogger(log_path, name=self.model.__class__.__name__)
+
+    def _init_trainer(self):
+        if self.training_config is None:
+            self.training_config = TrainingConfig()
+        self.trainer = pl.Trainer(logger=self.tb_logger,
+                                  max_epochs=self.training_config.epoch,
+                                  **self.training_config.dict(
+                                      include=set(inspect.getfullargspec(pl.Trainer)[0])))
+        logger.info("Predictor logger initialised at %s" % self.tb_logger.log_dir,
+                    group=PREDICTOR)
+
+    def _save_config(self, save_path:Path):
+        res = dict()
+        self.config.model_path = str(save_path.parent)
+        if self.training_config is not None :
+            res["training_config"] = self.training_config.dict()
+        if self.config is not None :
+            res["model_config"] = self.config.dict()
+        with (save_path).open('w', encoding="utf-8") as conf_file:
+            json.dump(res, conf_file, indent=4, sort_keys=True)
+
+    def _load_config(self, config_path: Union[Path,str]):
+        if config_path is None:
+            logger.info("No config were found near model at %s" % config_path, group=PREDICTOR)
+            return
+        if isinstance(config_path, str):
+            config_path = Path(config_path)
+        with (config_path).open(encoding="utf-8") as conf_file:
+            self.config_data = json.load(conf_file)
+        self.training_config = TrainingConfig(**self.config_data.get("training_config", None))
+        logger.info("Config loaded from %s" % config_path, group=PREDICTOR)
+
+
+
+    def __call__(self, input_batch):
+        return self.run(input_batch)
+
     def train(self, train_dataloader: Iterable, train_config: TrainingConfig = None):
         """train the model"""
         if not train_config:
             train_config = TrainingConfig()
         self._init_training_config(train_config)
-        self.training_config = train_config
-        self.trainer = pl.Trainer(max_epochs=train_config.epoch,
-                                  accelerator=train_config.accelerator,
-                                  devices=train_config.devices,
-                                  )
-        # where do we store checkpoints and models
-        # probably we'll need a more complex constructor
+        self._init_trainer()
         self.trainer.fit(model=self.model, train_dataloaders=train_dataloader)
 
     def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
-            self.trainer = pl.Trainer(devices=1)
+            logger.info("New trainer as been created at %s" % self.tb_logger.log_dir,
+                    group=PREDICTOR)
+            self._init_trainer()
         self.trainer.test(model=self.model, dataloaders=test_dataloader)
 
     def run(self, input_batch: Iterable):
@@ -116,10 +152,20 @@ class LightningPredictor(BasePredictor):
     def save(self, save_path=None):
         """save model to path"""
         if save_path is None:
-            save_path = self.config.model_path
+            save_path = self.tb_logger.log_dir
+        else:  # we cp the tensorflow logger content first
+            shutil.copytree(self.tb_logger.log_dir, save_path, dirs_exist_ok=True)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
+
         if self.trainer is not None:
+            logger.info("Saving checkpoint at %s" % (save_path / "trainer_checkpoint.ckpt"),
+                    group=PREDICTOR)
             self.trainer.save_checkpoint(save_path / "trainer_checkpoint.ckpt")
+
+        logger.info("Saving model at %s" % save_path, group=PREDICTOR)
         self.model.save(save_path)
+
+        logger.info("Saving config at %s" % (save_path / "config.json"), group=PREDICTOR)
+        self._save_config(save_path / "config.json")

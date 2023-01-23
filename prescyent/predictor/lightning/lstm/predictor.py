@@ -1,5 +1,4 @@
-"""Pytorch module et Lightning module for LSTMs
-"""
+"""Pytorch module et Lightning module for LSTMs"""
 from pathlib import Path
 from typing import Union
 import inspect
@@ -14,17 +13,21 @@ class LSTMPredictor(LightningPredictor):
 
     def __init__(self, model_path=None, config=None):
         if model_path is not None:
-            self.model = self._load_from_path(model_path)
-            # reload a config instead
-            model_name = "lstm"
+            model = self._load_from_path(model_path)
+            root_path = model_path if Path(model_path).is_dir() else str(Path(model_path).parent)
+            self._load_config(Path(root_path) / "config.json")
         elif config is not None:
-            self._build_from_config(config)
-            model_name = config.identifier
+            model = self._build_from_config(config)
+            root_path = config.model_path
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
-        self._init_logger(config.model_path, model_name=model_name)
-        self._init_trainer()
+        super().__init__(model, root_path)
+
+    def _load_config(self, config_path: Union[Path, str]):
+        super()._load_config(config_path)
+        self.config = LSTMConfig(**self.config_data.get("model_config", None))
+        del self.config_data
 
     def _build_from_config(self, config: Union[dict, LSTMConfig]):
         # -- We check that the input config is valid through pydantic model
@@ -32,14 +35,9 @@ class LSTMPredictor(LightningPredictor):
             config = LSTMConfig(**config)
         self.config = config
 
-        # -- Check if a checkpoint or file exist:
-        if Path(config.model_path).exists():
-            self.model = LSTMPredictor._load_from_path(config.model_path)
-            return
-
         # -- Build from Scratch
         # The relevant items from "config" are passed as the args for the pytorch module
-        self.model = LSTMModule(**config.dict(include=set(inspect.getfullargspec(LSTMModule)[0])))
+        return LSTMModule(**config.dict(include=set(inspect.getfullargspec(LSTMModule)[0])))
 
     @classmethod
     def _load_from_path(cls, path: str, *args, **kwargs):

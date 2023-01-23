@@ -5,6 +5,6 @@ from pydantic import BaseModel
 
 class TrainingConfig(BaseModel):
     epoch: int = 50
-    accelerator: str = "auto"
-    devices: Union[str, int] = "auto"
+    accelerator: str = "gpu"
+    devices: Union[str, int] = 2
     # TODO see pl trainer args for more
