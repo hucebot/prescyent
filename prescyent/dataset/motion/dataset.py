@@ -43,11 +43,11 @@ class MotionDataset(Dataset):
 
     @property
     def test_dataloader(self):
-        return DataLoader(self.test_datasample, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.test_datasample, batch_size=self.batch_size, shuffle=False)
 
     @property
     def val_dataloader(self):
-        return DataLoader(self.val_datasample, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.val_datasample, batch_size=self.batch_size, shuffle=False)
 
     def __getitem__(self, index):
         return self.episodes_scaled[index]
@@ -75,9 +75,12 @@ class MotionDataset(Dataset):
             scaler = other_scaler
 
         # scale each episode of each subset
-        train_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.train]
-        test_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.test]
-        val_data = [torch.FloatTensor(scaler.transform(episode)) for episode in self.episodes.val]
+        train_data = [torch.FloatTensor(scaler.transform(episode))
+                      for episode in self.episodes.train]
+        test_data = [torch.FloatTensor(scaler.transform(episode))
+                     for episode in self.episodes.test]
+        val_data = [torch.FloatTensor(scaler.transform(episode))
+                    for episode in self.episodes.val]
         return Episodes(train_data, test_data, val_data), scaler
 
     def _make_datasample(self, scaled_episode):
