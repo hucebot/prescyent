@@ -29,7 +29,8 @@ def init_group_map(level):
     group_map = dict()
     for group_name in LOG_GROUPS:
         handler = logging.StreamHandler()
-        formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
+        _format = 'prescyent.%(name)-10s : %(levelname)-5s - %(message)s'
+        formatter = OneLineExceptionFormatter(_format)
         handler.setFormatter(formatter)
         _logger = logging.getLogger(str(group_name))
         _logger.setLevel(level)
@@ -38,7 +39,7 @@ def init_group_map(level):
     return group_map
 
 
-class GroupLogger():
+class GroupLogger(logging.Logger):
     """
     """
     def __init__(self, level) -> None:
