@@ -57,7 +57,7 @@ class TeleopIcubDataset(MotionDataset):
         val_data = pathfiles_to_array(val_files,
                                       subsampling_step=self.config.subsampling_step,
                                       dimensions=self.config.dimensions)
-        self.feature_size = train_data[0].shape[1]        
+        self.feature_size = train_data[0].shape[1]
         return Episodes(train_data, test_data, val_data)
 
     def _get_from_web(self):

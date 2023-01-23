@@ -13,24 +13,23 @@ if __name__ == "__main__":
     dimensions = [1, 2, 3]          # right hand x, right hand y, right hand z
     batch_size = 128
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
-                                     output_size=output_size,
-                                     dimensions=dimensions,
-                                     subsampling_step=subsampling_step,
-                                     batch_size=batch_size)
+                                             output_size=output_size,
+                                             dimensions=dimensions,
+                                             subsampling_step=subsampling_step,
+                                             batch_size=batch_size)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
-    hidden_size=100
+    hidden_size = 100
     feature_size = dataset.feature_size
-    model_path = "data/models/lstm_baseline_3dim"
     config = LSTMConfig(feature_size=feature_size,
                         output_size=output_size,
-                        hidden_size=hidden_size,
-                        model_path=model_path)
+                        hidden_size=hidden_size,)
     predictor = LSTMPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig(epoch=50)
+    training_config = TrainingConfig(epoch=50,
+                                     accelerator="gpu")
     predictor.train(dataset.train_dataloader, training_config)
     predictor.test(dataset.test_dataloader)
     predictor.save()
@@ -41,6 +40,7 @@ if __name__ == "__main__":
     input = dataset.unscale(input)
     truth = dataset.unscale(truth)
     prediction = dataset.unscale(prediction)
-    plot_prediction((input, truth), prediction, Path(predictor.config.model_path) / "pred_data_1.png")
+    plot_prediction((input, truth), prediction,
+                    savefig_path=Path(predictor.config.model_path) / "pred_data_1.png")
     truth = dataset.test_datasample[0][1]
     print("ADE: %.5f\nFDE: %.5f" % (get_ade(truth, prediction), get_fde(truth, prediction)))

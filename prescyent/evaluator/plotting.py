@@ -8,7 +8,8 @@ import torch
 
 from prescyent.dataset.motion.datasamples import MotionDataSamples
 
-def plot_data(data:Iterator, savefig_path=None):
+
+def plot_data(data: Iterator, savefig_path=None):
     # if not isinstance(data, np.ndarray):
     #     data = np.fromiter(data)
     plt.clf()
@@ -16,6 +17,7 @@ def plot_data(data:Iterator, savefig_path=None):
     plt.legend()
     if savefig_path is not None:
         save_fig_util(savefig_path)
+
 
 def plot_datasample(data_sample: Tuple[torch.Tensor, torch.Tensor], savefig_path=None):
     sample, truth = data_sample
@@ -25,7 +27,9 @@ def plot_datasample(data_sample: Tuple[torch.Tensor, torch.Tensor], savefig_path
     if savefig_path is not None:
         save_fig_util(savefig_path)
 
-def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor], pred:torch.Tensor, savefig_path=None):
+
+def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
+                    pred: torch.Tensor, savefig_path=None):
     plt.clf()   # clear just in case
     sample, truth = data_sample
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
@@ -46,6 +50,7 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor], pred:torch.T
     frame.set_edgecolor('0.9')
     if savefig_path is not None:
         save_fig_util(savefig_path)
+
 
 def save_fig_util(savefig_path):
     if not Path(savefig_path).parent.exists():
