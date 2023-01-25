@@ -10,6 +10,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
+from prescyent.predictor.lightning.lstm.module import LSTMModule
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.logger import logger, PREDICTOR
 
@@ -92,10 +93,11 @@ class LightningPredictor(BasePredictor):
     def _init_trainer(self):
         if self.training_config is None:
             self.training_config = TrainingConfig()
+        cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
+        kwargs = self.training_config.dict(include=cls_default_params)
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
-                                  **self.training_config.dict(
-                                      include=set(inspect.getfullargspec(pl.Trainer)[0])))
+                                  **kwargs)
         logger.info("Predictor logger initialised at %s" % self.tb_logger.log_dir,
                     group=PREDICTOR)
 
