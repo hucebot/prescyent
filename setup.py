@@ -9,9 +9,11 @@ CORE_REQUIREMENTS = [
         "scikit-learn"
 ]
 
-CORE_MODULES = ['prescyent.dataset',
-                'prescyent.predictor',
-                'prescyent.utils'
+CORE_MODULES = ['prescyent.',
+                'prescyent.dataset','prescyent.dataset.*',
+                'prescyent.evaluator','prescyent.evaluator.*',
+                'prescyent.predictor', 'prescyent.predictor.*',
+                'prescyent.utils', 'prescyent.utils.*'
 ]
 
 with open('README.md', encoding='utf-8') as f:
