@@ -52,6 +52,28 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
         save_fig_util(savefig_path)
 
 
+def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pred):
+    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
+    inputs = torch.swapaxes(episode, 0, 1)
+    preds = torch.swapaxes(preds, 0, 1)
+    x = range(len(inputs[0]))
+    fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
+    fig.suptitle('Motion Prediction plots')
+    for i, axe in enumerate(axes):
+        axe.plot(x, inputs[i], linewidth=2)
+        if eval_on_last_pred:
+            axe.plot(x[2*step-1::step], preds[i], linewidth=2, linestyle='--')
+        else:
+            axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
+        axe.plot(x[step:], inputs[i][:-step], linewidth=2)
+    legend = plt.legend(["Truth", "Prediction", "Delayed Truth"], loc=3)
+    frame = legend.get_frame()
+    frame.set_facecolor('0.9')
+    frame.set_edgecolor('0.9')
+    if savefig_path is not None:
+        save_fig_util(savefig_path)
+
+
 def save_fig_util(savefig_path):
     if not Path(savefig_path).parent.exists():
         Path(savefig_path).parent.mkdir(parents=True)
