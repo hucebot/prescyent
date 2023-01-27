@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from prescyent.logger import logger, DATASET
+from prescyent.utils.logger import logger, DATASET
 
 
 class MotionDataSamples():

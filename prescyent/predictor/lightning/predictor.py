@@ -12,7 +12,7 @@ import torch
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.lstm.module import LSTMModule
 from prescyent.predictor.lightning.training_config import TrainingConfig
-from prescyent.logger import logger, PREDICTOR
+from prescyent.utils.logger import logger, PREDICTOR
 
 
 class LightningPredictor(BasePredictor):
@@ -125,13 +125,17 @@ class LightningPredictor(BasePredictor):
     def __call__(self, input_batch):
         return self.run(input_batch)
 
-    def train(self, train_dataloader: Iterable, train_config: TrainingConfig = None):
+    def train(self, train_dataloader: Iterable,
+              train_config: TrainingConfig=None,
+              val_dataloader: Iterable=None):
         """train the model"""
         if not train_config:
             train_config = TrainingConfig()
         self._init_training_config(train_config)
         self._init_trainer()
-        self.trainer.fit(model=self.model, train_dataloaders=train_dataloader)
+        self.trainer.fit(model=self.model,
+                         train_dataloaders=train_dataloader,
+                         val_dataloaders=val_dataloader)
 
     def test(self, test_dataloader: Iterable):
         """test the model"""

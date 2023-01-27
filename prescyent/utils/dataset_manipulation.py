@@ -1,5 +1,5 @@
 """util functions for list, files and data"""
-from prescyent.logger import logger, DATASET
+from prescyent.utils.logger import logger, DATASET
 from typing import List
 
 import numpy as np

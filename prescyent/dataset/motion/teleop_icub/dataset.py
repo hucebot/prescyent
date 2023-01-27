@@ -5,7 +5,7 @@ from typing import Union, Dict
 
 from pathlib import Path
 
-from prescyent.logger import logger, DATASET
+from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.motion.dataset import MotionDataset, Episodes
 from prescyent.utils.dataset_manipulation import split_array_with_ratios, pathfiles_to_array
 from prescyent.dataset.motion.teleop_icub.config import TeleopIcubDatasetConfig
