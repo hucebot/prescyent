@@ -8,7 +8,7 @@ def get_ade(truth: torch.Tensor, pred: torch.Tensor):
         Average RMSE for all frames
         Lower is better
     """
-    return torch.mean(get_rmse(truth, pred)).item()
+    return torch.mean(get_rmse(truth, pred))
 
 
 def get_fde(truth: torch.Tensor, pred: torch.Tensor):
@@ -17,7 +17,7 @@ def get_fde(truth: torch.Tensor, pred: torch.Tensor):
         Lower is better
     """
     rmse = get_rmse(truth, pred)
-    return rmse[-1].item()
+    return rmse[-1]
 
 
 def get_mse(truth: torch.Tensor, pred: torch.Tensor):

@@ -74,15 +74,7 @@ class LSTMModule(pl.LightningModule):
     @classmethod
     def load_from_state_dict(cls, path: str):
         """Retrieve model infos from state dict"""
-        raise NotImplementedError("TODO: WIP")
-        state_dict = torch.load(path)
-        input_size, _ = state_dict['lstm.weight_ih_l0'].T.shape
-        hidden_size, output_size = state_dict['linear.weight'].T.shape
-        num_layers = (len(state_dict) - 4) // 2
-        # 4 = Input Bias + Input weight + Output Bias + Output weight
-        # We divide by 2 (weight and bias again) to get the number of hidden layers
-        lstm_module = cls(input_size, hidden_size, output_size, num_layers)
-        lstm_module.torch_model.load_state_dict(state_dict)
+        raise NotImplementedError("TODO ?")
 
     @classmethod
     def load_from_binary(cls, path: str):
@@ -97,38 +89,43 @@ class LSTMModule(pl.LightningModule):
         torch.save(self.torch_model.state_dict(), save_path / "state_dict.pt")
         torch.save(self.torch_model, save_path / "model.pb")
 
-    def compute_loss(self, batch):
-        """get loss from truth and pred"""
-        sample, truth = batch
-        pred = self.torch_model(sample)
-        loss = self.criterion(pred, truth)
-        return loss
+    def configure_optimizers(self):
+        optimizer = optim.Adam(self.parameters(), lr=1e-3)
+        return optimizer
 
-    def training_step(self, batch, batch_idx):
-        # training_step defines the train loop.
-        # it is independent of forward
-        loss = self.compute_loss(batch)
-        self.log("train_loss", loss)
-        return loss
-
-    def test_step(self, batch, batch_idx):
-        # for test loop of the Trainer
+    def get_metrics(self, batch, prefix: str = ""):
+        """get loss and accuracy metrics from batch"""
         sample, truth = batch
         pred = self.torch_model(sample)
         loss = self.criterion(pred, truth)
         ade = get_ade(truth, pred)
         fde = get_fde(truth, pred)
-        self.log("MSE_loss", loss)
-        self.log("ADE", ade)
-        self.log("FDE", fde)
-        return loss, ade, fde
+        self.log(f"{prefix}/loss", loss)
+        return {"loss": loss, "ADE": ade, "FDE": fde}
+
+    def log_accuracy(self, outputs, prefix: str = ""):
+        """log accuracy metrics from epoch"""
+        mean_loss = torch.stack([x["loss"] for  x in outputs]).mean()
+        fde = torch.stack([x["FDE"] for  x in outputs]).mean()
+        ade = torch.stack([x["ADE"] for  x in outputs]).mean()
+        self.logger.experiment.add_scalar(f"{prefix}/epoch_loss", mean_loss, self.current_epoch)
+        self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
+        self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
+
+    def training_step(self, batch, batch_idx):
+        return self.get_metrics(batch, "Train")
+
+    def test_step(self, batch, batch_idx):
+        return self.get_metrics(batch, "Test")
 
     def validation_step(self, batch, batch_idx):
-        # for test loop of the Trainer
-        loss = self.compute_loss(batch)
-        self.log("val_loss", loss)
-        return loss
+        return self.get_metrics(batch, "Val")
 
-    def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
+    def test_epoch_end(self, outputs):
+        self.log_accuracy(outputs, "Test")
+
+    def training_epoch_end(self,outputs):
+        self.log_accuracy(outputs, "Train")
+
+    def validation_epoch_end(self,outputs):
+        self.log_accuracy(outputs, "Val")

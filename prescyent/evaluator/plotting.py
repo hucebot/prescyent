@@ -6,8 +6,6 @@ from typing import Iterator, Tuple
 import matplotlib.pyplot as plt
 import torch
 
-from prescyent.dataset.motion.datasamples import MotionDataSamples
-
 
 def plot_data(data: Iterator, savefig_path=None):
     # if not isinstance(data, np.ndarray):
@@ -56,16 +54,24 @@ def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pre
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     inputs = torch.swapaxes(episode, 0, 1)
     preds = torch.swapaxes(preds, 0, 1)
-    x = range(len(inputs[0]))
+
+    pred_last = len(inputs[0]) + step
+
+    x = range(pred_last)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
     fig.suptitle('Motion Prediction plots')
     for i, axe in enumerate(axes):
-        axe.plot(x, inputs[i], linewidth=2)
+        axe.plot(x[:-step], inputs[i], linewidth=2)
         if eval_on_last_pred:
-            axe.plot(x[2*step-1::step], preds[i], linewidth=2, linestyle='--')
+            # fancy lines to range from last of first prediction (2 step - 1)
+            # to the last predicted index (len + step -1)
+            stepped_x = list(range(2*step-1, pred_last, step))
+            if pred_last - 1 not in stepped_x:
+                stepped_x.append(pred_last - 1)
+            axe.plot(stepped_x, preds[i], linewidth=2, linestyle='--')
         else:
             axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
-        axe.plot(x[step:], inputs[i][:-step], linewidth=2)
+        axe.plot(x[step:], inputs[i], linewidth=2)
     legend = plt.legend(["Truth", "Prediction", "Delayed Truth"], loc=3)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
