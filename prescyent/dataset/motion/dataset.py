@@ -23,6 +23,7 @@ def _scale_episodes(episode_array, scaler):
 class MotionDataset(Dataset):
     scaler: StandardScaler
     batch_size: int
+    num_workers: int
     input_size: int
     output_size: int
     episodes: Episodes
@@ -39,15 +40,21 @@ class MotionDataset(Dataset):
 
     @property
     def train_dataloader(self):
-        return DataLoader(self.train_datasample, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_datasample, batch_size=self.batch_size,
+                          shuffle=True, num_workers=self.num_workers,
+                          persistent_workers=True)
 
     @property
     def test_dataloader(self):
-        return DataLoader(self.test_datasample, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.test_datasample, batch_size=self.batch_size,
+                          shuffle=False, num_workers=self.num_workers,
+                          persistent_workers=True)
 
     @property
     def val_dataloader(self):
-        return DataLoader(self.val_datasample, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.val_datasample, batch_size=self.batch_size,
+                          shuffle=False, num_workers=self.num_workers,
+                          persistent_workers=True)
 
     def __getitem__(self, index):
         return self.episodes_scaled[index]

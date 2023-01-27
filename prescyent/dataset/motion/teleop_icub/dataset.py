@@ -34,6 +34,7 @@ class TeleopIcubDataset(MotionDataset):
         self.input_size = config.input_size
         self.output_size = config.output_size
         self.batch_size = config.batch_size
+        self.num_workers = config.num_workers
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):
