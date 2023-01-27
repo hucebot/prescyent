@@ -7,7 +7,7 @@ from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.evaluator.plotting import plot_episode_prediction
 
 
-def pred_episode(episode: torch.Tensor, predictor:Callable, step: int=10,
+def pred_episode(episode: torch.Tensor, predictor: Callable, step: int=10,
                  eval_on_last_pred: bool=True, skip_partial_input=True) -> torch.Tensor:
     """prediction loop over an episode
 
@@ -51,7 +51,7 @@ def eval_episode(episode, predictor,
         preds = unscale_function(preds)
         inputs = unscale_function(inputs)
     # if we only want to look at the last predicted point
-    truth = inputs[::step]  if eval_on_last_pred else inputs
+    truth = inputs[::step] if eval_on_last_pred else inputs
     truth = truth[step:]
     ade = get_ade(truth, preds[:-step])
     fde = get_fde(truth, preds[:-step])

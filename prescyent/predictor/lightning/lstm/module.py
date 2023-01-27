@@ -105,9 +105,9 @@ class LSTMModule(pl.LightningModule):
 
     def log_accuracy(self, outputs, prefix: str = ""):
         """log accuracy metrics from epoch"""
-        mean_loss = torch.stack([x["loss"] for  x in outputs]).mean()
-        fde = torch.stack([x["FDE"] for  x in outputs]).mean()
-        ade = torch.stack([x["ADE"] for  x in outputs]).mean()
+        mean_loss = torch.stack([x["loss"] for x in outputs]).mean()
+        fde = torch.stack([x["FDE"] for x in outputs]).mean()
+        ade = torch.stack([x["ADE"] for x in outputs]).mean()
         self.logger.experiment.add_scalar(f"{prefix}/epoch_loss", mean_loss, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
@@ -124,8 +124,8 @@ class LSTMModule(pl.LightningModule):
     def test_epoch_end(self, outputs):
         self.log_accuracy(outputs, "Test")
 
-    def training_epoch_end(self,outputs):
+    def training_epoch_end(self, outputs):
         self.log_accuracy(outputs, "Train")
 
-    def validation_epoch_end(self,outputs):
+    def validation_epoch_end(self, outputs):
         self.log_accuracy(outputs, "Val")

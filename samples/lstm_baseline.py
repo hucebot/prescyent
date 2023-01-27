@@ -8,14 +8,16 @@ if __name__ == "__main__":
     subsampling_step: int = 10      # subsampling -> 100 Hz to 10Hz
     input_size = 10                 # 1 second
     output_size = 10                # 1 second
-    dimensions = [1, 2, 3]          # right hand x, right hand y, right hand z
     dimensions = None               # None equals ALL dimensions !
+    # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
     batch_size = 256
+    num_workers = 12
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
                                              output_size=output_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size)
+                                             batch_size=batch_size,
+                                             num_workers=num_workers)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
@@ -34,6 +36,7 @@ if __name__ == "__main__":
     predictor.save()
     # plot some test episodes
     episode = dataset.episodes_scaled.test[0]
-    ade, fde = eval_episode(episode, predictor, step=input_size, savefig_path=f"data/eval/test_episode.png",
-                    eval_on_last_pred=False, unscale_function=dataset.unscale)
-    print("ADE:", ade, "FDE:", fde)
+    ade, fde = eval_episode(episode, predictor, step=input_size,
+                            savefig_path=f"data/eval/test_episode.png",
+                            eval_on_last_pred=False, unscale_function=dataset.unscale)
+    print("ADE:", ade.item(), "FDE:", fde.item())

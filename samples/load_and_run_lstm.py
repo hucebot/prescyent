@@ -28,4 +28,5 @@ if __name__ == "__main__":
                     pred=prediction,
                     savefig_path="data/example/lstm_ver1/pred_data_1.png")
     truth = dataset.test_datasample[0][1]
-    print("ADE: %.5f\nFDE: %.5f" % (get_ade(truth, prediction), get_fde(truth, prediction)))
+    print("ADE: %.5f\nFDE: %.5f" % (get_ade(truth, prediction).item(),
+                                    get_fde(truth, prediction).item()))

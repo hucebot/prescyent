@@ -65,7 +65,7 @@ def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pre
         if eval_on_last_pred:
             # fancy lines to range from last of first prediction (2 step - 1)
             # to the last predicted index (len + step -1)
-            stepped_x = list(range(2*step-1, pred_last, step))
+            stepped_x = list(range(2 * step - 1, pred_last, step))
             if pred_last - 1 not in stepped_x:
                 stepped_x.append(pred_last - 1)
             axe.plot(stepped_x, preds[i], linewidth=2, linestyle='--')
