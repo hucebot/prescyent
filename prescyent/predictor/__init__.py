@@ -7,4 +7,6 @@ Predictors can be trained, loaded from a checkpoint, and runned
 Built with pytorch_lightning and pydantic (for now)
 """
 
-from prescyent.predictor.lightning import LSTMConfig, LSTMPredictor, TrainingConfig
+from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.predictor.lightning.lstm import LSTMConfig, LSTMPredictor
+from prescyent.predictor.lightning.linear import LinearConfig, LinearPredictor
