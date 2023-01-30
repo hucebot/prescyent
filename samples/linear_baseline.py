@@ -1,5 +1,5 @@
 from prescyent.evaluator import eval_episode
-from prescyent.predictor import LSTMPredictor, LSTMConfig, TrainingConfig
+from prescyent.predictor import LinearPredictor, LinearConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
 
@@ -23,12 +23,12 @@ if __name__ == "__main__":
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
+
     feature_size = dataset.feature_size
-    hidden_size = feature_size * 10
-    config = LSTMConfig(feature_size=feature_size,
+    config = LinearConfig(feature_size=feature_size,
                         output_size=output_size,
-                        hidden_size=hidden_size,)
-    predictor = LSTMPredictor(config=config)
+                        input_size=input_size)
+    predictor = LinearPredictor(config=config)
 
     # Train, Test and Save
     training_config = TrainingConfig(epoch=200,
@@ -39,6 +39,6 @@ if __name__ == "__main__":
     # plot some test episodes
     episode = dataset.episodes_scaled.test[0]
     ade, fde = eval_episode(episode, predictor, step=input_size,
-                            savefig_path=f"data/eval/lstm_test_episode.png",
+                            savefig_path=f"data/eval/linear_test_episode.png",
                             eval_on_last_pred=True, unscale_function=dataset.unscale)
     print("ADE:", ade.item(), "FDE:", fde.item())
