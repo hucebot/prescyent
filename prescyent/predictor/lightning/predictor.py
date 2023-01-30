@@ -2,15 +2,15 @@ from collections.abc import Iterable, Callable
 import inspect
 import json
 import shutil
-from typing import Dict, Union
+from typing import Dict, Type, Union
 from pathlib import Path
 
+from pydantic import BaseModel
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
-from prescyent.predictor.lightning.lstm.module import LSTMModule
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
 
@@ -20,33 +20,46 @@ class LightningPredictor(BasePredictor):
     This class should not be called as is
     You must instanciate a class from wich LightningPredictor is a parent
     """
+    module_class = Type[BasePredictor]
+    config_class = Type[BaseModel]
     model: pl.LightningModule
     training_config: TrainingConfig
     trainer: pl.Trainer
     tb_logger: TensorBoardLogger
 
-    def __init__(self, model, root_path="lightning_logs") -> None:
-        super().__init__()
-        # root path must have been previously resolved from attribute, config or default
-        self.root_path = root_path
-        # a LightningModule must have been initialised as "model"
-        self.model = model
+    def __init__(self,  model_path=None, config=None) -> None:
+        # -- Init Model and root path
+        if model_path is not None:
+            self.model = self._load_from_path(model_path)
+            self.root_path = model_path if Path(model_path).is_dir() else str(Path(model_path).parent)
+            self._load_config(Path(self.root_path) / "config.json")
+        elif config is not None:
+            self.model = self._build_from_config(config)
+            self.root_path = config.model_path
+        else:
+            # In later versions we can imagine a pretrained or config free version of the model
+            raise NotImplementedError("No default implementation for now")
 
+        # -- Init trainer and related args
         if not hasattr(self, "training_config"):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
-        self._init_logger(log_path=root_path)
+        self._init_logger(log_path=self.root_path)
         self._init_trainer()
 
-    def _build_from_id(self, identifier: str):
-        raise NotImplementedError()
+    def _build_from_config(self, config):
+        # -- We check that the input config is valid through pydantic model
+        if isinstance(config, dict):
+            config = self.config_class(**config)
+        self.config = config
 
-    def _build_from_config(self, config: Dict):
-        raise NotImplementedError()
+        # -- Build from Scratch
+        # The relevant items from "config" are passed as the args for the pytorch module
+        return self.module_class(**config.dict(include=set(inspect.getfullargspec(self.module_class)[0])))
 
-    @classmethod
-    def _load_from_path(cls, path: str, module_class: Callable):
+
+    def _load_from_path(self, path: str):
         supported_extentions = [".ckpt", ".pb"]   # prefered order
         model_path = Path(path)
         if not model_path.exists():
@@ -65,10 +78,10 @@ class LightningPredictor(BasePredictor):
             model_path = found_model
 
         if model_path.suffix == ".ckpt":
-            return cls._load_from_checkpoint(model_path, module_class)
-        #     return cls._load_from_state_dict(model_path, module_class)
+            return self.module_class.load_from_checkpoint(model_path)
+        #     return self.module_class._load_from_state_dict(model_path, module_class)
         elif model_path.suffix == ".pb":
-            return cls._load_from_binary(model_path, module_class)
+            return self.module_class.load_from_binary(model_path)
         else:
             raise NotImplementedError("Given file extention %s is not supported. "
                                       "Models exported by this module and imported to it can be %s"
@@ -118,8 +131,9 @@ class LightningPredictor(BasePredictor):
         if isinstance(config_path, str):
             config_path = Path(config_path)
         with (config_path).open(encoding="utf-8") as conf_file:
-            self.config_data = json.load(conf_file)
-        self.training_config = TrainingConfig(**self.config_data.get("training_config", None))
+            config_data = json.load(conf_file)
+        self.training_config = TrainingConfig(**config_data.get("training_config", None))
+        self.config = self.config_class(**config_data.get("model_config", None))
         logger.info("Config loaded from %s" % config_path, group=PREDICTOR)
 
     def __call__(self, input_batch):

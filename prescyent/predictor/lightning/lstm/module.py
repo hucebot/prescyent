@@ -4,11 +4,9 @@ simple LSTM implementation
 [link to the paper]
 """
 import torch
-import pytorch_lightning as pl
 from torch import nn
-import torch.optim as optim
 
-from prescyent.evaluator.metrics import get_ade, get_fde
+from prescyent.predictor.lightning.module import BaseLightningModule
 
 
 class LSTM(nn.Module):
@@ -60,7 +58,7 @@ class LSTM(nn.Module):
         return predictions
 
 
-class LSTMModule(pl.LightningModule):
+class LSTMModule(BaseLightningModule):
     """[short description]
        [usage]
        [detail of the implementation]
@@ -72,60 +70,9 @@ class LSTMModule(pl.LightningModule):
         self.save_hyperparameters()
 
     @classmethod
-    def load_from_state_dict(cls, path: str):
-        """Retrieve model infos from state dict"""
-        raise NotImplementedError("TODO ?")
-
-    @classmethod
     def load_from_binary(cls, path: str):
         """Retrieve model infos from torch binary"""
         model = torch.load(path)
         lstm_module = cls(model.input_size, model.hidden_size, model.output_size, model.num_layers)
         lstm_module.torch_model = model
         return lstm_module
-
-    def save(self, save_path: str):
-        """Export model to state_dict and torch binary"""
-        torch.save(self.torch_model.state_dict(), save_path / "state_dict.pt")
-        torch.save(self.torch_model, save_path / "model.pb")
-
-    def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
-
-    def get_metrics(self, batch, prefix: str = ""):
-        """get loss and accuracy metrics from batch"""
-        sample, truth = batch
-        pred = self.torch_model(sample)
-        loss = self.criterion(pred, truth)
-        ade = get_ade(truth, pred)
-        fde = get_fde(truth, pred)
-        self.log(f"{prefix}/loss", loss)
-        return {"loss": loss, "ADE": ade, "FDE": fde}
-
-    def log_accuracy(self, outputs, prefix: str = ""):
-        """log accuracy metrics from epoch"""
-        mean_loss = torch.stack([x["loss"] for x in outputs]).mean()
-        fde = torch.stack([x["FDE"] for x in outputs]).mean()
-        ade = torch.stack([x["ADE"] for x in outputs]).mean()
-        self.logger.experiment.add_scalar(f"{prefix}/epoch_loss", mean_loss, self.current_epoch)
-        self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
-        self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
-
-    def training_step(self, batch, batch_idx):
-        return self.get_metrics(batch, "Train")
-
-    def test_step(self, batch, batch_idx):
-        return self.get_metrics(batch, "Test")
-
-    def validation_step(self, batch, batch_idx):
-        return self.get_metrics(batch, "Val")
-
-    def test_epoch_end(self, outputs):
-        self.log_accuracy(outputs, "Test")
-
-    def training_epoch_end(self, outputs):
-        self.log_accuracy(outputs, "Train")
-
-    def validation_epoch_end(self, outputs):
-        self.log_accuracy(outputs, "Val")

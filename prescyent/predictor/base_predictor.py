@@ -8,9 +8,6 @@ from abc import abstractmethod, ABCMeta
 
 class BasePredictor(metaclass=ABCMeta):
     """abstract class for any predictor"""
-    @abstractmethod
-    def _build_from_id(self, identifier: str):
-        """build predictor from and id"""
 
     @abstractmethod
     def _build_from_config(self, config: Dict):
