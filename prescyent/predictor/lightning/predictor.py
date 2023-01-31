@@ -2,7 +2,7 @@ from collections.abc import Iterable, Callable
 import inspect
 import json
 import shutil
-from typing import Dict, Type, Union
+from typing import Type, Union
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -27,11 +27,12 @@ class LightningPredictor(BasePredictor):
     trainer: pl.Trainer
     tb_logger: TensorBoardLogger
 
-    def __init__(self,  model_path=None, config=None) -> None:
+    def __init__(self, model_path=None, config=None) -> None:
         # -- Init Model and root path
         if model_path is not None:
             self.model = self._load_from_path(model_path)
-            self.root_path = model_path if Path(model_path).is_dir() else str(Path(model_path).parent)
+            self.root_path = model_path if Path(model_path).is_dir() \
+                else str(Path(model_path).parent)
             self._load_config(Path(self.root_path) / "config.json")
         elif config is not None:
             self.model = self._build_from_config(config)
@@ -56,8 +57,9 @@ class LightningPredictor(BasePredictor):
 
         # -- Build from Scratch
         # The relevant items from "config" are passed as the args for the pytorch module
-        return self.module_class(**config.dict(include=set(inspect.getfullargspec(self.module_class)[0])))
-
+        return self.module_class(**config.dict(include=set(
+            inspect.getfullargspec(self.module_class)[0]
+        )))
 
     def _load_from_path(self, path: str):
         supported_extentions = [".ckpt", ".pb"]   # prefered order

@@ -1,10 +1,27 @@
 
+import functools
+
 import pytorch_lightning as pl
 import torch
 import torch.optim as optim
 from torch import nn
 
 from prescyent.evaluator.metrics import get_ade, get_fde
+
+
+def allow_unbatched(function):
+    @functools.wraps(function)
+    def reshape(*args, **kwargs):
+        self = args[0]
+        x = args[1]
+        unbatched = len(x.shape) == 2
+        if unbatched:
+            x = torch.unsqueeze(x, dim=0)
+        predictions = function(self, x, **kwargs)
+        if unbatched:
+            predictions = torch.squeeze(predictions, dim=0)
+        return predictions
+    return reshape
 
 
 class BaseLightningModule(pl.LightningModule):

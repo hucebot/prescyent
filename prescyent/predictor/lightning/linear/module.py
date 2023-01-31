@@ -6,7 +6,7 @@ simple Linear implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseLightningModule
+from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
 
 
 class Linear(nn.Module):
@@ -23,11 +23,9 @@ class Linear(nn.Module):
 
         self.linear = nn.Linear(input_size * feature_size, output_size * feature_size)
 
+    @allow_unbatched
     def forward(self, x):
         """"""
-        unbatched = len(x.shape) == 2
-        if unbatched:
-            x = torch.unsqueeze(x, dim=0)
         # save input shape
         shape = x.shape
         # flatten input
@@ -35,8 +33,6 @@ class Linear(nn.Module):
         predictions = self.linear(x)
         # reshape output
         predictions = predictions.view(shape[0], shape[1], shape[2])
-        if unbatched:
-            predictions = torch.squeeze(predictions, dim=0)
         return predictions
 
 

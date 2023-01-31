@@ -1,7 +1,4 @@
 """Pytorch module et Lightning module for Linears"""
-from pathlib import Path
-from typing import Union
-import inspect
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.lightning.linear.module import LinearModule

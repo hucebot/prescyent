@@ -6,7 +6,7 @@ simple LSTM implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseLightningModule
+from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
 
 
 class LSTM(nn.Module):
@@ -40,6 +40,7 @@ class LSTM(nn.Module):
     def input_size(self):
         return self.feature_size
 
+    @allow_unbatched
     def forward(self, x):
         """
         inputs need to be in the right shape as defined in documentation
@@ -48,13 +49,8 @@ class LSTM(nn.Module):
         lstm_out - will contain the hidden states from all times in the sequence
         self.hidden - will contain the current hidden state and cell state
         """
-        unbatched = len(x.shape) == 2
-        if unbatched:
-            x = torch.unsqueeze(x, dim=0)
         lstm_out, hidden = self.lstm(x)
-        predictions = self.linear(lstm_out)  # self.linear(lstm_out.view(len(x), -1))
-        if unbatched:
-            predictions = torch.squeeze(predictions, dim=0)
+        predictions = self.linear(lstm_out)
         return predictions
 
 

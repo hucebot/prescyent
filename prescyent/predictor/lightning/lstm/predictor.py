@@ -1,7 +1,4 @@
 """Pytorch module et Lightning module for LSTMs"""
-from pathlib import Path
-from typing import Union
-import inspect
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.lightning.lstm.module import LSTMModule
