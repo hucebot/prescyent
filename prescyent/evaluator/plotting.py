@@ -1,39 +1,27 @@
 """Util functions for plots"""
 
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import torch
 
 
-def plot_data(data: Iterator, savefig_path=None):
-    # if not isinstance(data, np.ndarray):
-    #     data = np.fromiter(data)
-    plt.clf()
-    plt.plot(data)
-    plt.legend()
-    if savefig_path is not None:
-        save_fig_util(savefig_path)
-
-
-def plot_datasample(data_sample: Tuple[torch.Tensor, torch.Tensor], savefig_path=None):
-    sample, truth = data_sample
-    plt.clf()
-    plt.plot(torch.cat((sample, truth)))
-    plt.legend()
-    if savefig_path is not None:
-        save_fig_util(savefig_path)
-
-
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
                     pred: torch.Tensor, savefig_path=None):
+    """plot input, truth and pred
+
+    Args:
+        data_sample (Tuple[torch.Tensor, torch.Tensor]):  tuple(input, truth)
+        pred (torch.Tensor): prediction
+        savefig_path (_type_, optional): if there is a path we save. Defaults to None.
+    """
     plt.clf()   # clear just in case
     sample, truth = data_sample
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    sample = torch.swapaxes(sample, 0, 1)
-    truth = torch.swapaxes(truth, 0, 1)
-    pred = torch.swapaxes(pred, 0, 1)
+    sample = torch.transpose(sample, 0, 1)
+    truth = torch.transpose(truth, 0, 1)
+    pred = torch.transpose(pred, 0, 1)
     x = range(len(sample[0]) + len(truth[0]))
     fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
     fig.suptitle('Motion Prediction plots')
@@ -52,8 +40,8 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
 
 def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pred):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    inputs = torch.swapaxes(episode, 0, 1)
-    preds = torch.swapaxes(preds, 0, 1)
+    inputs = torch.transpose(episode, 0, 1)
+    preds = torch.transpose(preds, 0, 1)
 
     pred_last = len(inputs[0]) + step
 

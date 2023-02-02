@@ -10,11 +10,7 @@ from prescyent.predictor.lightning.module import BaseLightningModule, allow_unba
 
 
 class Linear(nn.Module):
-    """
-    feature_size - The number of dimensions to predict in parrallel
-    hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
-    output_size - This will be equal to the prediction_periods input to get_x_y_pairs
-    """
+    """Simple linear layer with flatten input"""
     def __init__(self, feature_size, input_size, output_size):
         super(Linear, self).__init__()
         self.feature_size = feature_size
@@ -25,11 +21,10 @@ class Linear(nn.Module):
 
     @allow_unbatched
     def forward(self, x):
-        """"""
         # save input shape
         shape = x.shape
         # flatten input
-        x = x.view(x.shape[0], x.shape[1] * x.shape[2])
+        x = x.view(shape[0], shape[1] * shape[2])
         predictions = self.linear(x)
         # reshape output
         predictions = predictions.view(shape[0], shape[1], shape[2])
@@ -37,10 +32,7 @@ class Linear(nn.Module):
 
 
 class LinearModule(BaseLightningModule):
-    """[short description]
-       [usage]
-       [detail of the implementation]
-    """
+    """Lightning Module initializing Linear NN"""
     def __init__(self, feature_size, input_size, output_size):
         super().__init__()
         self.torch_model = Linear(feature_size, input_size, output_size)

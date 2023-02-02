@@ -1,4 +1,4 @@
-
+"""Module with methods common to every lightning modules"""
 import functools
 
 import pytorch_lightning as pl
@@ -10,14 +10,15 @@ from prescyent.evaluator.metrics import get_ade, get_fde
 
 
 def allow_unbatched(function):
+    """decorator for seemless batched/unbatched forward methods"""
     @functools.wraps(function)
     def reshape(*args, **kwargs):
         self = args[0]
-        x = args[1]
-        unbatched = len(x.shape) == 2
+        input_tensor = args[1]
+        unbatched = len(input_tensor.shape) == 2
         if unbatched:
-            x = torch.unsqueeze(x, dim=0)
-        predictions = function(self, x, **kwargs)
+            input_tensor = torch.unsqueeze(input_tensor, dim=0)
+        predictions = function(self, input_tensor, **kwargs)
         if unbatched:
             predictions = torch.squeeze(predictions, dim=0)
         return predictions
@@ -25,6 +26,7 @@ def allow_unbatched(function):
 
 
 class BaseLightningModule(pl.LightningModule):
+    """Base class with methods for lightning modules training, saving, logging"""
     torch_model: nn.Module
     criterion: torch.nn.modules.loss._Loss
 
@@ -33,6 +35,7 @@ class BaseLightningModule(pl.LightningModule):
         torch.save(self.torch_model, save_path / "model.pb")
 
     def configure_optimizers(self):
+        """return module optimizer"""
         optimizer = optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
@@ -55,20 +58,29 @@ class BaseLightningModule(pl.LightningModule):
         self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, *args, **kwargs):
+        """run every training step"""
+        batch = args[0]
         return self.get_metrics(batch, "Train")
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, *args, **kwargs):
+        """run every test step"""
+        batch = args[0]
         return self.get_metrics(batch, "Test")
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, *args, **kwargs):
+        """run every validation step"""
+        batch = args[0]
         return self.get_metrics(batch, "Val")
 
     def test_epoch_end(self, outputs):
+        """run every test epoch end"""
         self.log_accuracy(outputs, "Test")
 
     def training_epoch_end(self, outputs):
+        """run every training epoch end"""
         self.log_accuracy(outputs, "Train")
 
     def validation_epoch_end(self, outputs):
+        """run every validation epoch end"""
         self.log_accuracy(outputs, "Val")

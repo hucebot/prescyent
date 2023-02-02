@@ -1,3 +1,4 @@
+"""Lightning Predictor class for ML predictors"""
 from collections.abc import Iterable, Callable
 import inspect
 import json
@@ -113,7 +114,7 @@ class LightningPredictor(BasePredictor):
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
                                   **kwargs)
-        logger.info("Predictor logger initialised at %s" % self.tb_logger.log_dir,
+        logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
                     group=PREDICTOR)
 
     def _save_config(self, save_path: Path):
@@ -128,7 +129,7 @@ class LightningPredictor(BasePredictor):
 
     def _load_config(self, config_path: Union[Path, str]):
         if config_path is None:
-            logger.info("No config were found near model at %s" % config_path, group=PREDICTOR)
+            logger.info("No config were found near model at %s", config_path, group=PREDICTOR)
             return
         if isinstance(config_path, str):
             config_path = Path(config_path)
@@ -136,7 +137,7 @@ class LightningPredictor(BasePredictor):
             config_data = json.load(conf_file)
         self.training_config = TrainingConfig(**config_data.get("training_config", None))
         self.config = self.config_class(**config_data.get("model_config", None))
-        logger.info("Config loaded from %s" % config_path, group=PREDICTOR)
+        logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
     def __call__(self, input_batch):
         return self.run(input_batch)
@@ -156,7 +157,7 @@ class LightningPredictor(BasePredictor):
     def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
-            logger.info("New trainer as been created at %s" % self.tb_logger.log_dir,
+            logger.info("New trainer as been created at %s", self.tb_logger.log_dir,
                         group=PREDICTOR)
             self._init_trainer()
         self.trainer.test(model=self.model, dataloaders=test_dataloader)
@@ -178,12 +179,12 @@ class LightningPredictor(BasePredictor):
         save_path.mkdir(parents=True, exist_ok=True)
 
         if self.trainer is not None:
-            logger.info("Saving checkpoint at %s" % (save_path / "trainer_checkpoint.ckpt"),
+            logger.info("Saving checkpoint at %s", (save_path / "trainer_checkpoint.ckpt"),
                         group=PREDICTOR)
             self.trainer.save_checkpoint(save_path / "trainer_checkpoint.ckpt")
 
-        logger.info("Saving model at %s" % save_path, group=PREDICTOR)
+        logger.info("Saving model at %s", save_path, group=PREDICTOR)
         self.model.save(save_path)
 
-        logger.info("Saving config at %s" % (save_path / "config.json"), group=PREDICTOR)
+        logger.info("Saving config at %s", (save_path / "config.json"), group=PREDICTOR)
         self._save_config(save_path / "config.json")
