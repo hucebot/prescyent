@@ -47,7 +47,7 @@ class LightningPredictor(BasePredictor):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
-        self._init_logger(log_path=self.root_path)
+        super().__init__(self.root_path)
         self._init_trainer()
 
     def _build_from_config(self, config):
@@ -66,7 +66,7 @@ class LightningPredictor(BasePredictor):
         supported_extentions = [".ckpt", ".pb"]   # prefered order
         model_path = Path(path)
         if not model_path.exists():
-            raise FileNotFoundError("No file or directory at %s" % model_path)
+            raise FileNotFoundError(f"No file or directory at {model_path}")
 
         if model_path.is_dir():
             found_model = None
@@ -76,8 +76,8 @@ class LightningPredictor(BasePredictor):
                     found_model = sorted(model_path.glob(f'*{extention}'))[-1]
                     break
             if found_model is None:
-                raise FileNotFoundError("No file matching %s was found in directory %s"
-                                        % (supported_extentions, model_path))
+                raise FileNotFoundError(f"No file matching {supported_extentions}"
+                                        f" was found in directory {model_path}")
             model_path = found_model
 
         if model_path.suffix == ".ckpt":
@@ -86,9 +86,9 @@ class LightningPredictor(BasePredictor):
         elif model_path.suffix == ".pb":
             return self.module_class.load_from_binary(model_path)
         else:
-            raise NotImplementedError("Given file extention %s is not supported. "
-                                      "Models exported by this module and imported to it can be %s"
-                                      % (model_path.suffix, supported_extentions))
+            raise NotImplementedError(f"Given file extention {model_path.suffix} "
+                                      "is not supported. Models exported by this module "
+                                      f"and imported to it can be {supported_extentions}")
 
     @classmethod
     def _load_from_binary(cls, path: str, module_class: Callable):
@@ -139,9 +139,6 @@ class LightningPredictor(BasePredictor):
         self.config = self.config_class(**config_data.get("model_config", None))
         logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
-    def __call__(self, input_batch):
-        return self.run(input_batch)
-
     def train(self, train_dataloader: Iterable,
               train_config: TrainingConfig=None,
               val_dataloader: Iterable=None):
@@ -160,7 +157,6 @@ class LightningPredictor(BasePredictor):
             logger.info("New trainer as been created at %s", self.tb_logger.log_dir,
                         group=PREDICTOR)
             self._init_trainer()
-        self.trainer.test(model=self.model, dataloaders=test_dataloader)
 
     def run(self, input_batch: Iterable):
         """run method/model inference on the input batch"""

@@ -27,9 +27,9 @@ if __name__ == "__main__":
     feature_size = dataset.feature_size
     hidden_size = feature_size * 10
     config = Seq2SeqConfig(feature_size=feature_size,
-                          output_size=output_size,
-                          hidden_size=hidden_size,
-                          input_size=input_size)
+                           output_size=output_size,
+                           hidden_size=hidden_size,
+                           input_size=input_size)
     predictor = Seq2SeqPredictor(config=config)
 
     # Train, Test and Save
@@ -44,4 +44,3 @@ if __name__ == "__main__":
                             savefig_path=f"data/eval/seq2seq_test_episode.png",
                             eval_on_last_pred=False, unscale_function=dataset.unscale)
     print("ADE:", ade.item(), "FDE:", fde.item())
-  

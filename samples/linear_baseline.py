@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     feature_size = dataset.feature_size
     config = LinearConfig(feature_size=feature_size,
-                        output_size=output_size,
-                        input_size=input_size)
+                          output_size=output_size,
+                          input_size=input_size)
     predictor = LinearPredictor(config=config)
 
     # Train, Test and Save
@@ -40,5 +40,5 @@ if __name__ == "__main__":
     episode = dataset.episodes_scaled.test[0]
     ade, fde = eval_episode(episode, predictor, step=input_size,
                             savefig_path=f"data/eval/linear_test_episode.png",
-                            eval_on_last_pred=True, unscale_function=dataset.unscale)
+                            eval_on_last_pred=False, unscale_function=dataset.unscale)
     print("ADE:", ade.item(), "FDE:", fde.item())

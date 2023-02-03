@@ -35,7 +35,6 @@ class Seq2Seq(nn.Module):
 
     @allow_unbatched
     def forward(self, x):
-        """"""
         # take hidden state as the encoding of the whole input sequence
         _, hidden_state = self.encoder(x)
         batch_size = x.shape[0]
