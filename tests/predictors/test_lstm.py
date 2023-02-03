@@ -2,7 +2,7 @@
 from pydantic import ValidationError
 from prescyent.predictor import LSTMPredictor, LSTMConfig
 
-from .custom_test_case import CustomTestCase
+from tests.custom_test_case import CustomTestCase
 
 
 class LSTMInitTests(CustomTestCase):
