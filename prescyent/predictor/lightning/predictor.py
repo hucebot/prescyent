@@ -14,6 +14,7 @@ import torch
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensorboard_utils import retreive_log_version_from_path
 
 
 class LightningPredictor(BasePredictor):
@@ -32,12 +33,14 @@ class LightningPredictor(BasePredictor):
         # -- Init Model and root path
         if model_path is not None:
             self.model = self._load_from_path(model_path)
-            self.root_path = model_path if Path(model_path).is_dir() \
+            self.log_root_path = model_path if Path(model_path).is_dir() \
                 else str(Path(model_path).parent)
-            self._load_config(Path(self.root_path) / "config.json")
+            self._load_config(Path(self.log_root_path) / "config.json")
+            self.log_root_path, self.name, self.version = retreive_log_version_from_path(model_path)
         elif config is not None:
+            self.name, self.version = None, None
             self.model = self._build_from_config(config)
-            self.root_path = config.model_path
+            self.log_root_path = config.model_path
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
@@ -47,7 +50,7 @@ class LightningPredictor(BasePredictor):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
-        super().__init__(self.root_path)
+        super().__init__()
         self._init_trainer()
 
     def _build_from_config(self, config):
@@ -103,9 +106,6 @@ class LightningPredictor(BasePredictor):
             config = TrainingConfig(**config)
         self.training_config = config
 
-    def _init_logger(self, log_path: str):
-        self.tb_logger = TensorBoardLogger(log_path, name=self.model.__class__.__name__)
-
     def _init_trainer(self):
         if self.training_config is None:
             self.training_config = TrainingConfig()
@@ -157,12 +157,16 @@ class LightningPredictor(BasePredictor):
             logger.info("New trainer as been created at %s", self.tb_logger.log_dir,
                         group=PREDICTOR)
             self._init_trainer()
+        self.trainer.test(self.model, test_dataloader)
 
     def run(self, input_batch: Iterable):
         """run method/model inference on the input batch"""
         with torch.no_grad():
             self.model.eval()
+            # if seq_len == model_input_size: return prediction
+            # if input_batch.shape[1] == self.model.seq_len
             return self.model.torch_model(input_batch)
+            # else iter over prediction
 
     def save(self, save_path=None):
         """save model to path"""

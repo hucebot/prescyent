@@ -13,7 +13,8 @@ class DelayedPredictor(BasePredictor):
     """simple predictor that simply return the input"""
 
     def __init__(self, log_path: str="data/models") -> None:
-        super().__init__(log_path)
+        self.log_root_path = log_path
+        super().__init__()
 
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""
@@ -43,9 +44,9 @@ class DelayedPredictor(BasePredictor):
         mean_loss = torch.stack(losses).mean()
         ade = torch.stack(ades).mean()
         fde = torch.stack(fdes).mean()
-        self.tb_logger.experiment.add_scalar(f"Test/epoch_loss", mean_loss, 0)
-        self.tb_logger.experiment.add_scalar(f"Test/ADE", ade, 0)
-        self.tb_logger.experiment.add_scalar(f"Test/FDE", fde, 0)
+        self.tb_logger.experiment.add_scalar("Test/epoch_loss", mean_loss, 0)
+        self.tb_logger.experiment.add_scalar("Test/ADE", ade, 0)
+        self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
         return mean_loss, ade, fde
 
     def run(self, input_batch: Iterable):

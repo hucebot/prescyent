@@ -9,12 +9,22 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 class BasePredictor():
     """abstract class for any predictor"""
+    log_root_path: str = None
+    name: str = None
+    version: int = None
 
-    def __init__(self, log_path: str) -> None:
-        self._init_logger(log_path)
+    def __init__(self) -> None:
+        if self.log_root_path is None:
+            raise NotImplementedError("Child class must define a logger path before init parent")
+        if self.name is None:
+            self.name=self.__class__.__name__
+        self._init_logger()
 
-    def _init_logger(self, log_path: str):
-        self.tb_logger = TensorBoardLogger(log_path, name=self.__class__.__name__)
+    def _init_logger(self):
+        self.tb_logger = TensorBoardLogger(self.log_root_path, name=self.name, version=self.version)
+        # determine version from tb logger logic
+        if self.version is None:
+            self.version = self.tb_logger._version
 
     def __call__(self, input_batch):
         return self.run(input_batch)
