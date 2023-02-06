@@ -17,17 +17,15 @@ class Linear(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
 
-        self.linear = nn.Linear(input_size * feature_size, output_size * feature_size)
+        self.linear = nn.Linear(input_size, output_size)
 
     @allow_unbatched
     def forward(self, x):
-        # save input shape
-        shape = x.shape
-        # flatten input
-        x = x.view(shape[0], shape[1] * shape[2])
+        # simple single feature prediction of the next item in sequence
+        # (batch, seq_len, features) -> (batch, features, seq_len)
+        x = torch.transpose(x, 1, 2)
         predictions = self.linear(x)
-        # reshape output
-        predictions = predictions.view(shape[0], shape[1], shape[2])
+        predictions = torch.transpose(predictions, 1, 2)
         return predictions
 
 
