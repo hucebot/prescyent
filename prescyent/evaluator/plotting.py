@@ -1,7 +1,7 @@
 """Util functions for plots"""
 
 from pathlib import Path
-from typing import Tuple
+from typing import Callable, List, Tuple
 
 import matplotlib.pyplot as plt
 import torch
@@ -72,3 +72,28 @@ def save_fig_util(savefig_path):
     if not Path(savefig_path).parent.exists():
         Path(savefig_path).parent.mkdir(parents=True)
     plt.savefig(savefig_path)
+
+
+def plot_multiple_predictors(episode: torch.Tensor,
+                             predictors: List[Callable],
+                             predictions: List[torch.Tensor],
+                             step: int, savefig_path: str):
+    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
+    truth = torch.transpose(episode, 0, 1)
+    preds = [torch.transpose(pred, 0, 1) for pred in predictions]
+    pred_last_idx = len(episode) + step
+    x = range(pred_last_idx)
+    # we do one subplot per feature
+    fig, axes = plt.subplots(truth.shape[0], sharex=True)
+    fig.suptitle('Motion Prediction plots')
+    for i, axe in enumerate(axes):
+        axe.plot(x[:-step], truth[i], linewidth=2)
+        for pred in preds:
+            axe.plot(x[pred_last_idx-len(pred[i]):], pred[i], linewidth=1, linestyle='--')
+    legend = plt.legend(["Truth"] + [predictor.__class__.__name__ for predictor in predictors], loc=1)
+    
+    frame = legend.get_frame()
+    frame.set_facecolor('0.9')
+    frame.set_edgecolor('0.9')
+    if savefig_path is not None:
+        save_fig_util(savefig_path)
