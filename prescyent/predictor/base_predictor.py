@@ -26,8 +26,8 @@ class BasePredictor():
         if self.version is None:
             self.version = self.tb_logger._version
 
-    def __call__(self, input_batch):
-        return self.run(input_batch)
+    def __call__(self, input_batch, input_size=None, input_step=1):
+        return self.run(input_batch, input_size, input_step)
 
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""
@@ -43,6 +43,6 @@ class BasePredictor():
         """test predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
-    def run(self, input_batch: Iterable):
+    def run(self, input_batch: Iterable, input_size:int, input_step:int):
         """run predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")

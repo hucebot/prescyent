@@ -159,14 +159,32 @@ class LightningPredictor(BasePredictor):
             self._init_trainer()
         self.trainer.test(self.model, test_dataloader)
 
-    def run(self, input_batch: Iterable):
-        """run method/model inference on the input batch"""
+    def run(self, input_batch: Iterable, input_size:int=None, input_step = 1) -> torch.Tensor:
+        """run method/model inference on the input batch
+        The output is either the list of predictions for each defined subpart of the input batch,
+        or the single prediction for the whole input
+
+        Args:
+            input_batch (Iterable): Input for the predictor's model
+            input_size (int|None, optional): If an input size is provided, the input batch will
+                be splitted sequences of len == input_size. Defaults to None.
+            input_step (int, optional): When splitting the input_batch (input_size != None)
+                defines the step of the iteration. Defaults to 1.
+
+        Returns:
+            torch.Tensor | List[torch.Tensor]: the model prediction or list of model predictions
+        """
         with torch.no_grad():
             self.model.eval()
-            # if seq_len == model_input_size: return prediction
-            # if input_batch.shape[1] == self.model.seq_len
-            return self.model.torch_model(input_batch)
-            # else iter over prediction
+            # return pred for all input if no input_size was given
+            if input_size is None or input_size >= input_batch.shape[0]:
+                return self.model.torch_model(input_batch)
+            # otherwise we iterate over inputs of len input_size and return a list of predictions
+            prediction_list = torch.zeros(input_batch.shape[0] - input_size, input_size, input_batch.shape[1])
+            for i in range(0, input_batch.shape[0] - input_size, input_step):
+                input_sub_batch = input_batch[i:i + input_size]
+                prediction_list[i] = self.model.torch_model(input_sub_batch)
+            return prediction_list
 
     def save(self, save_path=None):
         """save model to path"""
