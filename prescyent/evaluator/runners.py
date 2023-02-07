@@ -1,7 +1,7 @@
 """module to run model and methods evaluation"""
 from typing import Callable, List, Tuple
+
 import torch
-import matplotlib.pyplot as plt
 
 from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.evaluator.plotting import plot_episode_prediction, plot_multiple_predictors
@@ -9,8 +9,8 @@ from prescyent.utils.tensor_manipulation import flatten_list_of_preds
 
 
 def pred_episode(episode: torch.Tensor, predictor: Callable,
-                 input_size: int=10, eval_on_last_pred: bool=False,
-                 skip_partial_input=True) -> Tuple[torch.Tensor, torch.Tensor]:
+                 input_size: int = 10, eval_on_last_pred: bool = False,
+                 skip_partial_input: bool = True) -> Tuple[torch.Tensor, torch.Tensor]:
     """loops a predictor over a whole episode
 
     Args:
@@ -42,10 +42,10 @@ def pred_episode(episode: torch.Tensor, predictor: Callable,
 
 def eval_episode(episode: torch.Tensor,
                  predictor: Callable,
-                 input_size: int=10,
-                 savefig_path: str="test.png",
-                 eval_on_last_pred: bool=False,
-                 unscale_function: Callable=None):
+                 input_size: int = 10,
+                 savefig_path: str = "test.png",
+                 eval_on_last_pred: bool = False,
+                 unscale_function: Callable = None):
     """runs prediction over a whole episode, evaluate and plots the results
 
     Args:
@@ -78,8 +78,8 @@ def eval_episode(episode: torch.Tensor,
 # -- TODO: think of some "prediction_modes" to choose how to iterate over epîsodes
 # and unify the behaviors of the eval_episode and eval_episode_multiple_predictors
 def pred_episode_multiple_predictors(episode: torch.Tensor,
-                            predictors: List[Callable],
-                            input_size: int=None):
+                                     predictors: List[Callable],
+                                     input_size: int = None):
     predictions = []
     for predictor in predictors:
         preds = predictor(episode, input_size=input_size)
@@ -87,11 +87,29 @@ def pred_episode_multiple_predictors(episode: torch.Tensor,
         predictions.append(preds)
     return predictions
 
+
 def eval_episode_multiple_predictors(episode: torch.Tensor,
-                            predictors: List[Callable],
-                            input_size: int=None,
-                            savefig_path: str="test.png",
-                            unscale_function: Callable=None):
+                                     predictors: List[Callable],
+                                     input_size: int = None,
+                                     savefig_path: str = "test.png",
+                                     unscale_function: Callable = None
+                                     ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+    """Evaluate a list of predictors on the given episode
+
+    Args:
+        episode (torch.Tensor): tensor of a sample use for prediction input
+        predictors (List[Callable]): list of predictors
+        input_size (int, optional): if provided, will split the episode in
+                multiple inputs of size = input_size. Defaults to None.
+        savefig_path (str, optional): path to the output plot file.
+                Defaults to "test.png".
+        unscale_function (Callable, optional): if provided is used to unscale
+                the input data. Defaults to None.
+
+    Returns:
+        Tuple[List[torch.Tensor], List[torch.Tensor]]: the evaluation metrics for each predictor
+                ADE and FDE
+    """
     predictions = pred_episode_multiple_predictors(episode, predictors, input_size)
     if unscale_function is not None:
         predictions = [unscale_function(preds) for preds in predictions]

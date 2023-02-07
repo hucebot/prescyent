@@ -12,7 +12,7 @@ from prescyent.utils.logger import logger, PREDICTOR
 class DelayedPredictor(BasePredictor):
     """simple predictor that simply return the input"""
 
-    def __init__(self, log_path: str="data/models") -> None:
+    def __init__(self, log_path: str = "data/models") -> None:
         self.log_root_path = log_path
         super().__init__()
 
@@ -49,6 +49,6 @@ class DelayedPredictor(BasePredictor):
         self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
         return mean_loss, ade, fde
 
-    def run(self, input_batch: Iterable, input_size: int=None, input_step: int=1):
+    def run(self, input_batch: Iterable, input_size: int = None, input_step: int = 1):
         """run predictor"""
         return input_batch

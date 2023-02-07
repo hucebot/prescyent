@@ -1,7 +1,7 @@
 """Class and methods for the TeleopIcub Dataset
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
-from typing import Union, Dict
+from typing import Callable, Union, Dict
 
 from pathlib import Path
 
@@ -18,7 +18,8 @@ class TeleopIcubDataset(MotionDataset):
     Dataset is not splitted into test / train / val
     It as to be at initialisation, througt the parameters
     """
-    def __init__(self, config: Union[Dict, TeleopIcubDatasetConfig]=None, scaler=None):
+    def __init__(self, config: Union[Dict, TeleopIcubDatasetConfig] = None,
+                 scaler: Callable = None):
         if not config:
             config = TeleopIcubDatasetConfig()
         self._init_from_config(config)

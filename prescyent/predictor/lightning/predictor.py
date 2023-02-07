@@ -140,8 +140,8 @@ class LightningPredictor(BasePredictor):
         logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
     def train(self, train_dataloader: Iterable,
-              train_config: TrainingConfig=None,
-              val_dataloader: Iterable=None):
+              train_config: TrainingConfig = None,
+              val_dataloader: Iterable = None):
         """train the model"""
         if not train_config:
             train_config = TrainingConfig()
@@ -159,7 +159,8 @@ class LightningPredictor(BasePredictor):
             self._init_trainer()
         self.trainer.test(self.model, test_dataloader)
 
-    def run(self, input_batch: Iterable, input_size:int=None, input_step = 1) -> torch.Tensor:
+    def run(self, input_batch: Iterable, input_size: int = None,
+            input_step: int = 1) -> torch.Tensor:
         """run method/model inference on the input batch
         The output is either the list of predictions for each defined subpart of the input batch,
         or the single prediction for the whole input
@@ -180,13 +181,15 @@ class LightningPredictor(BasePredictor):
             if input_size is None or input_size >= input_batch.shape[0]:
                 return self.model.torch_model(input_batch)
             # otherwise we iterate over inputs of len input_size and return a list of predictions
-            prediction_list = torch.zeros(input_batch.shape[0] - input_size, input_size, input_batch.shape[1])
+            prediction_list = torch.zeros(input_batch.shape[0] - input_size,
+                                          input_size,
+                                          input_batch.shape[1])
             for i in range(0, input_batch.shape[0] - input_size, input_step):
                 input_sub_batch = input_batch[i:i + input_size]
                 prediction_list[i] = self.model.torch_model(input_sub_batch)
             return prediction_list
 
-    def save(self, save_path=None):
+    def save(self, save_path: Union[str, Path] = None):
         """save model to path"""
         if save_path is None:
             save_path = self.tb_logger.log_dir

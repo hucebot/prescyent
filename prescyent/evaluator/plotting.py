@@ -89,9 +89,9 @@ def plot_multiple_predictors(episode: torch.Tensor,
     for i, axe in enumerate(axes):
         axe.plot(x[:-step], truth[i], linewidth=2)
         for pred in preds:
-            axe.plot(x[pred_last_idx-len(pred[i]):], pred[i], linewidth=1, linestyle='--')
-    legend = plt.legend(["Truth"] + [predictor.__class__.__name__ for predictor in predictors], loc=1)
-    
+            axe.plot(x[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
+    legend = plt.legend(["Truth"] + [predictor.__class__.__name__ for predictor in predictors],
+                        loc=1)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')

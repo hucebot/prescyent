@@ -6,7 +6,7 @@ import numpy as np
 
 
 def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
-                            ratio3: float = None, shuffle: bool=True):
+                            ratio3: float = None, shuffle: bool = True):
     if len(array) < 1:
         raise ValueError("Can't split an empty array")
     if not isinstance(array, np.ndarray):
