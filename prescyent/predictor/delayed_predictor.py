@@ -14,6 +14,7 @@ class DelayedPredictor(BasePredictor):
 
     def __init__(self, log_path: str = "data/models") -> None:
         self.log_root_path = log_path
+        self.version = 0
         super().__init__()
 
     def _build_from_config(self, config: Dict):
