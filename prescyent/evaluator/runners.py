@@ -2,13 +2,14 @@
 from typing import Callable, List, Tuple
 
 import torch
+from prescyent.dataset.motion.episodes import Episode
 
 from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.evaluator.plotting import plot_episode_prediction, plot_multiple_predictors
 from prescyent.utils.tensor_manipulation import flatten_list_of_preds
 
 
-def pred_episode(episode: torch.Tensor, predictor: Callable,
+def pred_episode(episode: Episode, predictor: Callable,
                  input_size: int = 10, eval_on_last_pred: bool = False,
                  skip_partial_input: bool = True) -> Tuple[torch.Tensor, torch.Tensor]:
     """loops a predictor over a whole episode
@@ -29,7 +30,7 @@ def pred_episode(episode: torch.Tensor, predictor: Callable,
     inputs = torch.Tensor()
     preds = torch.Tensor()
     for i in range(0, len(episode), input_size):
-        input_sample = episode[i:i + input_size]
+        input_sample = episode.scaled_tensor[i:i + input_size]
         if skip_partial_input and input_sample.shape[0] != input_size:
             continue
         prediction = predictor(input_sample)
@@ -40,7 +41,7 @@ def pred_episode(episode: torch.Tensor, predictor: Callable,
     return preds, inputs
 
 
-def eval_episode(episode: torch.Tensor,
+def eval_episode(episode: Episode,
                  predictor: Callable,
                  input_size: int = 10,
                  savefig_path: str = "test.png",
@@ -62,7 +63,7 @@ def eval_episode(episode: torch.Tensor,
     Returns:
         Tuple[torch.Tensor, torch.Tensor]: tuple of evaluation metrics ADE and FDE
     """
-    preds, inputs = pred_episode(episode.clone(), predictor, input_size, eval_on_last_pred)
+    preds, inputs = pred_episode(episode, predictor, input_size, eval_on_last_pred)
     if unscale_function is not None:    # unscale data if provided function
         preds = unscale_function(preds)
         inputs = unscale_function(inputs)
@@ -71,24 +72,24 @@ def eval_episode(episode: torch.Tensor,
     truth = truth[input_size:]
     ade = get_ade(truth, preds[:-input_size])
     fde = get_fde(truth, preds[:-input_size])
-    plot_episode_prediction(inputs, preds, input_size, savefig_path, eval_on_last_pred)
+    plot_episode_prediction(episode, inputs, preds, input_size, savefig_path, eval_on_last_pred)
     return ade, fde
 
 
 # -- TODO: think of some "prediction_modes" to choose how to iterate over epîsodes
 # and unify the behaviors of the eval_episode and eval_episode_multiple_predictors
-def pred_episode_multiple_predictors(episode: torch.Tensor,
+def pred_episode_multiple_predictors(episode: Episode,
                                      predictors: List[Callable],
                                      input_size: int = None):
     predictions = []
     for predictor in predictors:
-        preds = predictor(episode, input_size=input_size)
+        preds = predictor(episode.scaled_tensor, input_size=input_size)
         preds = flatten_list_of_preds(preds)
         predictions.append(preds)
     return predictions
 
 
-def eval_episode_multiple_predictors(episode: torch.Tensor,
+def eval_episode_multiple_predictors(episode: Episode,
                                      predictors: List[Callable],
                                      input_size: int = None,
                                      savefig_path: str = "test.png",
@@ -113,7 +114,6 @@ def eval_episode_multiple_predictors(episode: torch.Tensor,
     predictions = pred_episode_multiple_predictors(episode, predictors, input_size)
     if unscale_function is not None:
         predictions = [unscale_function(preds) for preds in predictions]
-        episode = unscale_function(episode)
     if input_size is None:
         input_size = len(episode)
     truth = episode[input_size:]

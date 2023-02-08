@@ -12,30 +12,22 @@ from prescyent.dataset.motion.episodes import Episodes
 from prescyent.dataset.motion.datasamples import MotionDataSamples
 
 
-def _scale_episodes(episode_array, scaler):
-    res_array = list()
-    for episode in episode_array:
-        scaled_tensor = torch.FloatTensor(scaler.transform(episode))
-        res_array.append(scaled_tensor)
-    return res_array
-
-
 class MotionDataset(Dataset):
     scaler: StandardScaler
     batch_size: int
     input_size: int
     output_size: int
     episodes: Episodes
-    episodes_scaled: Episodes
     train_datasample: MotionDataSamples
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
     def __init__(self, scaler) -> None:
-        self.episodes_scaled, self.scaler = self._scale_episodes(scaler)
-        self.train_datasample = self._make_datasample(self.episodes_scaled.train)
-        self.test_datasample = self._make_datasample(self.episodes_scaled.test)
-        self.val_datasample = self._make_datasample(self.episodes_scaled.val)
+        self.scaler = self._train_scaller(scaler)
+        self.episodes.scale_function = self.scale
+        self.train_datasample = self._make_datasample(self.episodes.train_scaled)
+        self.test_datasample = self._make_datasample(self.episodes.test_scaled)
+        self.val_datasample = self._make_datasample(self.episodes.val_scaled)
 
     @property
     def train_dataloader(self):
@@ -56,38 +48,30 @@ class MotionDataset(Dataset):
                           persistent_workers=self.config.persistent_workers)
 
     def __getitem__(self, index):
-        return self.episodes_scaled[index]
+        return self.val_datasample[index]
 
     def __len__(self):
-        return len(self.episodes_scaled)
+        return len(self.val_datasample)
 
     def scale(self, l_array):
-        return torch.from_numpy(self.scaler.transform(l_array))
+        return torch.FloatTensor(self.scaler.transform(l_array))
 
     def unscale(self, l_array):
-        return torch.from_numpy(self.scaler.inverse_transform(l_array))
+        return torch.FloatTensor(self.scaler.inverse_transform(l_array))
 
     # scale all the episodes (same scaling for all the data)
-    def _scale_episodes(self, other_scaler):
+    def _train_scaller(self, other_scaler):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            train_all = np.empty((1, self.episodes.train[0].shape[1]))
+            train_all = torch.zeros((1, self.episodes.train[0].shape[1]))
             for episode in self.episodes.train:
-                train_all = np.concatenate((train_all, episode))    # useful for normalization
+                train_all = torch.cat((train_all, episode.tensor))    # useful for normalization
             scaler = StandardScaler()
             scaler.fit(train_all)
         else:
             scaler = other_scaler
-
-        # scale each episode of each subset
-        train_data = [torch.FloatTensor(scaler.transform(episode))
-                      for episode in self.episodes.train]
-        test_data = [torch.FloatTensor(scaler.transform(episode))
-                     for episode in self.episodes.test]
-        val_data = [torch.FloatTensor(scaler.transform(episode))
-                    for episode in self.episodes.val]
-        return Episodes(train_data, test_data, val_data), scaler
+        return scaler
 
     def _make_datasample(self, scaled_episode):
         x = torch.FloatTensor([])   # shape(num_sample, seq_len, features)

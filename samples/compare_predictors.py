@@ -39,13 +39,13 @@ if __name__ == "__main__":
     for predictor in predictors:
         predictor.test(dataset.test_dataloader)
         # plot some test episodes
-        for i, episode in enumerate(dataset.episodes_scaled.val):
+        for i, episode in enumerate(dataset.episodes.val):
             ade, fde = eval_episode(episode, predictor, input_size=input_size,
                                     savefig_path=f"data/eval/{i}_{predictor.__class__.__name__}"
                                     "_test_episode.png",
                                     eval_on_last_pred=False, unscale_function=dataset.unscale)
             print(predictor.__class__.__name__, ":\nADE:", ade.item(), "FDE:", fde.item())
-    for i, episode in enumerate(dataset.episodes_scaled.val):
+    for i, episode in enumerate(dataset.episodes.val):
         eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
                                  savefig_path=f"data/eval/{i}_test_episode.png",
                                  unscale_function=dataset.unscale)

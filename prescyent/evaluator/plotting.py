@@ -6,6 +6,8 @@ from typing import Callable, List, Tuple
 import matplotlib.pyplot as plt
 import torch
 
+from prescyent.dataset.motion.episodes import Episode
+
 
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
                     pred: torch.Tensor, savefig_path=None):
@@ -24,57 +26,62 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     pred = torch.transpose(pred, 0, 1)
     x = range(len(sample[0]) + len(truth[0]))
     fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
-    fig.suptitle('Motion Prediction plots')
     for i, axe in enumerate(axes):
         axe.plot(x, torch.cat((sample[i], truth[i])), linewidth=2)
         axe.plot(x[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
     legend_plot(axes, ["Truth", "Prediction"])
+    fig.set_size_inches(10.5, 10.5)
+    fig.suptitle("Motion prediction")
     save_plot_and_close(savefig_path)
 
 
-def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pred):
+def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_last_pred):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    inputs = torch.transpose(episode, 0, 1)
+    inputs = torch.transpose(inputs, 0, 1)
     preds = torch.transpose(preds, 0, 1)
 
-    pred_last = len(inputs[0]) + step
+    pred_last_idx = len(inputs[0]) + step
 
-    x = range(pred_last)
+    x = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
-    fig.suptitle('Motion Prediction plots')
     for i, axe in enumerate(axes):
         axe.plot(x[:-step], inputs[i], linewidth=2)
         if eval_on_last_pred:
             # fancy lines to range from last of first prediction (2 step - 1)
             # to the last predicted index (len + step -1)
-            stepped_x = list(range(2 * step - 1, pred_last, step))
-            if pred_last - 1 not in stepped_x:
-                stepped_x.append(pred_last - 1)
+            stepped_x = list(range(2 * step - 1, pred_last_idx, step))
+            if pred_last_idx - 1 not in stepped_x:
+                stepped_x.append(pred_last_idx - 1)
             axe.plot(stepped_x, preds[i], linewidth=2, linestyle='--')
         else:
             axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
         axe.plot(x[step:], inputs[i], linewidth=2)
-    legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"])
+    legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
+                ylabels=episode.dimension_names)
+    fig.set_size_inches(pred_last_idx/20, len(episode.dimension_names))
+    fig.suptitle(episode.file_path)
     save_plot_and_close(savefig_path)
 
 
-def plot_multiple_predictors(episode: torch.Tensor,
+def plot_multiple_predictors(episode: Episode,
                              predictors: List[Callable],
                              predictions: List[torch.Tensor],
                              step: int, savefig_path: str):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    truth = torch.transpose(episode, 0, 1)
+    truth = torch.transpose(episode.tensor, 0, 1)
     preds = [torch.transpose(pred, 0, 1) for pred in predictions]
     pred_last_idx = len(episode) + step
     x = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
-    fig.suptitle('Motion Prediction plots')
     for i, axe in enumerate(axes):
         axe.plot(x[:-step], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(x[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
-    legend_plot(axes, ["Truth"] + [predictor.__class__.__name__ for predictor in predictors])
+    legend_plot(axes, ["Truth"] + [predictor.__class__.__name__ for predictor in predictors],
+                ylabels=episode.dimension_names)
+    fig.set_size_inches(pred_last_idx/15, len(episode.dimension_names) + 2)
+    fig.suptitle(episode.file_path)
     save_plot_and_close(savefig_path)
 
 
@@ -85,7 +92,7 @@ def save_plot_and_close(savefig_path):
         plt.savefig(savefig_path)
     plt.close()
 
-        
+
 def legend_plot(axes, names: List[str],
                 xlabel: str = "time", ylabels: List[str] = ["pos"]):
     """standardized lengend function for all plots of the library
@@ -108,4 +115,4 @@ def legend_plot(axes, names: List[str],
             axe.set_ylabel(ylabels[0])
         bottom, top = axe.get_ylim()
         axe.set_ylim(top=round(top, 2) + .01,
-                 bottom=round(bottom, 2) - .01)
+                     bottom=round(bottom, 2) - .01)

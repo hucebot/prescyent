@@ -77,6 +77,4 @@ class LSTMFunctionalTests(CustomTestCase):
                             )
         self.predictor = LSTMPredictor(config=config)
 
-    # TODO
-    # def test_train(self):
-    #     self.predictor.train()
+    # TODO More functionnal tests
