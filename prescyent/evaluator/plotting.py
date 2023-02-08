@@ -28,9 +28,8 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     for i, axe in enumerate(axes):
         axe.plot(x, torch.cat((sample[i], truth[i])), linewidth=2)
         axe.plot(x[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
-    legend_plot(["Truth", "Prediction"])
-    if savefig_path is not None:
-        save_fig_util(savefig_path)
+    legend_plot(axes, ["Truth", "Prediction"])
+    save_plot_and_close(savefig_path)
 
 
 def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pred):
@@ -55,9 +54,8 @@ def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pre
         else:
             axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
         axe.plot(x[step:], inputs[i], linewidth=2)
-    legend_plot(["Truth", "Prediction", "Delayed Truth"])
-    if savefig_path is not None:
-        save_fig_util(savefig_path)
+    legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"])
+    save_plot_and_close(savefig_path)
 
 
 def plot_multiple_predictors(episode: torch.Tensor,
@@ -76,24 +74,38 @@ def plot_multiple_predictors(episode: torch.Tensor,
         axe.plot(x[:-step], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(x[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
-    legend_plot(["Truth"] + [predictor.__class__.__name__ for predictor in predictors])
+    legend_plot(axes, ["Truth"] + [predictor.__class__.__name__ for predictor in predictors])
+    save_plot_and_close(savefig_path)
+
+
+def save_plot_and_close(savefig_path):
     if savefig_path is not None:
-        save_fig_util(savefig_path)
-
-
-def save_fig_util(savefig_path):
-    if not Path(savefig_path).parent.exists():
-        Path(savefig_path).parent.mkdir(parents=True)
-    plt.savefig(savefig_path)
+        if not Path(savefig_path).parent.exists():
+            Path(savefig_path).parent.mkdir(parents=True)
+        plt.savefig(savefig_path)
+    plt.close()
 
         
-def legend_plot(names: List[str]):
+def legend_plot(axes, names: List[str],
+                xlabel: str = "time", ylabels: List[str] = ["pos"]):
     """standardized lengend function for all plots of the library
 
     Args:
+        axes (List[Axes]): axes to describe
         names (List[str]): legend names of the plot
+        xlabel (str, optional): label for x. x axis are shared in our plots. Defaults to "time".
+        ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
-    legend = plt.legend(names, loc=1)
+    legend = axes[-1].legend(names, loc=1)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')
+    for i, axe in enumerate(axes):
+        axe.set_xlabel(xlabel)
+        if len(ylabels) >= len(axes):
+            axe.set_ylabel(ylabels[i])
+        elif ylabels:
+            axe.set_ylabel(ylabels[0])
+        bottom, top = axe.get_ylim()
+        axe.set_ylim(top=round(top, 2) + .01,
+                 bottom=round(bottom, 2) - .01)
