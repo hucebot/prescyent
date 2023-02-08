@@ -28,12 +28,7 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     for i, axe in enumerate(axes):
         axe.plot(x, torch.cat((sample[i], truth[i])), linewidth=2)
         axe.plot(x[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
-    # plt.plot(x, torch.cat((sample, truth)), linewidth=2, color='#B22400')
-    # plt.plot(x[len(sample):], pred, linewidth=2, linestyle='--', color='#006BB2')
-    legend = plt.legend(["Truth", "Prediction"], loc=3)
-    frame = legend.get_frame()
-    frame.set_facecolor('0.9')
-    frame.set_edgecolor('0.9')
+    legend_plot(["Truth", "Prediction"])
     if savefig_path is not None:
         save_fig_util(savefig_path)
 
@@ -60,18 +55,9 @@ def plot_episode_prediction(episode, preds, step, savefig_path, eval_on_last_pre
         else:
             axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
         axe.plot(x[step:], inputs[i], linewidth=2)
-    legend = plt.legend(["Truth", "Prediction", "Delayed Truth"], loc=3)
-    frame = legend.get_frame()
-    frame.set_facecolor('0.9')
-    frame.set_edgecolor('0.9')
+    legend_plot(["Truth", "Prediction", "Delayed Truth"])
     if savefig_path is not None:
         save_fig_util(savefig_path)
-
-
-def save_fig_util(savefig_path):
-    if not Path(savefig_path).parent.exists():
-        Path(savefig_path).parent.mkdir(parents=True)
-    plt.savefig(savefig_path)
 
 
 def plot_multiple_predictors(episode: torch.Tensor,
@@ -90,10 +76,24 @@ def plot_multiple_predictors(episode: torch.Tensor,
         axe.plot(x[:-step], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(x[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
-    legend = plt.legend(["Truth"] + [predictor.__class__.__name__ for predictor in predictors],
-                        loc=1)
+    legend_plot(["Truth"] + [predictor.__class__.__name__ for predictor in predictors])
+    if savefig_path is not None:
+        save_fig_util(savefig_path)
+
+
+def save_fig_util(savefig_path):
+    if not Path(savefig_path).parent.exists():
+        Path(savefig_path).parent.mkdir(parents=True)
+    plt.savefig(savefig_path)
+
+        
+def legend_plot(names: List[str]):
+    """standardized lengend function for all plots of the library
+
+    Args:
+        names (List[str]): legend names of the plot
+    """
+    legend = plt.legend(names, loc=1)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')
-    if savefig_path is not None:
-        save_fig_util(savefig_path)
