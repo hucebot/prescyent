@@ -113,7 +113,7 @@ def legend_plot(axes: List[Axes],
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')
     for i, axe in enumerate(axes):
-        if isinstance(list, ylabels) and len(ylabels) >= len(axes):
+        if isinstance(ylabels, list) and len(ylabels) >= len(axes):
             axe.set_ylabel(ylabels[i])
         elif ylabels:
             axe.set_ylabel(ylabels[0])
