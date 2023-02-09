@@ -13,6 +13,7 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
         array = np.array(array)
 
     if shuffle:
+        np.random.seed(2) # have a deterministic shuffle for reruns
         np.random.shuffle(array)
     if len(array) < 2:
         logger.warning("Only the first array could contain data",
