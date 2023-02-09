@@ -104,11 +104,11 @@ def legend_plot(axes, names: List[str],
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
     legend = axes[-1].legend(names, loc=1)
+    axes[-1].set_xlabel(xlabel)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')
     for i, axe in enumerate(axes):
-        axe.set_xlabel(xlabel)
         if len(ylabels) >= len(axes):
             axe.set_ylabel(ylabels[i])
         elif ylabels:
