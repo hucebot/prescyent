@@ -33,14 +33,14 @@ if __name__ == "__main__":
     predictor = Seq2SeqPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig(epoch=200,
+    training_config = TrainingConfig(epoch=500,
                                      accelerator="gpu", devices=2)
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save()
     # plot some test episodes
     episode = dataset.episodes_scaled.test[0]
-    ade, fde = eval_episode(episode, predictor, step=input_size,
+    ade, fde = eval_episode(episode, predictor, input_size=input_size,
                             savefig_path=f"data/eval/seq2seq_test_episode.png",
                             eval_on_last_pred=False, unscale_function=dataset.unscale)
     print("ADE:", ade.item(), "FDE:", fde.item())
