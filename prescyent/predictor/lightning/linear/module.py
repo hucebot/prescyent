@@ -20,11 +20,11 @@ class Linear(nn.Module):
         self.linear = nn.Linear(input_size, output_size)
 
     @allow_unbatched
-    def forward(self, x):
+    def forward(self, input_tensor):
         # simple single feature prediction of the next item in sequence
         # (batch, seq_len, features) -> (batch, features, seq_len)
-        x = torch.transpose(x, 1, 2)
-        predictions = self.linear(x)
+        input_tensor = torch.transpose(input_tensor, 1, 2)
+        predictions = self.linear(input_tensor)
         predictions = torch.transpose(predictions, 1, 2)
         return predictions
 

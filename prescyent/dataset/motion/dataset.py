@@ -1,18 +1,20 @@
 """Standard class for motion datasets"""
-import requests
 import zipfile
 from pathlib import Path
 
-import numpy as np
+import requests
 import torch
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
+from prescyent.dataset.motion.config import MotionDatasetConfig
 from prescyent.dataset.motion.episodes import Episodes
 from prescyent.dataset.motion.datasamples import MotionDataSamples
 
 
 class MotionDataset(Dataset):
+    """Base classe for all motion datasets"""
+    config: MotionDatasetConfig
     scaler: StandardScaler
     batch_size: int
     input_size: int
@@ -77,34 +79,34 @@ class MotionDataset(Dataset):
         return scaler
 
     def _make_datasample(self, scaled_episode):
-        x = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
-        y = torch.FloatTensor([])
-        for ep in scaled_episode:
-            x_ep, y_ep = self._make_x_y_pairs(ep)
-            x = torch.cat([x, x_ep], dim=0)
-            y = torch.cat([y, y_ep], dim=0)
-        return MotionDataSamples(x, y)
+        sample = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
+        truth = torch.FloatTensor([])
+        for epoisode in scaled_episode:
+            sample_epoisode, truth_epoisode = self._make_sample_truth_pairs(epoisode)
+            sample = torch.cat([sample, sample_epoisode], dim=0)
+            truth = torch.cat([truth, truth_epoisode], dim=0)
+        return MotionDataSamples(sample, truth)
 
     # This could use padding to get recognition from the first time-steps
-    def _make_x_y_pairs(self, ep):
-        x = [ep[i:i + self.input_size]
-             for i in range(len(ep) - self.input_size - self.output_size)]
-        y = [ep[i + self.input_size:i + self.input_size + self.output_size]
-             for i in range(len(ep) - self.input_size - self.output_size)]
+    def _make_sample_truth_pairs(self, episode):
+        sample = [episode[i:i + self.input_size]
+             for i in range(len(episode) - self.input_size - self.output_size)]
+        truth = [episode[i + self.input_size:i + self.input_size + self.output_size]
+             for i in range(len(episode) - self.input_size - self.output_size)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
-        x = torch.stack(x)
-        y = torch.stack(y)
-        return x, y
+        sample = torch.stack(sample)
+        truth = torch.stack(truth)
+        return sample, truth
 
     def _download_files(self, url, path):
         """get the dataset files from an url"""
-        data = requests.get(url)
-        p = Path(path)
-        if p.is_dir():
-            p = p / "downloaded_data.zip"
-        p.parent.mkdir(parents=True, exist_ok=True)
-        with p.open("wb") as pfile:
+        data = requests.get(url, timeout=10)
+        path = Path(path)
+        if path.is_dir():
+            path = path / "downloaded_data.zip"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("wb") as pfile:
             pfile.write(data.content)
 
     def _unzip(self, zip_path: str):

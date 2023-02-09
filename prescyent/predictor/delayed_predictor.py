@@ -3,6 +3,7 @@
 from typing import Dict, Iterable
 
 import torch
+from pydantic import BaseModel
 
 from prescyent.evaluator import get_ade, get_fde
 from prescyent.predictor.base_predictor import BasePredictor
@@ -22,19 +23,19 @@ class DelayedPredictor(BasePredictor):
         logger.warning("No config necessary for this predictor %s",
                        self.__class__.__name__,
                        group=PREDICTOR)
-        return
 
-    def train(self, *args, **kwargs):
+    def train(self, train_dataloader: Iterable,
+              train_config: BaseModel = None,
+              val_dataloader: Iterable = None):
         """train predictor"""
         logger.warning("No training necessary for this predictor %s",
                        self.__class__.__name__,
                        group=PREDICTOR)
-        return
 
     def test(self, test_dataloader: Iterable):
         """test predictor"""
         # log in tensorboard
-        losses, ades, fdes = list(), list(), list()
+        losses, ades, fdes = [], [], []
         for sample, truth in test_dataloader:
             # eval step
             pred = self.run(sample)

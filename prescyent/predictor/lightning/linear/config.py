@@ -1,7 +1,9 @@
+"""Config elements for Linear Pytorch Lightning module usage"""
 from pydantic import BaseModel
 
 
 class LinearConfig(BaseModel):
+    """Pydantic Basemodel for Linear Module configuration"""
     feature_size: int
     input_size: int
     output_size: int

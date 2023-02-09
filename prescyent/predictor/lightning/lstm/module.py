@@ -36,20 +36,16 @@ class LSTM(nn.Module):
         # linear expect [batch_size, *, nb_features]
         self.linear = nn.Linear(hidden_size, feature_size)
 
-    @property
-    def input_size(self):
-        return self.feature_size
-
     @allow_unbatched
-    def forward(self, x):
+    def forward(self, input_tensor):
         """
         inputs need to be in the right shape as defined in documentation
         - https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
 
         lstm_out - will contain the hidden states from all times in the sequence
-        self.hidden - will contain the current hidden state and cell state
+        hidden - will contain the current hidden state and cell state, it is ommited here
         """
-        lstm_out, hidden = self.lstm(x)
+        lstm_out, _ = self.lstm(input_tensor)
         predictions = self.linear(lstm_out)
         return predictions
 

@@ -1,7 +1,9 @@
+"""Config elements for LSTM Pytorch Lightning module usage"""
 from pydantic import BaseModel
 
 
 class LSTMConfig(BaseModel):
+    """Pydantic Basemodel for LSTM Module configuration"""
     feature_size: int
     output_size: int
     identifier: str = "lstm"

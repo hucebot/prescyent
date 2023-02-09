@@ -1,10 +1,10 @@
 """Class and methods for the TeleopIcub Dataset
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
+from pathlib import Path
 from typing import Callable, List, Union, Dict
 
 import numpy as np
-from pathlib import Path
 import torch
 
 from prescyent.dataset.motion.episodes import Episode

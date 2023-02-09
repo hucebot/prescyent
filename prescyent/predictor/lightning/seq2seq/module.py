@@ -34,16 +34,17 @@ class Seq2Seq(nn.Module):
         self.linear = nn.Linear(hidden_size, feature_size)
 
     @allow_unbatched
-    def forward(self, x):
+    def forward(self, input_tensor):
         # take hidden state as the encoding of the whole input sequence
-        _, hidden_state = self.encoder(x)
-        batch_size = x.shape[0]
+        _, hidden_state = self.encoder(input_tensor)
+        batch_size = input_tensor.shape[0]
         # (batch_size, seq_len, features) => (seq_len, batch_size, features)
-        x = torch.transpose(x, 0, 1)
+        input_tensor = torch.transpose(input_tensor, 0, 1)
         # we take as input for the decoder the last input form the input sample
-        dec_input = x[-1].unsqueeze(0)
+        dec_input = input_tensor[-1].unsqueeze(0)
         # we prepare the output tensor that will be fed by the decoding loop
-        predictions = torch.zeros(self.output_size, batch_size, self.feature_size, device=x.device)
+        predictions = torch.zeros(self.output_size, batch_size,
+                                  self.feature_size, device=input_tensor.device)
         # decoding loop must update the hidden state and input for each wanted output
         for i in range(self.output_size):
             dec_output, hidden_state = self.decoder(dec_input, hidden_state)

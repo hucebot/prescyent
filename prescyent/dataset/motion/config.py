@@ -1,7 +1,9 @@
+"""Common config elements for motion datasets usage"""
 from pydantic import BaseModel
 
 
 class MotionDatasetConfig(BaseModel):
+    """Pydantic Basemodel for MotionDatasets configuration"""
     data_path: str
     batch_size = 128
     shuffle = True

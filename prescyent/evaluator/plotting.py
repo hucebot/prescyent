@@ -1,10 +1,11 @@
 """Util functions for plots"""
 
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import torch
+from matplotlib.axes import Axes
 
 from prescyent.dataset.motion.episodes import Episode
 
@@ -24,11 +25,11 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     sample = torch.transpose(sample, 0, 1)
     truth = torch.transpose(truth, 0, 1)
     pred = torch.transpose(pred, 0, 1)
-    x = range(len(sample[0]) + len(truth[0]))
+    timesteps = range(len(sample[0]) + len(truth[0]))
     fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
     for i, axe in enumerate(axes):
-        axe.plot(x, torch.cat((sample[i], truth[i])), linewidth=2)
-        axe.plot(x[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
+        axe.plot(timesteps, torch.cat((sample[i], truth[i])), linewidth=2)
+        axe.plot(timesteps[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
     legend_plot(axes, ["Truth", "Prediction"])
     fig.set_size_inches(10.5, 10.5)
     fig.suptitle("Motion prediction")
@@ -42,10 +43,10 @@ def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_
 
     pred_last_idx = len(inputs[0]) + step
 
-    x = range(pred_last_idx)
+    timesteps = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
     for i, axe in enumerate(axes):
-        axe.plot(x[:-step], inputs[i], linewidth=2)
+        axe.plot(timesteps[:-step], inputs[i], linewidth=2)
         if eval_on_last_pred:
             # fancy lines to range from last of first prediction (2 step - 1)
             # to the last predicted index (len + step -1)
@@ -54,8 +55,8 @@ def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_
                 stepped_x.append(pred_last_idx - 1)
             axe.plot(stepped_x, preds[i], linewidth=2, linestyle='--')
         else:
-            axe.plot(x[step:], preds[i], linewidth=2, linestyle='--')
-        axe.plot(x[step:], inputs[i], linewidth=2)
+            axe.plot(timesteps[step:], preds[i], linewidth=2, linestyle='--')
+        axe.plot(timesteps[step:], inputs[i], linewidth=2)
     legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
                 ylabels=episode.dimension_names)
     fig.set_size_inches(pred_last_idx/20, len(episode.dimension_names))
@@ -71,13 +72,13 @@ def plot_multiple_predictors(episode: Episode,
     truth = torch.transpose(episode.tensor, 0, 1)
     preds = [torch.transpose(pred, 0, 1) for pred in predictions]
     pred_last_idx = len(episode) + step
-    x = range(pred_last_idx)
+    timesteps = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
     for i, axe in enumerate(axes):
-        axe.plot(x[:-step], truth[i], linewidth=2)
+        axe.plot(timesteps[:-step], truth[i], linewidth=2)
         for pred in preds:
-            axe.plot(x[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
+            axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [predictor.__class__.__name__ for predictor in predictors],
                 ylabels=episode.dimension_names)
     fig.set_size_inches(pred_last_idx/15, len(episode.dimension_names) + 2)
@@ -86,6 +87,7 @@ def plot_multiple_predictors(episode: Episode,
 
 
 def save_plot_and_close(savefig_path):
+    """savefig helper"""
     if savefig_path is not None:
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
@@ -93,8 +95,10 @@ def save_plot_and_close(savefig_path):
     plt.close()
 
 
-def legend_plot(axes, names: List[str],
-                xlabel: str = "time", ylabels: List[str] = ["pos"]):
+def legend_plot(axes: List[Axes],
+                names: List[str],
+                xlabel: str = "time",
+                ylabels: Union[List[str], str] = "pos"):
     """standardized lengend function for all plots of the library
 
     Args:
@@ -109,7 +113,7 @@ def legend_plot(axes, names: List[str],
     frame.set_facecolor('0.9')
     frame.set_edgecolor('0.9')
     for i, axe in enumerate(axes):
-        if len(ylabels) >= len(axes):
+        if isinstance(list, ylabels) and len(ylabels) >= len(axes):
             axe.set_ylabel(ylabels[i])
         elif ylabels:
             axe.set_ylabel(ylabels[0])

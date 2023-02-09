@@ -1,7 +1,9 @@
+"""Config elements for Seq2Seq Pytorch Lightning module usage"""
 from pydantic import BaseModel
 
 
 class Seq2SeqConfig(BaseModel):
+    """Pydantic Basemodel for Seq2Seq Module configuration"""
     feature_size: int
     output_size: int
     identifier: str = "seq2seq"
