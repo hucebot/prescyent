@@ -23,9 +23,9 @@ if __name__ == "__main__":
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Load predictors
-    linear_predictor = LinearPredictor("data/models/LinearModule/version_0")
-    lstm_predictor = LSTMPredictor("data/models/LSTMModule/version_0")
-    seq2seq_predictor = Seq2SeqPredictor("data/models/Seq2SeqModule/version_0")
+    linear_predictor = LinearPredictor("data/models/LinearPredictor/version_0")
+    lstm_predictor = LSTMPredictor("data/models/LSTMPredictor/version_0")
+    seq2seq_predictor = Seq2SeqPredictor("data/models/Seq2SeqPredictor/version_1")
     delayed_predictor = DelayedPredictor("data/models")
     # Train, Test and Save
 

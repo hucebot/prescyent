@@ -33,18 +33,21 @@ class MotionDataset(Dataset):
     def train_dataloader(self):
         return DataLoader(self.train_datasample, batch_size=self.batch_size,
                           shuffle=True, num_workers=self.config.num_workers,
+                          pin_memory= self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     @property
     def test_dataloader(self):
         return DataLoader(self.test_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
+                          pin_memory= self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     @property
     def val_dataloader(self):
         return DataLoader(self.val_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
+                          pin_memory= self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     def __getitem__(self, index):
