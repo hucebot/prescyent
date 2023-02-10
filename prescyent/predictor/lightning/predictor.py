@@ -2,6 +2,7 @@
 from collections.abc import Iterable, Callable
 import inspect
 import json
+import math
 import shutil
 from typing import Type, Union
 from pathlib import Path
@@ -9,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.callbacks import LearningRateMonitor
 import torch
 
 from prescyent.predictor.base_predictor import BasePredictor
@@ -111,8 +113,11 @@ class LightningPredictor(BasePredictor):
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.dict(include=cls_default_params)
+        lr_monitor = LearningRateMonitor(logging_interval='step')
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
+                                  callbacks=[lr_monitor],
+                                  log_every_n_steps=1,
                                   **kwargs)
         logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
                     group=PREDICTOR)
@@ -139,6 +144,9 @@ class LightningPredictor(BasePredictor):
         self.config = self.config_class(**config_data.get("model_config", None))
         logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
+    def _init_module_optimizer(self):
+        self.model.training_config = self.training_config
+
     def train(self, train_dataloader: Iterable,
               train_config: TrainingConfig = None,
               val_dataloader: Iterable = None):
@@ -147,6 +155,7 @@ class LightningPredictor(BasePredictor):
             train_config = TrainingConfig()
         self._init_training_config(train_config)
         self._init_trainer()
+        self._init_module_optimizer()
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)

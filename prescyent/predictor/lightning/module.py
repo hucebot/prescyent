@@ -3,10 +3,9 @@ import functools
 
 import pytorch_lightning as pl
 import torch
-import torch.optim as optim
-from torch import nn
 
 from prescyent.evaluator.metrics import get_ade, get_fde
+from prescyent.predictor.lightning.training_config import TrainingConfig
 
 
 def allow_unbatched(function):
@@ -27,8 +26,9 @@ def allow_unbatched(function):
 
 class BaseLightningModule(pl.LightningModule):
     """Base class with methods for lightning modules training, saving, logging"""
-    torch_model: nn.Module
+    torch_model: torch.nn.Module
     criterion: torch.nn.modules.loss._Loss
+    training_config: TrainingConfig
 
     def save(self, save_path: str):
         """Export model to state_dict and torch binary"""
@@ -36,8 +36,17 @@ class BaseLightningModule(pl.LightningModule):
 
     def configure_optimizers(self):
         """return module optimizer"""
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.training_config.learning_rate,
+                                weight_decay=self.training_config.weight_decay)
+        if self.training_config.use_scheduler:
+            lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer,
+                    max_lr=self.training_config.max_learning_rate,
+                    total_steps=self.trainer.estimated_stepping_batches
+                )
+            return [optimizer], [{'scheduler': lr_scheduler, 'interval': 'step'}]
+        return [optimizer]
+
 
     def get_metrics(self, batch, prefix: str = ""):
         """get loss and accuracy metrics from batch"""
