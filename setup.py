@@ -6,7 +6,8 @@ CORE_REQUIREMENTS = [
         "numpy",
         "pydantic",
         "pytorch_lightning",
-        "scikit-learn"
+        "scikit-learn",
+        "tensorboard"
 ]
 
 CORE_MODULES = ['prescyent.',
