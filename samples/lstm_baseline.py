@@ -10,7 +10,7 @@ if __name__ == "__main__":
     output_size = 10                # 1 second
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
-    batch_size = 64
+    batch_size = 64 * 4
     devices = 2
     persistent_workers = True
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
@@ -24,15 +24,15 @@ if __name__ == "__main__":
 
     # -- Init predictor
     feature_size = dataset.feature_size
-    hidden_size = feature_size * 10
+    hidden_size = feature_size * 20
     config = LSTMConfig(feature_size=feature_size,
                         output_size=output_size,
                         hidden_size=hidden_size,)
     predictor = LSTMPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig(epoch=500,
-                                     accelerator="gpu", devices=devices)
+    training_config = TrainingConfig(epoch=1000,
+                                     accelerator="gpu", devices=devices, use_scheduler=True)
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save()

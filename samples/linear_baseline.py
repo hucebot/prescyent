@@ -10,7 +10,7 @@ if __name__ == "__main__":
     output_size = 10                # 1 second
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
-    batch_size = 64
+    batch_size = 64 * 4
     devices = 2
     persistent_workers = True
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # Train, Test and Save
     training_config = TrainingConfig(epoch=500,
-                                     accelerator="gpu", devices=devices)
+                                     accelerator="gpu", devices=devices, use_scheduler=False)
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save()

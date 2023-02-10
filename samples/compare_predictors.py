@@ -37,15 +37,30 @@ if __name__ == "__main__":
         ]
 
     for predictor in predictors:
+        # redo the test loop and log in tensorboard
         predictor.test(dataset.test_dataloader)
-        # plot some test episodes
-        for i, episode in enumerate(dataset.episodes.val):
+
+        # check model behavior with some plots on train episodes
+        for i, episode in enumerate(dataset.episodes.train[:5]):
             ade, fde = eval_episode(episode, predictor, input_size=input_size,
-                                    savefig_path=f"data/eval/{i}_{predictor}"
-                                    "_test_episode.png",
+                                    savefig_path=f"data/eval/train/episode_{i}/{predictor}"
+                                    "_episode_evaluation.png",
                                     eval_on_last_pred=False, unscale_function=dataset.unscale)
             print(f"{predictor}, :\nADE: {ade.item() :.5f}, FDE: {fde.item() :.5f}")
-    for i, episode in enumerate(dataset.episodes.val):
+        # check model generalization with some plots on test episodes
+        for i, episode in enumerate(dataset.episodes.test[:5]):
+            ade, fde = eval_episode(episode, predictor, input_size=input_size,
+                                    savefig_path=f"data/eval/test/episode_{i}/{predictor}"
+                                    "_episode_evaluation.png",
+                                    eval_on_last_pred=False, unscale_function=dataset.unscale)
+            print(f"{predictor}, :\nADE: {ade.item() :.5f}, FDE: {fde.item() :.5f}")
+
+    # compare models with some plots on train and test episodes
+    for i, episode in enumerate(dataset.episodes.train[:5]):
         eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
-                                 savefig_path=f"data/eval/{i}_test_episode.png",
+                                 savefig_path=f"data/eval/train/episode_{i}/multi_predictors_evaluation.png",
+                                 unscale_function=dataset.unscale)
+    for i, episode in enumerate(dataset.episodes.test[:5]):
+        eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
+                                 savefig_path=f"data/eval/test/episode_{i}/multi_predictors_evaluation.png",
                                  unscale_function=dataset.unscale)
