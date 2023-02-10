@@ -79,7 +79,7 @@ def plot_multiple_predictors(episode: Episode,
         axe.plot(timesteps[:-step], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
-    legend_plot(axes, ["Truth"] + [predictor.__class__.__name__ for predictor in predictors],
+    legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
                 ylabels=episode.dimension_names)
     fig.set_size_inches(pred_last_idx/15, len(episode.dimension_names) + 2)
     fig.suptitle(episode.file_path)

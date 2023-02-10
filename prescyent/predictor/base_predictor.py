@@ -31,6 +31,9 @@ class BasePredictor():
     def __call__(self, input_batch, input_size: int = None, input_step: int = 1):
         return self.run(input_batch, input_size, input_step)
 
+    def __str__(self) -> str:
+        return f"{self.name}_v{self.version}"
+
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")

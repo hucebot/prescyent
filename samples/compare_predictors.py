@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # -- Load predictors
     linear_predictor = LinearPredictor("data/models/LinearPredictor/version_0")
     lstm_predictor = LSTMPredictor("data/models/LSTMPredictor/version_0")
-    seq2seq_predictor = Seq2SeqPredictor("data/models/Seq2SeqPredictor/version_1")
+    seq2seq_predictor = Seq2SeqPredictor("data/models/Seq2SeqPredictor/version_0")
     delayed_predictor = DelayedPredictor("data/models")
     # Train, Test and Save
 
@@ -41,10 +41,10 @@ if __name__ == "__main__":
         # plot some test episodes
         for i, episode in enumerate(dataset.episodes.val):
             ade, fde = eval_episode(episode, predictor, input_size=input_size,
-                                    savefig_path=f"data/eval/{i}_{predictor.__class__.__name__}"
+                                    savefig_path=f"data/eval/{i}_{predictor}"
                                     "_test_episode.png",
                                     eval_on_last_pred=False, unscale_function=dataset.unscale)
-            print(predictor.__class__.__name__, ":\nADE:", ade.item(), "FDE:", fde.item())
+            print(f"{predictor}, :\nADE: {ade.item() :.5f}, FDE: {fde.item() :.5f}")
     for i, episode in enumerate(dataset.episodes.val):
         eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
                                  savefig_path=f"data/eval/{i}_test_episode.png",
