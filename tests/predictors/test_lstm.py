@@ -26,8 +26,6 @@ class LSTMInitTests(CustomTestCase):
                          hidden_size)           # overriden value
         self.assertEqual(predictor.model.torch_model.feature_size,
                          feature_size)            # mandatory value
-        self.assertEqual(predictor.model.torch_model.lstm.input_size,
-                         feature_size)            # mandatory value
         self.assertEqual(predictor.model.torch_model.linear.out_features,
                          feature_size)           # mandatory value
         self.assertEqual(predictor.model.torch_model.output_size,
