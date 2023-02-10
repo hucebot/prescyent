@@ -35,21 +35,21 @@ class MotionDataset(Dataset):
     def train_dataloader(self):
         return DataLoader(self.train_datasample, batch_size=self.batch_size,
                           shuffle=True, num_workers=self.config.num_workers,
-                          pin_memory= self.config.pin_memory,
+                          pin_memory=self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     @property
     def test_dataloader(self):
         return DataLoader(self.test_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
-                          pin_memory= self.config.pin_memory,
+                          pin_memory=self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     @property
     def val_dataloader(self):
         return DataLoader(self.val_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
-                          pin_memory= self.config.pin_memory,
+                          pin_memory=self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
     def __getitem__(self, index):
@@ -90,9 +90,9 @@ class MotionDataset(Dataset):
     # This could use padding to get recognition from the first time-steps
     def _make_sample_truth_pairs(self, episode):
         sample = [episode[i:i + self.input_size]
-             for i in range(len(episode) - self.input_size - self.output_size)]
+                  for i in range(len(episode) - self.input_size - self.output_size)]
         truth = [episode[i + self.input_size:i + self.input_size + self.output_size]
-             for i in range(len(episode) - self.input_size - self.output_size)]
+                 for i in range(len(episode) - self.input_size - self.output_size)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         sample = torch.stack(sample)

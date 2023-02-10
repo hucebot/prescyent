@@ -59,7 +59,7 @@ def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_
         axe.plot(timesteps[step:], inputs[i], linewidth=2)
     legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
                 ylabels=episode.dimension_names)
-    fig.set_size_inches(pred_last_idx/20, len(episode.dimension_names))
+    fig.set_size_inches(pred_last_idx / 20, len(episode.dimension_names))
     fig.suptitle(episode.file_path)
     save_plot_and_close(savefig_path)
 
@@ -81,7 +81,7 @@ def plot_multiple_predictors(episode: Episode,
             axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
                 ylabels=episode.dimension_names)
-    fig.set_size_inches(pred_last_idx/15, len(episode.dimension_names) + 2)
+    fig.set_size_inches(pred_last_idx / 15, len(episode.dimension_names) + 2)
     fig.suptitle(episode.file_path)
     save_plot_and_close(savefig_path)
 

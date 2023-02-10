@@ -65,6 +65,7 @@ class LSTMModule(BaseLightningModule):
     def load_from_binary(cls, path: str):
         """Retrieve model infos from torch binary"""
         model = torch.load(path)
-        lstm_module = cls(model.feature_size, model.hidden_size, model.output_size, model.num_layers)
+        lstm_module = cls(model.feature_size, model.hidden_size,
+                          model.output_size, model.num_layers)
         lstm_module.torch_model = model
         return lstm_module

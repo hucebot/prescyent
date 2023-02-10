@@ -37,16 +37,15 @@ class BaseLightningModule(pl.LightningModule):
     def configure_optimizers(self):
         """return module optimizer"""
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.training_config.learning_rate,
-                                weight_decay=self.training_config.weight_decay)
+                                      weight_decay=self.training_config.weight_decay)
         if self.training_config.use_scheduler:
             lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                    optimizer,
-                    max_lr=self.training_config.max_learning_rate,
-                    total_steps=self.trainer.estimated_stepping_batches
-                )
+                optimizer,
+                max_lr=self.training_config.max_learning_rate,
+                total_steps=self.trainer.estimated_stepping_batches
+            )
             return [optimizer], [{'scheduler': lr_scheduler, 'interval': 'step'}]
         return [optimizer]
-
 
     def get_metrics(self, batch, prefix: str = ""):
         """get loss and accuracy metrics from batch"""
