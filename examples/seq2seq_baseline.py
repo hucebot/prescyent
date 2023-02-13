@@ -5,21 +5,17 @@ from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
 if __name__ == "__main__":
     # -- Init dataset
-    subsampling_step: int = 10      # subsampling -> 100 Hz to 10Hz
+    subsampling_step = 10      # subsampling -> 100 Hz to 10Hz
     input_size = 10                 # 1 second
     output_size = 10                # 1 second
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
-    batch_size = 64 * 4
-    persistent_workers = True
-    devices = 2
+    batch_size = 64
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
                                              output_size=output_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size,
-                                             num_workers=devices * 4,
-                                             persistent_workers=persistent_workers)
+                                             batch_size=batch_size)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
@@ -33,9 +29,7 @@ if __name__ == "__main__":
     predictor = Seq2SeqPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig(epoch=1000,
-                                     accelerator="gpu", devices=devices,
-                                     use_scheduler=True)
+    training_config = TrainingConfig()
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save()

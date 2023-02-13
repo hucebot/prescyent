@@ -11,15 +11,11 @@ if __name__ == "__main__":
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
     batch_size = 64
-    num_workers = 8
-    persistent_workers = True
     dataset_config = TeleopIcubDatasetConfig(input_size=input_size,
                                              output_size=output_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size,
-                                             num_workers=num_workers,
-                                             persistent_workers=persistent_workers)
+                                             batch_size=batch_size)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Load predictors
