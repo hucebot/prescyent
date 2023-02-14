@@ -1,11 +1,11 @@
 """Lightning Predictor class for ML predictors"""
-from collections.abc import Iterable, Callable
+import gc
 import inspect
 import json
-import math
 import shutil
-from typing import Type, Union
+from collections.abc import Iterable, Callable
 from pathlib import Path
+from typing import Type, Union
 
 from pydantic import BaseModel
 import pytorch_lightning as pl
@@ -47,13 +47,12 @@ class LightningPredictor(BasePredictor):
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
 
-        # -- Init trainer and related args
+        # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
         super().__init__()
-        self._init_trainer()
 
     def _build_from_config(self, config):
         # -- We check that the input config is valid through pydantic model
@@ -122,6 +121,11 @@ class LightningPredictor(BasePredictor):
         logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
                     group=PREDICTOR)
 
+    def _free_trainer(self):
+        del self.trainer
+        self.trainer = None
+        gc.collect()
+
     def _save_config(self, save_path: Path):
         res = dict()
         self.config.model_path = str(save_path.parent)
@@ -159,6 +163,7 @@ class LightningPredictor(BasePredictor):
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)
+        self._free_trainer()
 
     def test(self, test_dataloader: Iterable):
         """test the model"""
@@ -167,6 +172,7 @@ class LightningPredictor(BasePredictor):
                         group=PREDICTOR)
             self._init_trainer()
         self.trainer.test(self.model, test_dataloader)
+        self._free_trainer()
 
     def run(self, input_batch: Iterable, input_size: int = None,
             input_step: int = 1) -> torch.Tensor:
