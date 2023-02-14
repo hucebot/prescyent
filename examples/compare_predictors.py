@@ -1,4 +1,4 @@
-from prescyent.evaluator import eval_episode, eval_episode_multiple_predictors
+from prescyent.evaluator import eval_trajectory, eval_trajectory_multiple_predictors
 from prescyent.predictor import LinearPredictor, LSTMPredictor, Seq2SeqPredictor, DelayedPredictor
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
@@ -36,27 +36,27 @@ if __name__ == "__main__":
         # redo the test loop and log in tensorboard
         predictor.test(dataset.test_dataloader)
 
-        # check model behavior with some plots on train episodes
-        for i, episode in enumerate(dataset.episodes.train[:5]):
-            ade, fde = eval_episode(episode, predictor, input_size=input_size,
-                                    savefig_path=f"data/eval/train/episode_{i}/{predictor}"
-                                    "_episode_evaluation.png",
+        # check model behavior with some plots on train trajectories
+        for i, trajectory in enumerate(dataset.trajectories.train[:5]):
+            ade, fde = eval_trajectory(trajectory, predictor, input_size=input_size,
+                                    savefig_path=f"data/eval/train/trajectory_{i}/{predictor}"
+                                    "_trajectory_evaluation.png",
                                     eval_on_last_pred=False, unscale_function=dataset.unscale)
             print(f"{predictor}, :\nADE: {ade.item() :.5f}, FDE: {fde.item() :.5f}")
-        # check model generalization with some plots on test episodes
-        for i, episode in enumerate(dataset.episodes.test[:5]):
-            ade, fde = eval_episode(episode, predictor, input_size=input_size,
-                                    savefig_path=f"data/eval/test/episode_{i}/{predictor}"
-                                    "_episode_evaluation.png",
+        # check model generalization with some plots on test trajectories
+        for i, trajectory in enumerate(dataset.trajectories.test[:5]):
+            ade, fde = eval_trajectory(trajectory, predictor, input_size=input_size,
+                                    savefig_path=f"data/eval/test/trajectory_{i}/{predictor}"
+                                    "_trajectory_evaluation.png",
                                     eval_on_last_pred=False, unscale_function=dataset.unscale)
             print(f"{predictor}, :\nADE: {ade.item() :.5f}, FDE: {fde.item() :.5f}")
 
-    # compare models with some plots on train and test episodes
-    for i, episode in enumerate(dataset.episodes.train[:5]):
-        eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
-                                 savefig_path=f"data/eval/train/episode_{i}/multi_predictors_evaluation.png",
+    # compare models with some plots on train and test trajectories
+    for i, trajectory in enumerate(dataset.trajectories.train[:5]):
+        eval_trajectory_multiple_predictors(trajectory, predictors, input_size=input_size,
+                                 savefig_path=f"data/eval/train/trajectory_{i}/multi_predictors_evaluation.png",
                                  unscale_function=dataset.unscale)
-    for i, episode in enumerate(dataset.episodes.test[:5]):
-        eval_episode_multiple_predictors(episode, predictors, input_size=input_size,
-                                 savefig_path=f"data/eval/test/episode_{i}/multi_predictors_evaluation.png",
+    for i, trajectory in enumerate(dataset.trajectories.test[:5]):
+        eval_trajectory_multiple_predictors(trajectory, predictors, input_size=input_size,
+                                 savefig_path=f"data/eval/test/trajectory_{i}/multi_predictors_evaluation.png",
                                  unscale_function=dataset.unscale)

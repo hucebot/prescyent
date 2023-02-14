@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
 from prescyent.dataset.motion.config import MotionDatasetConfig
-from prescyent.dataset.motion.episodes import Episodes
+from prescyent.dataset.motion.trajectories import Trajectories
 from prescyent.dataset.motion.datasamples import MotionDataSamples
 
 
@@ -19,17 +19,17 @@ class MotionDataset(Dataset):
     batch_size: int
     input_size: int
     output_size: int
-    episodes: Episodes
+    trajectories: Trajectories
     train_datasample: MotionDataSamples
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
     def __init__(self, scaler) -> None:
-        self.scaler = self._train_scaller(scaler)
-        self.episodes.scale_function = self.scale
-        self.train_datasample = self._make_datasample(self.episodes.train_scaled)
-        self.test_datasample = self._make_datasample(self.episodes.test_scaled)
-        self.val_datasample = self._make_datasample(self.episodes.val_scaled)
+        self.scaler = self._train_scaler(scaler)
+        self.trajectories.scale_function = self.scale
+        self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
+        self.test_datasample = self._make_datasample(self.trajectories.test_scaled)
+        self.val_datasample = self._make_datasample(self.trajectories.val_scaled)
 
     @property
     def train_dataloader(self):
@@ -64,35 +64,35 @@ class MotionDataset(Dataset):
     def unscale(self, l_array):
         return torch.FloatTensor(self.scaler.inverse_transform(l_array))
 
-    # scale all the episodes (same scaling for all the data)
-    def _train_scaller(self, other_scaler):
+    # scale all the trajectories (same scaling for all the data)
+    def _train_scaler(self, other_scaler):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            train_all = torch.zeros((1, self.episodes.train[0].shape[1]))
-            for episode in self.episodes.train:
-                train_all = torch.cat((train_all, episode.tensor))    # useful for normalization
+            train_all = torch.zeros((1, self.trajectories.train[0].shape[1]))
+            for trajectory in self.trajectories.train:
+                train_all = torch.cat((train_all, trajectory.tensor))    # useful for normalization
             scaler = StandardScaler()
             scaler.fit(train_all)
         else:
             scaler = other_scaler
         return scaler
 
-    def _make_datasample(self, scaled_episode):
+    def _make_datasample(self, scaled_trajectory):
         sample = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
         truth = torch.FloatTensor([])
-        for epoisode in scaled_episode:
-            sample_epoisode, truth_epoisode = self._make_sample_truth_pairs(epoisode)
-            sample = torch.cat([sample, sample_epoisode], dim=0)
-            truth = torch.cat([truth, truth_epoisode], dim=0)
+        for trajectory in scaled_trajectory:
+            sample_trajectory, truth_trajectory = self._make_sample_truth_pairs(trajectory)
+            sample = torch.cat([sample, sample_trajectory], dim=0)
+            truth = torch.cat([truth, truth_trajectory], dim=0)
         return MotionDataSamples(sample, truth)
 
     # This could use padding to get recognition from the first time-steps
-    def _make_sample_truth_pairs(self, episode):
-        sample = [episode[i:i + self.input_size]
-                  for i in range(len(episode) - self.input_size - self.output_size)]
-        truth = [episode[i + self.input_size:i + self.input_size + self.output_size]
-                 for i in range(len(episode) - self.input_size - self.output_size)]
+    def _make_sample_truth_pairs(self, trajectory):
+        sample = [trajectory[i:i + self.input_size]
+                  for i in range(len(trajectory) - self.input_size - self.output_size)]
+        truth = [trajectory[i + self.input_size:i + self.input_size + self.output_size]
+                 for i in range(len(trajectory) - self.input_size - self.output_size)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         sample = torch.stack(sample)

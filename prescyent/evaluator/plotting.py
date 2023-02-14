@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from matplotlib.axes import Axes
 
-from prescyent.dataset.motion.episodes import Episode
+from prescyent.dataset.motion.trajectories import Trajectory
 
 
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
@@ -36,7 +36,7 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     save_plot_and_close(savefig_path)
 
 
-def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_last_pred):
+def plot_trajectory_prediction(trajectory, inputs, preds, step, savefig_path, eval_on_last_pred):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     inputs = torch.transpose(inputs, 0, 1)
     preds = torch.transpose(preds, 0, 1)
@@ -58,20 +58,20 @@ def plot_episode_prediction(episode, inputs, preds, step, savefig_path, eval_on_
             axe.plot(timesteps[step:], preds[i], linewidth=2, linestyle='--')
         axe.plot(timesteps[step:], inputs[i], linewidth=2)
     legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
-                ylabels=episode.dimension_names)
-    fig.set_size_inches(pred_last_idx / 20, len(episode.dimension_names))
-    fig.suptitle(episode.file_path)
+                ylabels=trajectory.dimension_names)
+    fig.set_size_inches(pred_last_idx / 20, len(trajectory.dimension_names))
+    fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
 
-def plot_multiple_predictors(episode: Episode,
+def plot_multiple_predictors(trajectory: Trajectory,
                              predictors: List[Callable],
                              predictions: List[torch.Tensor],
                              step: int, savefig_path: str):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    truth = torch.transpose(episode.tensor, 0, 1)
+    truth = torch.transpose(trajectory.tensor, 0, 1)
     preds = [torch.transpose(pred, 0, 1) for pred in predictions]
-    pred_last_idx = len(episode) + step
+    pred_last_idx = len(trajectory) + step
     timesteps = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
@@ -80,9 +80,9 @@ def plot_multiple_predictors(episode: Episode,
         for pred in preds:
             axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
-                ylabels=episode.dimension_names)
-    fig.set_size_inches(pred_last_idx / 15, len(episode.dimension_names) + 2)
-    fig.suptitle(episode.file_path)
+                ylabels=trajectory.dimension_names)
+    fig.set_size_inches(pred_last_idx / 15, len(trajectory.dimension_names) + 2)
+    fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
 

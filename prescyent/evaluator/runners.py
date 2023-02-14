@@ -2,20 +2,20 @@
 from typing import Callable, List, Tuple
 
 import torch
-from prescyent.dataset.motion.episodes import Episode
+from prescyent.dataset.motion.trajectories import Trajectory
 
 from prescyent.evaluator.metrics import get_ade, get_fde
-from prescyent.evaluator.plotting import plot_episode_prediction, plot_multiple_predictors
+from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors
 from prescyent.utils.tensor_manipulation import flatten_list_of_preds
 
 
-def pred_episode(episode: Episode, predictor: Callable,
+def pred_trajectory(trajectory: Trajectory, predictor: Callable,
                  input_size: int = 10, eval_on_last_pred: bool = False,
                  skip_partial_input: bool = True) -> Tuple[torch.Tensor, torch.Tensor]:
-    """loops a predictor over a whole episode
+    """loops a predictor over a whole trajectory
 
     Args:
-        episode (torch.Tensor): a tensor of positions to predict
+        trajectory (torch.Tensor): a tensor of positions to predict
         predictor (Callable): Any predictor module (or any callable)
         input_size (int, optional): sequence size for the predictor input. Defaults to 10.
         eval_on_last_pred (bool, optional): For each prediction loop, set this to
@@ -29,8 +29,8 @@ def pred_episode(episode: Episode, predictor: Callable,
     """
     inputs = torch.Tensor()
     preds = torch.Tensor()
-    for i in range(0, len(episode), input_size):
-        input_sample = episode.scaled_tensor[i:i + input_size]
+    for i in range(0, len(trajectory), input_size):
+        input_sample = trajectory.scaled_tensor[i:i + input_size]
         if skip_partial_input and input_sample.shape[0] != input_size:
             continue
         prediction = predictor(input_sample)
@@ -41,16 +41,16 @@ def pred_episode(episode: Episode, predictor: Callable,
     return preds, inputs
 
 
-def eval_episode(episode: Episode,
+def eval_trajectory(trajectory: Trajectory,
                  predictor: Callable,
                  input_size: int = 10,
                  savefig_path: str = "test.png",
                  eval_on_last_pred: bool = False,
                  unscale_function: Callable = None):
-    """runs prediction over a whole episode, evaluate and plots the results
+    """runs prediction over a whole trajectory, evaluate and plots the results
 
     Args:
-        episode (torch.Tensor): input episode to evaluate
+        trajectory (torch.Tensor): input trajectory to evaluate
         predictor (Callable): Any predictor module (or any callable)
         input_size (int, optional): sequence size for the predictor input. Defaults to 10.
         savefig_path (str, optional): path where to save the plot. Defaults to "test.png".
@@ -63,7 +63,7 @@ def eval_episode(episode: Episode,
     Returns:
         Tuple[torch.Tensor, torch.Tensor]: tuple of evaluation metrics ADE and FDE
     """
-    preds, inputs = pred_episode(episode, predictor, input_size, eval_on_last_pred)
+    preds, inputs = pred_trajectory(trajectory, predictor, input_size, eval_on_last_pred)
     if unscale_function is not None:    # unscale data if provided function
         preds = unscale_function(preds)
         inputs = unscale_function(inputs)
@@ -72,35 +72,35 @@ def eval_episode(episode: Episode,
     truth = truth[input_size:]
     ade = get_ade(truth, preds[:-input_size])
     fde = get_fde(truth, preds[:-input_size])
-    plot_episode_prediction(episode, inputs, preds, input_size, savefig_path, eval_on_last_pred)
+    plot_trajectory_prediction(trajectory, inputs, preds, input_size, savefig_path, eval_on_last_pred)
     return ade, fde
 
 
 # -- TODO: think of some "prediction_modes" to choose how to iterate over epîsodes
-# and unify the behaviors of the eval_episode and eval_episode_multiple_predictors
-def pred_episode_multiple_predictors(episode: Episode,
+# and unify the behaviors of the eval_trajectory and eval_trajectory_multiple_predictors
+def pred_trajectory_multiple_predictors(trajectory: Trajectory,
                                      predictors: List[Callable],
                                      input_size: int = None):
     predictions = []
     for predictor in predictors:
-        preds = predictor(episode.scaled_tensor, input_size=input_size)
+        preds = predictor(trajectory.scaled_tensor, input_size=input_size)
         preds = flatten_list_of_preds(preds)
         predictions.append(preds)
     return predictions
 
 
-def eval_episode_multiple_predictors(episode: Episode,
+def eval_trajectory_multiple_predictors(trajectory: Trajectory,
                                      predictors: List[Callable],
                                      input_size: int = None,
                                      savefig_path: str = "test.png",
                                      unscale_function: Callable = None
                                      ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
-    """Evaluate a list of predictors on the given episode
+    """Evaluate a list of predictors on the given trajectory
 
     Args:
-        episode (torch.Tensor): tensor of a sample use for prediction input
+        trajectory (torch.Tensor): tensor of a sample use for prediction input
         predictors (List[Callable]): list of predictors
-        input_size (int, optional): if provided, will split the episode in
+        input_size (int, optional): if provided, will split the trajectory in
                 multiple inputs of size = input_size. Defaults to None.
         savefig_path (str, optional): path to the output plot file.
                 Defaults to "test.png".
@@ -111,13 +111,13 @@ def eval_episode_multiple_predictors(episode: Episode,
         Tuple[List[torch.Tensor], List[torch.Tensor]]: the evaluation metrics for each predictor
                 ADE and FDE
     """
-    predictions = pred_episode_multiple_predictors(episode, predictors, input_size)
+    predictions = pred_trajectory_multiple_predictors(trajectory, predictors, input_size)
     if unscale_function is not None:
         predictions = [unscale_function(preds) for preds in predictions]
     if input_size is None:
-        input_size = len(episode)
-    truth = episode[input_size:]
+        input_size = len(trajectory)
+    truth = trajectory[input_size:]
     ades = [get_ade(truth, preds[:len(truth)]) for preds in predictions]
     fdes = [get_fde(truth, preds[:len(truth)]) for preds in predictions]
-    plot_multiple_predictors(episode, predictors, predictions, input_size, savefig_path)
+    plot_multiple_predictors(trajectory, predictors, predictions, input_size, savefig_path)
     return ades, fdes

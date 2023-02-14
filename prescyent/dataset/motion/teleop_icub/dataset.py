@@ -7,9 +7,9 @@ from typing import Callable, List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.motion.episodes import Episode
+from prescyent.dataset.motion.trajectories import Trajectory
 from prescyent.utils.logger import logger, DATASET
-from prescyent.dataset.motion.dataset import MotionDataset, Episodes
+from prescyent.dataset.motion.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import split_array_with_ratios
 from prescyent.dataset.motion.teleop_icub.config import TeleopIcubDatasetConfig
 
@@ -25,7 +25,7 @@ class TeleopIcubDataset(MotionDataset):
     Architecture
 
     Dataset is not splitted into test / train / val
-    It as to be at initialisation, througt the parameters
+    It as to be at initialisation, through the parameters
     """
     def __init__(self, config: Union[Dict, TeleopIcubDatasetConfig] = None,
                  scaler: Callable = None):
@@ -34,7 +34,8 @@ class TeleopIcubDataset(MotionDataset):
         self._init_from_config(config)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
-        self.episodes = self._load_files()
+        self.trajectories = self._load_files()
+        self.feature_size = self.trajectories.train[0].shape[1]
         super().__init__(scaler)
 
     def _init_from_config(self, config):
@@ -58,17 +59,16 @@ class TeleopIcubDataset(MotionDataset):
                                                                      self.config.ratio_test,
                                                                      self.config.ratio_val,
                                                                      shuffle=self.config.shuffle)
-        train_episodes = pathfiles_to_episodes(train_files,
+        train_trajectories = pathfiles_to_trajectories(train_files,
                                                subsampling_step=self.config.subsampling_step,
                                                dimensions=self.config.dimensions)
-        test_episodes = pathfiles_to_episodes(test_files,
+        test_trajectories = pathfiles_to_trajectories(test_files,
                                               subsampling_step=self.config.subsampling_step,
                                               dimensions=self.config.dimensions)
-        val_episodes = pathfiles_to_episodes(val_files,
+        val_trajectories = pathfiles_to_trajectories(val_files,
                                              subsampling_step=self.config.subsampling_step,
                                              dimensions=self.config.dimensions)
-        self.feature_size = train_episodes[0].shape[1]
-        return Episodes(train_episodes, test_episodes, val_episodes)
+        return Trajectories(train_trajectories, test_trajectories, val_trajectories)
 
     def _get_from_web(self):
         self._download_files(self.config.url,
@@ -76,7 +76,7 @@ class TeleopIcubDataset(MotionDataset):
         self._unzip(self.config.data_path + ".zip")
 
 
-def pathfiles_to_episodes(files: List,
+def pathfiles_to_trajectories(files: List,
                           delimiter: str = ',',
                           start: int = None,
                           end: int = None,
@@ -98,7 +98,7 @@ def pathfiles_to_episodes(files: List,
     """
     if start is None:
         start = 0
-    episode_arrray = list()
+    trajectory_arrray = list()
     for file in files:
         if not file.exists():
             logger.error("file does not exist: %s", file,
@@ -112,6 +112,6 @@ def pathfiles_to_episodes(files: List,
         else:
             tensor = torch.FloatTensor(file_array[start:end:subsampling_step])
             dimensions = list(range(len(TELEOP_DIMENSIONS_NAMES)))
-        episode_arrray.append(Episode(tensor, file,
+        trajectory_arrray.append(Trajectory(tensor, file,
                                       [TELEOP_DIMENSIONS_NAMES[i] for i in dimensions]))
-    return episode_arrray
+    return trajectory_arrray

@@ -1,13 +1,13 @@
-"""Module for episodes classes"""
+"""Module for trajectories classes"""
 from typing import Callable, List
 
 import torch
 
 
-class Episode():
+class Trajectory():
     """
-    An episode represents a full dataset sample, that we can retreive with its file name
-    An episode tracks n dimensions in time, represented in a tensor of shape (seq_len, n_dim)
+    An trajectory represents a full dataset sample, that we can retrieve with its file name
+    An trajectory tracks n dimensions in time, represented in a tensor of shape (seq_len, n_dim)
     We also store the scaled tensor, for interactions with the models
     """
     tensor: torch.Tensor
@@ -32,15 +32,15 @@ class Episode():
         return self.tensor.shape
 
 
-class Episodes():
-    """Episodes are collections of Episodes, organized into train, val, test"""
-    train: List[Episode]
-    test: List[Episode]
-    val: List[Episode]
+class Trajectories():
+    """Trajectories are collections of n Trajectory, organized into train, val, test"""
+    train: List[Trajectory]
+    test: List[Trajectory]
+    val: List[Trajectory]
     _scale_function: Callable
 
-    def __init__(self, train: List[Episode],
-                 test: List[Episode], val: List[Episode]) -> None:
+    def __init__(self, train: List[Trajectory],
+                 test: List[Trajectory], val: List[Trajectory]) -> None:
         self.train = train
         self.test = test
         self.val = val
@@ -51,26 +51,29 @@ class Episodes():
 
     @scale_function.setter
     def scale_function(self, scale_function):
-        """when setting a scaler, creating the """
+        """when setting a scaler, creating the scaled tensor for each trajectories"""
         self._scale_function = scale_function
-        for episode in self.train:
-            episode.scaled_tensor = scale_function(episode.tensor)
-        for episode in self.test:
-            episode.scaled_tensor = scale_function(episode.tensor)
-        for episode in self.val:
-            episode.scaled_tensor = scale_function(episode.tensor)
+        self._scale_tensors()
+
+    def _scale_tensors(self):
+        for trajectory in self.train:
+            trajectory.scaled_tensor = self.scale_function(trajectory.tensor)
+        for trajectory in self.test:
+            trajectory.scaled_tensor = self.scale_function(trajectory.tensor)
+        for trajectory in self.val:
+            trajectory.scaled_tensor = self.scale_function(trajectory.tensor)
 
     @property
     def train_scaled(self) -> List[torch.Tensor]:
-        return [episode.scaled_tensor for episode in self.train]
+        return [trajectory.scaled_tensor for trajectory in self.train]
 
     @property
     def test_scaled(self) -> List[torch.Tensor]:
-        return [episode.scaled_tensor for episode in self.test]
+        return [trajectory.scaled_tensor for trajectory in self.test]
 
     @property
     def val_scaled(self) -> List[torch.Tensor]:
-        return [episode.scaled_tensor for episode in self.val]
+        return [trajectory.scaled_tensor for trajectory in self.val]
 
     def _all_len(self):
         return len(self.train) + len(self.test) + len(self.val)

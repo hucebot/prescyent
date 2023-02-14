@@ -1,4 +1,4 @@
-from prescyent.evaluator import eval_episode
+from prescyent.evaluator import eval_trajectory
 from prescyent.predictor import LinearPredictor, LinearConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
@@ -32,9 +32,9 @@ if __name__ == "__main__":
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save()
-    # plot some test episodes
-    episode = dataset.episodes.test[0]
-    ade, fde = eval_episode(episode, predictor, input_size=input_size,
-                            savefig_path=f"data/eval/linear_test_episode.png",
+    # plot some test trajectories
+    trajectory = dataset.trajectories.test[0]
+    ade, fde = eval_trajectory(trajectory, predictor, input_size=input_size,
+                            savefig_path=f"data/eval/linear_test_trajectory.png",
                             eval_on_last_pred=False, unscale_function=dataset.unscale)
     print("ADE:", ade.item(), "FDE:", fde.item())

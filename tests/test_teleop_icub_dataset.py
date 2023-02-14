@@ -11,19 +11,12 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         dataset = TeleopIcubDataset()
         self.assertGreater(len(dataset), 0)
 
-    # def test_download(self):
-    #     tmp_data_path = Path("tmp")
-    #     config = TeleopIcubDatasetConfig(data_path=str(tmp_data_path / "icub_data"))
-    #     dataset = TeleopIcubDataset(config)
-    #     self.assertEqual(len(dataset), 20)
-    #     shutil.rmtree(str(Path("tmp")))
-
 
 class TeleopIcubDatasetTest(CustomTestCase):
 
     def test_scale(self):
         dataset = TeleopIcubDataset()
-        sample = torch.FloatTensor(dataset.episodes.train[0].tensor)
+        sample = torch.FloatTensor(dataset.trajectories.train[0].tensor)
         nom_sample = dataset.scale(sample)
         # the method is deterministic
         np.testing.assert_allclose(dataset.scale(sample), nom_sample)
