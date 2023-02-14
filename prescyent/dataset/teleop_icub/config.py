@@ -1,9 +1,9 @@
 """Config elements for TeleopIcub dataset usage"""
 from typing import List, Union
-from prescyent.dataset.motion.config import MotionDatasetConfig
+from prescyent.dataset.config import MotionDatasetConfig
 
 
-class TeleopIcubDatasetConfig(MotionDatasetConfig):
+class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
     url = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
     data_path: str = "data/datasets/AndyData-lab-prescientTeleopICub/datasetMultipleTasks"

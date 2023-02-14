@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from matplotlib.axes import Axes
 
-from prescyent.dataset.motion.trajectories import Trajectory
+from prescyent.dataset.trajectories import Trajectory
 
 
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],

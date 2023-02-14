@@ -7,11 +7,11 @@ from typing import Callable, List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.motion.trajectories import Trajectory
+from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, DATASET
-from prescyent.dataset.motion.dataset import MotionDataset, Trajectories
+from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import split_array_with_ratios
-from prescyent.dataset.motion.teleop_icub.config import TeleopIcubDatasetConfig
+from prescyent.dataset.teleop_icub.config import DatasetConfig
 
 
 TELEOP_DIMENSIONS_NAMES = [
@@ -20,17 +20,17 @@ TELEOP_DIMENSIONS_NAMES = [
 ]
 
 
-class TeleopIcubDataset(MotionDataset):
+class Dataset(MotionDataset):
     """TODO: present the dataset here
     Architecture
 
     Dataset is not splitted into test / train / val
     It as to be at initialisation, through the parameters
     """
-    def __init__(self, config: Union[Dict, TeleopIcubDatasetConfig] = None,
+    def __init__(self, config: Union[Dict, DatasetConfig] = None,
                  scaler: Callable = None):
         if not config:
-            config = TeleopIcubDatasetConfig()
+            config = DatasetConfig()
         self._init_from_config(config)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
@@ -40,7 +40,7 @@ class TeleopIcubDataset(MotionDataset):
 
     def _init_from_config(self, config):
         if isinstance(config, dict):
-            config = TeleopIcubDatasetConfig(**config)
+            config = DatasetConfig(**config)
         self.config = config
         self.input_size = config.input_size
         self.output_size = config.output_size

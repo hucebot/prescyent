@@ -7,9 +7,9 @@ import torch
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
-from prescyent.dataset.motion.config import MotionDatasetConfig
-from prescyent.dataset.motion.trajectories import Trajectories
-from prescyent.dataset.motion.datasamples import MotionDataSamples
+from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.trajectories import Trajectories
+from prescyent.dataset.datasamples import MotionDataSamples
 
 
 class MotionDataset(Dataset):

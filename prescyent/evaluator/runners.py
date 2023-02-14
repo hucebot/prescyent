@@ -2,7 +2,7 @@
 from typing import Callable, List, Tuple
 
 import torch
-from prescyent.dataset.motion.trajectories import Trajectory
+from prescyent.dataset.trajectories import Trajectory
 
 from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors
