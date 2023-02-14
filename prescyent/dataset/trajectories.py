@@ -11,13 +11,16 @@ class Trajectory():
     We also store the scaled tensor, for interactions with the models
     """
     tensor: torch.Tensor
-    scaled_tensor: torch.Tensor = None
+    scaled_tensor: torch.Tensor
     file_path: str
     dimension_names: List[str]
 
     def __init__(self, tensor: torch.Tensor,
-                 file_path: str, dimension_names: List[str]) -> None:
+                 file_path: str = "episode_name",
+                 dimension_names: List[str] = ["y_infos"],
+                 scaled_tensor: torch.Tensor = None) -> None:
         self.tensor = tensor
+        self.scaled_tensor = scaled_tensor
         self.file_path = file_path
         self.dimension_names = dimension_names
 
