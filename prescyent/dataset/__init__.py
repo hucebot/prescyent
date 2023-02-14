@@ -7,3 +7,4 @@ Built with torch dataset and dataloader
 """
 
 from prescyent.dataset.motion import TeleopIcubDataset, TeleopIcubDatasetConfig
+from prescyent.dataset.motion.sine import SineDataset, SineDatasetConfig
