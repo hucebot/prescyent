@@ -45,6 +45,8 @@ def plot_trajectory_prediction(trajectory, inputs, preds, step, savefig_path, ev
 
     timesteps = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
+    if preds.shape[0] == 1:
+        axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(timesteps[:-step], inputs[i], linewidth=2)
         if eval_on_last_pred:
