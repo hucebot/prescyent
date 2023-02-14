@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 
 
-class LinearConfig(BaseModel):
+class Config(BaseModel):
     """Pydantic Basemodel for Linear Module configuration"""
     feature_size: int
     input_size: int

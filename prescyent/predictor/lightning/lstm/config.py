@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 
 
-class LSTMConfig(BaseModel):
+class Config(BaseModel):
     """Pydantic Basemodel for LSTM Module configuration"""
     feature_size: int
     output_size: int

@@ -14,9 +14,7 @@ class DelayedPredictor(BasePredictor):
     """simple predictor that simply return the input"""
 
     def __init__(self, log_path: str = "data/models") -> None:
-        self.log_root_path = log_path
-        self.version = 0
-        super().__init__()
+        super().__init__(log_path, version=0)
 
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""

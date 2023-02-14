@@ -9,10 +9,10 @@ from torch import nn
 from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
 
 
-class Linear(nn.Module):
+class TorchModule(nn.Module):
     """Simple linear layer with flatten input"""
-    def __init__(self, feature_size, input_size, output_size):
-        super(Linear, self).__init__()
+    def __init__(self, feature_size: int, input_size: int, output_size: int):
+        super().__init__()
         self.feature_size = feature_size
         self.input_size = input_size
         self.output_size = output_size
@@ -20,7 +20,7 @@ class Linear(nn.Module):
         self.linear = nn.Linear(input_size, output_size)
 
     @allow_unbatched
-    def forward(self, input_tensor):
+    def forward(self, input_tensor: torch.Tensor):
         # simple single feature prediction of the next item in sequence
         # (batch, seq_len, features) -> (batch, features, seq_len)
         input_tensor = torch.transpose(input_tensor, 1, 2)
@@ -29,11 +29,11 @@ class Linear(nn.Module):
         return predictions
 
 
-class LinearModule(BaseLightningModule):
+class LightningModule(BaseLightningModule):
     """Lightning Module initializing Linear NN"""
-    def __init__(self, feature_size, input_size, output_size):
+    def __init__(self, feature_size: int, input_size: int, output_size: int):
         super().__init__()
-        self.torch_model = Linear(feature_size, input_size, output_size)
+        self.torch_model = TorchModule(feature_size, input_size, output_size)
         self.criterion = nn.MSELoss()
         self.save_hyperparameters()
 

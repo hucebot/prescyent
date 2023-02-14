@@ -1,7 +1,7 @@
 """Interface for the library's Predictors
 The predictor can be trained and predict
 """
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Union
 
 from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -9,22 +9,24 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 class BasePredictor():
     """abstract class for any predictor"""
-    log_root_path: str = None
-    name: str = None
-    version: int = None
+    log_root_path: str
+    name: str
+    version: int
 
-    def __init__(self) -> None:
-        if self.log_root_path is None:
-            raise NotImplementedError("Child class must define a logger path before init parent")
-        if self.name is None:
-            self.name = self.__class__.__name__
+    def __init__(self, log_root_path: str,
+                 name: str = None, version: Union[str, int] = None) -> None:
+        self.log_root_path = log_root_path
+        if name is None:
+            name = self.__class__.__name__
+        self.name = name
+        self.version = version
         self._init_logger()
 
     def _init_logger(self):
         self.tb_logger = TensorBoardLogger(self.log_root_path,
                                            name=self.name,
                                            version=self.version)
-        # determine version from tb logger logic
+        # redetermine version from tb logger logic if None
         if self.version is None:
             self.version = self.tb_logger._version
 

@@ -9,14 +9,14 @@ from torch import nn
 from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
 
 
-class Seq2Seq(nn.Module):
+class TorchModule(nn.Module):
     """
     feature_size - The number of dimensions to predict in parrallel
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
     output_size - This will be equal to the prediction_periods input to get_x_y_pairs
     """
-    def __init__(self, feature_size, hidden_size, output_size, num_layers):
-        super(Seq2Seq, self).__init__()
+    def __init__(self, feature_size: int, hidden_size: int, output_size: int, num_layers: int):
+        super().__init__()
         self.hidden_size = hidden_size
         self.feature_size = feature_size
         self.output_size = output_size
@@ -34,7 +34,7 @@ class Seq2Seq(nn.Module):
         self.linear = nn.Linear(hidden_size, feature_size)
 
     @allow_unbatched
-    def forward(self, input_tensor):
+    def forward(self, input_tensor: torch.Tensor):
         # take hidden state as the encoding of the whole input sequence
         _, hidden_state = self.encoder(input_tensor)
         batch_size = input_tensor.shape[0]
@@ -56,14 +56,14 @@ class Seq2Seq(nn.Module):
         return predictions
 
 
-class Seq2SeqModule(BaseLightningModule):
+class LightningModule(BaseLightningModule):
     """[short description]
        [usage]
        [detail of the implementation]
     """
-    def __init__(self, feature_size, hidden_size, output_size, num_layers):
+    def __init__(self, feature_size: int, hidden_size: int, output_size: int, num_layers: int):
         super().__init__()
-        self.torch_model = Seq2Seq(feature_size, hidden_size, output_size, num_layers)
+        self.torch_model = TorchModule(feature_size, hidden_size, output_size, num_layers)
         self.criterion = nn.MSELoss()
         self.save_hyperparameters()
 

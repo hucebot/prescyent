@@ -24,25 +24,25 @@ class LightningPredictor(BasePredictor):
     This class should not be called as is
     You must instanciate a class from wich LightningPredictor is a parent
     """
-    module_class = Type[BasePredictor]
-    config_class = Type[BaseModel]
+    module_class: Type[BasePredictor]
+    config_class: Type[BaseModel]
     model: pl.LightningModule
     training_config: TrainingConfig
     trainer: pl.Trainer
     tb_logger: TensorBoardLogger
 
-    def __init__(self, model_path=None, config=None) -> None:
+    def __init__(self, model_path=None, config=None, name=None) -> None:
         # -- Init Model and root path
         if model_path is not None:
             self.model = self._load_from_path(model_path)
-            self.log_root_path = model_path if Path(model_path).is_dir() \
+            log_root_path = model_path if Path(model_path).is_dir() \
                 else str(Path(model_path).parent)
-            self._load_config(Path(self.log_root_path) / "config.json")
-            self.log_root_path, self.name, self.version = retreive_log_version_from_path(model_path)
+            self._load_config(Path(log_root_path) / "config.json")
+            log_root_path, name, version = retreive_log_version_from_path(model_path)
         elif config is not None:
-            self.name, self.version = None, None
+            version = None
             self.model = self._build_from_config(config)
-            self.log_root_path = config.model_path
+            log_root_path = config.model_path
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
@@ -52,7 +52,7 @@ class LightningPredictor(BasePredictor):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
-        super().__init__()
+        super().__init__(log_root_path, name, version)
 
     def _build_from_config(self, config):
         # -- We check that the input config is valid through pydantic model
@@ -163,6 +163,7 @@ class LightningPredictor(BasePredictor):
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)
+        self.trainer.save_checkpoint(Path(self.tb_logger.log_dir) / "trainer_checkpoint.ckpt")
         self._free_trainer()
 
     def test(self, test_dataloader: Iterable):
