@@ -59,16 +59,16 @@ class Dataset(MotionDataset):
                                                                      self.config.ratio_test,
                                                                      self.config.ratio_val,
                                                                      shuffle=self.config.shuffle)
-        train_trajectories = pathfiles_to_trajectories(train_files,
-                                               subsampling_step=self.config.subsampling_step,
-                                               dimensions=self.config.dimensions)
-        test_trajectories = pathfiles_to_trajectories(test_files,
-                                              subsampling_step=self.config.subsampling_step,
-                                              dimensions=self.config.dimensions)
-        val_trajectories = pathfiles_to_trajectories(val_files,
-                                             subsampling_step=self.config.subsampling_step,
-                                             dimensions=self.config.dimensions)
-        return Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        train = pathfiles_to_trajectories(train_files,
+                                          subsampling_step=self.config.subsampling_step,
+                                          dimensions=self.config.dimensions)
+        test = pathfiles_to_trajectories(test_files,
+                                         subsampling_step=self.config.subsampling_step,
+                                         dimensions=self.config.dimensions)
+        val = pathfiles_to_trajectories(val_files,
+                                        subsampling_step=self.config.subsampling_step,
+                                        dimensions=self.config.dimensions)
+        return Trajectories(train, test, val)
 
     def _get_from_web(self):
         self._download_files(self.config.url,
@@ -77,11 +77,11 @@ class Dataset(MotionDataset):
 
 
 def pathfiles_to_trajectories(files: List,
-                          delimiter: str = ',',
-                          start: int = None,
-                          end: int = None,
-                          subsampling_step: int = 0,
-                          dimensions: List[int] = None) -> list:
+                              delimiter: str = ',',
+                              start: int = None,
+                              end: int = None,
+                              subsampling_step: int = 0,
+                              dimensions: List[int] = None) -> list:
     """util method to turn a list of pathfiles to a list of their data
 
     :param files: list of files
@@ -113,5 +113,5 @@ def pathfiles_to_trajectories(files: List,
             tensor = torch.FloatTensor(file_array[start:end:subsampling_step])
             dimensions = list(range(len(TELEOP_DIMENSIONS_NAMES)))
         trajectory_arrray.append(Trajectory(tensor, file,
-                                      [TELEOP_DIMENSIONS_NAMES[i] for i in dimensions]))
+                                            [TELEOP_DIMENSIONS_NAMES[i] for i in dimensions]))
     return trajectory_arrray

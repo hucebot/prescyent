@@ -10,8 +10,8 @@ from prescyent.utils.tensor_manipulation import flatten_list_of_preds
 
 
 def pred_trajectory(trajectory: Trajectory, predictor: Callable,
-                 input_size: int = 10, eval_on_last_pred: bool = False,
-                 skip_partial_input: bool = True) -> Tuple[torch.Tensor, torch.Tensor]:
+                    input_size: int = 10, eval_on_last_pred: bool = False,
+                    skip_partial_input: bool = True) -> Tuple[torch.Tensor, torch.Tensor]:
     """loops a predictor over a whole trajectory
 
     Args:
@@ -42,11 +42,11 @@ def pred_trajectory(trajectory: Trajectory, predictor: Callable,
 
 
 def eval_trajectory(trajectory: Trajectory,
-                 predictor: Callable,
-                 input_size: int = 10,
-                 savefig_path: str = "test.png",
-                 eval_on_last_pred: bool = False,
-                 unscale_function: Callable = None):
+                    predictor: Callable,
+                    input_size: int = 10,
+                    savefig_path: str = "test.png",
+                    eval_on_last_pred: bool = False,
+                    unscale_function: Callable = None):
     """runs prediction over a whole trajectory, evaluate and plots the results
 
     Args:
@@ -72,15 +72,17 @@ def eval_trajectory(trajectory: Trajectory,
     truth = truth[input_size:]
     ade = get_ade(truth, preds[:-input_size])
     fde = get_fde(truth, preds[:-input_size])
-    plot_trajectory_prediction(trajectory, inputs, preds, input_size, savefig_path, eval_on_last_pred)
+    plot_trajectory_prediction(trajectory, inputs,
+                               preds, input_size,
+                               savefig_path, eval_on_last_pred)
     return ade, fde
 
 
 # -- TODO: think of some "prediction_modes" to choose how to iterate over epîsodes
 # and unify the behaviors of the eval_trajectory and eval_trajectory_multiple_predictors
 def pred_trajectory_multiple_predictors(trajectory: Trajectory,
-                                     predictors: List[Callable],
-                                     input_size: int = None):
+                                        predictors: List[Callable],
+                                        input_size: int = None):
     predictions = []
     for predictor in predictors:
         preds = predictor(trajectory.scaled_tensor, input_size=input_size)
@@ -90,11 +92,11 @@ def pred_trajectory_multiple_predictors(trajectory: Trajectory,
 
 
 def eval_trajectory_multiple_predictors(trajectory: Trajectory,
-                                     predictors: List[Callable],
-                                     input_size: int = None,
-                                     savefig_path: str = "test.png",
-                                     unscale_function: Callable = None
-                                     ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+                                        predictors: List[Callable],
+                                        input_size: int = None,
+                                        savefig_path: str = "test.png",
+                                        unscale_function: Callable = None
+                                        ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
     """Evaluate a list of predictors on the given trajectory
 
     Args:

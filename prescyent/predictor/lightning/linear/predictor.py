@@ -4,6 +4,7 @@ from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.lightning.linear.module import LightningModule
 from prescyent.predictor.lightning.linear.config import Config
 
+
 class Predictor(LightningPredictor):
     """Upper class to train and use a Linear Model"""
 

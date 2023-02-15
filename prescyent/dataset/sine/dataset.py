@@ -11,11 +11,9 @@ from prescyent.dataset.trajectories import Trajectory
 from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.dataset.sine.config import DatasetConfig
 
-class Dataset(MotionDataset):
-    """TODO: present the dataset here
-    Architecture
 
-    Dataset is not splitted into test / train / val
+class Dataset(MotionDataset):
+    """Dataset is not splitted into test / train / val
     It as to be at initialisation, througt the parameters
     """
     def __init__(self, config: Union[Dict, DatasetConfig] = None,
@@ -25,9 +23,9 @@ class Dataset(MotionDataset):
         self._init_from_config(config)
         self.feature_size = 1
         self.trajectories = self._gen_data(self.config.length, self.config.period,
-            int(self.config.size * self.config.ratio_train),
-            int(self.config.size * self.config.ratio_test),
-            int(self.config.size * self.config.ratio_val))
+                                           int(self.config.size * self.config.ratio_train),
+                                           int(self.config.size * self.config.ratio_test),
+                                           int(self.config.size * self.config.ratio_val))
         super().__init__(scaler)
 
     def _init_from_config(self, config):
@@ -47,8 +45,7 @@ class Dataset(MotionDataset):
 
     def _gen_sine_wave(self, length, period, rng):
         x = np.array(range(length)) + rng.integers(-4 * period, 4 * period)
-        return Trajectory(torch.Tensor(
-                                np.sin(x / 1.0 / period).astype('float64')
-                          ).reshape(length, 1),
-                          'sin trajectory',
-                          ['sin(x)'])
+        return Trajectory(
+            torch.Tensor(np.sin(x / 1.0 / period).astype('float64')).reshape(length, 1),
+            'sin trajectory',
+            ['sin(x)'])
