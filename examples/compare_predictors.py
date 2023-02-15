@@ -1,5 +1,5 @@
 from prescyent.evaluator import eval_trajectory, eval_trajectory_multiple_predictors
-from prescyent.predictor import LinearPredictor, LSTMPredictor, Seq2SeqPredictor, DelayedPredictor
+from prescyent.predictor import LinearPredictor, LSTMPredictor, TorchLSTMPredictor, Seq2SeqPredictor, DelayedPredictor
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
 
@@ -22,6 +22,7 @@ if __name__ == "__main__":
     linear_predictor = LinearPredictor("data/models/LinearPredictor/version_0")
     lstm_predictor = LSTMPredictor("data/models/LSTMPredictor/version_0")
     seq2seq_predictor = Seq2SeqPredictor("data/models/Seq2SeqPredictor/version_0")
+    torch_lstm_predictor = TorchLSTMPredictor("data/models/TorchLSTMPredictor/version_0")
     delayed_predictor = DelayedPredictor("data/models")
     # Train, Test and Save
 
@@ -29,6 +30,7 @@ if __name__ == "__main__":
             linear_predictor,
             lstm_predictor,
             seq2seq_predictor,
+            torch_lstm_predictor,
             delayed_predictor
         ]
 
