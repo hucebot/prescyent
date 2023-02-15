@@ -16,7 +16,7 @@ class Trajectory():
     dimension_names: List[str]
 
     def __init__(self, tensor: torch.Tensor,
-                 file_path: str = "episode_name",
+                 file_path: str = "trajectory_name",
                  dimension_names: List[str] = ["y_infos"],
                  scaled_tensor: torch.Tensor = None) -> None:
         self.tensor = tensor
