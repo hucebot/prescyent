@@ -16,7 +16,6 @@ import torch
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensorboard_utils import retreive_log_version_from_path
 
 
 class LightningPredictor(BasePredictor):
@@ -38,11 +37,13 @@ class LightningPredictor(BasePredictor):
             log_root_path = model_path if Path(model_path).is_dir() \
                 else str(Path(model_path).parent)
             self._load_config(Path(log_root_path) / "config.json")
-            log_root_path, name, version = retreive_log_version_from_path(model_path)
+            name, version = self.name, self.version
+            super().__init__(log_root_path, name, version, no_sub_dir_log=True)
         elif config is not None:
             version = None
             self.model = self._build_from_config(config)
             log_root_path = config.model_path
+            super().__init__(log_root_path, name, version)
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
@@ -52,7 +53,6 @@ class LightningPredictor(BasePredictor):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
-        super().__init__(log_root_path, name, version)
 
     def _build_from_config(self, config):
         # -- We check that the input config is valid through pydantic model
@@ -128,6 +128,8 @@ class LightningPredictor(BasePredictor):
 
     def _save_config(self, save_path: Path):
         res = dict()
+        res["name"] = self.name
+        res["version"] = self.version
         self.config.model_path = str(save_path.parent)
         if self.training_config is not None :
             res["training_config"] = self.training_config.dict()
@@ -146,6 +148,8 @@ class LightningPredictor(BasePredictor):
             config_data = json.load(conf_file)
         self.training_config = TrainingConfig(**config_data.get("training_config", None))
         self.config = self.config_class(**config_data.get("model_config", None))
+        self.name = config_data.get("name", None)
+        self.version = config_data.get("version", None)
         logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
     def _init_module_optimizer(self):

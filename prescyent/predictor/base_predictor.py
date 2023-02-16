@@ -2,6 +2,7 @@
 The predictor can be trained and predict
 """
 import copy
+from pathlib import Path
 from typing import Dict, Iterable, Union
 
 from pydantic import BaseModel
@@ -15,21 +16,28 @@ class BasePredictor():
     version: int
 
     def __init__(self, log_root_path: str,
-                 name: str = None, version: Union[str, int] = None) -> None:
+                 name: str = None, version: Union[str, int] = None,
+                 no_sub_dir_log: bool = False) -> None:
         self.log_root_path = log_root_path
         if name is None:
             name = self.__class__.__name__
         self.name = name
         self.version = version
-        self._init_logger()
+        self._init_logger(no_sub_dir_log)
 
-    def _init_logger(self):
+    def _init_logger(self, no_sub_dir_log=False):
+        if no_sub_dir_log:
+            name = ""
+            version = ""
+        else:
+            name = self.name
+            version = self.version
         self.tb_logger = TensorBoardLogger(self.log_root_path,
-                                           name=self.name,
-                                           version=self.version)
+                                           name=name,
+                                           version=version)
         # redetermine version from tb logger logic if None
         if self.version is None:
-            self.version = copy.deepcopy(self.tb_logger._version)
+            self.version = copy.deepcopy(self.tb_logger.version)
 
     def __call__(self, input_batch, history_size: int = None, input_step: int = 1):
         return self.run(input_batch, history_size, input_step)
