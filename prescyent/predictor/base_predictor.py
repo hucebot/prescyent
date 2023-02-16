@@ -1,6 +1,7 @@
 """Interface for the library's Predictors
 The predictor can be trained and predict
 """
+import copy
 from typing import Dict, Iterable, Union
 
 from pydantic import BaseModel
@@ -28,7 +29,7 @@ class BasePredictor():
                                            version=self.version)
         # redetermine version from tb logger logic if None
         if self.version is None:
-            self.version = self.tb_logger._version
+            self.version = copy.deepcopy(self.tb_logger._version)
 
     def __call__(self, input_batch, input_size: int = None, input_step: int = 1):
         return self.run(input_batch, input_size, input_step)
@@ -52,4 +53,8 @@ class BasePredictor():
 
     def run(self, input_batch: Iterable, input_size: int, input_step: int):
         """run predictor"""
+        raise NotImplementedError("This method must be overriden by the inherited predictor")
+
+    def save(self, save_path: str):
+        """save predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")

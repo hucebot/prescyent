@@ -30,6 +30,12 @@ class DelayedPredictor(BasePredictor):
                        self.__class__.__name__,
                        group=PREDICTOR)
 
+    def save(self, save_path:str):
+        """train predictor"""
+        logger.warning("No save necessary for this predictor %s",
+                       self.__class__.__name__,
+                       group=PREDICTOR)
+
     def test(self, test_dataloader: Iterable):
         """test predictor"""
         # log in tensorboard
