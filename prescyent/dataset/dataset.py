@@ -7,7 +7,7 @@ import torch
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import LearningTypes, MotionDatasetConfig
 from prescyent.dataset.trajectories import Trajectories
 from prescyent.dataset.datasamples import MotionDataSamples
 
@@ -17,8 +17,8 @@ class MotionDataset(Dataset):
     config: MotionDatasetConfig
     scaler: StandardScaler
     batch_size: int
-    input_size: int
-    output_size: int
+    history_size: int
+    future_size: int
     trajectories: Trajectories
     train_datasample: MotionDataSamples
     test_datasample: MotionDataSamples
@@ -82,17 +82,40 @@ class MotionDataset(Dataset):
         sample = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
         truth = torch.FloatTensor([])
         for trajectory in scaled_trajectory:
-            sample_trajectory, truth_trajectory = self._make_sample_truth_pairs(trajectory)
+            if self.config.learning_type == LearningTypes.SEQ2SEQ:
+                sample_trajectory, truth_trajectory = self._make_seq2seq_pairs(trajectory)
+            elif self.config.learning_type == LearningTypes.AUTOREG:
+                sample_trajectory, truth_trajectory = self._make_autoreg_pairs(trajectory)
+            else:
+                raise NotImplementedError(f"Learning type {self.config.learning_type}"
+                                          " is not implemented yet")
             sample = torch.cat([sample, sample_trajectory], dim=0)
             truth = torch.cat([truth, truth_trajectory], dim=0)
         return MotionDataSamples(sample, truth)
 
     # This could use padding to get recognition from the first time-steps
-    def _make_sample_truth_pairs(self, trajectory):
-        sample = [trajectory[i:i + self.input_size]
-                  for i in range(len(trajectory) - self.input_size - self.output_size)]
-        truth = [trajectory[i + self.input_size:i + self.input_size + self.output_size]
-                 for i in range(len(trajectory) - self.input_size - self.output_size)]
+    def _make_seq2seq_pairs(self, trajectory):
+        if len(trajectory) <= self.history_size + self.future_size:
+            raise ValueError("Check that the intended history size and future size are compatible"
+                             f" with the dataset. A trajectory of size {len(trajectory)} can't be"
+                             f" split in samples of sizes {self.history_size}"
+                             f" and {self.future_size}")
+        sample = [trajectory[i:i + self.history_size]
+                  for i in range(len(trajectory) - self.history_size - self.future_size)]
+        truth = [trajectory[i + self.history_size:i + self.history_size + self.future_size]
+                 for i in range(len(trajectory) - self.history_size - self.future_size)]
+        # -- use the stack function to convert the list of 1D tensors
+        # into a 2D tensor where each element of the list is now a row
+        sample = torch.stack(sample)
+        truth = torch.stack(truth)
+        return sample, truth
+
+    # This could use padding to get recognition from the first time-steps
+    def _make_autoreg_pairs(self, trajectory):
+        sample = [trajectory[i:i + self.history_size]
+                  for i in range(len(trajectory) - self.history_size - 1)]
+        truth = [trajectory[i + 1:i + self.history_size + 1]
+                 for i in range(len(trajectory) - self.history_size - 1)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         sample = torch.stack(sample)

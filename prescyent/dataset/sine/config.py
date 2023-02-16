@@ -14,7 +14,7 @@ class DatasetConfig(MotionDatasetConfig):
     # period of the sine waves
     period : int = 20
     # length of a trajectory
-    length : int = 1000
+    length : int = 2500
     # splits
     ratio_train: float = .8
     ratio_test: float = .15

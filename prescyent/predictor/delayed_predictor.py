@@ -55,6 +55,6 @@ class DelayedPredictor(BasePredictor):
         self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
         return mean_loss, ade, fde
 
-    def run(self, input_batch: Iterable, input_size: int = None, input_step: int = 1):
+    def run(self, input_batch: Iterable, history_size: int = None, input_step: int = 1):
         """run predictor"""
         return input_batch

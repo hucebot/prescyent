@@ -8,3 +8,4 @@ Built with torch dataset and dataloader
 
 from prescyent.dataset.teleop_icub import TeleopIcubDataset, TeleopIcubDatasetConfig
 from prescyent.dataset.sine import SineDataset, SineDatasetConfig
+from prescyent.dataset.config import LearningTypes

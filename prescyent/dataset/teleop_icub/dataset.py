@@ -42,8 +42,8 @@ class Dataset(MotionDataset):
         if isinstance(config, dict):
             config = DatasetConfig(**config)
         self.config = config
-        self.input_size = config.input_size
-        self.output_size = config.output_size
+        self.history_size = config.history_size
+        self.future_size = config.future_size
         self.batch_size = config.batch_size
 
     # load a set of trajectory, keeping them separate

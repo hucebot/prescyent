@@ -30,6 +30,9 @@ class Trajectory():
     def __len__(self):
         return len(self.tensor)
 
+    def __str__(self) -> str:
+        return self.file_path
+
     @property
     def shape(self):
         return self.tensor.shape

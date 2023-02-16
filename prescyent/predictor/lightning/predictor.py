@@ -175,7 +175,7 @@ class LightningPredictor(BasePredictor):
         self.trainer.test(self.model, test_dataloader)
         self._free_trainer()
 
-    def run(self, input_batch: Iterable, input_size: int = None,
+    def run(self, input_batch: Iterable, history_size: int = None,
             input_step: int = 1) -> torch.Tensor:
         """run method/model inference on the input batch
         The output is either the list of predictions for each defined subpart of the input batch,
@@ -183,9 +183,9 @@ class LightningPredictor(BasePredictor):
 
         Args:
             input_batch (Iterable): Input for the predictor's model
-            input_size (int|None, optional): If an input size is provided, the input batch will
-                be splitted sequences of len == input_size. Defaults to None.
-            input_step (int, optional): When splitting the input_batch (input_size != None)
+            history_size (int|None, optional): If an input size is provided, the input batch will
+                be splitted sequences of len == history_size. Defaults to None.
+            input_step (int, optional): When splitting the input_batch (history_size != None)
                 defines the step of the iteration. Defaults to 1.
 
         Returns:
@@ -193,15 +193,15 @@ class LightningPredictor(BasePredictor):
         """
         with torch.no_grad():
             self.model.eval()
-            # return pred for all input if no input_size was given
-            if input_size is None or input_size >= input_batch.shape[0]:
+            # return pred for all input if no history_size was given
+            if history_size is None or history_size >= input_batch.shape[0]:
                 return self.model.torch_model(input_batch)
-            # otherwise we iterate over inputs of len input_size and return a list of predictions
-            prediction_list = torch.zeros(input_batch.shape[0] - input_size,
-                                          input_size,
+            # otherwise we iterate over inputs of len history_size and return a list of predictions
+            prediction_list = torch.zeros(input_batch.shape[0] - history_size,
+                                          history_size,
                                           input_batch.shape[1])
-            for i in range(0, input_batch.shape[0] - input_size, input_step):
-                input_sub_batch = input_batch[i:i + input_size]
+            for i in range(0, input_batch.shape[0] - history_size, input_step):
+                input_sub_batch = input_batch[i:i + history_size]
                 prediction_list[i] = self.model.torch_model(input_sub_batch)
             return prediction_list
 
