@@ -61,7 +61,7 @@ def plot_trajectory_prediction(trajectory, inputs, preds, step, savefig_path, ev
         axe.plot(timesteps[step:], inputs[i], linewidth=2)
     legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
                 ylabels=trajectory.dimension_names)
-    fig.set_size_inches(pred_last_idx / 20, len(trajectory.dimension_names))
+    fig.set_size_inches(15, len(trajectory.dimension_names))
     fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
@@ -77,13 +77,15 @@ def plot_multiple_predictors(trajectory: Trajectory,
     timesteps = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
+    if preds[0].shape[0] == 1:
+        axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(timesteps[:-step], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
                 ylabels=trajectory.dimension_names)
-    fig.set_size_inches(pred_last_idx / 15, len(trajectory.dimension_names) + 2)
+    fig.set_size_inches(15, len(trajectory.dimension_names) + 2)
     fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
