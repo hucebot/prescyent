@@ -8,6 +8,7 @@ class LearningTypes(Enum):
     SEQ2SEQ = "sequence_2_sequence"
     AUTOREG = "auto_regressive"
 
+
 class MotionDatasetConfig(BaseModel):
     """Pydantic Basemodel for MotionDatasets configuration"""
     batch_size = 128
