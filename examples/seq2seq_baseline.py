@@ -1,4 +1,4 @@
-from prescyent.evaluator import eval_trajectory
+from prescyent.evaluator import eval_predictors
 from prescyent.predictor import Seq2SeqPredictor, Seq2SeqConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
@@ -32,10 +32,11 @@ if __name__ == "__main__":
     training_config = TrainingConfig()
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save()
+    predictor.save(f"data/models/teleopredictoricub/all/{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
-    trajectory = dataset.trajectories.test[0]
-    ade, fde = eval_trajectory(trajectory, predictor, history_size=history_size,
-                            savefig_path=f"data/eval/seq2seq_test_trajectory.png",
-                            eval_on_last_pred=False, unscale_function=dataset.unscale)
-    print("ADE:", ade.item(), "FDE:", fde.item())
+    eval_results = eval_predictors([predictor],
+                               dataset.trajectories.test[0:1],
+                               history_size=history_size,
+                               future_size=future_size,
+                               unscale_function=dataset.unscale)[0]
+    print("ADE:", eval_results.mean_ade, "FDE:", eval_results.mean_fde)

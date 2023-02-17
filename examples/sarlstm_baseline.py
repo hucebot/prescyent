@@ -1,5 +1,6 @@
-from prescyent.evaluator import eval_trajectory
-from prescyent.predictor import TorchLSTMPredictor, TorchLSTMConfig, TrainingConfig
+from prescyent.dataset.config import LearningTypes
+from prescyent.evaluator import eval_predictors
+from prescyent.predictor import SARLSTMPredictor, SARLSTMConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
 
@@ -15,25 +16,27 @@ if __name__ == "__main__":
                                              future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size,)
+                                             batch_size=batch_size,
+                                             learning_type=LearningTypes.AUTOREG)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
     feature_size = dataset.feature_size
     hidden_size = feature_size * 20
-    config = TorchLSTMConfig(feature_size=feature_size,
+    config = SARLSTMConfig(feature_size=feature_size,
                         output_size=future_size,
                         hidden_size=hidden_size,)
-    predictor = TorchLSTMPredictor(config=config)
+    predictor = SARLSTMPredictor(config=config)
 
     # Train, Test and Save
     training_config = TrainingConfig()
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save()
+    predictor.save(f"data/models/teleopredictoricub/all/{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
-    trajectory = dataset.trajectories.test[0]
-    ade, fde = eval_trajectory(trajectory, predictor, history_size=history_size,
-                            savefig_path=f"data/eval/torch_lstm_test_trajectory.png",
-                            eval_on_last_pred=True, unscale_function=dataset.unscale)
-    print("ADE:", ade.item(), "FDE:", fde.item())
+    eval_results = eval_predictors([predictor],
+                               dataset.trajectories.test[0:1],
+                               history_size=history_size,
+                               future_size=future_size,
+                               unscale_function=dataset.unscale)[0]
+    print("ADE:", eval_results.mean_ade, "FDE:", eval_results.mean_fde)
