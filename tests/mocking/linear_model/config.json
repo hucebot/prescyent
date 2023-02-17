@@ -1,0 +1,21 @@
+{
+    "model_config": {
+        "feature_size": 7,
+        "identifier": "linear",
+        "input_size": 10,
+        "model_path": "data/models/teleopredictoricub/all/LinearPredictor/version_0",
+        "output_size": 10
+    },
+    "name": "LinearPredictor",
+    "training_config": {
+        "accelerator": "auto",
+        "devices": "auto",
+        "epoch": 10,
+        "learning_rate": 0.001,
+        "max_learning_rate": 0.01,
+        "max_steps": -1,
+        "use_scheduler": false,
+        "weight_decay": 0.01
+    },
+    "version": 0
+}

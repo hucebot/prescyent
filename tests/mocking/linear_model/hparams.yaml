@@ -1,4 +1,3 @@
 feature_size: 7
-hidden_size: 70
-num_layers: 1
+input_size: 10
 output_size: 10
