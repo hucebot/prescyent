@@ -36,29 +36,21 @@ def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
     save_plot_and_close(savefig_path)
 
 
-def plot_trajectory_prediction(trajectory, inputs, preds, step, savefig_path, eval_on_last_pred):
+def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    inputs = torch.transpose(inputs, 0, 1)
+    inputs = torch.transpose(trajectory.tensor, 0, 1)
     preds = torch.transpose(preds, 0, 1)
 
-    pred_last_idx = len(inputs[0]) + step
+    pred_last_idx = len(preds[0]) + step
 
     timesteps = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
     if preds.shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(timesteps[:-step], inputs[i], linewidth=2)
-        if eval_on_last_pred:
-            # fancy lines to range from last of first prediction (2 step - 1)
-            # to the last predicted index (len + step -1)
-            stepped_x = list(range(2 * step - 1, pred_last_idx, step))
-            if pred_last_idx - 1 not in stepped_x:
-                stepped_x.append(pred_last_idx - 1)
-            axe.plot(stepped_x, preds[i], linewidth=2, linestyle='--')
-        else:
-            axe.plot(timesteps[step:], preds[i], linewidth=2, linestyle='--')
-        axe.plot(timesteps[step:], inputs[i], linewidth=2)
+        axe.plot(timesteps[:len(inputs[i])], inputs[i], linewidth=2)
+        axe.plot(timesteps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
+        axe.plot(timesteps[step:], inputs[i][:pred_last_idx-step], linewidth=2)  # delayed
     legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names))
