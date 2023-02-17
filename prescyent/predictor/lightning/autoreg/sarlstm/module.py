@@ -1,7 +1,6 @@
 """
-simple LSTM implementation
-[short description]
-[link to the paper]
+Simple Auto Regressive LSTM implementation
+Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
 import torch
 from torch import nn
@@ -13,13 +12,11 @@ class TorchModule(nn.Module):
     """
     feature_size - The number of dimensions to predict in parrallel
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
-    output_size - This will be equal to the prediction_periods input to get_x_y_pairs
     """
-    def __init__(self, feature_size: int, hidden_size: int, output_size: int):
+    def __init__(self, feature_size: int, hidden_size: int):
         super().__init__()
         self.hidden_size = hidden_size
         self.feature_size = feature_size
-        self.output_size = output_size
 
         self.lstm1 = nn.LSTMCell(self.feature_size, self.hidden_size)
         self.lstm2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
@@ -31,7 +28,6 @@ class TorchModule(nn.Module):
         predictions = []
         # input shape is (batch_size, seq_len, num_feature)
         batch_size = input_tensor.shape[0]
-        num_feature = input_tensor.shape[2]
         # init the hidden states
         h1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
         c1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
@@ -47,10 +43,11 @@ class TorchModule(nn.Module):
             h1, c1 = self.lstm1(input_frame, (h1, c1))
             h2, c2 = self.lstm2(h1, (h2, c2))
             prediction = self.linear(h2)
+            predictions.append(torch.unsqueeze(prediction, 1))
 
         # decoding
         # we loop over the layers for each output desired
-        for _ in range(self.output_size):
+        for _ in range(future):
             h1, c1 = self.lstm1(prediction, (h1, c1))
             h2, c2 = self.lstm2(h1, (h2, c2))
             prediction = self.linear(h2)
@@ -62,13 +59,10 @@ class TorchModule(nn.Module):
 
 
 class LightningModule(BaseLightningModule):
-    """[short description]
-       [usage]
-       [detail of the implementation]
-    """
-    def __init__(self, feature_size: int, hidden_size: int, output_size: int):
+    """pl module for the simple ar lstm implementation"""
+    def __init__(self, feature_size: int, hidden_size: int):
         super().__init__()
-        self.torch_model = TorchModule(feature_size, hidden_size, output_size)
+        self.torch_model = TorchModule(feature_size, hidden_size)
         self.criterion = nn.MSELoss()
         self.save_hyperparameters()
 
@@ -76,6 +70,6 @@ class LightningModule(BaseLightningModule):
     def load_from_binary(cls, path: str):
         """Retrieve model infos from torch binary"""
         model = torch.load(path)
-        lstm_module = cls(model.feature_size, model.hidden_size, model.output_size)
+        lstm_module = cls(model.feature_size, model.hidden_size)
         lstm_module.torch_model = model
         return lstm_module

@@ -1,4 +1,5 @@
 """util functions for tensors"""
+from typing import Iterable
 import torch
 
 
@@ -12,3 +13,6 @@ def flatten_list_of_preds(preds: torch.Tensor):
             flatten_preds[j] = pred[-1]
         preds = flatten_preds
     return preds
+
+def is_tensor_batched(iterable: Iterable):
+    return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 3

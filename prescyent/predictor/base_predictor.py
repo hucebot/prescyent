@@ -39,8 +39,9 @@ class BasePredictor():
         if self.version is None:
             self.version = copy.deepcopy(self.tb_logger.version)
 
-    def __call__(self, input_batch, history_size: int = None, input_step: int = 1):
-        return self.run(input_batch, history_size, input_step)
+    def __call__(self, input_batch, history_size: int = None, history_step: int = 1,
+                 future_size: int = 0, output_only_future: bool = True):
+        return self.run(input_batch, history_size, history_step, future_size, output_only_future)
 
     def __str__(self) -> str:
         return f"{self.name}_v{self.version}"
@@ -59,7 +60,8 @@ class BasePredictor():
         """test predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
-    def run(self, input_batch: Iterable, history_size: int, input_step: int):
+    def run(self, input_batch: Iterable, history_size: int, history_step: int,
+            future_size: int, output_only_future: bool):
         """run predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 

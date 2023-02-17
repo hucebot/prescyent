@@ -1,11 +1,11 @@
 """Pytorch module et Lightning module for Linears"""
 
-from prescyent.predictor.lightning.predictor import LightningPredictor
-from prescyent.predictor.lightning.linear.module import LightningModule
-from prescyent.predictor.lightning.linear.config import Config
+from prescyent.predictor.lightning.sequence.predictor import SequencePredictor
+from prescyent.predictor.lightning.sequence.linear.module import LightningModule
+from prescyent.predictor.lightning.sequence.linear.config import Config
 
 
-class Predictor(LightningPredictor):
+class Predictor(SequencePredictor):
     """Upper class to train and use a Linear Model"""
 
     def __init__(self, model_path=None, config=None):
