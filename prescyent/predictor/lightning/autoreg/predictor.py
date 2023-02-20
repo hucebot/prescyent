@@ -33,7 +33,7 @@ class AutoRegPredictor(LightningPredictor):
             self.model.eval()
             # -- If no history_size is given or relevant, return the model over the whole input
             if history_size is None or history_size >= input_batch.shape[0]:
-                predictions = self.model.torch_model(input_batch, future_size)
+                predictions = self.model.torch_model(input_batch, future=future_size)
                 if output_only_future:
                     predictions = predictions[-(future_size + 1):]
                 return predictions
@@ -43,7 +43,7 @@ class AutoRegPredictor(LightningPredictor):
             prediction_list = []
             for i in range(0, input_batch.shape[0] - history_size, history_step):
                 input_sub_batch = input_batch[i:i + history_size]
-                prediction = self.model.torch_model(input_sub_batch, future_size)
+                prediction = self.model.torch_model(input_sub_batch, future=future_size)
                 if output_only_future:
                     prediction_list.append(prediction[-(future_size + 1):])
                 else:
