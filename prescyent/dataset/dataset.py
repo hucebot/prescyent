@@ -95,15 +95,15 @@ class MotionDataset(Dataset):
 
     # This could use padding to get recognition from the first time-steps
     def _make_seq2seq_pairs(self, trajectory):
-        if len(trajectory) <= self.history_size + self.future_size:
+        if len(trajectory) < self.history_size + self.future_size:
             raise ValueError("Check that the intended history size and future size are compatible"
                              f" with the dataset. A trajectory of size {len(trajectory)} can't be"
                              f" split in samples of sizes {self.history_size}"
                              f" and {self.future_size}")
         sample = [trajectory[i:i + self.history_size]
-                  for i in range(len(trajectory) - self.history_size - self.future_size)]
+                  for i in range(len(trajectory) - self.history_size - self.future_size + 1)]
         truth = [trajectory[i + self.history_size:i + self.history_size + self.future_size]
-                 for i in range(len(trajectory) - self.history_size - self.future_size)]
+                 for i in range(len(trajectory) - self.history_size - self.future_size + 1)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         sample = torch.stack(sample)
@@ -112,14 +112,14 @@ class MotionDataset(Dataset):
 
     # This could use padding to get recognition from the first time-steps
     def _make_autoreg_pairs(self, trajectory):
-        if len(trajectory) <= self.history_size + 1:
+        if len(trajectory) < self.history_size + 1:
             raise ValueError("Check that the intended history size and future size are compatible"
                              f" with the dataset. A trajectory of size {len(trajectory)} can't be"
                              f" split in samples of sizes {self.history_size} + 1")
         sample = [trajectory[i:i + self.history_size]
-                  for i in range(len(trajectory) - self.history_size - 1)]
+                  for i in range(len(trajectory) - self.history_size)]
         truth = [trajectory[i + 1:i + self.history_size + 1]
-                 for i in range(len(trajectory) - self.history_size - 1)]
+                 for i in range(len(trajectory) - self.history_size)]
         # -- use the stack function to convert the list of 1D tensors
         # into a 2D tensor where each element of the list is now a row
         sample = torch.stack(sample)
