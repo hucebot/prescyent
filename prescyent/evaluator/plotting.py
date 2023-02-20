@@ -8,7 +8,7 @@ import torch
 from matplotlib.axes import Axes
 
 from prescyent.dataset.trajectories import Trajectory
-
+from prescyent.utils.logger import logger, EVAL
 
 def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
                     pred: torch.Tensor, savefig_path=None):
@@ -88,6 +88,7 @@ def save_plot_and_close(savefig_path):
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
         plt.savefig(savefig_path)
+        logger.info("Saving plot to %s", savefig_path, group=EVAL)
     plt.close()
 
 
