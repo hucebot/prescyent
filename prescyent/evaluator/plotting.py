@@ -62,17 +62,17 @@ def plot_multiple_predictors(trajectory: Trajectory,
                              predictors: List[Callable],
                              predictions: List[torch.Tensor],
                              step: int, savefig_path: str):
+    pred_last_idx = max([len(pred) for pred in predictions]) + step
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     truth = torch.transpose(trajectory.tensor, 0, 1)
     preds = [torch.transpose(pred, 0, 1) for pred in predictions]
-    pred_last_idx = len(trajectory) + step
     timesteps = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
     if preds[0].shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(timesteps[:-step], truth[i], linewidth=2)
+        axe.plot(timesteps[:len(truth[i])], truth[i], linewidth=2)
         for pred in preds:
             axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
