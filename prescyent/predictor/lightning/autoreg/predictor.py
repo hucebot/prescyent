@@ -45,7 +45,7 @@ class AutoRegPredictor(LightningPredictor):
                 input_sub_batch = input_batch[i:i + history_size]
                 prediction = self.model.torch_model(input_sub_batch, future=future_size)
                 if output_only_future:
-                    prediction_list.append(prediction[-(future_size + 1):])
+                    prediction_list.append(prediction[-(future_size):])
                 else:
                     prediction_list.append(prediction)
             return prediction_list
