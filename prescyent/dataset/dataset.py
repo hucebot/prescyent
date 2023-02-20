@@ -112,6 +112,10 @@ class MotionDataset(Dataset):
 
     # This could use padding to get recognition from the first time-steps
     def _make_autoreg_pairs(self, trajectory):
+        if len(trajectory) <= self.history_size + 1:
+            raise ValueError("Check that the intended history size and future size are compatible"
+                             f" with the dataset. A trajectory of size {len(trajectory)} can't be"
+                             f" split in samples of sizes {self.history_size} + 1")
         sample = [trajectory[i:i + self.history_size]
                   for i in range(len(trajectory) - self.history_size - 1)]
         truth = [trajectory[i + 1:i + self.history_size + 1]
