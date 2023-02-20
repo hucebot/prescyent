@@ -1,8 +1,9 @@
 """util functions for list, files and data"""
-from prescyent.utils.logger import logger, DATASET
 from typing import List
 
 import numpy as np
+
+from prescyent.utils.logger import logger, DATASET
 
 
 def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
@@ -13,8 +14,8 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
         array = np.array(array)
 
     if shuffle:
-        np.random.seed(2)   # have a deterministic shuffle for reruns
-        np.random.shuffle(array)
+        np_rng = np.random.default_rng(2)   # have a deterministic shuffle for reruns
+        np_rng.shuffle(array)
     if len(array) < 2:
         logger.warning("Only the first array could contain data",
                        group=DATASET)
