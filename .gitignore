@@ -136,3 +136,5 @@ data/
 
 # lightning folder
 lightning_logs/
+
+samples/
