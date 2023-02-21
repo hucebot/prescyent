@@ -12,17 +12,13 @@ class LinearInitTests(CustomTestCase):
         feature_size = 1
         output_size = 10
         input_size = 10
-        config = LinearConfig(feature_size=feature_size,
-                            output_size=output_size,
-                            input_size=input_size
-                            )
+        config = LinearConfig(output_size=output_size,
+                            input_size=input_size)
         predictor = LinearPredictor(config=config)
         self.assertHasAttr(predictor, "model")
         self.assertHasAttr(predictor, "config")
         self.assertHasAttr(predictor.model, "torch_model")
         self.assertHasAttr(predictor.model, "criterion")
-        self.assertEqual(predictor.model.torch_model.feature_size,
-                         feature_size)            # mandatory value
         self.assertEqual(predictor.model.torch_model.linear.in_features,
                          input_size)           # mandatory value
         self.assertEqual(predictor.model.torch_model.output_size,

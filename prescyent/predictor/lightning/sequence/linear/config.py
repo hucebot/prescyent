@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 class Config(BaseModel):
     """Pydantic Basemodel for Linear Module configuration"""
-    feature_size: int
     input_size: int
     output_size: int
     identifier: str = "linear"
