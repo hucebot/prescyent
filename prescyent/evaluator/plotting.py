@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Callable, List, Tuple, Union
 
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.axes import Axes
@@ -10,27 +12,20 @@ from matplotlib.axes import Axes
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
 
-def plot_prediction(data_sample: Tuple[torch.Tensor, torch.Tensor],
-                    pred: torch.Tensor, savefig_path=None):
-    """plot input, truth and pred
 
-    Args:
-        data_sample (Tuple[torch.Tensor, torch.Tensor]):  tuple(input, truth)
-        pred (torch.Tensor): prediction
-        savefig_path (_type_, optional): if there is a path we save. Defaults to None.
-    """
+def plot_truth_and_pred(sample, truth, pred, step=0, savefig_path=None):
     plt.clf()   # clear just in case
-    sample, truth = data_sample
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     sample = torch.transpose(sample, 0, 1)
     truth = torch.transpose(truth, 0, 1)
     pred = torch.transpose(pred, 0, 1)
-    timesteps = range(len(sample[0]) + len(truth[0]))
+    timesteps = range(step + len(pred[0]))
     fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
     for i, axe in enumerate(axes):
-        axe.plot(timesteps, torch.cat((sample[i], truth[i])), linewidth=2)
-        axe.plot(timesteps[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
-    legend_plot(axes, ["Truth", "Prediction"])
+        axe.plot(timesteps[:len(sample[i])], sample[i], linewidth=2)
+        axe.plot(timesteps[step:len(truth[i]) + step], truth[i], linewidth=2)
+        axe.plot(timesteps[step:], pred[i], linewidth=2, linestyle='--')
+    legend_plot(axes, ["Sample", "Truth", "Prediction"])
     fig.set_size_inches(10.5, 10.5)
     fig.suptitle("Motion prediction")
     save_plot_and_close(savefig_path)
@@ -49,9 +44,9 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
         axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(timesteps[:len(inputs[i])], inputs[i], linewidth=2)
-        axe.plot(timesteps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
         axe.plot(timesteps[step:], inputs[i][:pred_last_idx-step], linewidth=2)  # delayed
-    legend_plot(axes, ["Truth", "Prediction", "Delayed Truth"],
+        axe.plot(timesteps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
+    legend_plot(axes, ["Truth", "Delayed Truth", "Prediction"],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names))
     fig.suptitle(trajectory.file_path)
