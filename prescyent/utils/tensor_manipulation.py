@@ -3,16 +3,22 @@ from typing import Iterable
 import torch
 
 
-def flatten_list_of_preds(preds: torch.Tensor):
+def cat_tensor_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
     # if we have a list of preds
     if len(preds.shape) == 3:
         # we flatten the prediction to the last output of each prediciton
         # (seq_len, input_size, feature_size) -> (seq_len, feature_size)
-        flatten_preds = torch.zeros(preds.shape[0], preds.shape[2])
+        cat_preds = torch.zeros(preds.shape[0], preds.shape[2])
         for j, pred in enumerate(preds):
-            flatten_preds[j] = pred[-1]
-        preds = flatten_preds
+            cat_preds[j] = pred[flatt_idx]
+        preds = cat_preds
     return preds
 
-def is_tensor_batched(iterable: Iterable):
+def cat_list_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
+    # we flatten the prediction to the last output of each prediciton
+    # list[Tensor(future_size, feature_size)] of len == pred_len
+    #   -> Tensor(pred_len, feature_size)
+    return torch.cat([preds[0][:flatt_idx]] + [pred[flatt_idx].unsqueeze(0) for pred in preds], dim=0)
+
+def is_tensor_is_batched(iterable: Iterable):
     return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 3

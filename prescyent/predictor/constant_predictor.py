@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from prescyent.evaluator import get_ade, get_fde
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensor_manipulation import is_tensor_batched
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 class ConstantPredictor(BasePredictor):
@@ -75,7 +75,7 @@ class ConstantPredictor(BasePredictor):
 
 
     def get_prediction(self, input_t, history_size):
-        if is_tensor_batched(input_t):
+        if is_tensor_is_batched(input_t):
             input_t = torch.transpose(input_t, 0, 1)
             output = [input_t[-1].unsqueeze(0) for _ in range(history_size)]
             output_t = torch.cat(output, dim=0)
