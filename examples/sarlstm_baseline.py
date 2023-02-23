@@ -24,19 +24,20 @@ if __name__ == "__main__":
     feature_size = dataset.feature_size
     hidden_size = feature_size * 20
     config = SARLSTMConfig(feature_size=feature_size,
-                        output_size=future_size,
-                        hidden_size=hidden_size,)
+                           output_size=future_size,
+                           hidden_size=hidden_size,)
     predictor = SARLSTMPredictor(config=config)
 
     # Train, Test and Save
     training_config = TrainingConfig()
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save(f"data/models/teleopredictoricub/all/{predictor.name}/version_{predictor.version}")
+    predictor.save("data/models/teleopredictoricub/all/"
+                   f"{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
     eval_results = eval_predictors([predictor],
-                               dataset.trajectories.test[0:1],
-                               history_size=history_size,
-                               future_size=future_size,
-                               unscale_function=dataset.unscale)[0]
+                                   dataset.trajectories.test[0:1],
+                                   history_size=history_size,
+                                   future_size=future_size,
+                                   unscale_function=dataset.unscale)[0]
     print("ADE:", eval_results.mean_ade, "FDE:", eval_results.mean_fde)

@@ -1,5 +1,7 @@
+from prescyent.dataset.config import LearningTypes
 from prescyent.evaluator import eval_predictors
-from prescyent.predictor import SARLSTMPredictor, LinearPredictor, DelayedPredictor, ConstantPredictor, Seq2SeqPredictor
+from prescyent.predictor import (SARLSTMPredictor, DelayedPredictor,
+                                 ConstantPredictor, LinearPredictor, Seq2SeqPredictor)
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 
 
@@ -15,35 +17,36 @@ if __name__ == "__main__":
                                              future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size)
+                                             batch_size=batch_size,
+                                             learning_type=LearningTypes.AUTOREG)
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Load predictors
-    linear_predictor = LinearPredictor("data/models/teleopredictoricub/all/"
+    linear_predictor = LinearPredictor("data/models/teleopicub/all/"
                                        "LinearPredictor/version_0")
-    lstm_predictor = SARLSTMPredictor("data/models/teleopredictoricub/all/"
-                                      "SARLSTMPredictor/version_2")
-    seq2seq_predictor = Seq2SeqPredictor("data/models/teleopredictoricub/all/"
+    lstm_predictor = SARLSTMPredictor("data/models/teleopicub/all/"
+                                      "SARLSTMPredictor/version_0")
+    seq2seq_predictor = Seq2SeqPredictor("data/models/teleopicub/all/"
                                          "Seq2SeqPredictor/version_0")
-    delayed_predictor = DelayedPredictor("data/models/teleopredictoricub/all")
-    constant_predictor = ConstantPredictor("data/models/teleopredictoricub/all")
-    # Train, Test and Save
+    delayed_predictor = DelayedPredictor("data/models/teleopicub/all")
+    constant_predictor = ConstantPredictor("data/models/teleopicub/all")
 
     predictors = [
-            linear_predictor,
-            lstm_predictor,
-            seq2seq_predictor,
-            delayed_predictor,
-            constant_predictor
-        ]
+        linear_predictor,
+        lstm_predictor,
+        seq2seq_predictor,
+        delayed_predictor,
+        constant_predictor
+    ]
 
+    # -- Get and print Evaluation Summaries with the eval runner
     eval_results = eval_predictors(predictors,
                                    dataset.trajectories.test[0:5],
                                    history_size=history_size,
                                    future_size=future_size,
                                    unscale_function=dataset.unscale,
-                                   saveplot_dir_path="data/eval/teleop/ar")
-
+                                   run_method="windowed",
+                                   saveplot_dir_path="data/eval/teleopicub/all/")
     for p, predictor in enumerate(predictors):
         print("\n ---", predictor,
               "\nMean ADE: %.6f" % eval_results[p].mean_ade,
