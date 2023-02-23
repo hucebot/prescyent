@@ -1,10 +1,9 @@
 """Util functions for plots"""
 
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Union
 
 import matplotlib
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.axes import Axes
@@ -13,18 +12,21 @@ from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
 
 
-def plot_truth_and_pred(sample, truth, pred, step=0, savefig_path=None):
+matplotlib.use('agg')
+
+
+def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
     plt.clf()   # clear just in case
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     sample = torch.transpose(sample, 0, 1)
     truth = torch.transpose(truth, 0, 1)
     pred = torch.transpose(pred, 0, 1)
-    timesteps = range(step + len(pred[0]))
+    time_steps = range(len(sample[0]) + len(pred[0]))
     fig, axes = plt.subplots(pred.shape[0], sharex=True)  # we do one subplot per feature
     for i, axe in enumerate(axes):
-        axe.plot(timesteps[:len(sample[i])], sample[i], linewidth=2)
-        axe.plot(timesteps[step:len(truth[i]) + step], truth[i], linewidth=2)
-        axe.plot(timesteps[step:], pred[i], linewidth=2, linestyle='--')
+        axe.plot(time_steps[:len(sample[i])], sample[i], linewidth=2)
+        axe.plot(time_steps[len(sample[i]):], truth[i], linewidth=2)
+        axe.plot(time_steps[len(sample[i]):], pred[i], linewidth=2, linestyle='--')
     legend_plot(axes, ["Sample", "Truth", "Prediction"])
     fig.set_size_inches(10.5, 10.5)
     fig.suptitle("Motion prediction")
@@ -38,14 +40,14 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
 
     pred_last_idx = len(preds[0]) + step
 
-    timesteps = range(pred_last_idx)
+    time_steps = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
     if preds.shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(timesteps[:len(inputs[i])], inputs[i], linewidth=2)
-        axe.plot(timesteps[step:], inputs[i][:pred_last_idx-step], linewidth=2)  # delayed
-        axe.plot(timesteps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
+        axe.plot(time_steps[:len(inputs[i])], inputs[i], linewidth=2)
+        axe.plot(time_steps[step:], inputs[i][:pred_last_idx - step], linewidth=2)  # delayed
+        axe.plot(time_steps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
     legend_plot(axes, ["Truth", "Delayed Truth", "Prediction"],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names))
@@ -61,15 +63,16 @@ def plot_multiple_predictors(trajectory: Trajectory,
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     truth = torch.transpose(trajectory.tensor, 0, 1)
     preds = [torch.transpose(pred, 0, 1) for pred in predictions]
-    timesteps = range(pred_last_idx)
+    time_steps = range(pred_last_idx)
     # we do one subplot per feature
     fig, axes = plt.subplots(truth.shape[0], sharex=True)
     if preds[0].shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(timesteps[:len(truth[i])], truth[i], linewidth=2)
+        axe.plot(time_steps[:len(truth[i])], truth[i], linewidth=2)
         for pred in preds:
-            axe.plot(timesteps[pred_last_idx - len(pred[i]):], pred[i], linewidth=1, linestyle='--')
+            axe.plot(time_steps[pred_last_idx - len(pred[i]):],
+                     pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) for predictor in predictors],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names) + 2)
@@ -91,7 +94,7 @@ def legend_plot(axes: List[Axes],
                 names: List[str],
                 xlabel: str = "time",
                 ylabels: Union[List[str], str] = "pos"):
-    """standardized lengend function for all plots of the library
+    """standardized legend function for all plots of the library
 
     Args:
         axes (List[Axes]): axes to describe
