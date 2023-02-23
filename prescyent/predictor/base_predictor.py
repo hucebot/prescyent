@@ -2,15 +2,20 @@
 The predictor can be trained and predict
 """
 import copy
-from pathlib import Path
-from typing import Dict, Iterable, Union
+from typing import Dict, Iterable, List, Union
 
+import torch
 from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 
+from prescyent.evaluator.metrics import get_ade, get_fde
+
 
 class BasePredictor():
-    """abstract class for any predictor"""
+    """ base class for any predictor
+        methods _build_from_config, train, get_prediction, save must be overridden by a child class
+        This class initialize a tensorboard logger and, a test loop and a default run loop
+    """
     log_root_path: str
     name: str
     version: int
@@ -56,15 +61,68 @@ class BasePredictor():
         """train predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
-    def test(self, test_dataloader: Iterable):
-        """test predictor"""
-        raise NotImplementedError("This method must be overriden by the inherited predictor")
-
-    def run(self, input_batch: Iterable, history_size: int, history_step: int,
-            future_size: int, output_only_future: bool):
-        """run predictor"""
+    def get_prediction(self, input_t: torch.Tensor, future_size: int):
+        """run the model / algorithm for one input"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
     def save(self, save_path: str):
         """save predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
+
+    def test(self, test_dataloader: Iterable):
+        """test predictor"""
+        # log in tensorboard
+        losses, ades, fdes = [], [], []
+        for sample, truth in test_dataloader:
+            # eval step
+            pred = self.get_prediction(sample, len(truth[0]))
+            losses.append(torch.nn.MSELoss()(pred, truth))
+            ades.append(get_ade(truth, pred))
+            fdes.append(get_fde(truth, pred))
+        # eval epoch
+        mean_loss = torch.stack(losses).mean()
+        ade = torch.stack(ades).mean()
+        fde = torch.stack(fdes).mean()
+        self.tb_logger.experiment.add_scalar("Test/epoch_loss", mean_loss, 0)
+        self.tb_logger.experiment.add_scalar("Test/ADE", ade, 0)
+        self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
+        return mean_loss, ade, fde
+
+    def run(self, input_batch: Iterable, history_size: int,
+            history_step: int = 1, future_size: int = 0,
+            output_only_future: bool = True) -> List[torch.Tensor]:
+        """run method/model inference on the input batch
+        The output is the list of predictions for each defined subpart of the input batch,
+        or the single prediction for the whole input
+
+        Args:
+            input_batch (Iterable): Input for the predictor's model
+            history_size (int, optional): If an input size is provided, the input batch will
+                be splitted sequences of len == history_size.
+            history_step (int, optional): When splitting the input_batch (history_size != None)
+                defines the step of the iteration. Defaults to 1.
+            future_size (int|None, optional): If an input size is provided, the input batch will
+                be splitted sequences of len == future_size. Defaults to None.
+            output_only_future (bool, optional): If the model also outputs more than future,
+                we keep only the last future_size_values. Defaults to True
+        Returns:
+            List[torch.Tensor]: the list of model predictions
+        """
+        # -- If no history_size is given or relevant, return the model over the whole input
+        if history_size is None or history_size >= input_batch.shape[0]:
+            predictions = self.get_prediction(input_batch, future_size)
+            if output_only_future and future_size and \
+                    len(prediction) == history_size + future_size - 1:
+                prediction = prediction[-future_size:]
+            return predictions
+        # -- Else we iterate over inputs of len history_size, with step history_step
+        # and return a list of predictions
+        prediction_list = []
+        for i in range(0, input_batch.shape[0] - history_size, history_step):
+            input_sub_batch = input_batch[i:i + history_size]
+            prediction = self.get_prediction(input_sub_batch, future_size)
+            if output_only_future and future_size and \
+                    len(prediction) == history_size + future_size - 1:
+                prediction = prediction[-future_size:]
+            prediction_list.append(prediction)
+        return prediction_list

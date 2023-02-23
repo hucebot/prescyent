@@ -23,7 +23,7 @@ class TorchModule(nn.Module):
         self.linear = nn.Linear(hidden_size, feature_size)
 
     @allow_unbatched
-    def forward(self, input_tensor: torch.Tensor, future: int = 1):
+    def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         # init the output
         predictions = []
         # input shape is (batch_size, seq_len, num_feature)
@@ -47,7 +47,7 @@ class TorchModule(nn.Module):
 
         # decoding
         # we loop over the layers for each output desired
-        for _ in range(future - 1):
+        for _ in range(future_size - 1):
             h1, c1 = self.lstm1(prediction, (h1, c1))
             h2, c2 = self.lstm2(h1, (h2, c2))
             prediction = self.linear(h2)

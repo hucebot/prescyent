@@ -5,7 +5,7 @@ import json
 import shutil
 from collections.abc import Iterable, Callable
 from pathlib import Path
-from typing import Type, Union
+from typing import List, Type, Union
 
 import pytorch_lightning as pl
 import torch
@@ -200,3 +200,15 @@ class LightningPredictor(BasePredictor):
 
         logger.info("Saving config at %s", (save_path / "config.json"), group=PREDICTOR)
         self._save_config(save_path / "config.json")
+
+    def get_prediction(self, input_t: torch.Tensor, future_size: int):
+        return self.model.torch_model(input_t, future_size=future_size)
+
+    def run(self, input_batch: Iterable, history_size: int,
+            history_step: int = 1, future_size: int = 0,
+            output_only_future: bool = True) -> List[torch.Tensor]:
+        with torch.no_grad():
+            self.model.eval()
+            return super().run(input_batch, history_size,
+                               history_step, future_size,
+                               output_only_future)

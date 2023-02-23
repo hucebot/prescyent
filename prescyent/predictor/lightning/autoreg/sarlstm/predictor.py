@@ -1,11 +1,11 @@
 """Pytorch module et Lightning module for LSTMs"""
 
-from prescyent.predictor.lightning.autoreg.predictor import AutoRegPredictor
+from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.lightning.autoreg.sarlstm.module import LightningModule
 from prescyent.predictor.lightning.autoreg.sarlstm.config import Config
 
 
-class Predictor(AutoRegPredictor):
+class Predictor(LightningPredictor):
     """Upper class to train and use a LSTM Model"""
 
     def __init__(self, model_path=None, config=None):
