@@ -108,7 +108,7 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
             # prediction is made with chosed method and timed
             start = timeit.default_timer()
             prediction = run_predictor(predictor, trajectory.scaled_tensor,
-                                        history_size, future_size, run_method)
+                                       history_size, future_size, run_method)
             elapsed = (timeit.default_timer() - start) * 1000.0
             if unscale_function is not None:
                 prediction = unscale_function(prediction)

@@ -14,11 +14,16 @@ def cat_tensor_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
         preds = cat_preds
     return preds
 
+
 def cat_list_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
     # we flatten the prediction to the last output of each prediciton
     # list[Tensor(future_size, feature_size)] of len == pred_len
     #   -> Tensor(pred_len, feature_size)
-    return torch.cat([preds[0][:flatt_idx]] + [pred[flatt_idx].unsqueeze(0) for pred in preds], dim=0)
+    return torch.cat(
+        [preds[0][:flatt_idx]] + [pred[flatt_idx].unsqueeze(0) for pred in preds],
+        dim=0
+    )
+
 
 def is_tensor_is_batched(iterable: Iterable):
     return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 3

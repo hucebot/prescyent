@@ -45,7 +45,7 @@ class BasePredictor():
             self.version = copy.deepcopy(self.tb_logger.version)
 
     def __call__(self, input_batch, history_size: int = None, history_step: int = 1,
-                 future_size: int = 0, output_only_future: bool = True):
+                 future_size: int = None, output_only_future: bool = True):
         return self.run(input_batch, history_size, history_step, future_size, output_only_future)
 
     def __str__(self) -> str:
@@ -88,8 +88,8 @@ class BasePredictor():
         self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
         return mean_loss, ade, fde
 
-    def run(self, input_batch: Iterable, history_size: int,
-            history_step: int = 1, future_size: int = 0,
+    def run(self, input_batch: Iterable, history_size: int = None,
+            history_step: int = 1, future_size: int = None,
             output_only_future: bool = True) -> List[torch.Tensor]:
         """run method/model inference on the input batch
         The output is the list of predictions for each defined subpart of the input batch,
@@ -98,7 +98,7 @@ class BasePredictor():
         Args:
             input_batch (Iterable): Input for the predictor's model
             history_size (int, optional): If an input size is provided, the input batch will
-                be splitted sequences of len == history_size.
+                be splitted sequences of len == history_size. Defaults to None
             history_step (int, optional): When splitting the input_batch (history_size != None)
                 defines the step of the iteration. Defaults to 1.
             future_size (int|None, optional): If an input size is provided, the input batch will
@@ -108,17 +108,14 @@ class BasePredictor():
         Returns:
             List[torch.Tensor]: the list of model predictions
         """
-        # -- If no history_size is given or relevant, return the model over the whole input
-        if history_size is None or history_size >= input_batch.shape[0]:
-            predictions = self.get_prediction(input_batch, future_size)
-            if output_only_future and future_size and \
-                    len(prediction) == history_size + future_size - 1:
-                prediction = prediction[-future_size:]
-            return predictions
-        # -- Else we iterate over inputs of len history_size, with step history_step
-        # and return a list of predictions
         prediction_list = []
-        for i in range(0, input_batch.shape[0] - history_size, history_step):
+        # if we don't split the input, the history_size is the size of input
+        if history_size is None:
+            history_size = input_batch.shape[0]
+        # default future_size would be 1 in the general case
+        if future_size is None:
+            future_size = input_batch.shape[0]
+        for i in range(0, input_batch.shape[0] - history_size + 1, history_step):
             input_sub_batch = input_batch[i:i + history_size]
             prediction = self.get_prediction(input_sub_batch, future_size)
             if output_only_future and future_size and \

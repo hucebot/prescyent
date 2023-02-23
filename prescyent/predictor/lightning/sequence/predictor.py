@@ -1,10 +1,11 @@
 """class for auto regressive lightning models"""
-from typing import Iterable
+from typing import Iterable, List
 
 import torch
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 class SequencePredictor(LightningPredictor):
@@ -13,8 +14,8 @@ class SequencePredictor(LightningPredictor):
     """
 
     def run(self, input_batch: Iterable, history_size: int = None,
-            history_step: int = 1, future_size: int = 0,
-            output_only_future: bool = None) -> torch.Tensor:
+            history_step: int = 1, future_size: int = None,
+            output_only_future: bool = None) -> List[torch.Tensor]:
         """run method/model inference on the input batch
         The output is either the list of predictions for each defined subpart of the input batch,
         or the single prediction for the whole input
@@ -27,21 +28,20 @@ class SequencePredictor(LightningPredictor):
                 defines the step of the iteration. Defaults to 1.
 
         Returns:
-            torch.Tensor | List[torch.Tensor]: the model prediction or list of model predictions
+            List[torch.Tensor]: the model prediction or list of model predictions
         """
         with torch.no_grad():
             self.model.eval()
             if future_size is not None and self.model.torch_model.output_size < future_size:
                 logger.warning("This predictor cannot output a sequence lower than %s",
-                            self.model.torch_model.output_size,
-                            group=PREDICTOR)
+                               self.model.torch_model.output_size,
+                               group=PREDICTOR)
             elif future_size is None:
                 future_size = self.model.torch_model.output_size
             list_outputs = []
             # if is tensor and batched, input_len = seq_len's dim, else len()
-            input_len = input_batch.shape[1] \
-                if isinstance(input_batch, torch.Tensor) and len(input_batch.shape) == 3 \
-                else len(input_batch)
+            input_len = input_batch.shape[1] if is_tensor_is_batched(input_batch) \
+                                             else len(input_batch)
             # -- If no history_size is given or relevant, return the model over the whole input
             if history_size is None or history_size >= input_batch.shape[0]:
                 for _ in range(0, future_size, self.model.torch_model.output_size):
@@ -50,8 +50,7 @@ class SequencePredictor(LightningPredictor):
                     # We iter over pred
                     input_batch = torch.cat((input_batch, prediction))[-input_len:]
                 # If we predicted more, we output only future_size
-                return torch.cat(list_outputs, dim=0)[:future_size]
-
+                return [torch.cat(list_outputs, dim=0)[:future_size]]
             # -- Else we iterate over inputs of len history_size, with step history_step
             # and return a list of predictions of len == future_size
             prediction_list = []

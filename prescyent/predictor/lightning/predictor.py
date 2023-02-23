@@ -204,8 +204,8 @@ class LightningPredictor(BasePredictor):
     def get_prediction(self, input_t: torch.Tensor, future_size: int):
         return self.model.torch_model(input_t, future_size=future_size)
 
-    def run(self, input_batch: Iterable, history_size: int,
-            history_step: int = 1, future_size: int = 0,
+    def run(self, input_batch: Iterable, history_size: int = None,
+            history_step: int = 1, future_size: int = None,
             output_only_future: bool = True) -> List[torch.Tensor]:
         with torch.no_grad():
             self.model.eval()
