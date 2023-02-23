@@ -25,7 +25,6 @@ class TorchModule(nn.Module):
         self.encoder = nn.LSTM(input_size=feature_size,
                                hidden_size=hidden_size,
                                num_layers=self.num_layers,
-                               batch_first=True,
                                dropout=0)
         self.decoder = nn.LSTM(input_size=feature_size,
                                hidden_size=hidden_size,
@@ -35,11 +34,11 @@ class TorchModule(nn.Module):
 
     @allow_unbatched
     def forward(self, input_tensor: torch.Tensor):
+        # (batch_size, seq_len, features) => (seq_len, batch_size, features)
+        batch_size = input_tensor.shape[0]
+        input_tensor = torch.transpose(input_tensor, 0, 1)
         # take hidden state as the encoding of the whole input sequence
         _, hidden_state = self.encoder(input_tensor)
-        batch_size = input_tensor.shape[0]
-        # (batch_size, seq_len, features) => (seq_len, batch_size, features)
-        input_tensor = torch.transpose(input_tensor, 0, 1)
         # we take as input for the decoder the last input form the input sample
         dec_input = input_tensor[-1].unsqueeze(0)
         # we prepare the output tensor that will be fed by the decoding loop

@@ -31,7 +31,7 @@ class SequencePredictor(LightningPredictor):
         """
         with torch.no_grad():
             self.model.eval()
-            if future_size is not None and self.model.torch_model.output_size <= future_size:
+            if future_size is not None and self.model.torch_model.output_size < future_size:
                 logger.warning("This predictor cannot output a sequence lower than %s",
                             self.model.torch_model.output_size,
                             group=PREDICTOR)
@@ -56,6 +56,7 @@ class SequencePredictor(LightningPredictor):
             # and return a list of predictions of len == future_size
             prediction_list = []
             for j in range(0, input_batch.shape[0] - history_size, history_step):
+                list_outputs = []
                 input_step = input_batch[j:j + history_size]
                 for _ in range(0, future_size, self.model.torch_model.output_size):
                     prediction = self.model.torch_model(input_step)

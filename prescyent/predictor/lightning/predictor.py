@@ -7,8 +7,9 @@ from collections.abc import Iterable, Callable
 from pathlib import Path
 from typing import Type, Union
 
-from pydantic import BaseModel
 import pytorch_lightning as pl
+import torch
+from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 
@@ -123,6 +124,7 @@ class LightningPredictor(BasePredictor):
     def _free_trainer(self):
         del self.trainer
         self.trainer = None
+        torch.cuda.empty_cache()
         gc.collect()
 
     def _save_config(self, save_path: Path):
