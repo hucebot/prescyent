@@ -1,9 +1,9 @@
 {
     "model_config": {
-        "feature_size": 7,
+        "do_normalization": true,
         "identifier": "linear",
         "input_size": 10,
-        "model_path": "data/models/teleopredictoricub/all/LinearPredictor/version_0",
+        "model_path": "tests/mocking/linear_model",
         "output_size": 10
     },
     "name": "LinearPredictor",
