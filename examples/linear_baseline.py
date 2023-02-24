@@ -24,7 +24,7 @@ if __name__ == "__main__":
     feature_size = dataset.feature_size
     config = LinearConfig(output_size=future_size,
                           input_size=history_size,
-                          do_normalization=True)
+                          do_normalization=False)
     predictor = LinearPredictor(config=config)
 
     # Train, Test and Save
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     predictor.train(dataset.train_dataloader, training_config,
                     dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save("data/models/teleopredictoricub/all/"
+    predictor.save("caca/"
                    f"{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
     eval_results = eval_predictors([predictor],

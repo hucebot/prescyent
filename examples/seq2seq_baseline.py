@@ -32,7 +32,7 @@ if __name__ == "__main__":
     training_config = TrainingConfig()
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save("data/models/teleopredictoricub/all/"
+    predictor.save("data/models/teleopicub/all/"
                    f"{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
     eval_results = eval_predictors([predictor],
