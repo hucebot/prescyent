@@ -129,6 +129,8 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
             savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, "all")))
             plot_multiple_predictors(trajectory, predictors, predictions,
                                      step=history_size, savefig_path=savefig_path)
+    for p, predictor in enumerate(predictors):
+        predictor.log_evaluation_summary(evaluation_results[p])
     return evaluation_results
 
 # TODO: Think of some evaluator with a scaling future size, maybe like this but a bit redundant:

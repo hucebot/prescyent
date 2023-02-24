@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Union
 import torch
 from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
+from prescyent.evaluator.eval_result import EvaluationSummary
 
 from prescyent.evaluator.metrics import get_ade, get_fde
 
@@ -124,3 +125,13 @@ class BasePredictor():
                 prediction = prediction[-future_size:]
             prediction_list.append(prediction)
         return prediction_list
+
+    def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
+        self.tb_logger.experiment.add_scalar("Eval/mean_ade", evaluation_summary.mean_ade, 0)
+        self.tb_logger.experiment.add_scalar("Eval/mean_fde", evaluation_summary.mean_fde, 0)
+        self.tb_logger.experiment.add_scalar("Eval/mean_inference_time_ms",
+                                             evaluation_summary.mean_inference_time_ms, 0)
+        self.tb_logger.experiment.add_scalar("Eval/max_ade", evaluation_summary.max_ade, 0)
+        self.tb_logger.experiment.add_scalar("Eval/max_fde", evaluation_summary.max_fde, 0)
+        self.tb_logger.experiment.add_scalar("Eval/max_inference_time_ms",
+                                             evaluation_summary.max_inference_time_ms, 0)
