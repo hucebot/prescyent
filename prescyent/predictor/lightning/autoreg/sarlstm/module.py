@@ -5,7 +5,8 @@ Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_predict
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
+from prescyent.predictor.lightning.module import (BaseLightningModule, allow_unbatched,
+                                                  normalize_tensor_from_last_value)
 
 
 class TorchModule(nn.Module):
@@ -23,6 +24,7 @@ class TorchModule(nn.Module):
         self.linear = nn.Linear(hidden_size, feature_size)
 
     @allow_unbatched
+    @normalize_tensor_from_last_value
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         # init the output
         predictions = []

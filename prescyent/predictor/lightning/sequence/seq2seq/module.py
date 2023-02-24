@@ -6,7 +6,8 @@ simple Seq2Seq implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
+from prescyent.predictor.lightning.module import (BaseLightningModule, allow_unbatched,
+                                                  normalize_tensor_from_last_value)
 
 
 class TorchModule(nn.Module):
@@ -33,6 +34,7 @@ class TorchModule(nn.Module):
         self.linear = nn.Linear(hidden_size, feature_size)
 
     @allow_unbatched
+    @normalize_tensor_from_last_value
     def forward(self, input_tensor: torch.Tensor):
         # (batch_size, seq_len, features) => (seq_len, batch_size, features)
         batch_size = input_tensor.shape[0]

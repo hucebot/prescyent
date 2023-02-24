@@ -23,7 +23,8 @@ if __name__ == "__main__":
 
     feature_size = dataset.feature_size
     config = LinearConfig(output_size=future_size,
-                          input_size=history_size)
+                          input_size=history_size,
+                          do_normalization=True)
     predictor = LinearPredictor(config=config)
 
     # Train, Test and Save

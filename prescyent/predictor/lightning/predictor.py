@@ -9,12 +9,13 @@ from typing import List, Type, Union
 
 import pytorch_lightning as pl
 import torch
-from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 
 from prescyent.predictor.base_predictor import BasePredictor
+from prescyent.predictor.lightning.module import BaseLightningModule
 from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.predictor.lightning.module_config import ModuleConfig
 from prescyent.utils.logger import logger, PREDICTOR
 
 
@@ -23,8 +24,8 @@ class LightningPredictor(BasePredictor):
     This class should not be called as is
     You must instanciate a class from wich LightningPredictor is a parent
     """
-    module_class: Type[BasePredictor]
-    config_class: Type[BaseModel]
+    module_class: Type[BaseLightningModule]
+    config_class: Type[ModuleConfig]
     model: pl.LightningModule
     training_config: TrainingConfig
     trainer: pl.Trainer
@@ -42,12 +43,14 @@ class LightningPredictor(BasePredictor):
         elif config is not None:
             version = None
             self.model = self._build_from_config(config)
-            log_root_path = config.model_path
+            log_root_path = self.config.model_path
             super().__init__(log_root_path, name, version)
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
 
+        # -- Init module related args
+        self.model.torch_model.do_normalization = self.config.do_normalization
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None

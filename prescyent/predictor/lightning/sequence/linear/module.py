@@ -6,8 +6,8 @@ simple Linear implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseLightningModule, allow_unbatched
-
+from prescyent.predictor.lightning.module import (BaseLightningModule, allow_unbatched,
+                                                  normalize_tensor_from_last_value)
 
 class TorchModule(nn.Module):
     """Simple linear layer with flatten input"""
@@ -19,6 +19,7 @@ class TorchModule(nn.Module):
         self.linear = nn.Linear(input_size, output_size)
 
     @allow_unbatched
+    @normalize_tensor_from_last_value
     def forward(self, input_tensor: torch.Tensor):
         # simple single feature prediction of the next item in sequence
         # (batch, seq_len, features) -> (batch, features, seq_len)

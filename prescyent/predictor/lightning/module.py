@@ -8,6 +8,22 @@ from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.predictor.lightning.training_config import TrainingConfig
 
 
+def normalize_tensor_from_last_value(function):
+    """decorator for normalization of the input tensor before forward method"""
+    @functools.wraps(function)
+    def normalize(*args, **kwargs):
+        self = args[0]
+        input_tensor = args[1]
+        if self.do_normalization:
+            seq_last = input_tensor[:, -1:, :].detach()
+            input_tensor = input_tensor - seq_last
+        predictions = function(self, input_tensor, **kwargs)
+        if self.do_normalization:
+            predictions = predictions + seq_last
+        return predictions
+    return normalize
+
+
 def allow_unbatched(function):
     """decorator for seemless batched/unbatched forward methods"""
     @functools.wraps(function)
