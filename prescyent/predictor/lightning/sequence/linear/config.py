@@ -6,4 +6,3 @@ class Config(ModuleConfig):
     """Pydantic Basemodel for Linear Module configuration"""
     input_size: int
     output_size: int
-    identifier: str = "linear"

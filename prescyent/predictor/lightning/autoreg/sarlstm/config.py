@@ -5,5 +5,4 @@ from prescyent.predictor.lightning.module_config import ModuleConfig
 class Config(ModuleConfig):
     """Pydantic Basemodel for SARLSTM configuration"""
     feature_size: int
-    identifier: str = "sarlstm"
     hidden_size: int = 10

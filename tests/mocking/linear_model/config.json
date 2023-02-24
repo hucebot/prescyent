@@ -1,7 +1,6 @@
 {
     "model_config": {
         "do_normalization": true,
-        "identifier": "linear",
         "input_size": 10,
         "model_path": "tests/mocking/linear_model",
         "output_size": 10

@@ -168,6 +168,9 @@ class LightningPredictor(BasePredictor):
         self._init_training_config(train_config)
         self._init_trainer()
         self._init_module_optimizer()
+        self.tb_logger.log_hyperparams({**self.model.hparams,
+                                        **self.training_config.dict(),
+                                        **self.config.dict()})
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)
@@ -187,8 +190,8 @@ class LightningPredictor(BasePredictor):
         """save model to path"""
         if save_path is None:
             save_path = self.tb_logger.log_dir
-        else:  # we move the tensorflow logger content first
-            shutil.move(self.tb_logger.log_dir, save_path)
+        else:  # we cp the tensorflow logger content first
+            shutil.copytree(self.tb_logger.log_dir, save_path)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
