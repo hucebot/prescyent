@@ -1,10 +1,9 @@
 """Config elements for Linear Pytorch Lightning module usage"""
-from pydantic import BaseModel
+from prescyent.predictor.lightning.module_config import ModuleConfig
 
 
-class Config(BaseModel):
+class Config(ModuleConfig):
     """Pydantic Basemodel for Linear Module configuration"""
     input_size: int
     output_size: int
     identifier: str = "linear"
-    model_path: str = "data/models"

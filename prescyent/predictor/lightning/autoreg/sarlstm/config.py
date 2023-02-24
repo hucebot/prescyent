@@ -1,10 +1,9 @@
 """Config elements for SARLSTM Lightning module usage"""
-from pydantic import BaseModel
+from prescyent.predictor.lightning.module_config import ModuleConfig
 
 
-class Config(BaseModel):
+class Config(ModuleConfig):
     """Pydantic Basemodel for SARLSTM configuration"""
     feature_size: int
     identifier: str = "sarlstm"
     hidden_size: int = 10
-    model_path: str = "data/models"
