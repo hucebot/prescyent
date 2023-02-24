@@ -187,8 +187,8 @@ class LightningPredictor(BasePredictor):
         """save model to path"""
         if save_path is None:
             save_path = self.tb_logger.log_dir
-        else:  # we cp the tensorflow logger content first
-            shutil.copytree(self.tb_logger.log_dir, save_path, dirs_exist_ok=True)
+        else:  # we move the tensorflow logger content first
+            shutil.move(self.tb_logger.log_dir, save_path)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
