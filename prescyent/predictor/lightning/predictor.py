@@ -191,7 +191,21 @@ class LightningPredictor(BasePredictor):
         if save_path is None:
             save_path = self.tb_logger.log_dir
         else:  # we cp the tensorflow logger content first
-            shutil.copytree(self.tb_logger.log_dir, save_path)
+            try:
+                shutil.copytree(self.tb_logger.log_dir, save_path)
+            except FileExistsError:
+                while True:
+                    force_copy = input(f"Dir already exist at {save_path}, "
+                                    "do you want to force copy ? y/N")
+                    if force_copy == "" or force_copy.upper() == "N":
+                        logger.warning("Predictor wasn't saved",
+                        group=PREDICTOR)
+                        return
+                    elif force_copy.upper() == "Y":
+                        shutil.copytree(self.tb_logger.log_dir, save_path, dirs_exist_ok=True)
+                        break
+                    logger.warning("Your input is invalid, we expect 'y' or 'n'",
+                    group=PREDICTOR)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
