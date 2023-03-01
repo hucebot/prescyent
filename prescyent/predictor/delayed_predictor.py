@@ -2,12 +2,12 @@
 
 from typing import Dict, Iterable
 
-import torch
 from pydantic import BaseModel
+import torch
 
-from prescyent.evaluator import get_ade, get_fde
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 class DelayedPredictor(BasePredictor):
@@ -37,4 +37,15 @@ class DelayedPredictor(BasePredictor):
                        group=PREDICTOR)
 
     def get_prediction(self, input_t, future_size):
-        return input_t
+        if is_tensor_is_batched(input_t):
+            input_t = torch.transpose(input_t, 0, 1)
+
+        if future_size > len(input_t):
+            new_inputs = [input_t[0].unsqueeze(0) for _ in range(future_size - len(input_t))]
+            new_inputs = torch.cat(new_inputs, dim=0)
+            input_t = torch.cat((new_inputs, input_t), dim=0)
+        res = input_t[:future_size]
+
+        if is_tensor_is_batched(res):
+            res = torch.transpose(res, 0, 1)
+        return res
