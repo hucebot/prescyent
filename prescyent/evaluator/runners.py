@@ -50,9 +50,10 @@ def run_predictor(predictor: Callable, trajectory: torch.Tensor,
                                history_step=custom_step,
                                future_size=future_size)
     elif run_method == "windowed":
+        history_step = future_size
         prediction = predictor(trajectory,
                                history_size=history_size,
-                               history_step=history_size,
+                               history_step=history_step,
                                future_size=future_size)
         if not output_all:  # here we can produce a continous prediction with a simple cat
             prediction = torch.cat(prediction, dim=0)

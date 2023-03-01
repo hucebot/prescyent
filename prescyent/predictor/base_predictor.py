@@ -110,14 +110,15 @@ class BasePredictor():
             List[torch.Tensor]: the list of model predictions
         """
         prediction_list = []
+        input_len = input_batch.shape[0]
         # if we don't split the input, the history_size is the size of input
         if history_size is None:
-            history_size = input_batch.shape[0]
+            history_size = input_len
         # default future_size would be the size of input in the general case
         if future_size is None:
-            future_size = input_batch.shape[0]
+            future_size = input_len
 
-        for i in range(0, input_batch.shape[0] - history_size + 1, history_step):
+        for i in range(0, input_len - history_size + 1, history_step):
             input_sub_batch = input_batch[i:i + history_size]
             prediction = self.get_prediction(input_sub_batch, future_size)
             if output_only_future and future_size and \

@@ -38,7 +38,7 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
     inputs = torch.transpose(trajectory.tensor, 0, 1)
     preds = torch.transpose(preds, 0, 1)
 
-    pred_last_idx = len(preds[0]) + step
+    pred_last_idx = max(len(preds[0]), len(inputs[0])) + step
 
     time_steps = range(pred_last_idx)
     fig, axes = plt.subplots(preds.shape[0], sharex=True)  # we do one subplot per feature
@@ -46,8 +46,8 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
         axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(time_steps[:len(inputs[i])], inputs[i], linewidth=2)
-        axe.plot(time_steps[step:], inputs[i][:pred_last_idx - step], linewidth=2)  # delayed
-        axe.plot(time_steps[pred_last_idx - len(preds[i]):], preds[i], linewidth=2, linestyle='--')
+        axe.plot(time_steps[-len(inputs[i]):], inputs[i][:min(len(inputs[i]), pred_last_idx)], linewidth=2)  # delayed
+        axe.plot(time_steps[step:step + len(preds[i])], preds[i], linewidth=2, linestyle='--')
     legend_plot(axes, ["Truth", "Delayed Truth", "Prediction"],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names))
