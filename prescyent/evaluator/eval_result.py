@@ -38,6 +38,12 @@ class EvaluationSummary():
             results = []
         self.results = results
 
+    def __getitem__(self, item):
+         return self.results[item]
+
+    def __len__(self):
+        return len(self.results)
+
     @property
     def mean_ade(self) -> float:
         return mean([eval.ade for eval in self.results])
