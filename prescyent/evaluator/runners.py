@@ -7,7 +7,7 @@ import torch
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.evaluator.eval_result import EvaluationResult, EvaluationSummary
 
-from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors
+from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors, plot_multiple_future
 from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
 
@@ -126,13 +126,34 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
     return evaluation_results
 
 # TODO: Think of some evaluator with a scaling future size, maybe like this but a bit redundant:
-# def evaluate_n_futures(predictors: List[Callable],
-#                     trajectories: List[Trajectory],
-#                     history_size: int,
-#                     future_sizes: List[int],
-#                     run_method: str = "windowed",
-#                     unscale_function: Callable = None,
-#                     do_plotting: bool = True,
-#                     saveplot_pattern: str = "%d_%s_prediction",
-#                     saveplot_dir_path: str = str(Path("data") / "eval"),
-#                     ):
+def evaluate_n_futures(predictors: List[Callable],
+                    trajectories: List[Trajectory],
+                    history_size: int,
+                    future_sizes: List[int],
+                    run_method: str = "windowed",
+                    unscale_function: Callable = None,
+                    do_plotting: bool = True,
+                    saveplot_pattern: str = "%d_%s_prediction.png",
+                    saveplot_dir_path: str = str(Path("data") / "eval"),
+                    ):
+    future_results = []
+    for future_size in future_sizes:
+        future_results.append(eval_predictors(predictors,
+                                              trajectories,
+                                              history_size,
+                                              future_size,
+                                              run_method,
+                                              unscale_function,
+                                              do_plotting,
+                                              f"f{future_size}_" + saveplot_pattern,
+                                              saveplot_dir_path))
+    if do_plotting:
+        for p, predictor in enumerate(predictors):
+            for t, trajectory in enumerate(trajectories):
+                per_future_pred = [eval_result[p][t].pred for eval_result in future_results]
+                savefig_path = str(Path(saveplot_dir_path) /
+                                   ("n_futures" + saveplot_pattern % (t, predictor)))
+                plot_multiple_future(future_sizes, trajectory, predictor,
+                                     per_future_pred, step=history_size,
+                                     savefig_path=savefig_path)
+    return future_results

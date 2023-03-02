@@ -79,6 +79,31 @@ def plot_multiple_predictors(trajectory: Trajectory,
     fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
+def plot_multiple_future(future_sizes: List[int],
+                         trajectory: Trajectory,
+                         predictor: Callable,
+                         predictions: List[torch.Tensor],
+                         step: int, savefig_path: str):
+    pred_last_idx = max([len(pred) for pred in predictions]) + step
+    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
+    truth = torch.transpose(trajectory.tensor, 0, 1)
+    preds = [torch.transpose(pred, 0, 1) for pred in predictions]
+    time_steps = range(pred_last_idx)
+    # we do one subplot per feature
+    fig, axes = plt.subplots(truth.shape[0], sharex=True)
+    if preds[0].shape[0] == 1:
+        axes = [axes]
+    for i, axe in enumerate(axes):
+        axe.plot(time_steps[:len(truth[i])], truth[i], linewidth=2)
+        for pred in preds:
+            axe.plot(time_steps[step:step+len(pred[i])],
+                     pred[i], linewidth=1, linestyle='--')
+    legend_plot(axes, ["Truth"] + [str(predictor) + f"f_{future}" for future in future_sizes],
+                ylabels=trajectory.dimension_names)
+    fig.set_size_inches(15, len(trajectory.dimension_names) + 2)
+    fig.suptitle(trajectory.file_path)
+    save_plot_and_close(savefig_path)
+
 
 def save_plot_and_close(savefig_path):
     """savefig helper"""
