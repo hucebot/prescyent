@@ -7,7 +7,6 @@ import torch
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.evaluator.eval_result import EvaluationResult, EvaluationSummary
 
-from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors
 from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
@@ -15,7 +14,6 @@ from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 def run_predictor(predictor: Callable, trajectory: torch.Tensor,
                   history_size: int, future_size: int,
                   run_method: str = 'windowed',
-                  custom_step: int = None,
                   output_all: bool = False
                   ) -> Union[List[torch.Tensor], torch.Tensor]:
     """loops a predictor over a whole trajectory / tensor
@@ -44,12 +42,7 @@ def run_predictor(predictor: Callable, trajectory: torch.Tensor,
     Returns:
         List[torch.Tensor]: the list of predictions
     """
-    if custom_step is not None:
-        prediction = predictor(trajectory,
-                               history_size=history_size,
-                               history_step=custom_step,
-                               future_size=future_size)
-    elif run_method == "windowed":
+    if run_method == "windowed":
         history_step = future_size
         prediction = predictor(trajectory,
                                history_size=history_size,
@@ -83,7 +76,7 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
         history_size (int): size used as input for the predictor.
         future_size (int): size used as output for the predictor
         custom_step (int, optional): step used to loop over the input_tensor.
-                If ommited, the step is determmimed by the run_method
+                If omitted, the step is determined by the run_method
                 Defaults to None
         run_method (str, optional): method used to generate the predictions.
                 "windowed" will predict with a step == history_size
@@ -116,9 +109,7 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
             # plot_truth_and_pred(trajectory.tensor, truth, prediction, history_size, "test.png")
-            ade = get_ade(truth, prediction[:len(truth)]).item()
-            fde = get_fde(truth, prediction[:len(truth)]).item()
-            evaluation_results[p].results.append(EvaluationResult(ade, fde, elapsed))
+            evaluation_results[p].results.append(EvaluationResult(trajectory.tensor, truth, prediction, elapsed))
             # we plot a file per (predictor, trajectory) pair
             if do_plotting:
                 savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, predictor)))

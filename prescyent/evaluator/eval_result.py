@@ -2,17 +2,33 @@
 from statistics import mean
 from typing import List
 
+import torch
+
+from prescyent.evaluator.metrics import get_fde, get_ade
+
 
 class EvaluationResult():
     ade: float
     fde: float
     inference_time_ms: float
+    sample: torch.Tensor
+    truth: torch.Tensor
+    pred: torch.Tensor
 
-    def __init__(self, ade: float, fde: float, inference_time_ms: float) -> None:
-        self.ade = ade
-        self.fde = fde
+    def __init__(self, sample: torch.Tensor, truth: torch.Tensor,
+                 pred: torch.Tensor, inference_time_ms: float) -> None:
         self.inference_time_ms = inference_time_ms
+        self.sample = sample
+        self.truth = truth
+        self.pred = pred
 
+
+    @property
+    def ade(self) -> float:
+        return get_ade(self.truth, self.pred[:len(self.truth)]).item()
+    @property
+    def fde(self) -> float:
+        return get_fde(self.truth, self.pred[:len(self.truth)]).item()
 
 class EvaluationSummary():
     results: List[EvaluationResult]
