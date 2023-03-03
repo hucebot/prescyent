@@ -18,11 +18,11 @@ class SequencePredictor(LightningPredictor):
         # if is tensor and batched, input_len = seq_len's dim, else len()
         history_size = input_t.shape[1] if is_tensor_is_batched(input_t) else len(input_t)
         if hasattr(self.model.torch_model, "input_size") \
-            and history_size < self.model.torch_model.input_size:
+                and history_size < self.model.torch_model.input_size:
             raise AttributeError("history_size can't be lower than "
                                  f"{self.model.torch_model.input_size}")
         elif hasattr(self.model.torch_model, "input_size") \
-            and history_size > self.model.torch_model.input_size:
+                and history_size > self.model.torch_model.input_size:
             logger.warning("Input can't be bigger than model input_size %d"
                            ", the input will be sliced",
                            self.model.torch_model.input_size,

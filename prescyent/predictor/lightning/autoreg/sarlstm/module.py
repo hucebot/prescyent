@@ -5,26 +5,25 @@ Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_predict
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import (BaseLightningModule, allow_unbatched,
-                                                  normalize_tensor_from_last_value)
+from prescyent.predictor.lightning.module import BaseTorchModule
 
 
-class TorchModule(nn.Module):
+class TorchModule(BaseTorchModule):
     """
-    feature_size - The number of dimensions to predict in parrallel
+    feature_size - The number of dimensions to predict in parallel
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
     """
-    def __init__(self, feature_size: int, hidden_size: int):
-        super().__init__()
-        self.hidden_size = hidden_size
-        self.feature_size = feature_size
+    def __init__(self, config):
+        super().__init__(config)
+        self.hidden_size = config.hidden_size
+        self.feature_size = config.feature_size
 
         self.lstm1 = nn.LSTMCell(self.feature_size, self.hidden_size)
         self.lstm2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
-        self.linear = nn.Linear(hidden_size, feature_size)
+        self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
-    @allow_unbatched
-    @normalize_tensor_from_last_value
+    @BaseTorchModule.allow_unbatched
+    @BaseTorchModule.normalize_tensor_from_last_value
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         # init the output
         predictions = []
@@ -58,20 +57,3 @@ class TorchModule(nn.Module):
 
         predictions = torch.cat(predictions, dim=1)
         return predictions
-
-
-class LightningModule(BaseLightningModule):
-    """pl module for the simple ar lstm implementation"""
-    def __init__(self, feature_size: int, hidden_size: int):
-        super().__init__()
-        self.torch_model = TorchModule(feature_size, hidden_size)
-        self.criterion = nn.MSELoss()
-        self.save_hyperparameters()
-
-    @classmethod
-    def load_from_binary(cls, path: str):
-        """Retrieve model infos from torch binary"""
-        model = torch.load(path)
-        lstm_module = cls(model.feature_size, model.hidden_size)
-        lstm_module.torch_model = model
-        return lstm_module

@@ -13,7 +13,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 
 from prescyent.predictor.base_predictor import BasePredictor
-from prescyent.predictor.lightning.module import BaseLightningModule
+from prescyent.predictor.lightning.module import LightningModule, BaseTorchModule
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.predictor.lightning.module_config import ModuleConfig
 from prescyent.utils.logger import logger, PREDICTOR
@@ -24,7 +24,7 @@ class LightningPredictor(BasePredictor):
     This class should not be called as is
     You must instanciate a class from wich LightningPredictor is a parent
     """
-    module_class: Type[BaseLightningModule]
+    module_class: Type[BaseTorchModule]
     config_class: Type[ModuleConfig]
     model: pl.LightningModule
     training_config: TrainingConfig
@@ -34,11 +34,11 @@ class LightningPredictor(BasePredictor):
     def __init__(self, model_path=None, config=None, name=None) -> None:
         # -- Init Model and root path
         if model_path is not None:
-            self.model = self._load_from_path(model_path)
             log_root_path = model_path if Path(model_path).is_dir() \
                 else str(Path(model_path).parent)
             self._load_config(Path(log_root_path) / "config.json")
             name, version = self.name, self.version
+            self.model = self._load_from_path(model_path)
             super().__init__(log_root_path, name, version, no_sub_dir_log=True)
         elif config is not None:
             version = None
@@ -64,10 +64,7 @@ class LightningPredictor(BasePredictor):
         self.config = config
 
         # -- Build from Scratch
-        # The relevant items from "config" are passed as the args for the pytorch module
-        return self.module_class(**config.dict(include=set(
-            inspect.getfullargspec(self.module_class)[0]
-        )))
+        return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
         supported_extentions = [".ckpt", ".pb"]   # prefered order
@@ -88,10 +85,10 @@ class LightningPredictor(BasePredictor):
             model_path = found_model
 
         if model_path.suffix == ".ckpt":
-            return self.module_class.load_from_checkpoint(model_path)
+            return LightningModule.load_from_checkpoint(model_path)
         #     return self.module_class._load_from_state_dict(model_path, module_class)
         elif model_path.suffix == ".pb":
-            return self.module_class.load_from_binary(model_path)
+            return LightningModule(self.module_class, self.config)
         else:
             raise NotImplementedError(f"Given file extention {model_path.suffix} "
                                       "is not supported. Models exported by this module "
@@ -103,7 +100,7 @@ class LightningPredictor(BasePredictor):
 
     @classmethod
     def _load_from_checkpoint(cls, path: str, module_class: Callable):
-        return module_class.load_from_checkpoint(path)
+        return LightningModule.load_from_checkpoint(path)
 
     def _init_training_config(self, config):
         if isinstance(config, dict):
@@ -143,9 +140,9 @@ class LightningPredictor(BasePredictor):
             json.dump(res, conf_file, indent=4, sort_keys=True)
 
     def _load_config(self, config_path: Union[Path, str]):
-        if config_path is None:
-            logger.info("No config were found near model at %s", config_path, group=PREDICTOR)
-            return
+        config_path = Path(config_path)
+        if not config_path.exists():
+            raise FileNotFoundError(f"No file or directory at {config_path}")
         if isinstance(config_path, str):
             config_path = Path(config_path)
         with (config_path).open(encoding="utf-8") as conf_file:
@@ -196,16 +193,16 @@ class LightningPredictor(BasePredictor):
             except FileExistsError:
                 while True:
                     force_copy = input(f"Dir already exist at {save_path}, "
-                                    "do you want to force copy ? y/N")
+                                       "do you want to force copy ? y/N")
                     if force_copy == "" or force_copy.upper() == "N":
                         logger.warning("Predictor wasn't saved",
-                        group=PREDICTOR)
+                                       group=PREDICTOR)
                         return
                     elif force_copy.upper() == "Y":
                         shutil.copytree(self.tb_logger.log_dir, save_path, dirs_exist_ok=True)
                         break
                     logger.warning("Your input is invalid, we expect 'y' or 'n'",
-                    group=PREDICTOR)
+                                   group=PREDICTOR)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)

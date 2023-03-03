@@ -6,3 +6,4 @@ class ModuleConfig(BaseModel):
     """Pydantic Basemodel for Seq2Seq Module configuration"""
     model_path: str = "data/models"
     do_normalization: bool = False
+    criterion: str = "mseloss"

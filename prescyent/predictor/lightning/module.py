@@ -1,50 +1,95 @@
 """Module with methods common to every lightning modules"""
+from abc import abstractmethod
 import functools
+from typing import Type
 
 import pytorch_lightning as pl
 import torch
 
 from prescyent.evaluator.metrics import get_ade, get_fde
 from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.utils.logger import logger, PREDICTOR
 
 
-def normalize_tensor_from_last_value(function):
-    """decorator for normalization of the input tensor before forward method"""
-    @functools.wraps(function)
-    def normalize(*args, **kwargs):
-        self = args[0]
-        input_tensor = args[1]
-        if self.do_normalization:
-            seq_last = input_tensor[:, -1:, :].detach()
-            input_tensor = input_tensor - seq_last
-        predictions = function(self, input_tensor, **kwargs)
-        if self.do_normalization:
-            predictions = predictions + seq_last
-        return predictions
-    return normalize
+CRITERION_MAPPING = {
+    "l1loss": torch.nn.L1Loss(),
+    "mseloss": torch.nn.MSELoss(),
+    "nllloss": torch.nn.NLLLoss(),
+    "crossentropyloss": torch.nn.CrossEntropyLoss(),
+    "hingeembeddingloss": torch.nn.HingeEmbeddingLoss(),
+    "marginrankingloss": torch.nn.MarginRankingLoss(),
+    "tripletmarginloss": torch.nn.TripletMarginLoss(),
+    "kldivloss": torch.nn.KLDivLoss()
+}
 
 
-def allow_unbatched(function):
-    """decorator for seemless batched/unbatched forward methods"""
-    @functools.wraps(function)
-    def reshape(*args, **kwargs):
-        self = args[0]
-        input_tensor = args[1]
-        unbatched = len(input_tensor.shape) == 2
-        if unbatched:
-            input_tensor = torch.unsqueeze(input_tensor, dim=0)
-        predictions = function(self, input_tensor, **kwargs)
-        if unbatched:
-            predictions = torch.squeeze(predictions, dim=0)
-        return predictions
-    return reshape
+class BaseTorchModule(torch.nn.Module):
+
+    def __init__(self, config) -> None:
+        super().__init__()
+        self.do_normalization = config.do_normalization
+
+    @abstractmethod
+    def forward(self, input_tensor: torch.Tensor, future_size: int):
+        pass
+
+    @classmethod
+    def normalize_tensor_from_last_value(cls, function):
+        """decorator for normalization of the input tensor before forward method"""
+        @functools.wraps(function)
+        def normalize(*args, **kwargs):
+            self = args[0]
+            input_tensor = args[1]
+            if self.do_normalization:
+                seq_last = input_tensor[:, -1:, :].detach()
+                input_tensor = input_tensor - seq_last
+            predictions = function(self, input_tensor, **kwargs)
+            if self.do_normalization:
+                predictions = predictions + seq_last
+            return predictions
+        return normalize
+
+    @classmethod
+    def allow_unbatched(cls, function):
+        """decorator for seemless batched/unbatched forward methods"""
+        @functools.wraps(function)
+        def reshape(*args, **kwargs):
+            self = args[0]
+            input_tensor = args[1]
+            unbatched = len(input_tensor.shape) == 2
+            if unbatched:
+                input_tensor = torch.unsqueeze(input_tensor, dim=0)
+            predictions = function(self, input_tensor, **kwargs)
+            if unbatched:
+                predictions = torch.squeeze(predictions, dim=0)
+            return predictions
+        return reshape
 
 
-class BaseLightningModule(pl.LightningModule):
-    """Base class with methods for lightning modules training, saving, logging"""
-    torch_model: torch.nn.Module
+class LightningModule(pl.LightningModule):
+    """Lightning class with methods for modules training, saving, logging"""
+    torch_model: BaseTorchModule
     criterion: torch.nn.modules.loss._Loss
     training_config: TrainingConfig
+
+    def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
+        super().__init__()
+        self.torch_model = torch_model_class(config)
+        criterion = CRITERION_MAPPING.get(config.criterion.lower(), None)
+        if criterion is None:
+            logger.warning("provided criterion %s is not handled, please use one of the"
+                           "following %s. Using default MSELoss instead", config.criterion.lower(),
+                           list(CRITERION_MAPPING.keys()),
+                           group=PREDICTOR)
+            criterion = torch.nn.MSELoss()
+        self.criterion = criterion
+        self.save_hyperparameters(ignore=['torch_model', 'criterion'])
+
+    @classmethod
+    def load_from_binary(cls, path: str, config):
+        """Retrieve model infos from torch binary"""
+        model = torch.load(path)
+        return cls(model.__class__, config)
 
     def save(self, save_path: str):
         """Export model to state_dict and torch binary"""

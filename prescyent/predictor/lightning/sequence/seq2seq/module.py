@@ -6,36 +6,35 @@ simple Seq2Seq implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import (BaseLightningModule, allow_unbatched,
-                                                  normalize_tensor_from_last_value)
+from prescyent.predictor.lightning.module import BaseTorchModule
 
 
-class TorchModule(nn.Module):
+class TorchModule(BaseTorchModule):
     """
     feature_size - The number of dimensions to predict in parrallel
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
     output_size - This will be equal to the prediction_periods input to get_x_y_pairs
     """
-    def __init__(self, feature_size: int, hidden_size: int, output_size: int, num_layers: int):
-        super().__init__()
-        self.hidden_size = hidden_size
-        self.feature_size = feature_size
-        self.output_size = output_size
-        self.num_layers = num_layers
+    def __init__(self, config):
+        super().__init__(config)
+        self.hidden_size = config.hidden_size
+        self.feature_size = config.feature_size
+        self.output_size = config.output_size
+        self.num_layers = config.num_layers
 
-        self.encoder = nn.LSTM(input_size=feature_size,
-                               hidden_size=hidden_size,
+        self.encoder = nn.LSTM(input_size=self.feature_size,
+                               hidden_size=self.hidden_size,
                                num_layers=self.num_layers,
                                dropout=0)
-        self.decoder = nn.LSTM(input_size=feature_size,
-                               hidden_size=hidden_size,
+        self.decoder = nn.LSTM(input_size=self.feature_size,
+                               hidden_size=self.hidden_size,
                                num_layers=self.num_layers,
                                dropout=0)
-        self.linear = nn.Linear(hidden_size, feature_size)
+        self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
-    @allow_unbatched
-    @normalize_tensor_from_last_value
-    def forward(self, input_tensor: torch.Tensor):
+    @BaseTorchModule.allow_unbatched
+    @BaseTorchModule.normalize_tensor_from_last_value
+    def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # (batch_size, seq_len, features) => (seq_len, batch_size, features)
         batch_size = input_tensor.shape[0]
         input_tensor = torch.transpose(input_tensor, 0, 1)
@@ -55,24 +54,3 @@ class TorchModule(nn.Module):
         # (seq_len, batch_size, features) => (batch_size, seq_len, features)
         predictions = torch.transpose(predictions, 0, 1)
         return predictions
-
-
-class LightningModule(BaseLightningModule):
-    """[short description]
-       [usage]
-       [detail of the implementation]
-    """
-    def __init__(self, feature_size: int, hidden_size: int, output_size: int, num_layers: int):
-        super().__init__()
-        self.torch_model = TorchModule(feature_size, hidden_size, output_size, num_layers)
-        self.criterion = nn.MSELoss()
-        self.save_hyperparameters()
-
-    @classmethod
-    def load_from_binary(cls, path: str):
-        """Retrieve model infos from torch binary"""
-        model = torch.load(path)
-        seq2seq_module = cls(model.input_size, model.hidden_size,
-                             model.output_size, model.num_layers)
-        seq2seq_module.torch_model = model
-        return seq2seq_module
