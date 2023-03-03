@@ -1,20 +1,22 @@
 {
     "model_config": {
+        "criterion": "mseloss",
         "do_normalization": true,
         "input_size": 10,
-        "model_path": "tests/mocking/linear_model",
+        "model_path": "data/models/teleopicub/all/LinearPredictor/LinearPredictor/version_3_n",
         "output_size": 10
     },
     "name": "LinearPredictor",
     "training_config": {
         "accelerator": "auto",
         "devices": "auto",
-        "epoch": 10,
+        "epoch": 300,
         "learning_rate": 0.001,
         "max_learning_rate": 0.01,
         "max_steps": -1,
-        "use_scheduler": false,
+        "strategy": "ddp_spawn",
+        "use_scheduler": true,
         "weight_decay": 0.01
     },
-    "version": 0
+    "version": 3
 }

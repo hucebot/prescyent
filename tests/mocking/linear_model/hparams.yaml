@@ -1,3 +1,27 @@
-feature_size: 7
+accelerator: auto
+config: !!python/object:prescyent.predictor.lightning.sequence.linear.config.Config
+  __dict__:
+    criterion: mseloss
+    do_normalization: true
+    input_size: 10
+    model_path: data/models
+    output_size: 10
+  __fields_set__: !!set
+    do_normalization: null
+    input_size: null
+    output_size: null
+  __private_attribute_values__: {}
+criterion: mseloss
+devices: auto
+do_normalization: true
+epoch: 300
 input_size: 10
+learning_rate: 0.001
+max_learning_rate: 0.01
+max_steps: -1
+model_path: data/models
 output_size: 10
+strategy: ddp_spawn
+torch_model_class: !!python/name:prescyent.predictor.lightning.sequence.linear.module.TorchModule ''
+use_scheduler: true
+weight_decay: 0.01
