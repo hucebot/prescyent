@@ -49,6 +49,23 @@ ROTATION_IDS = [[5, 6, 4],
 # 32-long list with indices into expmap angles
 EXPMAP_IDS = np.split(np.arange(4,100)-1,32)
 
+FILE_LABELS = {}
+FILE_LABELS['torso'] = list(range(6))
+FILE_LABELS['torso'].extend(list(range(36,51)))
+FILE_LABELS['right_arm'] = list(range(75,99))
+FILE_LABELS['left_arm'] = list(range(51,75))
+FILE_LABELS['right_leg'] = list(range(6,21))
+FILE_LABELS['left_leg'] = list(range(21,36))
+
+POINT_LABELS = ["torso_0", "torso_1",
+                "right_leg_2", "right_leg_3", "right_leg_4", "right_leg_5", "right_leg_6",
+                "left_leg_7", "left_leg_8", "left_leg_9", "left_leg_10", "left_leg_11",
+                "torso_12", "torso_13", "torso_14", "torso_15", "torso_16",
+                "left_arm_17", "left_arm_18", "left_arm_19", "left_arm_20", "left_arm_21",
+                "left_arm_22", "left_arm_23", "left_arm_24",
+                "right_arm_25", "right_arm_26", "right_arm_27", "right_arm_28", "right_arm_29",
+                "right_arm_30", "right_arm_31", "right_arm_32",
+                ]
 
 class Dataset(MotionDataset):
     """Class for data loading et preparation before the MotionDataset sampling
@@ -79,9 +96,9 @@ class Dataset(MotionDataset):
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
         # each files gives an expmap and has to be converted into xyz
-        train = pathfiles_to_trajectories(train_files, dimensions=self.config.used_joints)
-        test = pathfiles_to_trajectories(test_files, dimensions=self.config.used_joints)
-        val = pathfiles_to_trajectories(val_files, dimensions=self.config.used_joints)
+        train = pathfiles_to_trajectories(train_files, used_joints=self.config.used_joints)
+        test = pathfiles_to_trajectories(test_files, used_joints=self.config.used_joints)
+        val = pathfiles_to_trajectories(val_files, used_joints=self.config.used_joints)
         return Trajectories(train, test, val)
 
     def _get_filenames_for_subject(self, subject_names:List[str]):
@@ -99,7 +116,7 @@ class Dataset(MotionDataset):
 def pathfiles_to_trajectories(files: List,
                               delimiter: str = ',',
                               subsampling_step: int = 0,
-                              dimensions: List[int] = None) -> list:
+                              used_joints: List[int] = None) -> list:
     """util method to turn a list of pathfiles to a list of their data
     :rtype: list
     """
@@ -118,7 +135,7 @@ def pathfiles_to_trajectories(files: List,
         pose_info = pose_info[:, 1:, :].reshape(-1, 3)
         pose_info = expmap2rotmat_torch(torch.tensor(pose_info).float()).reshape(T, 32, 3, 3)
         xyz_info = rotmat2xyz_torch(pose_info)
-        xyz_info = xyz_info[:, dimensions, :]
-        trajectory = Trajectory(xyz_info, file)
+        xyz_info = xyz_info[:, used_joints, :]
+        trajectory = Trajectory(xyz_info, file, [POINT_LABELS[i] for i in used_joints])
         trajectory_arrray.append(trajectory)
     return trajectory_arrray
