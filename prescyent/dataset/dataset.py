@@ -59,19 +59,28 @@ class MotionDataset(Dataset):
         return len(self.val_datasample)
 
     def scale(self, l_array):
-        return torch.FloatTensor(self.scaler.transform(l_array))
+        T = l_array.shape
+        l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = torch.FloatTensor(self.scaler.transform(l_array))
+        return l_array.reshape(T)
 
     def unscale(self, l_array):
-        return torch.FloatTensor(self.scaler.inverse_transform(l_array))
+        T = l_array.shape
+        l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = torch.FloatTensor(self.scaler.inverse_transform(l_array))
+        return l_array.reshape(T)
 
     # scale all the trajectories (same scaling for all the data)
     def _train_scaler(self, other_scaler):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            train_all = torch.zeros((1, self.trajectories.train[0].shape[1]))
+            n_points = self.trajectories.train[0].shape[1]
+            n_dims = self.trajectories.train[0].shape[2]
+            train_all = torch.zeros((1, n_points * n_dims))
             for trajectory in self.trajectories.train:
-                train_all = torch.cat((train_all, trajectory.tensor))    # useful for normalization
+                train_all = torch.cat((train_all, trajectory.tensor.reshape(
+                        trajectory.tensor.shape[0], -1)))
             scaler = StandardScaler()
             scaler.fit(train_all)
         else:
