@@ -37,7 +37,6 @@ class Dataset(MotionDataset):
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
-        self.feature_size = self.trajectories.train[0].shape[1]
         super().__init__(scaler)
 
     def _init_from_config(self, config):

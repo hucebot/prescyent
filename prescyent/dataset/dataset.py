@@ -52,6 +52,18 @@ class MotionDataset(Dataset):
                           pin_memory=self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
+    @property
+    def num_points(self):
+        return self.trajectories.train[0].shape[1]
+
+    @property
+    def num_dims(self):
+        return self.trajectories.train[0].shape[2]
+
+    @property
+    def feature_size(self):
+        return self.num_dims * self.num_points
+
     def __getitem__(self, index):
         return self.val_datasample[index]
 
@@ -75,9 +87,7 @@ class MotionDataset(Dataset):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            n_points = self.trajectories.train[0].shape[1]
-            n_dims = self.trajectories.train[0].shape[2]
-            train_all = torch.zeros((1, n_points * n_dims))
+            train_all = torch.zeros((1, self.num_points * self.num_dims))
             for trajectory in self.trajectories.train:
                 train_all = torch.cat((train_all, trajectory.tensor.reshape(
                         trajectory.tensor.shape[0], -1)))

@@ -78,7 +78,6 @@ class Dataset(MotionDataset):
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
-        self.feature_size = self.trajectories.train[0].shape[1]
         super().__init__(scaler)
 
     def _init_from_config(self, config):
@@ -96,9 +95,12 @@ class Dataset(MotionDataset):
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
         # each files gives an expmap and has to be converted into xyz
-        train = pathfiles_to_trajectories(train_files, used_joints=self.config.used_joints)
-        test = pathfiles_to_trajectories(test_files, used_joints=self.config.used_joints)
-        val = pathfiles_to_trajectories(val_files, used_joints=self.config.used_joints)
+        train = pathfiles_to_trajectories(train_files, used_joints=self.config.used_joints,
+                                        subsampling_step=self.config.subsampling_step)
+        test = pathfiles_to_trajectories(test_files, used_joints=self.config.used_joints,
+                                        subsampling_step=self.config.subsampling_step)
+        val = pathfiles_to_trajectories(val_files, used_joints=self.config.used_joints,
+                                        subsampling_step=self.config.subsampling_step)
         return Trajectories(train, test, val)
 
     def _get_filenames_for_subject(self, subject_names:List[str]):
@@ -135,7 +137,7 @@ def pathfiles_to_trajectories(files: List,
         pose_info = pose_info[:, 1:, :].reshape(-1, 3)
         pose_info = expmap2rotmat_torch(torch.tensor(pose_info).float()).reshape(T, 32, 3, 3)
         xyz_info = rotmat2xyz_torch(pose_info)
-        xyz_info = xyz_info[:, used_joints, :]
+        xyz_info = xyz_info[::subsampling_step, used_joints, :]
         trajectory = Trajectory(xyz_info, file, [POINT_LABELS[i] for i in used_joints])
         trajectory_arrray.append(trajectory)
     return trajectory_arrray
