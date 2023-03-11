@@ -35,8 +35,10 @@ class TorchModule(BaseTorchModule):
     @BaseTorchModule.allow_unbatched
     @BaseTorchModule.normalize_tensor_from_last_value
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
-        # (batch_size, seq_len, features) => (seq_len, batch_size, features)
-        batch_size = input_tensor.shape[0]
+        T = input_tensor.shape
+        # (batch_size, seq_len, num_point, num_dim) => (seq_len, batch_size, num_point * num_dim)
+        batch_size = T[0]
+        input_tensor = input_tensor.reshape(T[0], T[1], -1)
         input_tensor = torch.transpose(input_tensor, 0, 1)
         # take hidden state as the encoding of the whole input sequence
         _, hidden_state = self.encoder(input_tensor)
@@ -51,6 +53,7 @@ class TorchModule(BaseTorchModule):
             prediction = self.linear(dec_output)
             dec_input = prediction
             predictions[i] = prediction
-        # (seq_len, batch_size, features) => (batch_size, seq_len, features)
+        # (seq_len, batch_size, num_point * num_dim) => (batch_size, seq_len, num_point, num_dim)
         predictions = torch.transpose(predictions, 0, 1)
+        predictions = predictions.reshape(T)
         return predictions

@@ -41,7 +41,7 @@ class BaseTorchModule(torch.nn.Module):
             self = args[0]
             input_tensor = args[1]
             if self.do_normalization:
-                seq_last = input_tensor[:, -1:, :].detach()
+                seq_last = input_tensor[:, -1:, :, :].detach()
                 input_tensor = input_tensor - seq_last
             predictions = function(self, input_tensor, **kwargs)
             if self.do_normalization:
@@ -56,7 +56,7 @@ class BaseTorchModule(torch.nn.Module):
         def reshape(*args, **kwargs):
             self = args[0]
             input_tensor = args[1]
-            unbatched = len(input_tensor.shape) == 2
+            unbatched = len(input_tensor.shape) == 3
             if unbatched:
                 input_tensor = torch.unsqueeze(input_tensor, dim=0)
             predictions = function(self, input_tensor, **kwargs)

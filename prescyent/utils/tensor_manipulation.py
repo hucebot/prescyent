@@ -26,4 +26,4 @@ def cat_list_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
 
 
 def is_tensor_is_batched(iterable: Iterable):
-    return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 3
+    return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 4

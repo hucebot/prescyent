@@ -27,8 +27,10 @@ class TorchModule(BaseTorchModule):
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         # init the output
         predictions = []
+        T = input_tensor.shape
+        input_tensor = input_tensor.reshape(T[0], T[1], -1)
         # input shape is (batch_size, seq_len, num_feature)
-        batch_size = input_tensor.shape[0]
+        batch_size = T[0]
         # init the hidden states
         h1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
         c1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
@@ -56,4 +58,8 @@ class TorchModule(BaseTorchModule):
             predictions.append(torch.unsqueeze(prediction, 1))
 
         predictions = torch.cat(predictions, dim=1)
+        predictions = predictions.reshape(predictions.shape[0],
+                                          predictions.shape[1],
+                                          T[2],
+                                          T[3])
         return predictions
