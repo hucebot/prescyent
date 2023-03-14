@@ -14,5 +14,6 @@ from prescyent.predictor.constant_predictor import ConstantPredictor
 
 from prescyent.predictor.lightning.sequence.linear import LinearConfig, LinearPredictor
 from prescyent.predictor.lightning.sequence.seq2seq import Seq2SeqConfig, Seq2SeqPredictor
+from prescyent.predictor.lightning.sequence.mlp import MlpPredictor, MlpConfig
 
 from prescyent.predictor.lightning.autoreg.sarlstm import SARLSTMConfig, SARLSTMPredictor
