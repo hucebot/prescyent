@@ -15,7 +15,8 @@ if __name__ == "__main__":
                                              future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size)
+                                             batch_size=batch_size,
+                                             )
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
@@ -25,11 +26,12 @@ if __name__ == "__main__":
     config = Seq2SeqConfig(feature_size=feature_size,
                            output_size=future_size,
                            hidden_size=hidden_size,
-                           input_size=history_size)
+                           input_size=history_size,
+                           do_normalization=True)
     predictor = Seq2SeqPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig()
+    training_config = TrainingConfig(epoch=100, use_scheduler=True)
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save("data/models/teleopicub/all/"

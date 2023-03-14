@@ -17,19 +17,20 @@ if __name__ == "__main__":
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
                                              batch_size=batch_size,
-                                             learning_type=LearningTypes.AUTOREG)
+                                             learning_type=LearningTypes.AUTOREG,
+                                            )
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
     feature_size = dataset.feature_size
     hidden_size = feature_size * 20
     config = SARLSTMConfig(feature_size=feature_size,
-                           output_size=future_size,
-                           hidden_size=hidden_size,)
+                           hidden_size=hidden_size,
+                           do_normalization=True)
     predictor = SARLSTMPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig()
+    training_config = TrainingConfig(epoch=100, use_scheduler=True)
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
     predictor.save("data/models/teleopicub/all/"

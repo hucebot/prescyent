@@ -11,28 +11,27 @@ if __name__ == "__main__":
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
     batch_size = 64
-    persistent_workers = True
     dataset_config = TeleopIcubDatasetConfig(history_size=history_size,
                                              output_windows_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size)
+                                             batch_size=batch_size,
+                                            )
     dataset = TeleopIcubDataset(dataset_config)
 
     # -- Init predictor
-
     feature_size = dataset.feature_size
     config = LinearConfig(output_size=future_size,
                           input_size=history_size,
-                          do_normalization=False)
+                          do_normalization=True)
     predictor = LinearPredictor(config=config)
 
     # Train, Test and Save
-    training_config = TrainingConfig()
+    training_config = TrainingConfig(epoch=100, use_scheduler=True)
     predictor.train(dataset.train_dataloader, training_config,
                     dataset.val_dataloader)
     predictor.test(dataset.test_dataloader)
-    predictor.save("caca/"
+    predictor.save("data/models/teleopicub/all/"
                    f"{predictor.name}/version_{predictor.version}")
     # plot some test trajectories
     eval_results = eval_predictors([predictor],
