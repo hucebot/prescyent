@@ -5,10 +5,10 @@ import torch
 
 def cat_tensor_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
     # if we have a list of preds
-    if len(preds.shape) == 3:
+    if len(preds.shape) == 4:
         # we flatten the prediction to the last output of each prediciton
-        # (seq_len, input_size, feature_size) -> (seq_len, feature_size)
-        cat_preds = torch.zeros(preds.shape[0], preds.shape[2])
+        # (seq_len, input_size, num_points, num_dim) -> (seq_len, num_points, num_dim)
+        cat_preds = torch.zeros(preds.shape[0], preds.shape[2], preds.shape[3])
         for j, pred in enumerate(preds):
             cat_preds[j] = pred[flatt_idx]
         preds = cat_preds

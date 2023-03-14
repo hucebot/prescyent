@@ -16,6 +16,6 @@ class DatasetConfig(MotionDatasetConfig):
                          'phoning', 'posing', 'purchases', 'sitting',
                          'sittingdown', 'smoking', 'takingphoto', 'waiting',
                          'walking', 'walkingdog', 'walkingtogether']
-    subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9", "S11"]
+    subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]
     subjects_test: List[str] = ["S5"]
-    subjects_val: List[str] = []
+    subjects_val: List[str] = ["S11"]
