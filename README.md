@@ -26,10 +26,17 @@ It is represented with a tensor of shape:
 Unbatched tensors are also allowed!  
   
 The dataset (TeleopIcub) can be downloaded automatically if the files are not found in the given config path.  
-For Human3.6M (H36M) please prepare your data following:  
-
-TODO: HUMAN36M  
-
+  
+For Human3.6M (H36M) download the zip [here](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip) and prepare your data following this directory structure:  
+```bash
+data/datasets (or any custom directory that you specify in the DatasetConfig object)
+|-- h36m
+|   |-- S1
+|   |-- S5
+|   |-- S6
+|   |-- ...
+|   |-- S11
+```
 ## Predictors
 The trajectory prediction methods are organized as Predictor classes  
 For example, the LinearPredictor class is the implementation of a simple Linear layer as a baseline for the task of Trajectory prediction  
