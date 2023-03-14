@@ -74,9 +74,9 @@ class GroupLogger(logging.Logger):
 logger = GroupLogger(level=logging.DEBUG)
 
 
-def set_group_levels(level):
+def set_log_group_levels(level):
     logger._set_group_levels(level)
 
 
-def set_group_level(group, level):
+def set_log_group_level(group, level):
     logger._set_group_level(group, level)

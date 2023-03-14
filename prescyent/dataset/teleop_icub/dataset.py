@@ -40,6 +40,7 @@ class Dataset(MotionDataset):
         super().__init__(scaler)
 
     def _init_from_config(self, config):
+        logger.debug("Reading Dataset Config", group=DATASET)
         if isinstance(config, dict):
             config = DatasetConfig(**config)
         self.config = config
@@ -49,6 +50,7 @@ class Dataset(MotionDataset):
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):
+        logger.debug("Loading Dataset files from path %s", self.config.data_path, group=DATASET)
         files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
         if len(files) == 0:
             logger.error("No files matching '%s' rule for this path %s",
