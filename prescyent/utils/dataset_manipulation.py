@@ -36,14 +36,13 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
     return array[:len1], array[len1:len2], array[len2:]
 
 
-def _some_variables():
+def _get_metadata():
     """
-    borrowed from
+    code from
     https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/forward_kinematics.py#L100
-    We define some variables that are useful to run the kinematic tree
-    Args
-      None
-    Returns
+    dataset metadata + external knowldege needed to build the kinematic tree
+
+    Returns:
       parent: 32-long vector with parent-child relationships in the kinematic tree
       offset: 96-long vector with bone lenghts
       rotInd: 32-long list with indices into angles
@@ -243,7 +242,7 @@ def rotmat2xyz_torch(rotmat):
     :return: N*32*3
     """
     assert rotmat.shape[1] == 32
-    parent, offset, rotInd, expmapInd = _some_variables()
+    parent, offset, rotInd, expmapInd = _get_metadata()
     xyz = fkl_torch(rotmat, parent, offset, rotInd, expmapInd)
     return xyz
 

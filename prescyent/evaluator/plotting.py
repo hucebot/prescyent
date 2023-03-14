@@ -46,9 +46,10 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
         axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(time_steps[:len(inputs[i])], inputs[i], linewidth=2)
-        axe.plot(time_steps[-len(inputs[i]):], inputs[i][:min(len(inputs[i]), pred_last_idx)], linewidth=2)  # delayed
-        axe.plot(time_steps[step:step + len(preds[i])], preds[i], linewidth=2, linestyle='--')
-    legend_plot(axes, ["Truth", "Delayed Truth", "Prediction"],
+        # axe.plot(time_steps[-len(inputs[i]):], inputs[i][:min(len(inputs[i]), pred_last_idx)], linewidth=2)  # delayed
+        axe.plot(time_steps[step:step + len(preds[i])], preds[i], linewidth=1, linestyle='--')
+    legend_plot(axes, ["Truth_x", "Truth_y", "Truth_z",
+                       "Prediction_x", "Prediction_y", "Prediction_z"],
                 ylabels=trajectory.dimension_names)
     fig.set_size_inches(15, len(trajectory.dimension_names))
     fig.suptitle(trajectory.file_path)
