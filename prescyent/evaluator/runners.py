@@ -63,7 +63,7 @@ def run_predictor(predictor: Callable, trajectory: torch.Tensor,
 
 
 def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
-                    history_size: int, future_size: int, run_method: str = "windowed",
+                    history_size: int, future_size: int, run_method: str = "step_every_timestamp",
                     unscale_function: Callable = None, do_plotting: bool = True,
                     saveplot_pattern: str = "%d_%s_prediction.png",
                     saveplot_dir_path: str = str(Path("data") / "eval"),
@@ -117,10 +117,10 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
                                            step=history_size, savefig_path=savefig_path)
             predictions.append(prediction)
         # we also plot a file per (predictor_list, trajectory) pair for a direct comparision
-        if do_plotting:
-            savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, "all")))
-            plot_multiple_predictors(trajectory, predictors, predictions,
-                                     step=history_size, savefig_path=savefig_path)
+        # if do_plotting:
+        #     savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, "all")))
+        #     plot_multiple_predictors(trajectory, predictors, predictions,
+        #                              step=history_size, savefig_path=savefig_path)
     for p, predictor in enumerate(predictors):
         predictor.log_evaluation_summary(evaluation_results[p])
     return evaluation_results
@@ -130,7 +130,7 @@ def evaluate_n_futures(predictors: List[Callable],
                     trajectories: List[Trajectory],
                     history_size: int,
                     future_sizes: List[int],
-                    run_method: str = "windowed",
+                    run_method: str = "step_every_timestamp",
                     unscale_function: Callable = None,
                     do_plotting: bool = True,
                     saveplot_pattern: str = "%d_%s_prediction.png",

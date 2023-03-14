@@ -48,9 +48,6 @@ class LightningPredictor(BasePredictor):
         else:
             # In later versions we can imagine a pretrained or config free version of the model
             raise NotImplementedError("No default implementation for now")
-
-        # -- Init module related args
-        self.model.torch_model.do_normalization = self.config.do_normalization
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None

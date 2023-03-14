@@ -9,7 +9,7 @@ class DatasetConfig(MotionDatasetConfig):
     data_path: str = "data/datasets/AndyData-lab-prescientTeleopICub/datasetMultipleTasks"
     glob_dir: str = 'p*.csv'
     subsampling_step: int = 10     # subsampling -> 100 Hz to 10Hz
-    dimensions: Union[List[int], None] = [2]         # dimension in the data
+    used_joints: Union[List[int], None] = None  # None == all
     ratio_train: float = .8
     ratio_test: float = .15
     ratio_val: float = .05

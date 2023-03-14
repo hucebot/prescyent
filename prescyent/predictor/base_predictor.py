@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from prescyent.evaluator.eval_result import EvaluationSummary
 
-from prescyent.evaluator.metrics import get_ade, get_fde
+from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 
 
 class BasePredictor():
@@ -73,21 +73,24 @@ class BasePredictor():
     def test(self, test_dataloader: Iterable):
         """test predictor"""
         # log in tensorboard
-        losses, ades, fdes = [], [], []
+        losses, ades, fdes, mpjpes = [], [], [], []
         for sample, truth in test_dataloader:
             # eval step
             pred = self.get_prediction(sample, len(truth[0]))
             losses.append(torch.nn.MSELoss()(pred, truth))
             ades.append(get_ade(truth, pred))
             fdes.append(get_fde(truth, pred))
+            mpjpes.append(get_mpjpe(truth, pred))
         # eval epoch
         mean_loss = torch.stack(losses).mean()
         ade = torch.stack(ades).mean()
         fde = torch.stack(fdes).mean()
+        mpjpe = torch.stack(mpjpes).mean()
         self.tb_logger.experiment.add_scalar("Test/epoch_loss", mean_loss, 0)
         self.tb_logger.experiment.add_scalar("Test/ADE", ade, 0)
         self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
-        return mean_loss, ade, fde
+        self.tb_logger.experiment.add_scalar("Test/MPJPE", mpjpe, 0)
+        return mean_loss, ade, fde, mpjpe
 
     def run(self, input_batch: Iterable, history_size: int = None,
             history_step: int = 1, future_size: int = None,
@@ -130,9 +133,11 @@ class BasePredictor():
     def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
         self.tb_logger.experiment.add_scalar("Eval/mean_ade", evaluation_summary.mean_ade, 0)
         self.tb_logger.experiment.add_scalar("Eval/mean_fde", evaluation_summary.mean_fde, 0)
+        self.tb_logger.experiment.add_scalar("Eval/mean_mpjpe", evaluation_summary.mean_mpjpe, 0)
         self.tb_logger.experiment.add_scalar("Eval/mean_inference_time_ms",
                                              evaluation_summary.mean_inference_time_ms, 0)
         self.tb_logger.experiment.add_scalar("Eval/max_ade", evaluation_summary.max_ade, 0)
         self.tb_logger.experiment.add_scalar("Eval/max_fde", evaluation_summary.max_fde, 0)
+        self.tb_logger.experiment.add_scalar("Eval/max_mpjpe", evaluation_summary.max_mpjpe, 0)
         self.tb_logger.experiment.add_scalar("Eval/max_inference_time_ms",
                                              evaluation_summary.max_inference_time_ms, 0)

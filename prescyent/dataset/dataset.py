@@ -52,6 +52,18 @@ class MotionDataset(Dataset):
                           pin_memory=self.config.pin_memory,
                           persistent_workers=self.config.persistent_workers)
 
+    @property
+    def num_points(self):
+        return self.trajectories.train[0].shape[1]
+
+    @property
+    def num_dims(self):
+        return self.trajectories.train[0].shape[2]
+
+    @property
+    def feature_size(self):
+        return self.num_dims * self.num_points
+
     def __getitem__(self, index):
         return self.val_datasample[index]
 
@@ -59,19 +71,26 @@ class MotionDataset(Dataset):
         return len(self.val_datasample)
 
     def scale(self, l_array):
-        return torch.FloatTensor(self.scaler.transform(l_array))
+        T = l_array.shape
+        l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = torch.FloatTensor(self.scaler.transform(l_array))
+        return l_array.reshape(T)
 
     def unscale(self, l_array):
-        return torch.FloatTensor(self.scaler.inverse_transform(l_array))
+        T = l_array.shape
+        l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = torch.FloatTensor(self.scaler.inverse_transform(l_array))
+        return l_array.reshape(T)
 
     # scale all the trajectories (same scaling for all the data)
     def _train_scaler(self, other_scaler):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
-            train_all = torch.zeros((1, self.trajectories.train[0].shape[1]))
+            train_all = torch.zeros((1, self.num_points * self.num_dims))
             for trajectory in self.trajectories.train:
-                train_all = torch.cat((train_all, trajectory.tensor))    # useful for normalization
+                train_all = torch.cat((train_all, trajectory.tensor.reshape(
+                        trajectory.tensor.shape[0], -1)))
             scaler = StandardScaler()
             scaler.fit(train_all)
         else:
