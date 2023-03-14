@@ -4,7 +4,7 @@ from typing import List
 
 import torch
 
-from prescyent.evaluator.metrics import get_fde, get_ade
+from prescyent.evaluator.metrics import get_fde, get_ade, get_mpjpe
 
 
 class EvaluationResult():
@@ -26,9 +26,14 @@ class EvaluationResult():
     @property
     def ade(self) -> float:
         return get_ade(self.truth, self.pred[:len(self.truth)]).item()
+
     @property
     def fde(self) -> float:
         return get_fde(self.truth, self.pred[:len(self.truth)]).item()
+
+    @property
+    def mpjpe(self) -> float:
+        return get_mpjpe(self.truth, self.pred[:len(self.truth)])[-1].item()
 
 class EvaluationSummary():
     results: List[EvaluationResult]
@@ -44,6 +49,17 @@ class EvaluationSummary():
     def __len__(self):
         return len(self.results)
 
+    def __str__(self) -> str:
+        return f"\nMean ADE: {self.mean_ade:.6f}" + \
+               f"\nMean FDE: {self.mean_fde:.6f}" + \
+               f"\nMean MPJPE: {self.mean_mpjpe:.6f}" + \
+               f"\nMean Inference Time (ms): {self.mean_inference_time_ms:.6f}" + \
+               f"\nMax ADE: {self.max_ade:.6f}" + \
+               f"\nMax FDE: {self.max_fde:.6f}" + \
+               f"\nMax MPJPE: {self.max_mpjpe:.6f}" + \
+               f"\nMax Inference Time (ms): {self.max_inference_time_ms:.6f}"
+
+
     @property
     def mean_ade(self) -> float:
         return mean([eval.ade for eval in self.results])
@@ -51,6 +67,10 @@ class EvaluationSummary():
     @property
     def mean_fde(self):
         return mean([eval.fde for eval in self.results])
+
+    @property
+    def mean_mpjpe(self):
+        return mean([eval.mpjpe for eval in self.results])
 
     @property
     def mean_inference_time_ms(self):
@@ -63,6 +83,10 @@ class EvaluationSummary():
     @property
     def max_fde(self):
         return max([eval.fde for eval in self.results])
+
+    @property
+    def max_mpjpe(self):
+        return max([eval.mpjpe for eval in self.results])
 
     @property
     def max_inference_time_ms(self):
