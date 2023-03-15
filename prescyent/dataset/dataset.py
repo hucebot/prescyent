@@ -1,9 +1,11 @@
 """Standard class for motion datasets"""
 import zipfile
 from pathlib import Path
+from typing import Callable, Dict, Union, Type
 
 import requests
 import torch
+import json
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
@@ -24,7 +26,7 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, scaler) -> None:
+    def __init__(self, scaler: Callable) -> None:
         self.scaler = self._train_scaler(scaler)
         self.trajectories.scale_function = self.scale
         self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
@@ -75,6 +77,36 @@ class MotionDataset(Dataset):
 
     def __len__(self):
         return len(self.val_datasample)
+
+    def _init_from_config(self,
+                          config: Union[Dict, None, str, Path, MotionDatasetConfig],
+                          config_class: Type[MotionDatasetConfig]):
+        if isinstance(config, dict):  # use pydantic for dict verification
+            config = config_class(**config)
+        elif config is None:  # use default config if none
+            logger.info("Using default config because none was provided", group=DATASET)
+            config = config_class()
+        elif isinstance(config, str):  # load from a string
+            config = Path(config)
+        config = self._load_config(config)
+        assert isinstance(config, config_class)   # check our config type
+        self.config = config
+        self.history_size = config.history_size
+        self.future_size = config.future_size
+        self.batch_size = config.batch_size
+
+    def _load_config(self, config):
+        if isinstance(config, Path):  # load from a Path
+            logger.info("Loading config from %s", config, group=DATASET)
+            with open(config, encoding="utf-8") as conf_file:
+                return json.load(conf_file)
+        return config
+
+    def save_config(self, save_path: Path):
+        logger.info("Saving config to %s", save_path, group=DATASET)
+        with open(save_path, 'w', encoding="utf-8") as conf_file:
+            logger.debug(self.config.dict(), group=DATASET)
+            json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
 
     def scale(self, l_array):
         T = l_array.shape

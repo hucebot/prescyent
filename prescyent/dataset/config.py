@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 
-class LearningTypes(Enum):
+class LearningTypes(str, Enum):
     SEQ2SEQ = "sequence_2_sequence"
     AUTOREG = "auto_regressive"
 

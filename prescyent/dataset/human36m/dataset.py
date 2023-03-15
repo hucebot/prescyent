@@ -72,21 +72,12 @@ class Dataset(MotionDataset):
     """
     def __init__(self, config: Union[Dict, DatasetConfig] = None,
                  scaler: Callable = None):
-        if config is None:
-            config = DatasetConfig()
-        self._init_from_config(config)
+        self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
         super().__init__(scaler)
 
-    def _init_from_config(self, config):
-        if isinstance(config, dict):
-            config = DatasetConfig(**config)
-        self.config = config
-        self.history_size = config.history_size
-        self.future_size = config.future_size
-        self.batch_size = config.batch_size
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):
