@@ -29,10 +29,12 @@ class Dataset(MotionDataset):
     It as to be at initialisation, through the parameters
     """
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = None,
+    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None,
                  scaler: Callable = None):
         if not config:
             config = DatasetConfig()
+        config = super()._load_config(config)
+
         self._init_from_config(config)
         if not Path(self.config.data_path).exists():
             self._get_from_web()

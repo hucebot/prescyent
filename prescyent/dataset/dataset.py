@@ -1,9 +1,11 @@
 """Standard class for motion datasets"""
 import zipfile
 from pathlib import Path
+from typing import Callable
 
 import requests
 import torch
+import json
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
@@ -24,7 +26,7 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, scaler) -> None:
+    def __init__(self, scaler: Callable) -> None:
         self.scaler = self._train_scaler(scaler)
         self.trajectories.scale_function = self.scale
         self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
@@ -75,6 +77,24 @@ class MotionDataset(Dataset):
 
     def __len__(self):
         return len(self.val_datasample)
+
+    def save_config(self, save_path: Path):
+        with open(save_path, 'w', encoding="utf-8") as conf_file:
+            print(self.config.dict())
+            json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
+
+    def _load_config(self, config):
+        # this is supposed to be called by the constructor of child classes
+        # this does nothing if config is not a path nor a string
+        if isinstance(config, str):
+            config = Path(config)
+        if isinstance(config, Path):
+            with open(config, encoding="utf-8") as conf_file:
+                return json.load(conf_file)
+        else:
+            return config
+	
+
 
     def scale(self, l_array):
         T = l_array.shape

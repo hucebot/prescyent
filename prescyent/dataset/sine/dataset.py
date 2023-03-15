@@ -3,6 +3,7 @@
    Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
 from typing import Callable, Union, Dict
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -16,10 +17,11 @@ class Dataset(MotionDataset):
     """Dataset is not splitted into test / train / val
     It as to be at initialisation, througt the parameters
     """
-    def __init__(self, config: Union[Dict, DatasetConfig] = None,
+    def __init__(self, config: Union[Dict, DatasetConfig, Path, str] = None,
                  scaler: Callable = None):
         if not config:
             config = DatasetConfig()
+        config = super()._load_config(config)
         self._init_from_config(config)
         self.trajectories = self._gen_data(self.config.length, self.config.period,
                                            int(self.config.size * self.config.ratio_train),

@@ -74,6 +74,7 @@ class Dataset(MotionDataset):
                  scaler: Callable = None):
         if config is None:
             config = DatasetConfig()
+        config = super()._load_config(config)
         self._init_from_config(config)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
@@ -83,6 +84,7 @@ class Dataset(MotionDataset):
     def _init_from_config(self, config):
         if isinstance(config, dict):
             config = DatasetConfig(**config)
+        config = super._load_config(config)
         self.config = config
         self.history_size = config.history_size
         self.future_size = config.future_size
