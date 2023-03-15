@@ -14,7 +14,7 @@ from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 
 class BasePredictor():
     """ base class for any predictor
-        methods _build_from_config, train, get_prediction, save must be overridden by a child class
+        methods _build_from_config, train, predict, save must be overridden by a child class
         This class initialize a tensorboard logger and, a test loop and a default run loop
     """
     log_root_path: str
@@ -62,7 +62,7 @@ class BasePredictor():
         """train predictor"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
-    def get_prediction(self, input_t: torch.Tensor, future_size: int):
+    def predict(self, input_t: torch.Tensor, future_size: int):
         """run the model / algorithm for one input"""
         raise NotImplementedError("This method must be overriden by the inherited predictor")
 
@@ -76,7 +76,7 @@ class BasePredictor():
         losses, ades, fdes, mpjpes = [], [], [], []
         for sample, truth in test_dataloader:
             # eval step
-            pred = self.get_prediction(sample, len(truth[0]))
+            pred = self.predict(sample, len(truth[0]))
             losses.append(torch.nn.MSELoss()(pred, truth))
             ades.append(get_ade(truth, pred))
             fdes.append(get_fde(truth, pred))
@@ -123,7 +123,7 @@ class BasePredictor():
 
         for i in range(0, input_len - history_size + 1, history_step):
             input_sub_batch = input_batch[i:i + history_size]
-            prediction = self.get_prediction(input_sub_batch, future_size)
+            prediction = self.predict(input_sub_batch, future_size)
             if output_only_future and future_size and \
                     len(prediction) == history_size + future_size - 1:
                 prediction = prediction[-future_size:]

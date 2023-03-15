@@ -111,12 +111,14 @@ class MotionDataset(Dataset):
     def scale(self, l_array):
         T = l_array.shape
         l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = l_array.detach().numpy()
         l_array = torch.FloatTensor(self.scaler.transform(l_array))
         return l_array.reshape(T)
 
     def unscale(self, l_array):
         T = l_array.shape
         l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = l_array.detach().numpy()
         l_array = torch.FloatTensor(self.scaler.inverse_transform(l_array))
         return l_array.reshape(T)
 

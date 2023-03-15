@@ -11,10 +11,10 @@ class DelayedPredictorTests(CustomTestCase):
     def test_prediction(self):
         predictor = DelayedPredictor("tmp")
         input_tensor = torch.rand(20, 10, 7, 6)
-        output = predictor.get_prediction(input_tensor, len(input_tensor[0]))
+        output = predictor.predict(input_tensor, len(input_tensor[0]))
         self.assertTrue(torch.equal(input_tensor, output))
         input_tensor = torch.rand(10, 7, 6)
-        output = predictor.get_prediction(input_tensor, len(input_tensor))
+        output = predictor.predict(input_tensor, len(input_tensor))
         self.assertTrue(torch.equal(input_tensor, output))
         output = predictor.run(input_tensor)[0]
         self.assertTrue(torch.equal(input_tensor, output))

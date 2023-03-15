@@ -217,14 +217,8 @@ class LightningPredictor(BasePredictor):
         logger.info("Saving config at %s", (save_path / "config.json"), group=PREDICTOR)
         self._save_config(save_path / "config.json")
 
-    def get_prediction(self, input_t: torch.Tensor, future_size: int):
-        return self.model.torch_model(input_t, future_size=future_size)
-
-    def run(self, input_batch: Iterable, history_size: int = None,
-            history_step: int = 1, future_size: int = None,
-            output_only_future: bool = True) -> List[torch.Tensor]:
+    def predict(self, input_t: torch.Tensor, future_size: int):
         with torch.no_grad():
             self.model.eval()
-            return super().run(input_batch, history_size,
-                               history_step, future_size,
-                               output_only_future)
+            return self.model.torch_model(input_t, future_size=future_size)
+
