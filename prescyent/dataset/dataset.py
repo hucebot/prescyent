@@ -88,15 +88,19 @@ class MotionDataset(Dataset):
             config = config_class()
         elif isinstance(config, str):  # load from a string
             config = Path(config)
-        if isinstance(config, Path):  # load from a Path
-            logger.info("Loading config from %s", config, group=DATASET)
-            with open(config, encoding="utf-8") as conf_file:
-                return json.load(conf_file)
+        config = self._load_config(config)
         assert isinstance(config, config_class)   # check our config type
         self.config = config
         self.history_size = config.history_size
         self.future_size = config.future_size
         self.batch_size = config.batch_size
+
+    def _load_config(self, config):
+        if isinstance(config, Path):  # load from a Path
+            logger.info("Loading config from %s", config, group=DATASET)
+            with open(config, encoding="utf-8") as conf_file:
+                return json.load(conf_file)
+        return config
 
     def save_config(self, save_path: Path):
         logger.info("Saving config to %s", save_path, group=DATASET)
