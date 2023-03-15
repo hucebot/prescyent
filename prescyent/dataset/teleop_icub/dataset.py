@@ -31,24 +31,11 @@ class Dataset(MotionDataset):
 
     def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None,
                  scaler: Callable = None):
-        if not config:
-            config = DatasetConfig()
-        config = super()._load_config(config)
-
-        self._init_from_config(config)
+        self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
         super().__init__(scaler)
-
-    def _init_from_config(self, config):
-        logger.debug("Reading Dataset Config", group=DATASET)
-        if isinstance(config, dict):
-            config = DatasetConfig(**config)
-        self.config = config
-        self.history_size = config.history_size
-        self.future_size = config.future_size
-        self.batch_size = config.batch_size
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):

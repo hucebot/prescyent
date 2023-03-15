@@ -19,23 +19,12 @@ class Dataset(MotionDataset):
     """
     def __init__(self, config: Union[Dict, DatasetConfig, Path, str] = None,
                  scaler: Callable = None):
-        if not config:
-            config = DatasetConfig()
-        config = super()._load_config(config)
-        self._init_from_config(config)
+        self._init_from_config(config, DatasetConfig)
         self.trajectories = self._gen_data(self.config.length, self.config.period,
                                            int(self.config.size * self.config.ratio_train),
                                            int(self.config.size * self.config.ratio_test),
                                            int(self.config.size * self.config.ratio_val))
         super().__init__(scaler)
-
-    def _init_from_config(self, config):
-        if isinstance(config, dict):
-            config = DatasetConfig(**config)
-        self.config = config
-        self.history_size = config.history_size
-        self.future_size = config.future_size
-        self.batch_size = config.batch_size
 
     def _gen_data(self, length, period, num_train, num_test, num_val):
         rng = np.random.default_rng(42)
