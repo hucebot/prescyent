@@ -14,8 +14,9 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule, BaseTorchModule
-from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.predictor.lightning.module_config import ModuleConfig
+from prescyent.predictor.lightning.progress_bar import LightningProgressBar
+from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
 
 
@@ -110,9 +111,10 @@ class LightningPredictor(BasePredictor):
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.dict(include=cls_default_params)
         lr_monitor = LearningRateMonitor(logging_interval='step')
+        progress_bar = LightningProgressBar()
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
-                                  callbacks=[lr_monitor],
+                                  callbacks=[lr_monitor, progress_bar],
                                   log_every_n_steps=1,
                                   **kwargs)
         logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
