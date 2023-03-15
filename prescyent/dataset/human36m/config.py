@@ -12,10 +12,10 @@ class DatasetConfig(MotionDatasetConfig):
     used_joints: List[int] = [2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19,
                              21, 22, 25, 26, 27, 29, 30]  # indexes of the joints
     #type of actions to load
-    actions: List[str] =['directions', 'discussion', 'eating', 'greeting',
-                         'phoning', 'posing', 'purchases', 'sitting',
-                         'sittingdown', 'smoking', 'takingphoto', 'waiting',
-                         'walking', 'walkingdog', 'walkingtogether']
+    actions: List[str] = ['directions', 'discussion', 'eating', 'greeting',
+                          'phoning', 'posing', 'purchases', 'sitting',
+                          'sittingdown', 'smoking', 'takingphoto', 'waiting',
+                          'walking', 'walkingdog', 'walkingtogether']
     subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]
     subjects_test: List[str] = ["S5"]
     subjects_val: List[str] = ["S11"]

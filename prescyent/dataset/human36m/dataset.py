@@ -11,7 +11,7 @@ from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import expmap2rotmat_torch, rotmat2xyz_torch, split_array_with_ratios
-from prescyent.dataset.teleop_icub.config import DatasetConfig
+from prescyent.dataset.human36m.config import DatasetConfig
 
 # 32-long list with indices into angles
 ROTATION_IDS = [[5, 6, 4],
@@ -72,7 +72,7 @@ class Dataset(MotionDataset):
     """
     def __init__(self, config: Union[Dict, DatasetConfig] = None,
                  scaler: Callable = None):
-        if not config:
+        if config is None:
             config = DatasetConfig()
         self._init_from_config(config)
         if not Path(self.config.data_path).exists():
@@ -91,23 +91,29 @@ class Dataset(MotionDataset):
     # load a set of trajectory, keeping them separate
     def _load_files(self):
         """read txt files and create trajectories"""
+        logger.info("Reading files from %s", self.config.data_path,
+                    group=DATASET)
         train_files = self._get_filenames_for_subject(self.config.subjects_train)
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
         # each files gives an expmap and has to be converted into xyz
         train = pathfiles_to_trajectories(train_files, used_joints=self.config.used_joints,
                                         subsampling_step=self.config.subsampling_step)
+        logger.info("Found %d trajectories in the train set", len(train), group=DATASET)
         test = pathfiles_to_trajectories(test_files, used_joints=self.config.used_joints,
                                         subsampling_step=self.config.subsampling_step)
+        logger.info("Found %d trajectories in the test set", len(test), group=DATASET)
         val = pathfiles_to_trajectories(val_files, used_joints=self.config.used_joints,
                                         subsampling_step=self.config.subsampling_step)
+        logger.info("Found %d trajectories in the val set", len(val), group=DATASET)
         return Trajectories(train, test, val)
 
     def _get_filenames_for_subject(self, subject_names:List[str]):
         filenames = []
         for subject_name in subject_names:
-            filenames += list((Path(self.config.data_path) / subject_name)
-                              .rglob("*.txt"))
+            for action in self.config.actions :
+                filenames += list((Path(self.config.data_path) / subject_name)
+                                .rglob(f"{action}*.txt"))
         return filenames
 
     def _get_from_web(self):

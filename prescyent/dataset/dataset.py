@@ -10,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 from prescyent.dataset.config import LearningTypes, MotionDatasetConfig
 from prescyent.dataset.trajectories import Trajectories
 from prescyent.dataset.datasamples import MotionDataSamples
-
+from prescyent.utils.logger import logger, DATASET
 
 class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
@@ -28,8 +28,14 @@ class MotionDataset(Dataset):
         self.scaler = self._train_scaler(scaler)
         self.trajectories.scale_function = self.scale
         self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
+        logger.info("Generated %d tensor pairs for training", len(self.train_datasample),
+                    group=DATASET)
         self.test_datasample = self._make_datasample(self.trajectories.test_scaled)
+        logger.info("Generated %d tensor pairs for testing", len(self.test_datasample),
+                    group=DATASET)
         self.val_datasample = self._make_datasample(self.trajectories.val_scaled)
+        logger.info("Generated %d tensor pairs for validation", len(self.val_datasample),
+                    group=DATASET)
 
     @property
     def train_dataloader(self):
@@ -87,6 +93,7 @@ class MotionDataset(Dataset):
         # first, get all the data in a single tensor
         # scale according to all the data
         if other_scaler is None:
+            logger.debug("Training scaler", group=DATASET)
             train_all = torch.zeros((1, self.num_points * self.num_dims))
             for trajectory in self.trajectories.train:
                 train_all = torch.cat((train_all, trajectory.tensor.reshape(
@@ -98,16 +105,21 @@ class MotionDataset(Dataset):
         return scaler
 
     def _make_datasample(self, scaled_trajectory):
-        sample = torch.FloatTensor([])   # shape(num_sample, seq_len, features)
+        logger.debug("Sampling trajectories into sample/truth tensor pairs", group=DATASET)
+        sample = torch.FloatTensor([])   # shape(num_sample, seq_len, num_point, num_dim)
         truth = torch.FloatTensor([])
+        logger.debug("Tensor pairs will be generated for a %s learning type",
+                        self.config.learning_type,
+                        group=DATASET)
+        if self.config.learning_type == LearningTypes.SEQ2SEQ:
+            tensor_pair_function = self._make_seq2seq_pairs
+        elif self.config.learning_type == LearningTypes.AUTOREG:
+            tensor_pair_function = self._make_autoreg_pairs
+        else:
+            raise NotImplementedError(f"Learning type {self.config.learning_type}"
+                                        " is not implemented yet")
         for trajectory in scaled_trajectory:
-            if self.config.learning_type == LearningTypes.SEQ2SEQ:
-                sample_trajectory, truth_trajectory = self._make_seq2seq_pairs(trajectory)
-            elif self.config.learning_type == LearningTypes.AUTOREG:
-                sample_trajectory, truth_trajectory = self._make_autoreg_pairs(trajectory)
-            else:
-                raise NotImplementedError(f"Learning type {self.config.learning_type}"
-                                          " is not implemented yet")
+            sample_trajectory, truth_trajectory = tensor_pair_function(trajectory)
             sample = torch.cat([sample, sample_trajectory], dim=0)
             truth = torch.cat([truth, truth_trajectory], dim=0)
         return MotionDataSamples(sample, truth)
@@ -147,14 +159,20 @@ class MotionDataset(Dataset):
 
     def _download_files(self, url, path):
         """get the dataset files from an url"""
+        logger.info("Downloading data from %s", url,
+                    group=DATASET)
         data = requests.get(url, timeout=10)
         path = Path(path)
         if path.is_dir():
             path = path / "downloaded_data.zip"
         path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info("Saving data to %s", path,
+                    group=DATASET)
         with path.open("wb") as pfile:
             pfile.write(data.content)
 
     def _unzip(self, zip_path: str):
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(zip_path.replace(".zip", ""))
+        logger.info("Archive unziped at %s", zip_path.replace(".zip", ""),
+                    group=DATASET)
