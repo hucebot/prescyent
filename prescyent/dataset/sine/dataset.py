@@ -21,7 +21,6 @@ class Dataset(MotionDataset):
         if not config:
             config = DatasetConfig()
         self._init_from_config(config)
-        self.feature_size = 1
         self.trajectories = self._gen_data(self.config.length, self.config.period,
                                            int(self.config.size * self.config.ratio_train),
                                            int(self.config.size * self.config.ratio_test),
