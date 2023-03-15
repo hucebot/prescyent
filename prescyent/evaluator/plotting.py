@@ -7,6 +7,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.axes import Axes
+import numpy as np
 
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
@@ -48,11 +49,29 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
         axe.plot(time_steps[:len(inputs[i])], inputs[i], linewidth=2)
         # axe.plot(time_steps[-len(inputs[i]):], inputs[i][:min(len(inputs[i]), pred_last_idx)], linewidth=2)  # delayed
         axe.plot(time_steps[step:step + len(preds[i])], preds[i], linewidth=1, linestyle='--')
+        axe.grid(color='grey', linestyle='--', lw=0.3)
+        axe.set_axisbelow(True)
+        axe.spines['top'].set_visible(False)
+        axe.spines['right'].set_visible(False)
+        axe.spines['left'].set_visible(False)
+        for spine in axe.spines.values():
+            spine.set_position(('outward', 5))
+        axe.get_xaxis().tick_bottom()
+        axe.get_yaxis().tick_left()
+        axe.tick_params(axis='x', direction='out')
+        axe.tick_params(axis='y', length=0)
+        axe.spines['bottom'].set_linewidth(2)
+        if i != len(axes) - 1:
+            axe.spines['bottom'].set_visible(False)
+            axe.xaxis.set_ticks_position('none') 
     legend_plot(axes, ["Truth_x", "Truth_y", "Truth_z",
                        "Prediction_x", "Prediction_y", "Prediction_z"],
                 ylabels=trajectory.dimension_names)
-    fig.set_size_inches(15, len(trajectory.dimension_names))
-    fig.suptitle(trajectory.file_path)
+    fig.set_size_inches(trajectory.tensor.shape[1] *2, len(trajectory.dimension_names))
+    title = '/'.join(trajectory.file_path.parts[-2:])
+    fig.suptitle(title)
+    fig.subplots_adjust(right=0.7)
+    fig.tight_layout()
     save_plot_and_close(savefig_path)
 
 
@@ -111,7 +130,7 @@ def save_plot_and_close(savefig_path):
     if savefig_path is not None:
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
-        plt.savefig(savefig_path)
+        plt.savefig(savefig_path, dpi=300)
         logger.info("Saving plot to %s", savefig_path, group=EVAL)
     plt.close()
 
@@ -128,7 +147,7 @@ def legend_plot(axes: List[Axes],
         xlabel (str, optional): label for x. x axis are shared in our plots. Defaults to "time".
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
-    legend = axes[-1].legend(names, loc=1)
+    legend = axes[-1].legend(names, bbox_to_anchor=(1.45, 1.1), loc="lower right")
     axes[-1].set_xlabel(xlabel)
     frame = legend.get_frame()
     frame.set_facecolor('0.9')
