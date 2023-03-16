@@ -105,8 +105,13 @@ class MotionDataset(Dataset):
         return config
 
     def save_config(self, save_path: Path):
+        # check if parent folder exist, or create it
+        if isinstance(save_path, str):
+            save_path = Path(save_path)
+        if not save_path.parent.exists():
+            save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("Saving config to %s", save_path, group=DATASET)
-        with open(save_path, 'w', encoding="utf-8") as conf_file:
+        with save_path.open('w', encoding="utf-8") as conf_file:
             logger.debug(self.config.dict(), group=DATASET)
             json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
 
