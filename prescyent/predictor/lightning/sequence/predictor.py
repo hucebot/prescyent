@@ -8,10 +8,12 @@ from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 class SequencePredictor(LightningPredictor):
     """Sequence models outputs depend on their trained output_size
-        We reimplement here the get_prediction function to pass a future_size arg to the model
+        We reimplement here the predict function to pass a future_size arg to the model
     """
 
-    def get_prediction(self, input_t: torch.Tensor, future_size: int = None):
+    def predict(self, input_t: torch.Tensor, future_size: int = None):
+        with torch.no_grad():
+            self.model.eval()
         list_outputs = []
         if future_size is None:
             future_size = self.model.torch_model.output_size

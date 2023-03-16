@@ -36,7 +36,7 @@ class DelayedPredictor(BasePredictor):
                        self.__class__.__name__,
                        group=PREDICTOR)
 
-    def get_prediction(self, input_t, future_size):
+    def predict(self, input_t, future_size):
         if is_tensor_is_batched(input_t):
             input_t = torch.transpose(input_t, 0, 1)
 

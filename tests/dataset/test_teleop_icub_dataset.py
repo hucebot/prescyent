@@ -1,3 +1,5 @@
+import shutil
+
 import numpy as np
 import torch
 
@@ -34,6 +36,13 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         self.assertRaises(ValueError, TeleopIcubDataset, config)
         config = TeleopIcubDatasetConfig(history_size = 100)
         dataset = TeleopIcubDataset(config)  # this is ok
+
+    def test_load_from_path(self):
+        dataset = TeleopIcubDataset()
+        dataset.save_config("tmp/test.json")
+        dataset._load_config("tmp/test.json")
+        dataset = TeleopIcubDataset("tmp/test.json")
+        shutil.rmtree("tmp", ignore_errors=True)
 
 class TeleopIcubDatasetTest(CustomTestCase):
 

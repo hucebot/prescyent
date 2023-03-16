@@ -17,6 +17,7 @@ from prescyent.utils.logger import logger, DATASET
 class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
     config: MotionDatasetConfig
+    config_class: Type[MotionDatasetConfig]
     scaler: StandardScaler
     batch_size: int
     history_size: int
@@ -81,6 +82,7 @@ class MotionDataset(Dataset):
     def _init_from_config(self,
                           config: Union[Dict, None, str, Path, MotionDatasetConfig],
                           config_class: Type[MotionDatasetConfig]):
+        self.config_class = config_class
         if isinstance(config, dict):  # use pydantic for dict verification
             config = config_class(**config)
         elif config is None:  # use default config if none
@@ -99,24 +101,31 @@ class MotionDataset(Dataset):
         if isinstance(config, Path):  # load from a Path
             logger.info("Loading config from %s", config, group=DATASET)
             with open(config, encoding="utf-8") as conf_file:
-                return json.load(conf_file)
+                return self.config_class(**json.load(conf_file))
         return config
 
     def save_config(self, save_path: Path):
+        # check if parent folder exist, or create it
+        if isinstance(save_path, str):
+            save_path = Path(save_path)
+        if not save_path.parent.exists():
+            save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("Saving config to %s", save_path, group=DATASET)
-        with open(save_path, 'w', encoding="utf-8") as conf_file:
+        with save_path.open('w', encoding="utf-8") as conf_file:
             logger.debug(self.config.dict(), group=DATASET)
             json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
 
     def scale(self, l_array):
         T = l_array.shape
         l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = l_array.detach().numpy()
         l_array = torch.FloatTensor(self.scaler.transform(l_array))
         return l_array.reshape(T)
 
     def unscale(self, l_array):
         T = l_array.shape
         l_array = l_array.reshape(l_array.shape[0], -1)
+        l_array = l_array.detach().numpy()
         l_array = torch.FloatTensor(self.scaler.inverse_transform(l_array))
         return l_array.reshape(T)
 
