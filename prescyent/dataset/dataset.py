@@ -17,6 +17,7 @@ from prescyent.utils.logger import logger, DATASET
 class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
     config: MotionDatasetConfig
+    config_class: Type[MotionDatasetConfig]
     scaler: StandardScaler
     batch_size: int
     history_size: int
@@ -81,6 +82,7 @@ class MotionDataset(Dataset):
     def _init_from_config(self,
                           config: Union[Dict, None, str, Path, MotionDatasetConfig],
                           config_class: Type[MotionDatasetConfig]):
+        self.config_class = config_class
         if isinstance(config, dict):  # use pydantic for dict verification
             config = config_class(**config)
         elif config is None:  # use default config if none
@@ -99,7 +101,7 @@ class MotionDataset(Dataset):
         if isinstance(config, Path):  # load from a Path
             logger.info("Loading config from %s", config, group=DATASET)
             with open(config, encoding="utf-8") as conf_file:
-                return json.load(conf_file)
+                return self.config_class(**json.load(conf_file))
         return config
 
     def save_config(self, save_path: Path):
