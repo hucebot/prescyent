@@ -42,7 +42,7 @@ if __name__ == "__main__":
             pred = torch.zeros((traj.shape[0] - history_size, traj.shape[1], traj.shape[2]))
             for i in range(0, traj.shape[0] - history_size): # for each time-step
                 ##### this is the prediction
-                p = predictor.get_prediction(traj[i:i+history_size, :, :], future_size)
+                p = predictor.predict(traj[i:i+history_size, :, :], future_size)
                 ######
                 pred[i, :, :] = p[-1]
             all_preds += [pred]
