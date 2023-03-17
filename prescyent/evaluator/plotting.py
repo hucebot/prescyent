@@ -85,7 +85,7 @@ def plot_trajs(trajs, savefig_path: str,
                 marker = k % len(Line2D.filled_markers)
                 color = colors[j % len(colors)]
                 ls = '--' if j != 0 else '-'
-                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=0.1, markersize=3, color=color,ls=ls)
+                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=0.1, markersize=2, color=color,ls=ls)
 
     # tune the look
     for ax in axes:
