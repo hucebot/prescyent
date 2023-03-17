@@ -117,7 +117,7 @@ def plot_trajs(trajs, savefig_path: str,
 
     fig.tight_layout()
 
-    # save the figure in png
+    # save the figure
     fig.savefig(savefig_path, dpi=300)
     logger.info("Saving plot to %s", savefig_path, group=EVAL)
 
