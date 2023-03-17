@@ -80,13 +80,12 @@ def plot_trajs(trajs, savefig_path: str,
     for i, ax in enumerate(axes):# for each group
         for j, traj in enumerate(trajs): # for each traj
             ax.set_ylabel(group_labels[i])
-            # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
             time_steps = range(shifts[j], traj.shape[0] + shifts[j])
             for k in range(traj.shape[2]):
                 marker = k % len(Line2D.filled_markers)
                 color = colors[j % len(colors)]
                 ls = '--' if j != 0 else '-'
-                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=20, markersize=3, color=color,ls=ls)
+                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=0.1, markersize=3, color=color,ls=ls)
 
     # tune the look
     for ax in axes:
