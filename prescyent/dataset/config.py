@@ -17,5 +17,5 @@ class MotionDatasetConfig(BaseModel):
     num_workers = 0
     persistent_workers = False
     pin_memory = True
-    history_size = 10       # number of timesteps as input
-    future_size = 10      # number of predicted timesteps
+    history_size: int       # number of timesteps as input
+    future_size: int      # number of predicted timesteps
