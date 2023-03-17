@@ -5,7 +5,7 @@ from pathlib import Path
 from prescyent.evaluator import eval_predictors
 from prescyent.predictor import MlpPredictor, MlpConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
-from prescyent.evaluator.plotting import plot_trajectory_prediction
+from prescyent.evaluator.plotting import plot_trajs
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or sys.argv[1] == '--help':
@@ -51,4 +51,14 @@ if __name__ == "__main__":
     # plot everything in the current directory
     print("Plotting...")
     for i in tqdm(range(len(all_preds))): # for each test trajectory
-        plot_trajectory_prediction(dataset.trajectories.test[i], all_preds[i], history_size, f'plots/pred_{i}')
+        ref_traj = dataset.trajectories.test[i]
+        title = '/'.join(ref_traj.file_path.parts[-2:])
+        dims = ref_traj.dimension_names
+        plot_trajs([ref_traj.tensor, all_preds[i], ref_traj.tensor], 
+                   f'plots/pred_{i}.pdf', 
+                   # we shift the predictions of the history_size (data we need to predict) and of future_size (because given 1 s of data, we predict 1 second from now)
+                   shifts=[0, history_size + future_size, future_size],
+                   group_labels=dims,
+                   dim_labels = ['x', 'y', 'z'],
+                   title=title,
+                   traj_labels=['Truth', 'Prediction', 'delayed (1s)'])

@@ -33,7 +33,7 @@ if __name__ == "__main__":
     print("OK")
 
     # Train
-    training_config = TrainingConfig(epoch=1, use_scheduler=True)
+    training_config = TrainingConfig(epoch=50, use_scheduler=True)
     predictor.train(dataset.train_dataloader, training_config,
                     dataset.val_dataloader)
     # Test so that we know how good we are

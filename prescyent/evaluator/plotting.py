@@ -3,15 +3,17 @@
 from pathlib import Path
 from typing import Callable, List, Union
 
+import torch
+
 import matplotlib
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.axes import Axes
-import numpy as np
+from matplotlib.lines import Line2D
+from matplotlib.cm import get_cmap
+from matplotlib.lines import Line2D
 
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
-
 
 matplotlib.use('agg')
 
@@ -34,7 +36,101 @@ def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
     save_plot_and_close(savefig_path)
 
 
-def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
+def plot_trajs(trajs, savefig_path: str,
+               shifts,
+               group_labels: List[str] = None,
+               traj_labels: List[str] = None,
+               dim_labels: List[str] = None,
+               title=''):
+    assert(len(trajs) > 0)
+    if group_labels is None:
+        group_labels = []
+    if traj_labels is None:
+        traj_labels = []
+    if dim_labels is None:
+        dim_labels = []
+
+    # arguments
+    if not isinstance(trajs, list):
+        trajs = [trajs]
+    if not isinstance(shifts, list):
+        shifts = [shifts]
+    if len(shifts) == 0:
+        shifts = [0] * len(trajs)
+    if len(traj_labels) == 0:
+        traj_labels = [''] * len(trajs)
+    if len(group_labels) == 0:
+        group_labels = [''] * trajs[0].shape[1]
+    if len(dim_labels) == 0:
+        dim_labels = [''] * trajs[0].shape[2]
+    assert(len(traj_labels) == len(trajs))
+    assert(len(shifts) == len(trajs))
+    assert(len(group_labels) == trajs[0].shape[1])
+    assert(len(dim_labels) == trajs[0].shape[2])
+
+    # prepare a subplot for each "group"
+    fig, axes = plt.subplots(trajs[0].shape[1], sharex = True)
+    if trajs[0].shape[1] == 1:
+        axes = [axes]
+    fig.set_size_inches(6, trajs[0].shape[1]*1.5)
+
+    # setup colors
+    colors = get_cmap( "Accent").colors
+
+    for i, ax in enumerate(axes):# for each group
+        for j, traj in enumerate(trajs): # for each traj
+            ax.set_ylabel(group_labels[i])
+            # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
+            time_steps = range(shifts[j], traj.shape[0] + shifts[j])
+            for k in range(traj.shape[2]):
+                marker = k % len(Line2D.filled_markers)
+                color = colors[j % len(colors)]
+                ls = '--' if j != 0 else '-'
+                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=20, markersize=3, color=color,ls=ls)
+
+    # tune the look
+    for ax in axes:
+        ax.minorticks_on()
+        ax.grid(color='lightgrey', linestyle='-', lw=0.6)
+        ax.grid(which='minor', color='lightgrey', linestyle='--', lw=0.3)
+        ax.set_axisbelow(True)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        for spine in ax.spines.values():
+            spine.set_position(('outward', 5))
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()
+        ax.tick_params(axis='x', direction='out')
+        ax.tick_params(axis='y', length=0)
+        ax.tick_params(which='minor', axis='y', length=0)
+        ax.spines['bottom'].set_linewidth(2)
+        if i != len(axes) - 1:
+            ax.spines['bottom'].set_visible(False)
+            ax.xaxis.set_ticks_position('none')
+
+    # title
+    fig.suptitle(title)
+
+    # legend
+    fig.subplots_adjust(right=0.7)
+    leg = []
+    for j in range(len(trajs)):
+        color = colors[j % len(colors)]
+        leg += [Line2D([0], [0], color=color, label=traj_labels[j])]
+    for k in range(trajs[0].shape[2]):
+        marker = k % len(Line2D.filled_markers)
+        leg += [Line2D([0], [0], marker=Line2D.filled_markers[marker], color='black', lw=1, label=dim_labels[k])]
+
+    legend = axes[0].legend(handles=leg, bbox_to_anchor=(1.5, 1.1), loc="upper right")
+
+    fig.tight_layout()
+
+    # save the figure
+    save_plot_and_close(savefig_path)
+
+
+def plot_trajectory_prediction(trajectory: Trajectory, preds, step: int, savefig_path: str):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     inputs = torch.transpose(trajectory.tensor, 0, 1)
     preds = torch.transpose(preds, 0, 1)
@@ -60,10 +156,11 @@ def plot_trajectory_prediction(trajectory, preds, step, savefig_path):
         axe.get_yaxis().tick_left()
         axe.tick_params(axis='x', direction='out')
         axe.tick_params(axis='y', length=0)
+        axe.tick_params(which='minor', axis='y', length=0)
         axe.spines['bottom'].set_linewidth(2)
         if i != len(axes) - 1:
             axe.spines['bottom'].set_visible(False)
-            axe.xaxis.set_ticks_position('none') 
+            axe.xaxis.set_ticks_position('none')
     legend_plot(axes, ["Truth_x", "Truth_y", "Truth_z",
                        "Prediction_x", "Prediction_y", "Prediction_z"],
                 ylabels=trajectory.dimension_names)
@@ -125,12 +222,12 @@ def plot_multiple_future(future_sizes: List[int],
     save_plot_and_close(savefig_path)
 
 
-def save_plot_and_close(savefig_path):
+def save_plot_and_close(savefig_path, dpi=300):
     """savefig helper"""
     if savefig_path is not None:
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
-        plt.savefig(savefig_path, dpi=300)
+        plt.savefig(savefig_path, dpi=dpi)
         logger.info("Saving plot to %s", savefig_path, group=EVAL)
     plt.close()
 
