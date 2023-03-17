@@ -37,9 +37,18 @@ def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
 
 
 def plot_trajs(trajs, savefig_path: str,
-              shifts, group_labels:list[str]=[], traj_labels:list[str] = [], dim_labels:list[str] = [],
-              title=''):
+               shifts,
+               group_labels: List[str] = None,
+               traj_labels: List[str] = None,
+               dim_labels: List[str] = None,
+               title=''):
     assert(len(trajs) > 0)
+    if group_labels is None:
+        group_labels = []
+    if traj_labels is None:
+        traj_labels = []
+    if dim_labels is None:
+        dim_labels = []
 
     # arguments
     if not isinstance(trajs, list):
@@ -98,7 +107,7 @@ def plot_trajs(trajs, savefig_path: str,
         ax.spines['bottom'].set_linewidth(2)
         if i != len(axes) - 1:
             ax.spines['bottom'].set_visible(False)
-            ax.xaxis.set_ticks_position('none') 
+            ax.xaxis.set_ticks_position('none')
 
     # title
     fig.suptitle(title)
@@ -118,10 +127,8 @@ def plot_trajs(trajs, savefig_path: str,
     fig.tight_layout()
 
     # save the figure
-    fig.savefig(savefig_path, dpi=300)
-    logger.info("Saving plot to %s", savefig_path, group=EVAL)
+    save_plot_and_close(savefig_path)
 
-  
 
 def plot_trajectory_prediction(trajectory: Trajectory, preds, step: int, savefig_path: str):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
@@ -153,7 +160,7 @@ def plot_trajectory_prediction(trajectory: Trajectory, preds, step: int, savefig
         axe.spines['bottom'].set_linewidth(2)
         if i != len(axes) - 1:
             axe.spines['bottom'].set_visible(False)
-            axe.xaxis.set_ticks_position('none') 
+            axe.xaxis.set_ticks_position('none')
     legend_plot(axes, ["Truth_x", "Truth_y", "Truth_z",
                        "Prediction_x", "Prediction_y", "Prediction_z"],
                 ylabels=trajectory.dimension_names)
@@ -215,12 +222,12 @@ def plot_multiple_future(future_sizes: List[int],
     save_plot_and_close(savefig_path)
 
 
-def save_plot_and_close(savefig_path):
+def save_plot_and_close(savefig_path, dpi=300):
     """savefig helper"""
     if savefig_path is not None:
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
-        plt.savefig(savefig_path, dpi=300)
+        plt.savefig(savefig_path, dpi=dpi)
         logger.info("Saving plot to %s", savefig_path, group=EVAL)
     plt.close()
 
