@@ -7,14 +7,14 @@ from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
 if __name__ == "__main__":
     # -- Init dataset
     print("Initializing dataset...", end='')
-    subsampling_step: int = 10      # subsampling -> 100 Hz to 10Hz
-    history_size = 10                 # 1 second
-    future_size = 10                # 1 second
+    subsampling_step: int = 1      # subsampling -> 100 Hz to 10Hz
+    history_size = 100                 # 1 second
+    future_size = 100                # 1 second
     dimensions = None               # None equals ALL dimensions !
     # for TeleopIcub dimension = [0, 1, 2] is waist, right_hand, left_hand
     batch_size = 64
     dataset_config = TeleopIcubDatasetConfig(history_size=history_size,
-                                             output_windows_size=future_size,
+                                             future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
                                              batch_size=batch_size,

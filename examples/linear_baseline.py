@@ -12,7 +12,7 @@ if __name__ == "__main__":
     # for TeleopIcub dimension = [1, 2, 3] is right hand x, right hand y, right hand z
     batch_size = 64
     dataset_config = TeleopIcubDatasetConfig(history_size=history_size,
-                                             output_windows_size=future_size,
+                                             future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
                                              batch_size=batch_size,
