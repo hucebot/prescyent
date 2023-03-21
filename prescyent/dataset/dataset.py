@@ -30,6 +30,9 @@ class MotionDataset(Dataset):
     def __init__(self, scaler: Callable) -> None:
         self.scaler = self._train_scaler(scaler)
         self.trajectories.scale_function = self.scale
+        logger.debug("Tensor pairs will be generated for a %s learning type",
+                        self.config.learning_type,
+                        group=DATASET)
         self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
         logger.info("Generated %d tensor pairs for training", len(self.train_datasample),
                     group=DATASET)
@@ -45,6 +48,7 @@ class MotionDataset(Dataset):
         return DataLoader(self.train_datasample, batch_size=self.batch_size,
                           shuffle=True, num_workers=self.config.num_workers,
                           pin_memory=self.config.pin_memory,
+                          drop_last=self.config.drop_last,
                           persistent_workers=self.config.persistent_workers)
 
     @property
@@ -52,6 +56,7 @@ class MotionDataset(Dataset):
         return DataLoader(self.test_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
                           pin_memory=self.config.pin_memory,
+                          drop_last=self.config.drop_last,
                           persistent_workers=self.config.persistent_workers)
 
     @property
@@ -59,6 +64,7 @@ class MotionDataset(Dataset):
         return DataLoader(self.val_datasample, batch_size=self.batch_size,
                           shuffle=False, num_workers=self.config.num_workers,
                           pin_memory=self.config.pin_memory,
+                          drop_last=self.config.drop_last,
                           persistent_workers=self.config.persistent_workers)
 
     @property
@@ -146,12 +152,8 @@ class MotionDataset(Dataset):
         return scaler
 
     def _make_datasample(self, scaled_trajectory):
-        logger.debug("Sampling trajectories into sample/truth tensor pairs", group=DATASET)
         sample = torch.FloatTensor([])   # shape(num_sample, seq_len, num_point, num_dim)
         truth = torch.FloatTensor([])
-        logger.debug("Tensor pairs will be generated for a %s learning type",
-                        self.config.learning_type,
-                        group=DATASET)
         if self.config.learning_type == LearningTypes.SEQ2SEQ:
             tensor_pair_function = self._make_seq2seq_pairs
         elif self.config.learning_type == LearningTypes.AUTOREG:

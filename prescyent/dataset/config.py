@@ -15,6 +15,7 @@ class MotionDatasetConfig(BaseModel):
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
     shuffle = True
     num_workers = 0
+    drop_last: bool = True
     persistent_workers = False
     pin_memory = True
     history_size: int       # number of timesteps as input
