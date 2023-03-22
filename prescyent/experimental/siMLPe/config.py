@@ -18,7 +18,6 @@ class MotionFCInConfig(ModuleConfig):
     with_norm = False
     activation = 'relu'
     init_w_trunc_normal = False
-    temporal_fc = False
 
 class MotionFCOutConfig(ModuleConfig):
     # in_features = feature_size
@@ -26,7 +25,6 @@ class MotionFCOutConfig(ModuleConfig):
     with_norm = False
     activation = 'relu'
     init_w_trunc_normal = True
-    temporal_fc = False
 
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
@@ -35,8 +33,10 @@ class Config(ModuleConfig):
     input_size_dct: int
     feature_size: int
     hidden_size: int = DEFAULT_HIDDEN
-    pre_dct = False
-    post_dct = False
+    pre_dct = True
+    post_dct = True
+    temporal_fc_in = False
+    temporal_fc_out = False
     motion_mlp: MotionMlpConfig = MotionMlpConfig()
     motion_fc_in: MotionFCInConfig = MotionFCInConfig()
     motion_fc_out: MotionFCOutConfig = MotionFCOutConfig()
