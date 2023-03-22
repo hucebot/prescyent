@@ -80,7 +80,7 @@ class BasePredictor():
             losses.append(torch.nn.MSELoss()(pred, truth))
             ades.append(get_ade(truth, pred))
             fdes.append(get_fde(truth, pred))
-            mpjpes.append(get_mpjpe(truth, pred))
+            mpjpes.append(get_mpjpe(truth, pred))[-1]
         # eval epoch
         mean_loss = torch.stack(losses).mean()
         ade = torch.stack(ades).mean()

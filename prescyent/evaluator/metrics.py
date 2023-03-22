@@ -42,8 +42,12 @@ def get_rmse(truth: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
     return torch.sqrt(mse)
 
 
+# h36m_time_ms =      [80,    160,  320,   400,   560,   720,   880,  1000]
+# h36m_results_keys = ['#2', '#4', '#8', '#10', '#14', '#18', '#22', '#25']
 def get_mpjpe(truth: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
     if is_tensor_is_batched(truth):
         batch_len = truth.shape[0]
-        return torch.sum(torch.mean(torch.norm(truth - pred, dim=3), dim=2), dim=0) / batch_len
-    return torch.mean(torch.norm(truth - pred, dim=2), dim=1)
+        mpjpe = torch.sum(torch.mean(torch.norm(truth - pred, dim=3), dim=2), dim=0) / batch_len
+    else:
+        mpjpe = torch.mean(torch.norm(truth - pred, dim=2), dim=1)
+    return mpjpe

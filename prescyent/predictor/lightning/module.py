@@ -115,7 +115,7 @@ class LightningModule(pl.LightningModule):
         loss = self.criterion(pred, truth)
         ade = get_ade(truth, pred)
         fde = get_fde(truth, pred)
-        mpjpe = get_mpjpe(truth, pred)
+        mpjpe = get_mpjpe(truth, pred)[-1]
         self.log(f"{prefix}/loss", loss)
         return {"loss": loss, "ADE": ade, "FDE": fde, "MPJPE": mpjpe}
 

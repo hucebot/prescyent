@@ -19,5 +19,5 @@ class DatasetConfig(MotionDatasetConfig):
     subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]
     subjects_test: List[str] = ["S5"]
     subjects_val: List[str] = ["S11"]
-    history_size: int = 25       # number of timesteps as input
-    future_size: int = 25      # number of predicted timesteps
+    history_size: int = 50       # number of timesteps as input
+    future_size: int = 10      # number of predicted timesteps
