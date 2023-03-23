@@ -30,5 +30,5 @@ class TorchModule(BaseTorchModule):
         predictions = self.linear(input_tensor)
         # reshape as input
         predictions = torch.transpose(predictions, 1, 2)
-        predictions = predictions.reshape(T)
+        predictions = predictions.reshape(T[0], -1, T[2], T[3])
         return predictions

@@ -55,5 +55,5 @@ class TorchModule(BaseTorchModule):
             predictions[i] = prediction
         # (seq_len, batch_size, num_point * num_dim) => (batch_size, seq_len, num_point, num_dim)
         predictions = torch.transpose(predictions, 0, 1)
-        predictions = predictions.reshape(T)
+        predictions = predictions.reshape(T[0], -1, T[2], T[3])
         return predictions
