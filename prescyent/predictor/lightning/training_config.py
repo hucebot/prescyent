@@ -10,3 +10,4 @@ class TrainingConfig(OptimizerConfig):
     max_steps: int = -1
     accelerator: str = "auto"
     devices: Union[str, int] = "auto"
+    accumulate_grad_batches: int = 1
