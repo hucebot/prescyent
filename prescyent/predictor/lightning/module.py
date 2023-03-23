@@ -113,10 +113,11 @@ class LightningModule(pl.LightningModule):
         sample, truth = batch
         pred = self.torch_model(sample)
         loss = self.criterion(pred, truth)
-        ade = get_ade(truth, pred)
-        fde = get_fde(truth, pred)
-        mpjpe = get_mpjpe(truth, pred)[-1]
-        self.log(f"{prefix}/loss", loss)
+        with torch.no_grad():
+            ade = get_ade(truth, pred)
+            fde = get_fde(truth, pred)
+            mpjpe = get_mpjpe(truth, pred)[-1]
+            self.log(f"{prefix}/loss", loss)
         return {"loss": loss, "ADE": ade, "FDE": fde, "MPJPE": mpjpe}
 
     def log_accuracy(self, outputs, prefix: str = ""):
@@ -137,22 +138,31 @@ class LightningModule(pl.LightningModule):
 
     def test_step(self, *args, **kwargs):
         """run every test step"""
-        batch = args[0]
-        return self.get_metrics(batch, "Test")
+        with torch.no_grad():
+            batch = args[0]
+            return self.get_metrics(batch, "Test")
 
     def validation_step(self, *args, **kwargs):
         """run every validation step"""
-        batch = args[0]
-        return self.get_metrics(batch, "Val")
+        with torch.no_grad():
+            batch = args[0]
+            return self.get_metrics(batch, "Val")
 
     def test_epoch_end(self, outputs):
         """run every test epoch end"""
-        self.log_accuracy(outputs, "Test")
+        with torch.no_grad():
+            self.log_accuracy(outputs, "Test")
 
     def training_epoch_end(self, outputs):
         """run every training epoch end"""
-        self.log_accuracy(outputs, "Train")
+        with torch.no_grad():
+            self.log_accuracy(outputs, "Train")
 
     def validation_epoch_end(self, outputs):
         """run every validation epoch end"""
-        self.log_accuracy(outputs, "Val")
+        with torch.no_grad():
+            self.log_accuracy(outputs, "Val")
+
+    def on_before_zero_grad(self, optimizer)
+        for param in self.model.parameters():
+            param.grad = None
