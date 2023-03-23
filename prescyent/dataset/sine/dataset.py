@@ -36,6 +36,6 @@ class Dataset(MotionDataset):
     def _gen_sine_wave(self, length, period, rng):
         x = np.array(range(length)) + rng.integers(-4 * period, 4 * period)
         return Trajectory(
-            torch.Tensor(np.sin(x / 1.0 / period).astype('float64')).reshape(length, 1, 1),
+            torch.from_numpy(np.sin(x / 1.0 / period).astype('float64')).reshape(length, 1, 1),
             'sin trajectory',
             ['sin(x)'])
