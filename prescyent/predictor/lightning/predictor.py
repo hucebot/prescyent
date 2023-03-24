@@ -18,6 +18,7 @@ from prescyent.predictor.lightning.module_config import ModuleConfig
 from prescyent.predictor.lightning.progress_bar import LightningProgressBar
 from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 class LightningPredictor(BasePredictor):
@@ -142,9 +143,7 @@ class LightningPredictor(BasePredictor):
         config_path = Path(config_path)
         if not config_path.exists():
             raise FileNotFoundError(f"No file or directory at {config_path}")
-        if isinstance(config_path, str):
-            config_path = Path(config_path)
-        with (config_path).open(encoding="utf-8") as conf_file:
+        with config_path.open(encoding="utf-8") as conf_file:
             config_data = json.load(conf_file)
         self.training_config = TrainingConfig(**config_data.get("training_config", None))
         self.config = self.config_class(**config_data.get("model_config", None))
@@ -220,5 +219,8 @@ class LightningPredictor(BasePredictor):
     def predict(self, input_t: torch.Tensor, future_size: int):
         with torch.no_grad():
             self.model.eval()
-            return self.model.torch_model(input_t, future_size=future_size)
+            output = self.model.torch_model(input_t, future_size=future_size)
+            if is_tensor_is_batched(output):
+                return output[:,:future_size]
+            return output[:future_size]
 

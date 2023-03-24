@@ -33,5 +33,11 @@ class SequencePredictor(LightningPredictor):
         for _ in range(0, future_size, self.model.torch_model.output_size):
             prediction = self.model.torch_model(input_t)
             list_outputs.append(prediction)
-            input_t = torch.cat((input_t, prediction))[-history_size:]
-        return torch.cat(list_outputs, dim=0)[:future_size]
+            if is_tensor_is_batched(input_t):
+                input_t = torch.cat((input_t, prediction), dim=1)[:,-history_size:]
+            else:
+                input_t = torch.cat((input_t, prediction))[-history_size:]
+        if is_tensor_is_batched(input_t):
+            return torch.cat(list_outputs, dim=0)[:,:future_size]
+        else:
+            return torch.cat(list_outputs, dim=0)[:future_size]
