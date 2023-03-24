@@ -162,7 +162,3 @@ class LightningModule(pl.LightningModule):
         """run every validation epoch end"""
         with torch.no_grad():
             self.log_accuracy(outputs, "Val")
-
-    def on_before_zero_grad(self, optimizer)
-        for param in self.model.parameters():
-            param.grad = None
