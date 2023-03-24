@@ -8,6 +8,7 @@ Built with pytorch_lightning and pydantic (for now)
 """
 
 from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.predictor.auto_predictor import AutoPredictor
 
 from prescyent.predictor.delayed_predictor import DelayedPredictor
 from prescyent.predictor.constant_predictor import ConstantPredictor

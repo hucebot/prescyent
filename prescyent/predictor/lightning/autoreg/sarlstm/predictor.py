@@ -7,8 +7,9 @@ from prescyent.predictor.lightning.autoreg.sarlstm.config import Config
 
 class Predictor(LightningPredictor):
     """Upper class to train and use a LSTM Model"""
+    PREDICTOR_NAME = "SARLSTMPredictor"
 
     def __init__(self, model_path=None, config=None):
         self.module_class = TorchModule
         self.config_class = Config
-        super().__init__(model_path, config, "SARLSTMPredictor")
+        super().__init__(model_path, config, self.PREDICTOR_NAME)
