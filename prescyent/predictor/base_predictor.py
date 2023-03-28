@@ -77,10 +77,10 @@ class BasePredictor():
         for sample, truth in test_dataloader:
             # eval step
             pred = self.predict(sample, len(truth[0]))
-            losses.append(torch.nn.MSELoss()(pred, truth))
-            ades.append(get_ade(truth, pred))
-            fdes.append(get_fde(truth, pred))
-            mpjpes.append(get_mpjpe(truth, pred))[-1]
+            losses.append(torch.nn.MSELoss()(truth, pred).detach())
+            ades.append(get_ade(truth, pred).detach())
+            fdes.append(get_fde(truth, pred).detach())
+            mpjpes.append(get_mpjpe(truth, pred).detach())[-1]
         # eval epoch
         mean_loss = torch.stack(losses).mean()
         ade = torch.stack(ades).mean()

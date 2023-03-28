@@ -108,25 +108,28 @@ class LightningModule(pl.LightningModule):
             return [optimizer], [{'scheduler': lr_scheduler, 'interval': 'step'}]
         return [optimizer]
 
-    def get_metrics(self, batch, prefix: str = ""):
+    def get_metrics(self, batch, prefix: str = "", loss_only=False):
         """get loss and accuracy metrics from batch"""
         sample, truth = batch
         pred = self.torch_model(sample)
         loss = self.criterion(pred, truth)
-        with torch.no_grad():
-            ade = get_ade(truth, pred)
-            fde = get_fde(truth, pred)
-            mpjpe = get_mpjpe(truth, pred)[-1]
-            self.log(f"{prefix}/loss", loss)
+        self.log(f"{prefix}/loss", loss.detach())
+        if loss_only:
+            return {"loss": loss}
+        ade = get_ade(truth, pred).detach()
+        fde = get_fde(truth, pred).detach()
+        mpjpe = get_mpjpe(truth, pred).detach()[-1]
         return {"loss": loss, "ADE": ade, "FDE": fde, "MPJPE": mpjpe}
 
-    def log_accuracy(self, outputs, prefix: str = ""):
+    def log_accuracy(self, outputs, prefix: str = "", loss_only=False):
         """log accuracy metrics from epoch"""
-        mean_loss = torch.stack([x["loss"] for x in outputs]).mean()
-        fde = torch.stack([x["FDE"] for x in outputs]).mean()
-        ade = torch.stack([x["ADE"] for x in outputs]).mean()
-        mpjpe = torch.stack([x["MPJPE"] for x in outputs]).mean()
+        mean_loss = torch.stack([x["loss"] for x in outputs]).mean().detach()
         self.logger.experiment.add_scalar(f"{prefix}/epoch_loss", mean_loss, self.current_epoch)
+        if loss_only:
+            return
+        fde = torch.stack([x["FDE"] for x in outputs]).mean().detach()
+        ade = torch.stack([x["ADE"] for x in outputs]).mean().detach()
+        mpjpe = torch.stack([x["MPJPE"] for x in outputs]).mean().detach()
         self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/MPJPE", mpjpe, self.current_epoch)
@@ -134,7 +137,7 @@ class LightningModule(pl.LightningModule):
     def training_step(self, *args, **kwargs):
         """run every training step"""
         batch = args[0]
-        return self.get_metrics(batch, "Train")
+        return self.get_metrics(batch, "Train", loss_only=True)
 
     def test_step(self, *args, **kwargs):
         """run every test step"""
@@ -148,15 +151,15 @@ class LightningModule(pl.LightningModule):
             batch = args[0]
             return self.get_metrics(batch, "Val")
 
+    def training_epoch_end(self, outputs):
+        """run every training epoch end"""
+        with torch.no_grad():
+            self.log_accuracy(outputs, "Train", loss_only=True)
+
     def test_epoch_end(self, outputs):
         """run every test epoch end"""
         with torch.no_grad():
             self.log_accuracy(outputs, "Test")
-
-    def training_epoch_end(self, outputs):
-        """run every training epoch end"""
-        with torch.no_grad():
-            self.log_accuracy(outputs, "Train")
 
     def validation_epoch_end(self, outputs):
         """run every validation epoch end"""
