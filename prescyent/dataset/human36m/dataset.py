@@ -134,7 +134,7 @@ def pathfiles_to_trajectories(files: List,
         pose_info = pose_info[:, 1:, :].reshape(-1, 3)
         pose_info = expmap2rotmat_torch(torch.from_numpy(pose_info).float()).reshape(T, 32, 3, 3)
         xyz_info = rotmat2xyz_torch(pose_info)
-        xyz_info = xyz_info[::subsampling_step, used_joints, :]
+        xyz_info = xyz_info[::subsampling_step, used_joints, :] / 1000 # meter
         trajectory = Trajectory(xyz_info, file, [POINT_LABELS[i] for i in used_joints])
         trajectory_arrray.append(trajectory)
     return trajectory_arrray

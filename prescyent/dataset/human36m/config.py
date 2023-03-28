@@ -7,7 +7,7 @@ class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
     url: Union[str, None] = None
     data_path: str = "data/datasets/h36m"
-    subsampling_step: int = 2     # subsampling -> 100 Hz to 10Hz
+    subsampling_step: int = 2     # subsampling -> 50 Hz to 25Hz
     dimensions: Union[List[int], None] = None  # num features in the data
     used_joints: List[int] = [2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19,
                              21, 22, 25, 26, 27, 29, 30]  # indexes of the joints
