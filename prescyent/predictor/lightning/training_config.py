@@ -11,3 +11,4 @@ class TrainingConfig(OptimizerConfig):
     accelerator: str = "auto"
     devices: Union[str, int] = "auto"
     accumulate_grad_batches: int = 1
+    seed: int = 5
