@@ -46,13 +46,11 @@ if __name__ == "__main__":
                                    dataset.trajectories.test[0:5],
                                    history_size=history_size,
                                    future_size=future_size,
-                                   unscale_function=dataset.unscale,
                                    saveplot_dir_path="data/eval/teleopicub/all/")
     eval_results = eval_predictors(predictors,
                                    dataset.trajectories.test,
                                    history_size=history_size,
                                    future_size=future_size,
-                                   unscale_function=dataset.unscale,
                                    do_plotting=False)
     for p, predictor in enumerate(predictors):
         print(f"\n--- {predictor} ---")

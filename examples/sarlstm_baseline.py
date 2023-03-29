@@ -26,7 +26,7 @@ if __name__ == "__main__":
     hidden_size = feature_size * 20
     config = SARLSTMConfig(feature_size=feature_size,
                            hidden_size=hidden_size,
-                           do_normalization=True)
+                           norm_on_last_input=True)
     predictor = SARLSTMPredictor(config=config)
 
     # Train, Test and Save
@@ -39,6 +39,5 @@ if __name__ == "__main__":
     eval_results = eval_predictors([predictor],
                                    dataset.trajectories.test[0:1],
                                    history_size=history_size,
-                                   future_size=future_size,
-                                   unscale_function=dataset.unscale)[0]
+                                   future_size=future_size)[0]
     print("ADE:", eval_results.mean_ade, "FDE:", eval_results.mean_fde)

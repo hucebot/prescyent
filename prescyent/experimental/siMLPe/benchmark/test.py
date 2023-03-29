@@ -1,12 +1,11 @@
 import argparse
-import os, sys
 from scipy.spatial.transform import Rotation as R
 
 import numpy as np
 
 from prescyent.predictor import AutoPredictor
+from prescyent.dataset import H36MDataset, H36MDatasetConfig
 from prescyent.predictor.constant_predictor import ConstantPredictor
-from prescyent.utils.dataset_manipulation import rotmat2xyz_torch, rotmat2euler_torch
 
 from config import config
 from h36m_eval import H36MEval
@@ -14,22 +13,9 @@ from h36m_eval import H36MEval
 import torch
 from torch.utils.data import DataLoader
 
+
 results_keys = ['#2', '#4', '#8', '#10', '#14', '#18', '#22', '#25']
 
-def get_dct_matrix(N):
-    dct_m = np.eye(N)
-    for k in np.arange(N):
-        for i in np.arange(N):
-            w = np.sqrt(2 / N)
-            if k == 0:
-                w = np.sqrt(1 / N)
-            dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
-    idct_m = np.linalg.inv(dct_m)
-    return dct_m, idct_m
-
-dct_m,idct_m = get_dct_matrix(config.motion.h36m_input_length_dct)
-dct_m = torch.tensor(dct_m).float().cuda().unsqueeze(0)
-idct_m = torch.tensor(idct_m).float().cuda().unsqueeze(0)
 
 def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
     joint_to_ignore = np.array([16, 20, 23, 24, 28, 31]).astype(np.int64)
@@ -38,7 +24,6 @@ def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
     for (motion_input, motion_target) in pbar:
         b,n,c,_ = motion_input.shape
         num_samples += b
-
         motion_input = motion_input.reshape(b, n, 32, 3)
         motion_input = motion_input[:, :, joint_used_xyz]
         outputs = []
@@ -51,8 +36,6 @@ def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
             with torch.no_grad():
                 motion_input_ = motion_input.clone()
                 output = model.predict(motion_input_, step)
-            output = output.reshape(-1, 22*3)
-            output = output.reshape(b,step, 22, 3)
             outputs.append(output)
             motion_input = torch.cat([motion_input[:, step:], output], axis=1)
         motion_pred = torch.cat(outputs, axis=1)[:,:25]
@@ -94,7 +77,7 @@ def test(config, model, dataloader) :
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/siMLPe/version_65"
+    mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/siMLPe/version_81"
     parser.add_argument('--model_path', type=str, default=mp, help='=model path')
     parser.add_argument('--do_constant', action="store_true", help='=use constant predictor')
     args = parser.parse_args()

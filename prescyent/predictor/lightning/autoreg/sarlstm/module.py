@@ -23,7 +23,7 @@ class TorchModule(BaseTorchModule):
         self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
     @BaseTorchModule.allow_unbatched
-    @BaseTorchModule.normalize_tensor_from_last_value
+    @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         # init the output
         predictions = []

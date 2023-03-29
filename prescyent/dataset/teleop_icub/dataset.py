@@ -29,13 +29,12 @@ class Dataset(MotionDataset):
     It as to be at initialisation, through the parameters
     """
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None,
-                 scaler: Callable = None):
+    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__(scaler)
+        super().__init__()
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):

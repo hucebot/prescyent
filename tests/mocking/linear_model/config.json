@@ -1,7 +1,7 @@
 {
     "model_config": {
         "criterion": "mseloss",
-        "do_normalization": true,
+        "norm_on_last_input": true,
         "input_size": 10,
         "model_path": "data/models/teleopicub/all/LinearPredictor/LinearPredictor/version_3_n",
         "output_size": 10

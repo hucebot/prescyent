@@ -17,14 +17,13 @@ class Dataset(MotionDataset):
     """Dataset is not splitted into test / train / val
     It as to be at initialisation, througt the parameters
     """
-    def __init__(self, config: Union[Dict, DatasetConfig, Path, str] = None,
-                 scaler: Callable = None):
+    def __init__(self, config: Union[Dict, DatasetConfig, Path, str] = None):
         self._init_from_config(config, DatasetConfig)
         self.trajectories = self._gen_data(self.config.length, self.config.period,
                                            int(self.config.size * self.config.ratio_train),
                                            int(self.config.size * self.config.ratio_test),
                                            int(self.config.size * self.config.ratio_val))
-        super().__init__(scaler)
+        super().__init__()
 
     def _gen_data(self, length, period, num_train, num_test, num_val):
         rng = np.random.default_rng(42)

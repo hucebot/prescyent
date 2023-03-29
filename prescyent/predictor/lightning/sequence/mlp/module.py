@@ -34,7 +34,7 @@ class TorchModule(BaseTorchModule):
         self.layers = nn.Sequential(*layers)
 
     @BaseTorchModule.allow_unbatched
-    @BaseTorchModule.normalize_tensor_from_last_value
+    @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # simple single feature prediction of the next item in sequence
         # (batch, seq_len, num_point, num_dim) -> (batch, num_point, num_dim, seq_len)

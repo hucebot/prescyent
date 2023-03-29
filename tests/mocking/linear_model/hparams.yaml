@@ -2,18 +2,18 @@ accelerator: auto
 config: !!python/object:prescyent.predictor.lightning.sequence.linear.config.Config
   __dict__:
     criterion: mseloss
-    do_normalization: true
+    norm_on_last_input: true
     input_size: 10
     model_path: data/models
     output_size: 10
   __fields_set__: !!set
-    do_normalization: null
+    norm_on_last_input: null
     input_size: null
     output_size: null
   __private_attribute_values__: {}
 criterion: mseloss
 devices: auto
-do_normalization: true
+norm_on_last_input: true
 epoch: 300
 input_size: 10
 learning_rate: 0.001

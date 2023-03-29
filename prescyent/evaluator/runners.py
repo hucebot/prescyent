@@ -64,7 +64,7 @@ def run_predictor(predictor: Callable, trajectory: torch.Tensor,
 
 def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
                     history_size: int, future_size: int, run_method: str = "step_every_timestamp",
-                    unscale_function: Callable = None, do_plotting: bool = True,
+                    do_plotting: bool = True,
                     saveplot_pattern: str = "%d_%s_prediction.png",
                     saveplot_dir_path: str = str(Path("data") / "eval"),
                     ) -> List[EvaluationSummary]:
@@ -82,8 +82,6 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
                 "windowed" will predict with a step == history_size
                 "step_every_timestamp" will predict with a step == 1
                 Defaults to 'windowed'.
-        unscale_function (Callable, optional): if provided is used to unscale
-                the input data. Defaults to None.
         do_plotting (bool, optional): if True will output the evaluation plots.
                 Defaults to True.
         saveplot_pattern (str, optional): used to determine the path of the saved plot.
@@ -99,13 +97,11 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
     for t, trajectory in enumerate(trajectories):
         predictions = []
         for p, predictor in enumerate(predictors):
-            # prediction is made with chosed method and timed
+            # prediction is made with chosen method and timed
             start = timeit.default_timer()
-            prediction = run_predictor(predictor, trajectory.scaled_tensor,
+            prediction = run_predictor(predictor, trajectory.tensor,
                                        history_size, future_size, run_method)
             elapsed = (timeit.default_timer() - start) * 1000.0
-            if unscale_function is not None:
-                prediction = unscale_function(prediction)
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
             # plot_truth_and_pred(trajectory.tensor, truth, prediction, history_size, "test.png")
@@ -131,7 +127,6 @@ def evaluate_n_futures(predictors: List[Callable],
                     history_size: int,
                     future_sizes: List[int],
                     run_method: str = "step_every_timestamp",
-                    unscale_function: Callable = None,
                     do_plotting: bool = True,
                     saveplot_pattern: str = "%d_%s_prediction.png",
                     saveplot_dir_path: str = str(Path("data") / "eval"),
@@ -143,7 +138,6 @@ def evaluate_n_futures(predictors: List[Callable],
                                               history_size,
                                               future_size,
                                               run_method,
-                                              unscale_function,
                                               do_plotting,
                                               f"f{future_size}_" + saveplot_pattern,
                                               saveplot_dir_path))

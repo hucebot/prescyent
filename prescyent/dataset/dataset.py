@@ -1,12 +1,11 @@
 """Standard class for motion datasets"""
 import zipfile
 from pathlib import Path
-from typing import Callable, Dict, Union, Type
+from typing import Dict, Union, Type
 
 import requests
 import torch
 import json
-from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
 from prescyent.dataset.config import LearningTypes, MotionDatasetConfig
@@ -18,7 +17,6 @@ class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
-    scaler: StandardScaler
     batch_size: int
     history_size: int
     future_size: int
@@ -27,19 +25,17 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, scaler: Callable) -> None:
-        self.scaler = self._train_scaler(scaler)
-        self.trajectories.scale_function = self.scale
+    def __init__(self) -> None:
         logger.debug("Tensor pairs will be generated for a %s learning type",
                         self.config.learning_type,
                         group=DATASET)
-        self.train_datasample = self._make_datasample(self.trajectories.train_scaled)
+        self.train_datasample = self._make_datasample(self.trajectories.train)
         logger.info("Generated %d tensor pairs for training", len(self.train_datasample),
                     group=DATASET)
-        self.test_datasample = self._make_datasample(self.trajectories.test_scaled)
+        self.test_datasample = self._make_datasample(self.trajectories.test)
         logger.info("Generated %d tensor pairs for testing", len(self.test_datasample),
                     group=DATASET)
-        self.val_datasample = self._make_datasample(self.trajectories.val_scaled)
+        self.val_datasample = self._make_datasample(self.trajectories.val)
         logger.info("Generated %d tensor pairs for validation", len(self.val_datasample),
                     group=DATASET)
 
@@ -121,37 +117,7 @@ class MotionDataset(Dataset):
             logger.debug(self.config.dict(), group=DATASET)
             json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
 
-    def scale(self, l_array):
-        T = l_array.shape
-        l_array = l_array.reshape(l_array.shape[0], -1)
-        l_array = l_array.detach().numpy()
-        l_array = torch.FloatTensor(self.scaler.transform(l_array))
-        return l_array.reshape(T)
-
-    def unscale(self, l_array):
-        T = l_array.shape
-        l_array = l_array.reshape(l_array.shape[0], -1)
-        l_array = l_array.detach().numpy()
-        l_array = torch.FloatTensor(self.scaler.inverse_transform(l_array))
-        return l_array.reshape(T)
-
-    # scale all the trajectories (same scaling for all the data)
-    def _train_scaler(self, other_scaler):
-        # first, get all the data in a single tensor
-        # scale according to all the data
-        if other_scaler is None:
-            logger.debug("Training scaler", group=DATASET)
-            train_all = torch.zeros((1, self.num_points * self.num_dims))
-            for trajectory in self.trajectories.train:
-                train_all = torch.cat((train_all, trajectory.tensor.reshape(
-                        trajectory.tensor.shape[0], -1)))
-            scaler = StandardScaler()
-            scaler.fit(train_all)
-        else:
-            scaler = other_scaler
-        return scaler
-
-    def _make_datasample(self, scaled_trajectory):
+    def _make_datasample(self, trajectories):
         sample = torch.FloatTensor([])   # shape(num_sample, seq_len, num_point, num_dim)
         truth = torch.FloatTensor([])
         if self.config.learning_type == LearningTypes.SEQ2SEQ:
@@ -161,7 +127,7 @@ class MotionDataset(Dataset):
         else:
             raise NotImplementedError(f"Learning type {self.config.learning_type}"
                                         " is not implemented yet")
-        for trajectory in scaled_trajectory:
+        for trajectory in trajectories:
             sample_trajectory, truth_trajectory = tensor_pair_function(trajectory)
             sample = torch.cat([sample, sample_trajectory], dim=0)
             truth = torch.cat([truth, truth_trajectory], dim=0)

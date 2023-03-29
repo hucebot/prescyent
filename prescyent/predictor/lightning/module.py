@@ -27,24 +27,30 @@ class BaseTorchModule(torch.nn.Module):
 
     def __init__(self, config) -> None:
         super().__init__()
-        self.do_normalization = config.do_normalization
+        self.norm_on_last_input = config.norm_on_last_input
+        self.do_layernorm = config.do_layernorm
+        self.do_batchnorm = config.do_batchnorm
+        if self.do_layernorm:
+            self.layer_norm = torch.nn.LayerNorm() # TODO
+        if self.do_batchnorm:
+            self.batch_norm = torch.nn.BatchNorm1d() # TODO
 
     @abstractmethod
     def forward(self, input_tensor: torch.Tensor, future_size: int):
         pass
 
     @classmethod
-    def normalize_tensor_from_last_value(cls, function):
+    def normalize_tensor(cls, function):
         """decorator for normalization of the input tensor before forward method"""
         @functools.wraps(function)
         def normalize(*args, **kwargs):
             self = args[0]
             input_tensor = args[1]
-            if self.do_normalization:
+            if self.norm_on_last_input:
                 seq_last = input_tensor[:, -1:, :, :].detach()
                 input_tensor = input_tensor - seq_last
             predictions = function(self, input_tensor, **kwargs)
-            if self.do_normalization:
+            if self.norm_on_last_input:
                 predictions = predictions + seq_last
             return predictions
         return normalize
@@ -75,13 +81,16 @@ class LightningModule(pl.LightningModule):
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
         super().__init__()
         self.torch_model = torch_model_class(config)
-        criterion = CRITERION_MAPPING.get(config.criterion.lower(), None)
-        if criterion is None:
-            logger.warning("provided criterion %s is not handled, please use one of the"
-                           "following %s. Using default MSELoss instead", config.criterion.lower(),
-                           list(CRITERION_MAPPING.keys()),
-                           group=PREDICTOR)
-            criterion = torch.nn.MSELoss()
+        if not hasattr(self.torch_model, "criterion"):
+            criterion = CRITERION_MAPPING.get(config.criterion.lower(), None)
+            if criterion is None:
+                logger.warning("provided criterion %s is not handled, please use one of the"
+                            "following %s. Using default MSELoss instead", config.criterion.lower(),
+                            list(CRITERION_MAPPING.keys()),
+                            group=PREDICTOR)
+                criterion = torch.nn.MSELoss()
+        else:
+            criterion = self.torch_model.criterion
         self.criterion = criterion
         self.save_hyperparameters(ignore=['torch_model', 'criterion'])
 
