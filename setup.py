@@ -6,7 +6,6 @@ CORE_REQUIREMENTS = [
         "numpy",
         "pydantic",
         "pytorch_lightning",
-        "scikit-learn",
         "tensorboard"
 ]
 
