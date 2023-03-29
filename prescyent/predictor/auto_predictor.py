@@ -47,7 +47,7 @@ class AutoPredictor():
             raise AttributeError(predictor_class_name)
         if config_path is None:
             logger.error("Missing model path info")
-        logger.info("Loading %s from %s", predictor_class, config_path,
+        logger.info("Loading %s from %s", predictor_class.PREDICTOR_NAME, config_path,
                     group=PREDICTOR)
         return predictor_class(model_path=config_path)
 
