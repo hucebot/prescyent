@@ -11,6 +11,17 @@ from prescyent.predictor.lightning.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
 
 
+class MPJPELoss(torch.nn.modules.loss._Loss):
+    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        super(MPJPELoss, self).__init__(size_average, reduce, reduction)
+
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        T = target.shape[-1]
+        input_ = input.reshape(-1, T)
+        target_ = target.reshape(-1, T)
+        return torch.mean(torch.norm(input_ - target_, 2, 1))
+
+
 CRITERION_MAPPING = {
     "l1loss": torch.nn.L1Loss(),
     "mseloss": torch.nn.MSELoss(),
@@ -19,8 +30,10 @@ CRITERION_MAPPING = {
     "hingeembeddingloss": torch.nn.HingeEmbeddingLoss(),
     "marginrankingloss": torch.nn.MarginRankingLoss(),
     "tripletmarginloss": torch.nn.TripletMarginLoss(),
-    "kldivloss": torch.nn.KLDivLoss()
+    "kldivloss": torch.nn.KLDivLoss(),
+    "mpjpeloss": MPJPELoss()
 }
+DEFAULT_LOSS = MPJPELoss()
 
 
 class BaseTorchModule(torch.nn.Module):
@@ -30,10 +43,22 @@ class BaseTorchModule(torch.nn.Module):
         self.norm_on_last_input = config.norm_on_last_input
         self.do_layernorm = config.do_layernorm
         self.do_batchnorm = config.do_batchnorm
+        self.input_size = config.input_size
+        if hasattr(config, "num_points"):
+            self.num_points = config.num_points
+        if hasattr(config, "num_dims"):
+            self.num_dims = config.num_dims
+        if hasattr(config, "dropout_value"):
+            self.dropout_value = config.dropout_value
+            if self.dropout_value is not None and self.dropout_value >= 0:
+                self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.do_layernorm:
-            self.layer_norm = torch.nn.LayerNorm() # TODO
+            self.layer_norm = torch.nn.LayerNorm((config.input_size,
+                                                  self.num_points,
+                                                  self.num_dims),
+                                                 )
         if self.do_batchnorm:
-            self.batch_norm = torch.nn.BatchNorm1d() # TODO
+            self.batch_norm = torch.nn.BatchNorm2d(config.input_size)
 
     @abstractmethod
     def forward(self, input_tensor: torch.Tensor, future_size: int):
@@ -49,6 +74,12 @@ class BaseTorchModule(torch.nn.Module):
             if self.norm_on_last_input:
                 seq_last = input_tensor[:, -1:, :, :].detach()
                 input_tensor = input_tensor - seq_last
+            if self.do_layernorm:
+                input_tensor = self.layer_norm(input_tensor)
+            if self.do_batchnorm:
+                input_tensor = self.batch_norm(input_tensor)
+            if self.dropout_value is not None or self.dropout_value >= 0:
+                input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
             if self.norm_on_last_input:
                 predictions = predictions + seq_last
@@ -85,10 +116,10 @@ class LightningModule(pl.LightningModule):
             criterion = CRITERION_MAPPING.get(config.criterion.lower(), None)
             if criterion is None:
                 logger.warning("provided criterion %s is not handled, please use one of the"
-                            "following %s. Using default MSELoss instead", config.criterion.lower(),
+                            "following %s. Using default MPJPELoss instead", config.criterion.lower(),
                             list(CRITERION_MAPPING.keys()),
                             group=PREDICTOR)
-                criterion = torch.nn.MSELoss()
+                criterion = DEFAULT_LOSS
         else:
             criterion = self.torch_model.criterion
         self.criterion = criterion
