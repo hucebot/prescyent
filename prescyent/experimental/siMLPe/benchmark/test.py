@@ -77,8 +77,8 @@ def test(config, model, dataloader) :
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/siMLPe/version_81"
-    parser.add_argument('--model_path', type=str, default=mp, help='=model path')
+    # mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/MlpPredictor/version_27"
+    parser.add_argument('--model_path', type=str, help='=model path')
     parser.add_argument('--do_constant', action="store_true", help='=use constant predictor')
     args = parser.parse_args()
     if args.do_constant:
@@ -97,3 +97,5 @@ if __name__ == "__main__":
                             sampler=sampler, shuffle=shuffle, pin_memory=True)
 
     print(test(config, model, dataloader))
+    print("num_params: %.3f" % (sum(p.numel() for p in model.model.torch_model.parameters()) / 1000000))
+    print("num_trainable_params: %.3f" % (sum(p.numel() for p in model.model.torch_model.parameters() if p.requires_grad) / 1000000))
