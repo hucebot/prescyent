@@ -12,3 +12,4 @@ class TrainingConfig(OptimizerConfig):
     devices: Union[str, int] = "auto"
     accumulate_grad_batches: int = 1
     seed: int = 5
+    log_every_n_steps: int = 1

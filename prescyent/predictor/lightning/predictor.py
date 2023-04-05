@@ -105,20 +105,20 @@ class LightningPredictor(BasePredictor):
             config = TrainingConfig(**config)
         self.training_config = config
 
-    def _init_trainer(self):
+    def _init_trainer(self, devices=None):
         if self.training_config is None:
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.dict(include=cls_default_params)
+        if devices is not None:
+            kwargs["devices"] = devices
         lr_monitor = LearningRateMonitor(logging_interval='step')
         progress_bar = LightningProgressBar()
         torch.manual_seed(self.training_config.seed)
         self.trainer = pl.Trainer(
-            # strategy="ddp",
                                   logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
                                   callbacks=[lr_monitor, progress_bar],
-                                  log_every_n_steps=25,
                                   **kwargs)
         logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
                     group=PREDICTOR)
@@ -179,7 +179,7 @@ class LightningPredictor(BasePredictor):
         if self.trainer is None:
             logger.info("New trainer as been created at %s", self.tb_logger.log_dir,
                         group=PREDICTOR)
-            self._init_trainer()
+            self._init_trainer(devices=1)
         self.trainer.test(self.model, test_dataloader)
         self._free_trainer()
 
