@@ -45,6 +45,10 @@ class BasePredictor():
         if self.version is None:
             self.version = copy.deepcopy(self.tb_logger.version)
 
+    @property
+    def log_path(self) -> str:
+        return self.tb_logger.log_dir
+
     def __call__(self, input_batch, history_size: int = None, history_step: int = 1,
                  future_size: int = None, output_only_future: bool = True):
         return self.run(input_batch, history_size, history_step, future_size, output_only_future)

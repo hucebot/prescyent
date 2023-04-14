@@ -125,6 +125,9 @@ class LightningModule(pl.LightningModule):
         self.criterion = criterion
         self.save_hyperparameters(ignore=['torch_model', 'criterion'])
 
+    def optimizer_zero_grad(self, epoch, batch_idx, optimizer, optimizer_idx):
+        optimizer.zero_grad(set_to_none=True)
+
     @classmethod
     def load_from_binary(cls, path: str, config):
         """Retrieve model infos from torch binary"""

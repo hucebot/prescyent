@@ -2,6 +2,7 @@
 import gc
 import inspect
 import json
+import os
 import shutil
 from collections.abc import Iterable, Callable
 from pathlib import Path
@@ -10,7 +11,8 @@ from typing import List, Type, Union
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.profiler import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
+from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule, BaseTorchModule
 from prescyent.predictor.lightning.module_config import ModuleConfig
@@ -110,18 +112,34 @@ class LightningPredictor(BasePredictor):
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.dict(include=cls_default_params)
-        if devices is not None:
-            kwargs["devices"] = devices
         lr_monitor = LearningRateMonitor(logging_interval='step')
         progress_bar = LightningProgressBar()
+        callbacks = [lr_monitor, progress_bar]
+        if devices is not None:
+            kwargs["devices"] = devices
+        callbacks, profiler = self._init_profilers(callbacks)
         torch.manual_seed(self.training_config.seed)
+        torch.use_deterministic_algorithms(True)
         self.trainer = pl.Trainer(
                                   logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
-                                  callbacks=[lr_monitor, progress_bar],
+                                  callbacks=callbacks,
+                                  profiler=profiler,
                                   **kwargs)
-        logger.info("Predictor logger initialised at %s", self.tb_logger.log_dir,
+        logger.info("Predictor logger initialised at %s", self.log_path,
                     group=PREDICTOR)
+
+    def _init_profilers(self, callbacks):
+        if self.config.used_profiler == "advanced":
+            profiler = (AdvancedProfiler(dirpath=self.log_path, filename="advanced_profiler"))
+        elif self.config.used_profiler == "simple":
+            profiler = (SimpleProfiler(dirpath=self.log_path, filename="simple_profiler"))
+        elif self.config.used_profiler == "torch":
+            profiler = (PyTorchProfiler(dirpath=self.log_path, filename="torch_profiler"))
+        else: profiler = None
+        if self.config.used_profiler is not None:
+            callbacks.append(DeviceStatsMonitor())
+        return callbacks, profiler
 
     def _free_trainer(self):
         del self.trainer
@@ -171,13 +189,13 @@ class LightningPredictor(BasePredictor):
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)
-        self.trainer.save_checkpoint(Path(self.tb_logger.log_dir) / "trainer_checkpoint.ckpt")
+        self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
         self._free_trainer()
 
     def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
-            logger.info("New trainer as been created at %s", self.tb_logger.log_dir,
+            logger.info("New trainer as been created at %s", self.log_path,
                         group=PREDICTOR)
             self._init_trainer(devices=1)
         self.trainer.test(self.model, test_dataloader)
@@ -186,10 +204,10 @@ class LightningPredictor(BasePredictor):
     def save(self, save_path: Union[str, Path] = None):
         """save model to path"""
         if save_path is None:
-            save_path = self.tb_logger.log_dir
+            save_path = self.log_path
         else:  # we cp the tensorflow logger content first
             try:
-                shutil.copytree(self.tb_logger.log_dir, save_path)
+                shutil.copytree(self.log_path, save_path)
             except FileExistsError:
                 while True:
                     force_copy = input(f"Dir already exist at {save_path}, "
@@ -199,14 +217,13 @@ class LightningPredictor(BasePredictor):
                                        group=PREDICTOR)
                         return
                     elif force_copy.upper() == "Y":
-                        shutil.copytree(self.tb_logger.log_dir, save_path, dirs_exist_ok=True)
+                        shutil.copytree(self.log_path, save_path, dirs_exist_ok=True)
                         break
                     logger.warning("Your input is invalid, we expect 'y' or 'n'",
                                    group=PREDICTOR)
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
-
         if self.trainer is not None:
             logger.info("Saving checkpoint at %s", (save_path / "trainer_checkpoint.ckpt"),
                         group=PREDICTOR)

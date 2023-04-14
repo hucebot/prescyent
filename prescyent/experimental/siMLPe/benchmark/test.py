@@ -1,10 +1,8 @@
 import argparse
-from scipy.spatial.transform import Rotation as R
 
 import numpy as np
 
 from prescyent.predictor import AutoPredictor
-from prescyent.dataset import H36MDataset, H36MDatasetConfig
 from prescyent.predictor.constant_predictor import ConstantPredictor
 
 from config import config
@@ -77,8 +75,8 @@ def test(config, model, dataloader) :
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/MlpPredictor/version_27"
-    parser.add_argument('--model_path', type=str, help='=model path')
+    mp = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/Seq2SeqPredictor/version_2_n"
+    parser.add_argument('--model_path', type=str, default=mp, help='=model path')
     parser.add_argument('--do_constant', action="store_true", help='=use constant predictor')
     args = parser.parse_args()
     if args.do_constant:

@@ -32,10 +32,14 @@ class TorchModule(BaseTorchModule):
         # input shape is (batch_size, seq_len, num_feature)
         batch_size = T[0]
         # init the hidden states
-        h1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
-        c1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
-        h2 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
-        c2 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+        self.register_buffer("h1", torch.zeros(batch_size, self.hidden_size))
+        self.register_buffer("c1", torch.zeros(batch_size, self.hidden_size))
+        self.register_buffer("h2", torch.zeros(batch_size, self.hidden_size))
+        self.register_buffer("c2", torch.zeros(batch_size, self.hidden_size))
+        # h1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+        # c1 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+        # h2 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+        # c2 = torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
 
         # encoding
         for input_frame in input_tensor.split(1, dim=1):

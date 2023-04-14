@@ -5,7 +5,6 @@ class LN(nn.Module):
     def __init__(self, dim, epsilon=1e-5):
         super().__init__()
         self.epsilon = epsilon
-
         self.alpha = nn.Parameter(torch.ones([1, dim, 1]), requires_grad=True)
         self.beta = nn.Parameter(torch.zeros([1, dim, 1]), requires_grad=True)
 
@@ -21,7 +20,6 @@ class LN_v2(nn.Module):
     def __init__(self, dim, epsilon=1e-5):
         super().__init__()
         self.epsilon = epsilon
-
         self.alpha = nn.Parameter(torch.ones([1, 1, dim]), requires_grad=True)
         self.beta = nn.Parameter(torch.zeros([1, 1, dim]), requires_grad=True)
 

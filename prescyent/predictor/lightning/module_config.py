@@ -15,3 +15,4 @@ class ModuleConfig(BaseModel):
     do_batchnorm: bool = False
     dropout_value: Union[None, float] = None
     criterion: str = "mpjpeloss"
+    used_profiler: Optional[str] = None

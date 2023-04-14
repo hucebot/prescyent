@@ -18,7 +18,12 @@ class TorchModule(BaseTorchModule):
         self.output_size = config.output_size
         self.motion_mlp = build_mlps(self.config)
 
-        self.dct_m, self.idct_m = get_dct_matrix(self.config.input_size_dct)
+        if self.config.pre_dct:
+            dct_m, _ = get_dct_matrix(self.config.input_size_dct)
+            self.register_buffer("dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0))
+        if self.config.post_dct:
+            _, idct_m = get_dct_matrix(self.config.input_size_dct)
+            self.register_buffer("idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0))
 
         self.temporal_fc_in = config.temporal_fc_in
         self.temporal_fc_out = config.temporal_fc_out
@@ -45,8 +50,7 @@ class TorchModule(BaseTorchModule):
         T = input_tensor.shape
         input_tensor = input_tensor.reshape(T[0], T[1], -1)
         if self.config.pre_dct:
-            dct_m = torch.FloatTensor(self.dct_m).unsqueeze(0).to(input_tensor.device)
-            input_tensor_ = torch.matmul(dct_m[:, :, :self.input_size], input_tensor)
+            input_tensor_ = torch.matmul(self.dct_m[:, :, :self.input_size], input_tensor)
         else:
             input_tensor_ = input_tensor.clone().to(input_tensor.device)
         if self.temporal_fc_in:
@@ -64,8 +68,7 @@ class TorchModule(BaseTorchModule):
             motion_feats = self.motion_fc_out(motion_feats)
 
         if self.config.post_dct:
-            idct_m = torch.FloatTensor(self.idct_m).unsqueeze(0).to(motion_feats.device)
-            motion_feats = torch.matmul(idct_m[:, :self.input_size, :], motion_feats)
+            motion_feats = torch.matmul(self.idct_m[:, :self.input_size, :], motion_feats)
             offset = input_tensor[:, -1:].to(motion_feats.device)
             motion_feats = motion_feats[:, :self.output_size] + offset
         motion_pred = motion_feats[:,:self.output_size]
