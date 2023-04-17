@@ -77,7 +77,6 @@ class Dataset(MotionDataset):
         self.trajectories = self._load_files()
         super().__init__()
 
-
     # load a set of trajectory, keeping them separate
     def _load_files(self):
         """read txt files and create trajectories"""

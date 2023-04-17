@@ -78,7 +78,7 @@ class BaseTorchModule(torch.nn.Module):
                 input_tensor = self.layer_norm(input_tensor)
             if self.do_batchnorm:
                 input_tensor = self.batch_norm(input_tensor)
-            if self.dropout_value is not None or self.dropout_value >= 0:
+            if self.dropout_value is not None and self.dropout_value >= 0:
                 input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
             if self.norm_on_last_input:

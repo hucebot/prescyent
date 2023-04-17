@@ -48,3 +48,6 @@ class Trajectories():
 
     def _all_len(self):
         return len(self.train) + len(self.test) + len(self.val)
+
+    def __len__(self):
+        return self._all_len()

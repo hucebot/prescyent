@@ -25,15 +25,15 @@ class EvaluationResult():
 
     @property
     def ade(self) -> float:
-        return get_ade(self.truth, self.pred[:len(self.truth)]).item()
+        return get_ade(self.truth, self.pred[:len(self.truth)]).detach().item()
 
     @property
     def fde(self) -> float:
-        return get_fde(self.truth, self.pred[:len(self.truth)]).item()
+        return get_fde(self.truth, self.pred[:len(self.truth)]).detach().item()
 
     @property
     def mpjpe(self) -> float:
-        return get_mpjpe(self.truth, self.pred[:len(self.truth)])[-1].item()
+        return get_mpjpe(self.truth, self.pred[:len(self.truth)])[-1].detach().item()
 
 class EvaluationSummary():
     results: List[EvaluationResult]

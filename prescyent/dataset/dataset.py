@@ -45,6 +45,9 @@ class MotionDataset(Dataset):
                                                   sampling_type=self.config.learning_type)
         logger.info("Val dataset has a size of %d", len(self.val_datasample))
 
+    def __len__(self):
+        return len(self.trajectories)
+
     @property
     def train_dataloader(self):
         return DataLoader(self.train_datasample, batch_size=self.batch_size,
