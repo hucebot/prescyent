@@ -102,7 +102,7 @@ class Dataset(MotionDataset):
         for subject_name in subject_names:
             for action in self.config.actions :
                 filenames += list((Path(self.config.data_path) / subject_name)
-                                .rglob(f"{action}*.txt"))
+                                .rglob(f"{action}_*.txt"))
         return filenames
 
     def _get_from_web(self):

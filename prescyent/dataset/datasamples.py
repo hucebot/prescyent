@@ -33,7 +33,7 @@ class MotionDataSamples():
                 raise ValueError("Check that the intended history size and future size are compatible"
                                  f" with the dataset. A trajectory of size {len(trajectory)} can't be"
                                  f" split in samples of sizes {invalid_frames_per_traj}")
-            map.update({map_id + i: (t, i) for i in range(len(trajectory) - invalid_frames_per_traj)})
+            map.update({map_id + i: (t, i) for i in range(len(trajectory) - invalid_frames_per_traj + 1)})
             map_id += len(trajectory) - invalid_frames_per_traj
         return map
 
