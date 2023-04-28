@@ -12,13 +12,15 @@ if __name__ == "__main__":
         print("Usage (examples):")
         print("plot_mlp.py --model data/models/teleopicub/all/MlpPredictor/version_0")
         print("plot_mlp.py --last data/models/teleopicub/all/MlpPredictor/")
-        sys.exit(1)
+        # sys.exit(1)
+        path = "data/models/teleopicub/all/MlpPredictor/version_2/"
 
-    if sys.argv[1] == '--model':
+    elif sys.argv[1] == '--model':
         path = sys.argv[2]
     elif sys.argv[1] == '--last':
         path =  max(glob.glob(sys.argv[2] + '/version_*'), key=os.path.getctime)
     else:
+        path = "data/models/teleopicub/all/MlpPredictor/version_2/config.json"
         print("Error: use --last or --model")
 
     print("Path:", path)
@@ -47,7 +49,7 @@ if __name__ == "__main__":
                 pred[i, :, :] = p[-1]
             all_preds += [pred]
     print("Predictions OK")
-    
+
     # plot everything in the current directory
     print("Plotting...")
     for i in tqdm(range(len(all_preds))): # for each test trajectory
