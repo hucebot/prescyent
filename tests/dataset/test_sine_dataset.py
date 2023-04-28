@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 from tests.custom_test_case import CustomTestCase
-from prescyent.dataset import SineDataset, SineDatasetConfig, LearningTypes
+from prescyent.dataset import SineDataset, SineDatasetConfig
+from prescyent.utils.enums import LearningTypes
 
 
 class InitSineDatasetTest(CustomTestCase):

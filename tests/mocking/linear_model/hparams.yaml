@@ -1,27 +1,38 @@
 accelerator: auto
-config: !!python/object:prescyent.predictor.lightning.sequence.linear.config.Config
+accumulate_grad_batches: 1
+config: !!python/object:prescyent.predictor.lightning.models.sequence.linear.config.Config
   __dict__:
-    criterion: mseloss
-    norm_on_last_input: true
+    dropout_value: null
     input_size: 10
+    loss_fn: mpjpeloss
     model_path: data/models
+    norm_on_last_input: false
+    num_dims: null
+    num_points: null
     output_size: 10
+    used_norm: null
+    used_profiler: null
   __fields_set__: !!set
-    norm_on_last_input: null
     input_size: null
     output_size: null
   __private_attribute_values__: {}
-criterion: mseloss
-devices: auto
-norm_on_last_input: true
-epoch: 300
+devices: '1'
+dropout_value: null
+epoch: 100
 input_size: 10
 learning_rate: 0.001
+log_every_n_steps: 1
+loss_fn: mpjpeloss
 max_learning_rate: 0.01
 max_steps: -1
 model_path: data/models
+norm_on_last_input: false
+num_dims: null
+num_points: null
 output_size: 10
-strategy: ddp_spawn
-torch_model_class: !!python/name:prescyent.predictor.lightning.sequence.linear.module.TorchModule ''
+seed: 5
+torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.linear.module.TorchModule ''
 use_scheduler: true
+used_norm: null
+used_profiler: null
 weight_decay: 0.01

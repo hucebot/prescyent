@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 from tests.custom_test_case import CustomTestCase
-from prescyent.dataset import H36MDataset, H36MDatasetConfig, LearningTypes
+from prescyent.dataset import H36MDataset, H36MDatasetConfig
+from prescyent.utils.enums import LearningTypes
 
 
 class InitH36MDatasetTest(CustomTestCase):
