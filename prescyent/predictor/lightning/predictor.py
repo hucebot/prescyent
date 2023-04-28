@@ -14,10 +14,11 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.profiler import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
 from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor
 from prescyent.predictor.base_predictor import BasePredictor
-from prescyent.predictor.lightning.module import LightningModule, BaseTorchModule
-from prescyent.predictor.lightning.module_config import ModuleConfig
-from prescyent.predictor.lightning.progress_bar import LightningProgressBar
-from prescyent.predictor.lightning.training_config import TrainingConfig
+from prescyent.predictor.lightning.module import LightningModule
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.predictor.lightning.configs.module_config import ModuleConfig
+from prescyent.predictor.lightning.callbacks.progress_bar import LightningProgressBar
+from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
@@ -135,7 +136,7 @@ class LightningPredictor(BasePredictor):
         elif self.config.used_profiler == "simple":
             profiler = (SimpleProfiler(dirpath=self.log_path, filename="simple_profiler"))
         elif self.config.used_profiler == "torch":
-            profiler = (PyTorchProfiler(dirpath=self.log_path, filename="torch_profiler"))
+            profiler = (PyTorchProfiler(dirpath=self.log_path, filename="torch_profiler", emit_nvtx=True))
         else: profiler = None
         if self.config.used_profiler is not None:
             callbacks.append(DeviceStatsMonitor())

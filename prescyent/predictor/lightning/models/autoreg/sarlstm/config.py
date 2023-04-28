@@ -1,5 +1,5 @@
 """Config elements for SARLSTM Lightning module usage"""
-from prescyent.predictor.lightning.module_config import ModuleConfig
+from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 
 class Config(ModuleConfig):

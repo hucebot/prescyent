@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 from typing import Union
 
-from prescyent.predictor.lightning.module_config import ModuleConfig
+from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.predictor.lightning.sequence.linear import LinearPredictor
-from prescyent.predictor.lightning.sequence.mlp import MlpPredictor
-from prescyent.predictor.lightning.autoreg.sarlstm import SARLSTMPredictor
-from prescyent.predictor.lightning.sequence.seq2seq import Seq2SeqPredictor
+from prescyent.predictor.lightning.models.sequence.linear import LinearPredictor
+from prescyent.predictor.lightning.models.sequence.mlp import MlpPredictor
+from prescyent.predictor.lightning.models.autoreg.sarlstm import SARLSTMPredictor
+from prescyent.predictor.lightning.models.sequence.seq2seq import Seq2SeqPredictor
 
 try:
     from prescyent.experimental.siMLPe import SiMLPePredictor

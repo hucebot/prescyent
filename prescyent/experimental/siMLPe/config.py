@@ -2,7 +2,7 @@
 from typing import List
 from pydantic import BaseModel
 
-from prescyent.predictor.lightning.module_config import ModuleConfig
+from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 DEFAULT_HIDDEN = 64
 

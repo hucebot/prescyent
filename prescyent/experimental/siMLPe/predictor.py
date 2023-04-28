@@ -1,6 +1,6 @@
 """Pytorch module et Lightning module for MLP"""
 
-from prescyent.predictor.lightning.sequence.predictor import SequencePredictor
+from prescyent.predictor.lightning.models.sequence.predictor import SequencePredictor
 from .module import TorchModule
 from .config import Config
 

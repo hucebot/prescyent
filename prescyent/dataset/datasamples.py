@@ -1,6 +1,6 @@
 """Data pair of sample and truth for motion data in ML"""
 from typing import List
-from prescyent.dataset.config import LearningTypes
+from prescyent.utils.enums import LearningTypes
 
 from prescyent.dataset.trajectories import Trajectory
 

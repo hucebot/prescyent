@@ -1,12 +1,7 @@
 """Common config elements for motion datasets usage"""
-from enum import Enum
-
 from pydantic import BaseModel
 
-
-class LearningTypes(str, Enum):
-    SEQ2SEQ = "sequence_2_sequence"
-    AUTOREG = "auto_regressive"
+from prescyent.utils.enums import LearningTypes
 
 
 class MotionDatasetConfig(BaseModel):

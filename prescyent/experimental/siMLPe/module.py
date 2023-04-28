@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseTorchModule
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from .mlp import build_mlps
 
 class TorchModule(BaseTorchModule):

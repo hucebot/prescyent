@@ -1,8 +1,8 @@
 """Pytorch module et Lightning module for LSTMs"""
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
-from prescyent.predictor.lightning.autoreg.sarlstm.module import TorchModule
-from prescyent.predictor.lightning.autoreg.sarlstm.config import Config
+from prescyent.predictor.lightning.models.autoreg.sarlstm.module import TorchModule
+from prescyent.predictor.lightning.models.autoreg.sarlstm.config import Config
 
 
 class Predictor(LightningPredictor):

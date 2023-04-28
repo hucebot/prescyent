@@ -5,7 +5,7 @@ simple MLP implementation
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.module import BaseTorchModule
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
 
 
 class TorchModule(BaseTorchModule):

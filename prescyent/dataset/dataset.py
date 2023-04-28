@@ -4,11 +4,10 @@ from pathlib import Path
 from typing import Dict, Union, Type
 
 import requests
-import torch
 import json
 from torch.utils.data import Dataset, DataLoader
 
-from prescyent.dataset.config import LearningTypes, MotionDatasetConfig
+from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.trajectories import Trajectories
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.utils.logger import logger, DATASET

@@ -1,8 +1,8 @@
 """Pytorch module et Lightning module for Seq2Seq"""
 
-from prescyent.predictor.lightning.sequence.predictor import SequencePredictor
-from prescyent.predictor.lightning.sequence.seq2seq.module import TorchModule
-from prescyent.predictor.lightning.sequence.seq2seq.config import Config
+from prescyent.predictor.lightning.models.sequence.predictor import SequencePredictor
+from prescyent.predictor.lightning.models.sequence.seq2seq.module import TorchModule
+from prescyent.predictor.lightning.models.sequence.seq2seq.config import Config
 
 
 class Predictor(SequencePredictor):

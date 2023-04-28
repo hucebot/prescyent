@@ -1,8 +1,8 @@
 """Pytorch module et Lightning module for Linears"""
 
-from prescyent.predictor.lightning.sequence.predictor import SequencePredictor
-from prescyent.predictor.lightning.sequence.linear.module import TorchModule
-from prescyent.predictor.lightning.sequence.linear.config import Config
+from prescyent.predictor.lightning.models.sequence.predictor import SequencePredictor
+from prescyent.predictor.lightning.models.sequence.linear.module import TorchModule
+from prescyent.predictor.lightning.models.sequence.linear.config import Config
 
 
 class Predictor(SequencePredictor):
