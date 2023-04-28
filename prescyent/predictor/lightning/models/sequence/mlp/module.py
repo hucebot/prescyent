@@ -28,9 +28,9 @@ class TorchModule(BaseTorchModule):
         layers = [nn.Linear(config.input_size, config.hidden_size[0])]
         layers += [act_fun()]
         for i in range(0, len(config.hidden_size) - 1):
-            layers +=  [nn.Linear(config.hidden_size[i], config.hidden_size[i + 1])]
+            layers += [nn.Linear(config.hidden_size[i], config.hidden_size[i + 1])]
             layers += [act_fun()]
-        layers +=  [nn.Linear(config.hidden_size[-1], config.output_size)]
+        layers += [nn.Linear(config.hidden_size[-1], config.output_size)]
         self.layers = nn.Sequential(*layers)
 
     @BaseTorchModule.allow_unbatched
@@ -38,7 +38,6 @@ class TorchModule(BaseTorchModule):
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # simple single feature prediction of the next item in sequence
         # (batch, seq_len, num_point, num_dim) -> (batch, num_point, num_dim, seq_len)
-        T = input_tensor.shape
         input_tensor = torch.transpose(torch.transpose(input_tensor, 1, 2), 2, 3)
         predictions = self.layers(input_tensor)
         predictions = torch.transpose(torch.transpose(predictions, 2, 3), 1, 2)

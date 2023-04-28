@@ -6,6 +6,7 @@ from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 DEFAULT_HIDDEN = 64
 
+
 class MotionMlpConfig(BaseModel):
     hidden_dim = DEFAULT_HIDDEN
     # seq_len =  motion.h36m_input_length_dct  # history_size
@@ -14,6 +15,7 @@ class MotionMlpConfig(BaseModel):
     spatial_fc_only = False
     norm_axis = 'spatial'
 
+
 class MotionFCInConfig(BaseModel):
     # in_features =    hidden_size  # hidden_dim
     # out_features = feature_size
@@ -21,12 +23,14 @@ class MotionFCInConfig(BaseModel):
     activation = 'relu'
     init_w_trunc_normal = False
 
+
 class MotionFCOutConfig(BaseModel):
     # in_features = feature_size
     # out_features =  hidden_size  # hidden_dim
     with_norm = False
     activation = 'relu'
     init_w_trunc_normal = True
+
 
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""

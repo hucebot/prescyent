@@ -15,7 +15,7 @@ try:
 except ModuleNotFoundError:
     use_experimental = False
     logger.warning("modules from experimental package will not be instanciable",
-                group=PREDICTOR)
+                   group=PREDICTOR)
 
 
 predictor_list = [LinearPredictor, SARLSTMPredictor,

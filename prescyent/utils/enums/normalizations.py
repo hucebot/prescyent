@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Normalizations(str, Enum):
     BATCH_NORM = "batch_norm"
     ALL = "all"

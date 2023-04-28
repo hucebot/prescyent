@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.cm import get_cmap
-from matplotlib.lines import Line2D
 
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
@@ -42,7 +41,7 @@ def plot_trajs(trajs, savefig_path: str,
                traj_labels: List[str] = None,
                dim_labels: List[str] = None,
                title=''):
-    assert(len(trajs) > 0)
+    assert len(trajs) > 0
     if group_labels is None:
         group_labels = []
     if traj_labels is None:
@@ -63,29 +62,31 @@ def plot_trajs(trajs, savefig_path: str,
         group_labels = [''] * trajs[0].shape[1]
     if len(dim_labels) == 0:
         dim_labels = [''] * trajs[0].shape[2]
-    assert(len(traj_labels) == len(trajs))
-    assert(len(shifts) == len(trajs))
-    assert(len(group_labels) == trajs[0].shape[1])
-    assert(len(dim_labels) == trajs[0].shape[2])
+    assert len(traj_labels) == len(trajs)
+    assert len(shifts) == len(trajs)
+    assert len(group_labels) == trajs[0].shape[1]
+    assert len(dim_labels) == trajs[0].shape[2]
 
     # prepare a subplot for each "group"
-    fig, axes = plt.subplots(trajs[0].shape[1], sharex = True)
+    fig, axes = plt.subplots(trajs[0].shape[1], sharex=True)
     if trajs[0].shape[1] == 1:
         axes = [axes]
-    fig.set_size_inches(6, trajs[0].shape[1]*1.5)
+    fig.set_size_inches(6, trajs[0].shape[1] * 1.5)
 
     # setup colors
-    colors = get_cmap( "Accent").colors
+    colors = get_cmap("Accent").colors
 
-    for i, ax in enumerate(axes):# for each group
-        for j, traj in enumerate(trajs): # for each traj
+    for i, ax in enumerate(axes):  # for each group
+        for j, traj in enumerate(trajs):  # for each traj
             ax.set_ylabel(group_labels[i])
             time_steps = range(shifts[j], traj.shape[0] + shifts[j])
             for k in range(traj.shape[2]):
                 marker = k % len(Line2D.filled_markers)
                 color = colors[j % len(colors)]
                 ls = '--' if j != 0 else '-'
-                ax.plot(time_steps, traj[:,i,k], linewidth=1, marker=Line2D.filled_markers[marker], markevery=0.1, markersize=2, color=color,ls=ls)
+                ax.plot(time_steps, traj[:, i, k], linewidth=1,
+                        marker=Line2D.filled_markers[marker],
+                        markevery=0.1, markersize=2, color=color, ls=ls)
 
     # tune the look
     for ax in axes:
@@ -119,12 +120,11 @@ def plot_trajs(trajs, savefig_path: str,
         leg += [Line2D([0], [0], color=color, label=traj_labels[j])]
     for k in range(trajs[0].shape[2]):
         marker = k % len(Line2D.filled_markers)
-        leg += [Line2D([0], [0], marker=Line2D.filled_markers[marker], color='black', lw=1, label=dim_labels[k])]
-
-    legend = axes[0].legend(handles=leg, bbox_to_anchor=(1.5, 1.1), loc="upper right")
+        leg += [Line2D([0], [0], marker=Line2D.filled_markers[marker],
+                       color='black', lw=1, label=dim_labels[k])]
+    axes[0].legend(handles=leg, bbox_to_anchor=(1.5, 1.1), loc="upper right")
 
     fig.tight_layout()
-
     # save the figure
     save_plot_and_close(savefig_path)
 
@@ -142,7 +142,9 @@ def plot_trajectory_prediction(trajectory: Trajectory, preds, step: int, savefig
         axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(time_steps[:len(inputs[i])], inputs[i], linewidth=2)
-        # axe.plot(time_steps[-len(inputs[i]):], inputs[i][:min(len(inputs[i]), pred_last_idx)], linewidth=2)  # delayed
+        # axe.plot(time_steps[-len(inputs[i]):],
+        # inputs[i][:min(len(inputs[i]),
+        # pred_last_idx)], linewidth=2)  # delayed
         axe.plot(time_steps[step:step + len(preds[i])], preds[i], linewidth=1, linestyle='--')
         axe.grid(color='grey', linestyle='--', lw=0.3)
         axe.set_axisbelow(True)
@@ -163,7 +165,7 @@ def plot_trajectory_prediction(trajectory: Trajectory, preds, step: int, savefig
     legend_plot(axes, ["Truth_x", "Truth_y", "Truth_z",
                        "Prediction_x", "Prediction_y", "Prediction_z"],
                 ylabels=trajectory.dimension_names)
-    fig.set_size_inches(trajectory.tensor.shape[1] *2, len(trajectory.dimension_names))
+    fig.set_size_inches(trajectory.tensor.shape[1] * 2, len(trajectory.dimension_names))
     title = '/'.join(trajectory.file_path.parts[-2:])
     fig.suptitle(title)
     fig.subplots_adjust(right=0.7)
@@ -195,6 +197,7 @@ def plot_multiple_predictors(trajectory: Trajectory,
     fig.suptitle(trajectory.file_path)
     save_plot_and_close(savefig_path)
 
+
 def plot_multiple_future(future_sizes: List[int],
                          trajectory: Trajectory,
                          predictor: Callable,
@@ -212,7 +215,7 @@ def plot_multiple_future(future_sizes: List[int],
     for i, axe in enumerate(axes):
         axe.plot(time_steps[:len(truth[i])], truth[i], linewidth=2)
         for pred in preds:
-            axe.plot(time_steps[step:step+len(pred[i])],
+            axe.plot(time_steps[step:step + len(pred[i])],
                      pred[i], linewidth=1, linestyle='--')
     legend_plot(axes, ["Truth"] + [str(predictor) + f"f_{future}" for future in future_sizes],
                 ylabels=trajectory.dimension_names)

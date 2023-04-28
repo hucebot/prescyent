@@ -9,6 +9,7 @@ from torch import nn
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from .mlp import build_mlps
 
+
 class TorchModule(BaseTorchModule):
     """siMLPe implementation"""
     def __init__(self, config):
@@ -20,10 +21,12 @@ class TorchModule(BaseTorchModule):
 
         if self.config.pre_dct:
             dct_m, _ = get_dct_matrix(self.config.input_size_dct)
-            self.register_buffer("dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0))
+            self.register_buffer("dct_m",
+                                 torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0))
         if self.config.post_dct:
             _, idct_m = get_dct_matrix(self.config.input_size_dct)
-            self.register_buffer("idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0))
+            self.register_buffer("idct_m",
+                                 torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0))
 
         self.temporal_fc_in = config.temporal_fc_in
         self.temporal_fc_out = config.temporal_fc_out
@@ -71,7 +74,7 @@ class TorchModule(BaseTorchModule):
             motion_feats = torch.matmul(self.idct_m[:, :self.input_size, :], motion_feats)
             offset = input_tensor[:, -1:].to(motion_feats.device)
             motion_feats = motion_feats[:, :self.output_size] + offset
-        motion_pred = motion_feats[:,:self.output_size]
+        motion_pred = motion_feats[:, :self.output_size]
         motion_pred = motion_pred.reshape(T[0], self.output_size, T[2], T[3])
         return motion_pred
 

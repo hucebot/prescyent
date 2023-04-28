@@ -29,9 +29,9 @@ class MotionDataSamples():
             invalid_frames_per_traj = self.history_size + 1
         for t, trajectory in enumerate(self.trajectories):
             if len(trajectory) < invalid_frames_per_traj:
-                raise ValueError("Check that the intended history size and future size are compatible"
-                                 f" with the dataset. A trajectory of size {len(trajectory)} can't be"
-                                 f" split in samples of sizes {invalid_frames_per_traj}")
+                raise ValueError("Check that history size and future size are compatible with the"
+                                 f" dataset. Trajectory of size {len(trajectory)} can't be split "
+                                 f"in samples of sizes {invalid_frames_per_traj}")
             map += [(t, i) for i in range(len(trajectory) - invalid_frames_per_traj + 1)]
         return map
 
@@ -39,7 +39,8 @@ class MotionDataSamples():
         traj_id, tensor_id = self.sample_ids[index]
         trajectory = self.trajectories[traj_id]
         sample = trajectory[tensor_id:tensor_id + self.history_size]
-        truth = trajectory[tensor_id + self.history_size:tensor_id + self.history_size + self.future_size]
+        truth = trajectory[tensor_id + self.history_size:
+                           tensor_id + self.history_size + self.future_size]
         return sample, truth
 
     def _get_item_autoreg(self, index: int):

@@ -121,8 +121,7 @@ class LightningPredictor(BasePredictor):
         callbacks, profiler = self._init_profilers(callbacks)
         torch.manual_seed(self.training_config.seed)
         torch.use_deterministic_algorithms(True)
-        self.trainer = pl.Trainer(
-                                  logger=self.tb_logger,
+        self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
                                   callbacks=callbacks,
                                   profiler=profiler,
@@ -136,8 +135,11 @@ class LightningPredictor(BasePredictor):
         elif self.config.used_profiler == "simple":
             profiler = (SimpleProfiler(dirpath=self.log_path, filename="simple_profiler"))
         elif self.config.used_profiler == "torch":
-            profiler = (PyTorchProfiler(dirpath=self.log_path, filename="torch_profiler", emit_nvtx=True))
-        else: profiler = None
+            profiler = (PyTorchProfiler(dirpath=self.log_path,
+                                        filename="torch_profiler",
+                                        emit_nvtx=True))
+        else:
+            profiler = None
         if self.config.used_profiler is not None:
             callbacks.append(DeviceStatsMonitor())
         return callbacks, profiler
@@ -241,6 +243,5 @@ class LightningPredictor(BasePredictor):
             self.model.eval()
             output = self.model.torch_model(input_t, future_size=future_size)
             if is_tensor_is_batched(output):
-                return output[:,:future_size]
+                return output[:, :future_size]
             return output[:future_size]
-

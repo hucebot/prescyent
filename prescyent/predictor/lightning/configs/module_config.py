@@ -23,22 +23,19 @@ class ModuleConfig(BaseModel):
     @root_validator
     def check_norms_have_requirements(cls, values):
         used_norm = values.get('used_norm')
-        if used_norm == Normalizations.ALL and ( \
-                values.get('input_size', None) is None or \
-                values.get('num_dims', None) is None or \
-                values.get('num_points', None) is None
-            ):
+        if used_norm == Normalizations.ALL and (
+                values.get('input_size', None) is None
+                or values.get('num_dims', None) is None
+                or values.get('num_points', None) is None):
             raise ValueError(f'{used_norm} normalization necessitate a valid '
                              'input_size, num_dims and num_points in config')
-        elif used_norm == Normalizations.SPACE_NORM and ( \
-                values.get('num_dims', None) is None or \
-                values.get('num_points', None) is None
-            ):
+        elif used_norm == Normalizations.SPACE_NORM and (
+                values.get('num_dims', None) is None
+                or values.get('num_points', None) is None):
             raise ValueError(f'{used_norm} normalization necessitate a valid '
                              'num_dims and num_points in config')
-        elif used_norm in [Normalizations.BATCH_NORM, Normalizations.TIME_NORM] and ( \
-                values.get('input_size', None) is None
-            ):
+        elif used_norm in [Normalizations.BATCH_NORM, Normalizations.TIME_NORM] and (
+                values.get('input_size', None) is None):
             raise ValueError(f'{used_norm} normalization necessitate a valid '
                              'input_size in config')
         return values

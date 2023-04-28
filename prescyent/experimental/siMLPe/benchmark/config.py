@@ -7,9 +7,7 @@ from __future__ import print_function
 import os.path as osp
 import sys
 import time
-import numpy as np
 from easydict import EasyDict as edict
-import argparse
 
 C = edict()
 config = C
@@ -34,9 +32,11 @@ C.link_log_file = C.log_dir + '/log_last.log'
 C.val_log_file = C.log_dir + '/val_' + exp_time + '.log'
 C.link_val_log_file = C.log_dir + '/val_last.log'
 
+
 def add_path(path):
     if path not in sys.path:
         sys.path.insert(0, path)
+
 
 add_path(osp.join(C.root_dir, 'lib'))
 
@@ -59,10 +59,10 @@ C.deriv_output = True
 C.use_relative_loss = True
 
 """ Model Config"""
-## Network
+# Network
 C.pre_dct = False
 C.post_dct = False
-## Motion Network mlp
+# Motion Network mlp
 dim_ = 66
 C.motion_mlp = edict()
 C.motion_mlp.hidden_dim = dim_
@@ -71,7 +71,7 @@ C.motion_mlp.num_layers = 48
 C.motion_mlp.with_normalization = True
 C.motion_mlp.spatial_fc_only = False
 C.motion_mlp.norm_axis = 'spatial'
-## Motion Network FC In
+# Motion Network FC In
 C.motion_fc_in = edict()
 C.motion_fc_in.in_features = C.motion.dim
 C.motion_fc_in.out_features = dim_
@@ -79,7 +79,7 @@ C.motion_fc_in.with_norm = False
 C.motion_fc_in.activation = 'relu'
 C.motion_fc_in.init_w_trunc_normal = False
 C.motion_fc_in.temporal_fc = False
-## Motion Network FC Out
+# Motion Network FC Out
 C.motion_fc_out = edict()
 C.motion_fc_out.in_features = dim_
 C.motion_fc_out.out_features = C.motion.dim
@@ -92,9 +92,9 @@ C.motion_fc_out.temporal_fc = False
 C.batch_size = 256
 C.num_workers = 8
 
-C.cos_lr_max=1e-5
-C.cos_lr_min=5e-8
-C.cos_lr_total_iters=40000
+C.cos_lr_max = 1e-5
+C.cos_lr_min = 5e-8
+C.cos_lr_total_iters = 40000
 
 C.weight_decay = 1e-4
 C.model_pth = None

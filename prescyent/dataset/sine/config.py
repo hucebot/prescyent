@@ -21,4 +21,3 @@ class DatasetConfig(MotionDatasetConfig):
     ratio_val: float = .05
     history_size: int = 100       # number of timesteps as input
     future_size: int = 100      # number of predicted timesteps
-

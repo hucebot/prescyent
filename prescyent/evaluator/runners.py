@@ -5,9 +5,12 @@ import timeit
 
 import torch
 from prescyent.dataset.trajectories import Trajectory
-from prescyent.evaluator.eval_result import EvaluationResult, EvaluationSummary
+from prescyent.evaluator.eval_result import EvaluationResult
+from prescyent.evaluator.eval_summary import EvaluationSummary
 
-from prescyent.evaluator.plotting import plot_trajectory_prediction, plot_multiple_predictors, plot_multiple_future
+from prescyent.evaluator.plotting import (plot_trajectory_prediction,
+                                          plot_multiple_predictors,
+                                          plot_multiple_future)
 from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
 
@@ -104,8 +107,15 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
             elapsed = (timeit.default_timer() - start) * 1000.0
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
-            # plot_truth_and_pred(trajectory.tensor, truth, prediction, history_size, "test.png")
-            evaluation_results[p].results.append(EvaluationResult(trajectory.tensor, truth, prediction, elapsed))
+            # plot_truth_and_pred(trajectory.tensor,
+            #                     truth,
+            #                     prediction,
+            #                     history_size,
+            #                     "test.png")
+            evaluation_results[p].results.append(EvaluationResult(trajectory.tensor,
+                                                                  truth,
+                                                                  prediction,
+                                                                  elapsed))
             # we plot a file per (predictor, trajectory) pair
             if do_plotting:
                 savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, predictor)))
@@ -121,16 +131,17 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
         predictor.log_evaluation_summary(evaluation_results[p])
     return evaluation_results
 
-# TODO: Think of some evaluator with a scaling future size, maybe like this but a bit redundant:
+
+#  TODO: Think of some evaluator with a scaling future size, maybe like this but a bit redundant:
 def evaluate_n_futures(predictors: List[Callable],
-                    trajectories: List[Trajectory],
-                    history_size: int,
-                    future_sizes: List[int],
-                    run_method: str = "step_every_timestamp",
-                    do_plotting: bool = True,
-                    saveplot_pattern: str = "%d_%s_prediction.png",
-                    saveplot_dir_path: str = str(Path("data") / "eval"),
-                    ):
+                       trajectories: List[Trajectory],
+                       history_size: int,
+                       future_sizes: List[int],
+                       run_method: str = "step_every_timestamp",
+                       do_plotting: bool = True,
+                       saveplot_pattern: str = "%d_%s_prediction.png",
+                       saveplot_dir_path: str = str(Path("data") / "eval"),
+                       ):
     future_results = []
     for future_size in future_sizes:
         future_results.append(eval_predictors(predictors,
@@ -145,8 +156,8 @@ def evaluate_n_futures(predictors: List[Callable],
         for p, predictor in enumerate(predictors):
             for t, trajectory in enumerate(trajectories):
                 per_future_pred = [eval_result[p][t].pred for eval_result in future_results]
-                savefig_path = str(Path(saveplot_dir_path) /
-                                   ("n_futures" + saveplot_pattern % (t, predictor)))
+                savefig_path = str(Path(saveplot_dir_path)
+                                   / ("n_futures" + saveplot_pattern % (t, predictor)))
                 plot_multiple_future(future_sizes, trajectory, predictor,
                                      per_future_pred, step=history_size,
                                      savefig_path=savefig_path)

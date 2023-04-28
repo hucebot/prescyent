@@ -12,6 +12,7 @@ from prescyent.dataset.trajectories import Trajectories
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.utils.logger import logger, DATASET
 
+
 class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
     config: MotionDatasetConfig
@@ -26,22 +27,22 @@ class MotionDataset(Dataset):
 
     def __init__(self) -> None:
         logger.debug("Tensor pairs will be generated for a %s learning type",
-                        self.config.learning_type,
-                        group=DATASET)
+                     self.config.learning_type,
+                     group=DATASET)
         self.train_datasample = MotionDataSamples(self.trajectories.train,
                                                   history_size=self.history_size,
                                                   future_size=self.future_size,
                                                   sampling_type=self.config.learning_type)
         logger.info("Train dataset has a size of %d", len(self.train_datasample))
         self.test_datasample = MotionDataSamples(self.trajectories.test,
-                                                  history_size=self.history_size,
-                                                  future_size=self.future_size,
-                                                  sampling_type=self.config.learning_type)
+                                                 history_size=self.history_size,
+                                                 future_size=self.future_size,
+                                                 sampling_type=self.config.learning_type)
         logger.info("Test dataset has a size of %d", len(self.test_datasample))
         self.val_datasample = MotionDataSamples(self.trajectories.val,
-                                                  history_size=self.history_size,
-                                                  future_size=self.future_size,
-                                                  sampling_type=self.config.learning_type)
+                                                history_size=self.history_size,
+                                                future_size=self.future_size,
+                                                sampling_type=self.config.learning_type)
         logger.info("Val dataset has a size of %d", len(self.val_datasample))
 
     def __len__(self):

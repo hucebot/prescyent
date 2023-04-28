@@ -1,6 +1,6 @@
 [flake8]
 select = BLK,C,D,E,F,W,I
 max-complexity = 10
-ignore = E203, W503, I201, I100, C901, I101, F401
+extend-ignore = E203, W503, I201, I100, C901, I101, F401
 max-line-length = 100
 application-import-names = activity_recogntion,tests

@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class LN(nn.Module):
     def __init__(self, dim, epsilon=1e-5):
         super().__init__()
@@ -15,6 +16,7 @@ class LN(nn.Module):
         y = (x - mean) / std
         y = y * self.alpha + self.beta
         return y
+
 
 class LN_v2(nn.Module):
     def __init__(self, dim, epsilon=1e-5):
@@ -31,6 +33,7 @@ class LN_v2(nn.Module):
         y = y * self.alpha + self.beta
         return y
 
+
 class Spatial_FC(nn.Module):
     def __init__(self, dim):
         super(Spatial_FC, self).__init__()
@@ -42,6 +45,7 @@ class Spatial_FC(nn.Module):
         x = torch.transpose(x, 1, 2)
         return x
 
+
 class Temporal_FC(nn.Module):
     def __init__(self, dim):
         super(Temporal_FC, self).__init__()
@@ -50,6 +54,7 @@ class Temporal_FC(nn.Module):
     def forward(self, x):
         x = self.fc(x)
         return x
+
 
 class MLPblock(nn.Module):
 
@@ -88,6 +93,7 @@ class MLPblock(nn.Module):
 
         return x
 
+
 class TransMLP(nn.Module):
     def __init__(self, dim, seq, use_norm, use_spatial_fc, num_layers, layernorm_axis):
         super().__init__()
@@ -104,6 +110,7 @@ class TransMLP(nn.Module):
     def forward(self, x):
         x = self.mlps(x)
         return x
+
 
 def build_mlps(config):
     return TransMLP(
@@ -126,13 +133,14 @@ def _get_activation_fn(activation):
         return nn.GLU
     if activation == 'silu':
         return nn.SiLU
-    #if activation == 'swish':
+    # if activation == 'swish':
     #    return nn.Hardswish
     if activation == 'softplus':
         return nn.Softplus
     if activation == 'tanh':
         return nn.Tanh
     raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+
 
 def _get_norm_fn(norm):
     if norm == "batchnorm":
@@ -142,5 +150,3 @@ def _get_norm_fn(norm):
     if norm == 'instancenorm':
         return nn.InstanceNorm1d
     raise RuntimeError(F"norm should be batchnorm/layernorm, not {norm}.")
-
-

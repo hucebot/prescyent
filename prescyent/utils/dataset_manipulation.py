@@ -53,16 +53,20 @@ def _get_metadata():
                        17, 18, 19, 20, 21, 20, 23, 13, 25, 26, 27, 28, 29, 28, 31]) - 1
 
     offset = np.array(
-        [0.000000, 0.000000, 0.000000, -132.948591, 0.000000, 0.000000, 0.000000, -442.894612, 0.000000, 0.000000,
-         -454.206447, 0.000000, 0.000000, 0.000000, 162.767078, 0.000000, 0.000000, 74.999437, 132.948826, 0.000000,
-         0.000000, 0.000000, -442.894413, 0.000000, 0.000000, -454.206590, 0.000000, 0.000000, 0.000000, 162.767426,
-         0.000000, 0.000000, 74.999948, 0.000000, 0.100000, 0.000000, 0.000000, 233.383263, 0.000000, 0.000000,
-         257.077681, 0.000000, 0.000000, 121.134938, 0.000000, 0.000000, 115.002227, 0.000000, 0.000000, 257.077681,
-         0.000000, 0.000000, 151.034226, 0.000000, 0.000000, 278.882773, 0.000000, 0.000000, 251.733451, 0.000000,
-         0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 99.999627, 0.000000, 100.000188, 0.000000, 0.000000,
-         0.000000, 0.000000, 0.000000, 257.077681, 0.000000, 0.000000, 151.031437, 0.000000, 0.000000, 278.892924,
-         0.000000, 0.000000, 251.728680, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 99.999888,
-         0.000000, 137.499922, 0.000000, 0.000000, 0.000000, 0.000000])
+        [0.000000, 0.000000, 0.000000, -132.948591, 0.000000, 0.000000, 0.000000,
+         -442.894612, 0.000000, 0.000000, -454.206447, 0.000000, 0.000000, 0.000000,
+         162.767078, 0.000000, 0.000000, 74.999437, 132.948826, 0.000000, 0.000000,
+         0.000000, -442.894413, 0.000000, 0.000000, -454.206590, 0.000000, 0.000000,
+         0.000000, 162.767426, 0.000000, 0.000000, 74.999948, 0.000000, 0.100000,
+         0.000000, 0.000000, 233.383263, 0.000000, 0.000000, 257.077681, 0.000000,
+         0.000000, 121.134938, 0.000000, 0.000000, 115.002227, 0.000000, 0.000000,
+         257.077681, 0.000000, 0.000000, 151.034226, 0.000000, 0.000000, 278.882773,
+         0.000000, 0.000000, 251.733451, 0.000000, 0.000000, 0.000000, 0.000000,
+         0.000000, 0.000000, 99.999627, 0.000000, 100.000188, 0.000000, 0.000000,
+         0.000000, 0.000000, 0.000000, 257.077681, 0.000000, 0.000000, 151.031437,
+         0.000000, 0.000000, 278.892924, 0.000000, 0.000000, 251.728680, 0.000000,
+         0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 99.999888, 0.000000,
+         137.499922, 0.000000, 0.000000, 0.000000, 0.000000])
     offset = offset.reshape(-1, 3)
 
     rotInd = [[5, 6, 4],
@@ -249,10 +253,9 @@ def rotmat2xyz_torch(rotmat):
 
 def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
     """
-    Adapted from https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
-    which originaly from
+    Adapted from
+    https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
     In order to find the same action indices as in SRNN.
-    https://github.com/asheshjain399/RNNexp/blob/master/structural_rnn/CRFProblems/H3.6m/processdata.py#L325
     """
 
     # Used a fixed dummy seed, following
@@ -280,10 +283,9 @@ def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
 
 def find_indices_srnn(frame_num1, frame_num2, seq_len, input_n=10):
     """
-    Adapted from https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
-    which originaly from
+    Adapted from
+    https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
     In order to find the same action indices as in SRNN.
-    https://github.com/asheshjain399/RNNexp/blob/master/structural_rnn/CRFProblems/H3.6m/processdata.py#L325
     """
     # Used a fixed dummy seed, following
     # https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/forecastTrajectories.py#L29

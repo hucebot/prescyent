@@ -16,8 +16,7 @@ if __name__ == "__main__":
                                              future_size=future_size,
                                              dimensions=dimensions,
                                              subsampling_step=subsampling_step,
-                                             batch_size=batch_size,
-                                            )
+                                             batch_size=batch_size)
     dataset = TeleopIcubDataset(dataset_config)
     print("OK")
 
@@ -26,7 +25,7 @@ if __name__ == "__main__":
     feature_size = dataset.feature_size
     config = MlpConfig(output_size=future_size,
                        input_size=history_size,
-                       hidden_size=[512,512,512,512],
+                       hidden_size=[512, 512, 512, 512],
                        norm_on_last_input=True)
     predictor = MlpPredictor(config=config)
     print("OK")

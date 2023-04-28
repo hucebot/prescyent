@@ -6,7 +6,6 @@ from pydantic import root_validator
 from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
 
 
-
 class TrainingConfig(OptimizerConfig):
     """Pydantic Basemodel for Pytorch Lightning Training configuration"""
     epoch: int = 100

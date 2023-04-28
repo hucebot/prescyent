@@ -7,8 +7,8 @@ from typing import Dict, Iterable, List, Union
 import torch
 from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
-from prescyent.evaluator.eval_result import EvaluationSummary
 
+from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 
 

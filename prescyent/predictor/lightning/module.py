@@ -1,5 +1,6 @@
 """Module with methods common to every lightning modules"""
 from typing import Type
+
 import pytorch_lightning as pl
 import torch
 
@@ -9,7 +10,6 @@ from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.lightning.layers.mpjpe_loss import MPJPELoss
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.logger import logger, PREDICTOR
-
 
 
 CRITERION_MAPPING = {
@@ -26,7 +26,6 @@ CRITERION_MAPPING = {
 DEFAULT_LOSS = MPJPELoss()
 
 
-
 class LightningModule(pl.LightningModule):
     """Lightning class with methods for modules training, saving, logging"""
     torch_model: BaseTorchModule
@@ -40,9 +39,9 @@ class LightningModule(pl.LightningModule):
             criterion = CRITERION_MAPPING.get(config.loss_fn.lower(), None)
             if criterion is None:
                 logger.warning("provided criterion %s is not handled, please use one of the"
-                            "following %s.", config.loss_fn.lower(),
-                            list(CRITERION_MAPPING.keys()),
-                            group=PREDICTOR)
+                               "following %s.", config.loss_fn.lower(),
+                               list(CRITERION_MAPPING.keys()),
+                               group=PREDICTOR)
                 criterion = DEFAULT_LOSS
         else:
             criterion = self.torch_model.criterion
