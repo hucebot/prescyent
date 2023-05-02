@@ -188,7 +188,10 @@ class LightningPredictor(BasePredictor):
         self._init_module_optimizer()
         self.tb_logger.log_hyperparams({**self.model.hparams,
                                         **self.training_config.dict(),
-                                        **self.config.dict()})
+                                        **self.config.dict()},
+                                       {"hp/ADE": -1,
+                                        "hp/FDE": -1,
+                                        "hp/MPJPE": -1})
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)

@@ -123,8 +123,11 @@ class LightningModule(pl.LightningModule):
         self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
         self.logger.experiment.add_scalar(f"{prefix}/MPJPE", mpjpe, self.current_epoch)
-        if prefix == "Val":
-            self.log("hp_metric", mpjpe)
+        if prefix in ["Val", "Test"]:
+            self.logger.experiment.add_scalar("hp/FDE", fde, self.current_epoch)
+            self.logger.experiment.add_scalar("hp/ADE", ade, self.current_epoch)
+            self.logger.experiment.add_scalar("hp/MPJPE", mpjpe, self.current_epoch)
+
 
     def training_step(self, *args, **kwargs):
         """run every training step"""

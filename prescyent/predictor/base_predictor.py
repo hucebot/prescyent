@@ -40,7 +40,8 @@ class BasePredictor():
             version = self.version
         self.tb_logger = TensorBoardLogger(self.log_root_path,
                                            name=name,
-                                           version=version)
+                                           version=version,
+                                           default_hp_metric=False)
         # redetermine version from tb logger logic if None
         if self.version is None:
             self.version = copy.deepcopy(self.tb_logger.version)
