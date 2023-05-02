@@ -9,11 +9,10 @@ class LinearInitTests(CustomTestCase):
 
     # -- INIT FROM SCRATCH AND CONFIG
     def test_init(self):
-        feature_size = 1
         output_size = 10
         input_size = 10
         config = LinearConfig(output_size=output_size,
-                            input_size=input_size)
+                              input_size=input_size)
         predictor = LinearPredictor(config=config)
         self.assertHasAttr(predictor, "model")
         self.assertHasAttr(predictor, "config")
@@ -49,10 +48,10 @@ class LinearInitTests(CustomTestCase):
         input_size = 100
         model_path = "tests/mocking/linear_model"
         config = LinearConfig(feature_size=feature_size,
-                            output_size=output_size,
-                            input_size=input_size,
-                            model_path=model_path
-                            )
+                              output_size=output_size,
+                              input_size=input_size,
+                              model_path=model_path
+                              )
         LinearPredictor(config=config)
 
 
@@ -62,8 +61,6 @@ class LinearFunctionalTests(CustomTestCase):
         feature_size = 1
         output_size = 10
         config = LinearConfig(feature_size=feature_size,
-                            output_size=output_size,
-                            )
+                              output_size=output_size,
+                              )
         self.predictor = LinearPredictor(config=config)
-
-    # TODO More functionnal tests

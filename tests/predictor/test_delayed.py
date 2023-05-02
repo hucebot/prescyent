@@ -25,5 +25,5 @@ class DelayedPredictorTests(CustomTestCase):
     def test_test_loop(self):
         predictor = DelayedPredictor("tmp")
         dataloader = DataLoader([(torch.rand(64, 10, 7), torch.rand(64, 10, 7)) for i in range(50)])
-        test_results = predictor.test(dataloader)
+        predictor.test(dataloader)
         shutil.rmtree("tmp", ignore_errors=True)

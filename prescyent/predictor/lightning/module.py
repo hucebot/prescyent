@@ -128,7 +128,6 @@ class LightningModule(pl.LightningModule):
             self.logger.experiment.add_scalar("hp/ADE", ade, self.current_epoch)
             self.logger.experiment.add_scalar("hp/MPJPE", mpjpe, self.current_epoch)
 
-
     def training_step(self, *args, **kwargs):
         """run every training step"""
         batch = args[0]
