@@ -19,6 +19,7 @@ class ModuleConfig(BaseModel):
     used_norm: Union[None, Normalizations] = None
     loss_fn: LossFunctions = "mpjpeloss"
     used_profiler: Union[None, Profilers] = None
+    do_lipschitz_continuation: bool = False
 
     @root_validator
     def check_norms_have_requirements(cls, values):

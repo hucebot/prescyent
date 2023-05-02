@@ -1,4 +1,5 @@
 """Module with methods common to every lightning modules"""
+import copy
 from typing import Type
 
 import pytorch_lightning as pl
@@ -26,6 +27,23 @@ CRITERION_MAPPING = {
 DEFAULT_LOSS = MPJPELoss()
 
 
+def apply_spectral_norm(model):
+    for module_name, module in copy.copy(model._modules).items():
+        # recurse on sequentials
+        if isinstance(module, torch.nn.Sequential):
+            logger.info("Applying Spectral Normalization to %s module",
+                        module_name, group=PREDICTOR)
+            setattr(model, module_name, apply_spectral_norm(module))
+        # if the module has weights
+        elif hasattr(module, "weight") and isinstance(module, torch.nn.Module):
+            # apply spectral norm
+            module = torch.nn.utils.spectral_norm(module)
+            setattr(model, module_name, module)
+            logger.info("Applying Spectral Normalization to %s module",
+                        module_name, group=PREDICTOR)
+    return model
+
+
 class LightningModule(pl.LightningModule):
     """Lightning class with methods for modules training, saving, logging"""
     torch_model: BaseTorchModule
@@ -33,8 +51,12 @@ class LightningModule(pl.LightningModule):
     training_config: TrainingConfig
 
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
+        logger.info("Initialization of the Lightning Module...", group=PREDICTOR)
         super().__init__()
         self.torch_model = torch_model_class(config)
+        if config.do_lipschitz_continuation:
+            logger.info("Parametrization of Lightning Module using the Lipschitz constant...")
+            apply_spectral_norm(self.torch_model)
         if not hasattr(self.torch_model, "criterion"):
             criterion = CRITERION_MAPPING.get(config.loss_fn.lower(), None)
             if criterion is None:
@@ -48,6 +70,7 @@ class LightningModule(pl.LightningModule):
         logger.info("Using %s loss function", criterion.__class__.__name__, group=PREDICTOR)
         self.criterion = criterion
         self.save_hyperparameters(ignore=['torch_model', 'criterion'])
+        logger.info("Lightning Module ready.", group=PREDICTOR)
 
     def optimizer_zero_grad(self, epoch, batch_idx, optimizer, optimizer_idx):
         optimizer.zero_grad(set_to_none=True)
