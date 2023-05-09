@@ -21,15 +21,16 @@ class TorchModule(BaseTorchModule):
         self.feature_size = config.feature_size
         self.output_size = config.output_size
         self.num_layers = config.num_layers
+        self.dropout_value = config.dropout_value if config.dropout_value else 0
 
-        self.encoder = nn.LSTM(input_size=self.feature_size,
+        self.encoder = nn.GRU(input_size=self.feature_size,
                                hidden_size=self.hidden_size,
                                num_layers=self.num_layers,
-                               dropout=0)
-        self.decoder = nn.LSTM(input_size=self.feature_size,
+                               dropout=self.dropout_value)
+        self.decoder = nn.GRU(input_size=self.feature_size,
                                hidden_size=self.hidden_size,
                                num_layers=self.num_layers,
-                               dropout=0)
+                               dropout=self.dropout_value)
         self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
     @BaseTorchModule.allow_unbatched
