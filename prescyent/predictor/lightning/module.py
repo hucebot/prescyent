@@ -53,6 +53,7 @@ class LightningModule(pl.LightningModule):
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
         logger.info("Initialization of the Lightning Module...", group=PREDICTOR)
         super().__init__()
+        self.lr = 0.999
         self.torch_model = torch_model_class(config)
         if config.do_lipschitz_continuation:
             logger.info("Parametrization of Lightning Module using the Lipschitz constant...")
@@ -72,7 +73,7 @@ class LightningModule(pl.LightningModule):
         self.save_hyperparameters(ignore=['torch_model', 'criterion'])
         logger.info("Lightning Module ready.", group=PREDICTOR)
 
-    def optimizer_zero_grad(self, epoch, batch_idx, optimizer, optimizer_idx):
+    def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
         optimizer.zero_grad(set_to_none=True)
 
     @classmethod
@@ -87,7 +88,9 @@ class LightningModule(pl.LightningModule):
 
     def configure_optimizers(self):
         """return module optimizer"""
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.training_config.learning_rate,
+        if not self.training_config.use_auto_lr:
+            self.lr = self.training_config.learning_rate
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr,
                                       weight_decay=self.training_config.weight_decay)
         if self.training_config.use_scheduler:
             lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
@@ -128,34 +131,52 @@ class LightningModule(pl.LightningModule):
             self.logger.experiment.add_scalar("hp/ADE", ade, self.current_epoch)
             self.logger.experiment.add_scalar("hp/MPJPE", mpjpe, self.current_epoch)
 
+    def on_validation_epoch_start(self) -> None:
+        super().on_validation_epoch_start()
+        self.val_output = []
+
+    def on_test_epoch_start(self) -> None:
+        super().on_test_epoch_start()
+        self.test_output = []
+
+    def on_train_epoch_start(self) -> None:
+        super().on_train_epoch_start()
+        self.train_output = []
+
     def training_step(self, *args, **kwargs):
         """run every training step"""
         batch = args[0]
-        return self.get_metrics(batch, "Train", loss_only=True)
+        res = self.get_metrics(batch, "Train", loss_only=True)
+        self.train_output.append(res)
+        return res
 
     def test_step(self, *args, **kwargs):
         """run every test step"""
         with torch.no_grad():
             batch = args[0]
-            return self.get_metrics(batch, "Test")
+            res = self.get_metrics(batch, "Test")
+            self.test_output.append(res)
+            return res
 
     def validation_step(self, *args, **kwargs):
         """run every validation step"""
         with torch.no_grad():
             batch = args[0]
-            return self.get_metrics(batch, "Val")
+            res = self.get_metrics(batch, "Val")
+            self.val_output.append(res)
+            return res
 
-    def training_epoch_end(self, outputs):
+    def on_training_epoch_end(self):
         """run every training epoch end"""
         with torch.no_grad():
-            self.log_accuracy(outputs, "Train", loss_only=True)
+            self.log_accuracy(self.train_output, "Train", loss_only=True)
 
-    def test_epoch_end(self, outputs):
+    def on_test_epoch_end(self):
         """run every test epoch end"""
         with torch.no_grad():
-            self.log_accuracy(outputs, "Test")
+            self.log_accuracy(self.test_output, "Test")
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         """run every validation epoch end"""
         with torch.no_grad():
-            self.log_accuracy(outputs, "Val")
+            self.log_accuracy(self.val_output, "Val")

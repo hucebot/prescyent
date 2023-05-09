@@ -5,8 +5,8 @@ CORE_REQUIREMENTS = [
         "matplotlib",
         "numpy",
         "pydantic",
-        "torch==1.8.1",
-        "pytorch_lightning==1.6.5",
+        "torch",
+        "pytorch_lightning",
         "tensorboard"
 ]
 

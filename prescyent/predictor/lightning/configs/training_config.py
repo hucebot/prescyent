@@ -13,8 +13,10 @@ class TrainingConfig(OptimizerConfig):
     accelerator: str = "auto"
     devices: Union[str, int] = "auto"
     accumulate_grad_batches: int = 1
-    seed: int = 5
+    seed: Union[None, int] = 5
     log_every_n_steps: int = 1
+    use_auto_lr: bool = False
+    use_deterministic_algorithms: bool = True
 
     @root_validator
     def training_has_at_least_one_positive_limit(cls, values):

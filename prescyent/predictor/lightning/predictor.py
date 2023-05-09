@@ -11,7 +11,8 @@ from typing import List, Type, Union
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.profiler import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
+from pytorch_lightning.tuner import Tuner
+from pytorch_lightning.profilers import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
 from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule
@@ -119,8 +120,12 @@ class LightningPredictor(BasePredictor):
         if devices is not None:
             kwargs["devices"] = devices
         callbacks, profiler = self._init_profilers(callbacks)
-        torch.manual_seed(self.training_config.seed)
-        torch.use_deterministic_algorithms(True)
+        if self.training_config.seed is not None:
+            pl.seed_everything(self.training_config.seed, workers=True)
+        if self.training_config.use_deterministic_algorithms:
+            torch.use_deterministic_algorithms(True)
+            os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG",":4096:8")
+            kwargs["deterministic"] = True
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
                                   callbacks=callbacks,
@@ -186,6 +191,13 @@ class LightningPredictor(BasePredictor):
         self._init_training_config(train_config)
         self._init_trainer()
         self._init_module_optimizer()
+        if train_config.use_auto_lr:
+            # Run learning rate finder
+            tuner = Tuner(self.trainer)
+            lr_finder = tuner.lr_find(self.model, train_dataloader)
+            fig = lr_finder.plot(suggest=True) # Plot
+            self.tb_logger.experiment.add_figure("lr_finder", fig)
+            self.model.hparams.lr = lr_finder.suggestion()
         self.tb_logger.log_hyperparams({**self.model.hparams,
                                         **self.training_config.dict(),
                                         **self.config.dict()},
@@ -230,11 +242,6 @@ class LightningPredictor(BasePredictor):
         if isinstance(save_path, str):
             save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
-        if self.trainer is not None:
-            logger.info("Saving checkpoint at %s", (save_path / "trainer_checkpoint.ckpt"),
-                        group=PREDICTOR)
-            self.trainer.save_checkpoint(save_path / "trainer_checkpoint.ckpt")
-
         logger.info("Saving model at %s", save_path, group=PREDICTOR)
         self.model.save(save_path)
 

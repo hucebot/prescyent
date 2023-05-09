@@ -9,7 +9,9 @@ class LightningProgressBar(TQDMProgressBar):
     """surcharge the base progress bar with total number of epoch infos"""
     def on_train_epoch_start(self, trainer, *_) -> None:
         super().on_train_epoch_start(trainer, *_)
+        bar = super().init_train_tqdm()
         max_epoch = trainer.max_epochs
         if max_epoch < 0:
             max_epoch = calculate_max_epoch(trainer)
-        self.main_progress_bar.set_description(f"Epoch {trainer.current_epoch + 1}/{max_epoch}")
+        bar.set_description(f"Epoch {trainer.current_epoch + 1}/{max_epoch}")
+        return bar
