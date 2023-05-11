@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Union
 import torch
 from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
+from tqdm import tqdm
 
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
@@ -51,8 +52,8 @@ class BasePredictor():
         return self.tb_logger.log_dir
 
     def __call__(self, input_batch, history_size: int = None, history_step: int = 1,
-                 future_size: int = None, output_only_future: bool = True):
-        return self.run(input_batch, history_size, history_step, future_size, output_only_future)
+                 future_size: int = None):
+        return self.run(input_batch, history_size, history_step, future_size)
 
     def __str__(self) -> str:
         return f"{self.name}_v{self.version}"
@@ -98,8 +99,7 @@ class BasePredictor():
         return mean_loss, ade, fde, mpjpe
 
     def run(self, input_batch: Iterable, history_size: int = None,
-            history_step: int = 1, future_size: int = None,
-            output_only_future: bool = True) -> List[torch.Tensor]:
+            history_step: int = 1, future_size: int = None) -> List[torch.Tensor]:
         """run method/model inference on the input batch
         The output is the list of predictions for each defined subpart of the input batch,
         or the single prediction for the whole input
@@ -112,8 +112,6 @@ class BasePredictor():
                 defines the step of the iteration. Defaults to 1.
             future_size (int|None, optional): If an input size is provided, the input batch will
                 be splitted sequences of len == future_size. Defaults to None.
-            output_only_future (bool, optional): If the model also outputs more than future,
-                we keep only the last future_size_values. Defaults to True
         Returns:
             List[torch.Tensor]: the list of model predictions
         """
@@ -126,12 +124,10 @@ class BasePredictor():
         if future_size is None:
             future_size = input_len
 
-        for i in range(0, input_len - history_size + 1, history_step):
+        for i in tqdm(range(0, input_len - history_size + 1, history_step),
+                      desc="Iterate over input_batch"):
             input_sub_batch = input_batch[i:i + history_size]
             prediction = self.predict(input_sub_batch, future_size)
-            if output_only_future and future_size and \
-                    len(prediction) == history_size + future_size - 1:
-                prediction = prediction[-future_size:]
             prediction_list.append(prediction)
         return prediction_list
 

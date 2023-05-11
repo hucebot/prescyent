@@ -52,7 +52,8 @@ class LightningPredictor(BasePredictor):
             super().__init__(log_root_path, name, version)
         else:
             # In later versions we can imagine a pretrained or config free version of the model
-            raise NotImplementedError("No default implementation for now")
+            raise NotImplementedError("No default implementation for now, "
+                                      "please provide a config or a path to init predictor")
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None
@@ -253,5 +254,5 @@ class LightningPredictor(BasePredictor):
             self.model.eval()
             output = self.model.torch_model(input_t, future_size=future_size)
             if is_tensor_is_batched(output):
-                return output[:, :future_size]
-            return output[:future_size]
+                return output[:, -future_size:]
+            return output[-future_size:]

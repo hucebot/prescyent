@@ -11,7 +11,7 @@ class SequencePredictor(LightningPredictor):
         We reimplement here the predict function to pass a future_size arg to the model
     """
 
-    def predict(self, input_t: torch.Tensor, future_size: int = None):
+    def predict(self, input_t: torch.Tensor, future_size: int = None, ):
         with torch.no_grad():
             self.model.eval()
             list_outputs = []
