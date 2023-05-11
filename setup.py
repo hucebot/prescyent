@@ -5,9 +5,9 @@ CORE_REQUIREMENTS = [
         "matplotlib",
         "numpy",
         "pydantic",
+        "pytorch_lightning>=2.0.0",
+        "tensorboard",
         "torch",
-        "pytorch_lightning",
-        "tensorboard"
 ]
 
 CORE_MODULES = ['prescyent.',
