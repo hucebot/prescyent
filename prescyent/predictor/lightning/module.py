@@ -89,13 +89,13 @@ class LightningModule(pl.LightningModule):
     def configure_optimizers(self):
         """return module optimizer"""
         if not self.training_config.use_auto_lr:
-            self.lr = self.training_config.learning_rate
+            self.lr = self.training_config.lr
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr,
                                       weight_decay=self.training_config.weight_decay)
         if self.training_config.use_scheduler:
             lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
-                max_lr=self.training_config.max_learning_rate,
+                max_lr=self.training_config.max_lr,
                 total_steps=self.trainer.estimated_stepping_batches
             )
             return [optimizer], [{'scheduler': lr_scheduler, 'interval': 'step'}]
