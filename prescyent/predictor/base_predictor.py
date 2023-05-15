@@ -2,6 +2,7 @@
 The predictor can be trained and predict
 """
 import copy
+import random
 from typing import Dict, Iterable, List, Union
 
 import torch
@@ -29,6 +30,8 @@ class BasePredictor():
         if name is None:
             name = self.__class__.__name__
         self.name = name
+        if version is None:
+            version = random.randint(1, 10**9)
         self.version = version
         self._init_logger(no_sub_dir_log)
 
@@ -142,3 +145,14 @@ class BasePredictor():
         self.tb_logger.experiment.add_scalar("Eval/max_mpjpe", evaluation_summary.max_mpjpe, 0)
         self.tb_logger.experiment.add_scalar("Eval/max_inference_time_ms",
                                              evaluation_summary.max_inference_time_ms, 0)
+
+    def log_metrics(self, metrics: dict, pre_key=""):
+        for key, value in metrics.items():
+            if isinstance(value, dict):
+                self.log_metrics(value, pre_key=pre_key + key)
+                continue
+            if isinstance(value, list):
+                for i, j in enumerate(value):
+                    self.tb_logger.experiment.add_scalar(pre_key + key, j, i)
+                continue
+            self.tb_logger.experiment.add_scalar(pre_key + key, value)

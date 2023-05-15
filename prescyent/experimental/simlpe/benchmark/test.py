@@ -1,13 +1,14 @@
 import argparse
+import time
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 
-from config import config
-from h36m_eval import H36MEval
-from prescyent.predictor import AutoPredictor
+from prescyent import AutoPredictor
+from prescyent.experimental.simlpe.benchmark.config import config
+from prescyent.experimental.simlpe.benchmark.h36m_eval import H36MEval
 from prescyent.predictor.constant_predictor import ConstantPredictor
 
 
@@ -58,6 +59,7 @@ def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
                 dim=2),
             dim=0)
         m_p3d_h36 += mpjpe_p3d_h36.cpu().numpy()
+        # break
     m_p3d_h36 = m_p3d_h36 / num_samples
     return m_p3d_h36
 
@@ -79,27 +81,37 @@ def test(config, model, dataloader) :
         ret["#{:d}".format(titles[j])] = [m_p3d_h36[j], m_p3d_h36[j]]
     return [round(ret[key][0], 1) for key in results_keys]
 
+def run_benchmark(predictor):
+    config.motion.h36m_target_length = config.motion.h36m_target_length_eval
+    dataset = H36MEval(config, 'test')
+
+    shuffle = False
+    sampler = None
+    dataloader = DataLoader(dataset, batch_size=128,
+                            num_workers=1, drop_last=False,
+                            sampler=sampler, shuffle=shuffle, pin_memory=True)
+    start_time = time.time()
+    res = test(config, predictor, dataloader)
+    test_time = (time.time() - start_time) * 1000
+    num_params = sum(p.numel() for p in predictor.model.torch_model.parameters()) / 1000000
+    return {
+        "SiMLPe/test_time (ms)": test_time,
+        "SiMLPe/num_params (M)": num_params,
+        "SiMLPe/MPJPE": res
+    }
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--model_path', type=str, help='=model path')
     parser.add_argument('--do_constant', action="store_true", help='=use constant predictor')
     args = parser.parse_args()
+
+    model_path = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/SARLSTMPredictor/version_1_n"
+
     if args.do_constant:
         model = ConstantPredictor("ConstantPredictor/")
     else:
-        model = AutoPredictor.load_from_config(args.model_path)
+        model = AutoPredictor.load_from_config(model_path)
 
-    config.motion.h36m_target_length = config.motion.h36m_target_length_eval
-    dataset = H36MEval(config, 'test')
-
-    shuffle = False
-    sampler = None
-    train_sampler = None
-    dataloader = DataLoader(dataset, batch_size=128,
-                            num_workers=1, drop_last=False,
-                            sampler=sampler, shuffle=shuffle, pin_memory=True)
-
-    print(test(config, model, dataloader))
-    print("num_params: %.3f" %
-          (sum(p.numel() for p in model.model.torch_model.parameters()) / 1000000))
+    print(run_benchmark(model))

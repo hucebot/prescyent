@@ -19,7 +19,6 @@ FILE_LABELS = ["waist_z",
                "left_hand_x", "left_hand_y", "left_hand_z"]
 POINT_LABELS = ["waist", "right_hand", "left_hand"]
 
-
 class Dataset(MotionDataset):
     """TODO: present the dataset here
     Architecture
@@ -27,13 +26,14 @@ class Dataset(MotionDataset):
     Dataset is not splitted into test / train / val
     It as to be at initialisation, through the parameters
     """
+    DATASET_NAME = "TeleopIcub"
 
     def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__()
+        super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):

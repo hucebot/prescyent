@@ -1,0 +1,18 @@
+{
+    "model_config": {
+        "name": "MlpPredictor",
+        "input_size": 50,
+        "output_size": 10,
+        "dropout_value": 0.2,
+        "hidden_size": 256,
+        "num_layers": 3
+    },
+    "training_config": {
+        "epoch": 100,
+        "devices": 1,
+        "use_auto_lr": true
+    },
+    "dataset_config": {
+        "name": "H36M"
+    }
+}

@@ -158,13 +158,12 @@ class LightningPredictor(BasePredictor):
 
     def _save_config(self, save_path: Path):
         res = dict()
-        res["name"] = self.name
-        res["version"] = self.version
-        self.config.model_path = str(save_path.parent)
         if self.training_config is not None :
-            res["training_config"] = self.training_config.dict()
+            res["training_config"] = self.training_config.dict(exclude_defaults=True)
         if self.config is not None :
-            res["model_config"] = self.config.dict()
+            res["model_config"] = self.config.dict(exclude_defaults=True)
+        res["model_config"]["name"] = self.name
+        res["model_config"]["version"] = self.version
         with (save_path).open('w', encoding="utf-8") as conf_file:
             json.dump(res, conf_file, indent=4, sort_keys=True)
 
@@ -176,8 +175,8 @@ class LightningPredictor(BasePredictor):
             config_data = json.load(conf_file)
         self.training_config = TrainingConfig(**config_data.get("training_config", None))
         self.config = self.config_class(**config_data.get("model_config", None))
-        self.name = config_data.get("name", None)
-        self.version = config_data.get("version", None)
+        self.name = config_data.get("model_config", {}).get("name", None)
+        self.version = config_data.get("model_config", {}).get("version", None)
         logger.info("Config loaded from %s", config_path, group=PREDICTOR)
 
     def _init_module_optimizer(self):
@@ -199,6 +198,7 @@ class LightningPredictor(BasePredictor):
             fig = lr_finder.plot(suggest=True) # Plot
             self.tb_logger.experiment.add_figure("lr_finder", fig)
             self.model.hparams.lr = lr_finder.suggestion()
+            self.training_config.lr = lr_finder.suggestion()
         self.tb_logger.log_hyperparams({**self.model.hparams,
                                         **self.training_config.dict(),
                                         **self.config.dict()},

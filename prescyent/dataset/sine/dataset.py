@@ -13,17 +13,20 @@ from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.dataset.sine.config import DatasetConfig
 
 
+
 class Dataset(MotionDataset):
     """Dataset is not splitted into test / train / val
     It as to be at initialisation, througt the parameters
     """
+    DATASET_NAME = "Sine"
+
     def __init__(self, config: Union[Dict, DatasetConfig, Path, str] = None):
         self._init_from_config(config, DatasetConfig)
         self.trajectories = self._gen_data(self.config.length, self.config.period,
                                            int(self.config.size * self.config.ratio_train),
                                            int(self.config.size * self.config.ratio_test),
                                            int(self.config.size * self.config.ratio_val))
-        super().__init__()
+        super().__init__(self.DATASET_NAME)
 
     def _gen_data(self, length, period, num_train, num_test, num_val):
         rng = np.random.default_rng(42)

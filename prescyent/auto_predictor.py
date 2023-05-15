@@ -4,27 +4,7 @@ from typing import Union
 
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.predictor.lightning.models.sequence.linear import LinearPredictor
-from prescyent.predictor.lightning.models.sequence.mlp import MlpPredictor
-from prescyent.predictor.lightning.models.autoreg.sarlstm import SARLSTMPredictor
-from prescyent.predictor.lightning.models.sequence.seq2seq import Seq2SeqPredictor
-
-try:
-    from prescyent.experimental.siMLPe import SiMLPePredictor
-    use_experimental = True
-except ModuleNotFoundError:
-    use_experimental = False
-    logger.warning("modules from experimental package will not be instanciable",
-                   group=PREDICTOR)
-
-
-predictor_list = [LinearPredictor, SARLSTMPredictor,
-                  Seq2SeqPredictor, MlpPredictor]
-if use_experimental:
-    predictor_list.append(SiMLPePredictor)
-
-
-predictor_map = {p.PREDICTOR_NAME: p for p in predictor_list}
+from prescyent.predictor import PREDICTOR_MAP
 
 
 class AutoPredictor():
@@ -40,7 +20,7 @@ class AutoPredictor():
                 config = config.dict()
             config_path = config.get("model_path", None)
         predictor_class_name = config.get("name", None)
-        predictor_class = predictor_map.get(predictor_class_name, None)
+        predictor_class = PREDICTOR_MAP.get(predictor_class_name, None)
         if predictor_class is None:
             logger.error("Could not find a predictor class matching %s",
                          predictor_class_name, group=PREDICTOR)
@@ -58,7 +38,7 @@ class AutoPredictor():
         if isinstance(config, ModuleConfig):
             config = config.dict()
         predictor_class_name = config.get("name", None)
-        predictor_class = predictor_map.get(predictor_class_name, None)
+        predictor_class = PREDICTOR_MAP.get(predictor_class_name, None)
         if predictor_class is None:
             logger.error("Could not find a predictor class matching %s",
                          predictor_class_name, group=PREDICTOR)
@@ -73,5 +53,8 @@ class AutoPredictor():
             config_path = config_path / "config.json"
         if not config_path.exists():
             raise FileNotFoundError(f"No file or directory at {config_path}")
-        with config_path.open(encoding="utf-8") as conf_file:
-            return json.load(conf_file)
+        try:
+            with config_path.open(encoding="utf-8") as conf_file:
+                return json.load(conf_file)
+        except json.JSONDecodeError:
+            logger.error("The provided config_file could not be loaded as Json", group=PREDICTOR)

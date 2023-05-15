@@ -4,6 +4,7 @@ from typing import Callable, List, Union
 import timeit
 
 import torch
+from tqdm import tqdm
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
@@ -11,6 +12,7 @@ from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.evaluator.plotting import (plot_trajectory_prediction,
                                           plot_multiple_predictors,
                                           plot_multiple_future)
+from prescyent.utils.logger import logger, EVAL
 from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
 
@@ -97,9 +99,11 @@ def eval_predictors(predictors: List[Callable], trajectories: List[Trajectory],
     """
     # TODO: reject impossible values for history_size and future_size
     evaluation_results = [EvaluationSummary() for _ in predictors]
-    for t, trajectory in enumerate(trajectories):
+    logger.info(f"Running evaluation for {len(predictors)} predictors"
+                f" on {len(trajectories)} trajectories", group=EVAL)
+    for t, trajectory in tqdm(enumerate(trajectories), desc="Trajectory n°"):
         predictions = []
-        for p, predictor in enumerate(predictors):
+        for p, predictor in tqdm(enumerate(predictors), desc="Predictor n°"):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
             prediction = run_predictor(predictor, trajectory.tensor,

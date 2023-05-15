@@ -1,7 +1,8 @@
 """Common config elements for Pytorch Lightning training usage"""
+import random
 from typing import Union
 
-from pydantic import root_validator
+from pydantic import root_validator, validator
 
 from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
 
@@ -13,7 +14,7 @@ class TrainingConfig(OptimizerConfig):
     accelerator: str = "auto"
     devices: Union[str, int] = "auto"
     accumulate_grad_batches: int = 1
-    seed: Union[None, int] = 5
+    seed: Union[None, int] = None
     log_every_n_steps: int = 1
     use_auto_lr: bool = False
     use_deterministic_algorithms: bool = True
@@ -25,3 +26,8 @@ class TrainingConfig(OptimizerConfig):
             raise ValueError('Please set at least one positive limit for the training: '
                              '("max_steps" > 0 or "epoch" > 0)')
         return values
+
+    @validator('seed', pre=True, always=True)
+    def generate_random_seed_if_none(cls, v):
+        if v is None:
+            return random.randint(1, 10**9)

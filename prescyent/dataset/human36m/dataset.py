@@ -71,12 +71,14 @@ POINT_LABELS = ["torso_0", "torso_1",
 class Dataset(MotionDataset):
     """Class for data loading et preparation before the MotionDataset sampling
     """
+    DATASET_NAME = "H36M"
+
     def __init__(self, config: Union[Dict, DatasetConfig] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__()
+        super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):

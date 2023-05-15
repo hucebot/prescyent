@@ -16,7 +16,7 @@ class BaseTorchModule(torch.nn.Module):
         self.num_points = config.dict().get("num_points", None)
         self.dropout_value = config.dict().get("dropout_value", None)
         self.num_dims = config.dict().get("num_dims", None)
-        if self.dropout_value is not None and self.dropout_value >= 0:
+        if self.dropout_value is not None and self.dropout_value > 0:
             self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.used_norm is not None:
             self.norm = MotionLayerNorm(config)
@@ -37,7 +37,7 @@ class BaseTorchModule(torch.nn.Module):
                 input_tensor = input_tensor - seq_last
             if self.used_norm:
                 input_tensor = self.norm(input_tensor)
-            if self.dropout_value is not None and self.dropout_value >= 0:
+            if self.dropout_value is not None and self.dropout_value > 0:
                 input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
             if self.norm_on_last_input:

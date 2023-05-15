@@ -7,7 +7,8 @@ class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
     input_size: int
     output_size: int
-    hidden_size : List[int] = [64, 64]
+    hidden_size : int = 64
+    num_layers: int = 2
     activation: str = "ReLu"
     # we could add :
     # lipchiz normalisation

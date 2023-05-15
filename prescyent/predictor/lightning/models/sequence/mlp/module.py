@@ -25,12 +25,12 @@ class TorchModule(BaseTorchModule):
             act_fun = None
 
         # create the layers
-        layers = [nn.Linear(config.input_size, config.hidden_size[0])]
+        layers = [nn.Linear(config.input_size, config.hidden_size)]
         layers += [act_fun()]
-        for i in range(0, len(config.hidden_size) - 1):
-            layers += [nn.Linear(config.hidden_size[i], config.hidden_size[i + 1])]
+        for i in range(0, config.num_layers - 1):
+            layers += [nn.Linear(config.hidden_size, config.hidden_size)]
             layers += [act_fun()]
-        layers += [nn.Linear(config.hidden_size[-1], config.output_size)]
+        layers += [nn.Linear(config.hidden_size, config.output_size)]
         self.layers = nn.Sequential(*layers)
 
     @BaseTorchModule.allow_unbatched

@@ -25,10 +25,11 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self) -> None:
+    def __init__(self, name:str) -> None:
         logger.debug("Tensor pairs will be generated for a %s learning type",
                      self.config.learning_type,
                      group=DATASET)
+        self.name = name
         self.train_datasample = MotionDataSamples(self.trajectories.train,
                                                   history_size=self.history_size,
                                                   future_size=self.future_size,
@@ -44,6 +45,9 @@ class MotionDataset(Dataset):
                                                 future_size=self.future_size,
                                                 sampling_type=self.config.learning_type)
         logger.info("Val dataset has a size of %d", len(self.val_datasample))
+
+    def __getitem__(self, index):
+        return self.trajectories[index]
 
     def __len__(self):
         return len(self.trajectories)
@@ -115,9 +119,11 @@ class MotionDataset(Dataset):
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("Saving config to %s", save_path, group=DATASET)
+        config_dict = self.config.dict(exclude_defaults=True)
+        config_dict["name"] = self.name
         with save_path.open('w', encoding="utf-8") as conf_file:
-            logger.debug(self.config.dict(), group=DATASET)
-            json.dump(self.config.dict(), conf_file, indent=4, sort_keys=True)
+            logger.debug(config_dict, group=DATASET)
+            json.dump(config_dict, conf_file, indent=4, sort_keys=True)
 
     def _download_files(self, url, path):
         """get the dataset files from an url"""

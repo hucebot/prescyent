@@ -51,3 +51,6 @@ class Trajectories():
 
     def __len__(self):
         return self._all_len()
+
+    def __getitem__(self, index):
+        return self.train[index]
