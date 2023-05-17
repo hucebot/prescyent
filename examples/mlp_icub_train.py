@@ -34,8 +34,6 @@ if __name__ == "__main__":
     training_config = TrainingConfig(epoch=100, devices=1, use_auto_lr=True)
     predictor.train(dataset.train_dataloader, training_config,
                     dataset.val_dataloader)
-    # Test so that we know how good we are
-    predictor.test(dataset.test_dataloader)
 
     # Save the predictor
     model_dir = f"data/models/teleopicub/all/{predictor.name}/version_{predictor.version}"
@@ -43,3 +41,6 @@ if __name__ == "__main__":
     predictor.save(model_dir)
     # We save also the config so that we can load it later if needed
     dataset.save_config(model_dir + '/dataset.config')
+
+    # Test so that we know how good we are
+    predictor.test(dataset.test_dataloader)

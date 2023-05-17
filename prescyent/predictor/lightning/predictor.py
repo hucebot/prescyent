@@ -46,7 +46,7 @@ class LightningPredictor(BasePredictor):
             self.model = self._load_from_path(model_path)
             super().__init__(log_root_path, name, version, no_sub_dir_log=True)
         elif config is not None:
-            version = None
+            version = config.get("version", None)
             self.model = self._build_from_config(config)
             log_root_path = self.config.model_path
             super().__init__(log_root_path, name, version)
@@ -222,32 +222,27 @@ class LightningPredictor(BasePredictor):
 
     def save(self, save_path: Union[str, Path] = None):
         """save model to path"""
+        save_path = str(save_path)
         if save_path is None:
             save_path = self.log_path
         else:  # we cp the tensorflow logger content first
-            try:
-                shutil.copytree(self.log_path, save_path)
-            except FileExistsError:
-                while True:
-                    force_copy = input(f"Dir already exist at {save_path}, "
-                                       "do you want to force copy ? y/N")
-                    if force_copy == "" or force_copy.upper() == "N":
-                        logger.warning("Predictor wasn't saved",
-                                       group=PREDICTOR)
-                        return
-                    elif force_copy.upper() == "Y":
-                        shutil.copytree(self.log_path, save_path, dirs_exist_ok=True)
-                        break
-                    logger.warning("Your input is invalid, we expect 'y' or 'n'",
-                                   group=PREDICTOR)
+            while True:
+                try:
+                    shutil.copytree(self.log_path, save_path)
+                    break
+                except FileExistsError:
+                    save_path += "_"
         if isinstance(save_path, str):
             save_path = Path(save_path)
+        # save model & config
         save_path.mkdir(parents=True, exist_ok=True)
         logger.info("Saving model at %s", save_path, group=PREDICTOR)
         self.model.save(save_path)
-
         logger.info("Saving config at %s", (save_path / "config.json"), group=PREDICTOR)
         self._save_config(save_path / "config.json")
+        # reload logger at new location
+        self.log_root_path = save_path
+        super()._init_logger(no_sub_dir_log=True)
 
     def predict(self, input_t: torch.Tensor, future_size: int):
         with torch.no_grad():

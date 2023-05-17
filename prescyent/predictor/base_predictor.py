@@ -30,8 +30,6 @@ class BasePredictor():
         if name is None:
             name = self.__class__.__name__
         self.name = name
-        if version is None:
-            version = random.randint(1, 10**9)
         self.version = version
         self._init_logger(no_sub_dir_log)
 

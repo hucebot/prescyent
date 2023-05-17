@@ -41,6 +41,14 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
     predictor.train(dataset.train_dataloader, training_config,
                     dataset.val_dataloader)
 
+    # Save the predictor, and configs
+    model_dir = Path(f"data/models/exp/{predictor.name}/version_{predictor.version}_k2so")
+    print("model directory:", model_dir)
+    predictor.save(model_dir)
+    dataset.save_config(model_dir / 'dataset_config.json')
+    if rm_config:
+        os.remove(str(config_path))
+
     # Test so that we know how good we are
     print("Testing...")
     predictor.test(dataset.test_dataloader)
@@ -53,14 +61,6 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
         except RuntimeError as e:
             print(e)
             print("Aborting SiMLPe benchmark")
-
-    # Save the predictor, and configs
-    model_dir = Path(f"data/models/exp/{predictor.name}/version_{predictor.version}_k2so")
-    print("model directory:", model_dir)
-    predictor.save(model_dir)
-    dataset.save_config(model_dir / 'dataset_config.json')
-    if rm_config:
-        os.remove(str(config_path))
 
 
 if __name__ == "__main__":
