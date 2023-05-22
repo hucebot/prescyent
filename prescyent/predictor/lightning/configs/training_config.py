@@ -18,6 +18,9 @@ class TrainingConfig(OptimizerConfig):
     log_every_n_steps: int = 1
     use_auto_lr: bool = False
     use_deterministic_algorithms: bool = True
+    early_stopping_value: str = "Val/MPJPE"
+    early_stopping_patience: Union[None, int] = None
+    early_stopping_mode: str = "min"
 
     @root_validator
     def training_has_at_least_one_positive_limit(cls, values):

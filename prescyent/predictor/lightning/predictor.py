@@ -13,7 +13,7 @@ import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.tuner import Tuner
 from pytorch_lightning.profilers import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
-from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor, EarlyStopping
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
@@ -121,6 +121,11 @@ class LightningPredictor(BasePredictor):
         if devices is not None:
             kwargs["devices"] = devices
         callbacks, profiler = self._init_profilers(callbacks)
+        if self.training_config.early_stopping_patience:
+            early_stopping = EarlyStopping(monitor=self.training_config.early_stopping_value,
+                                           patience=self.training_config.early_stopping_patience,
+                                           mode=self.training_config.early_stopping_mode,)
+            callbacks.append(early_stopping)
         if self.training_config.seed is not None:
             pl.seed_everything(self.training_config.seed, workers=True)
         if self.training_config.use_deterministic_algorithms:
