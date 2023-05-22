@@ -46,8 +46,8 @@ class LightningPredictor(BasePredictor):
             self.model = self._load_from_path(model_path)
             super().__init__(log_root_path, name, version, no_sub_dir_log=True)
         elif config is not None:
-            version = config.get("version", None)
             self.model = self._build_from_config(config)
+            version = self.config.version
             log_root_path = self.config.model_path
             super().__init__(log_root_path, name, version)
         else:

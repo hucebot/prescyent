@@ -9,6 +9,7 @@ from prescyent.utils.enums import Profilers
 
 class ModuleConfig(BaseModel):
     """Pydantic Basemodel for Seq2Seq Module configuration"""
+    version: Union[None, int] = None
     input_size: Optional[int]
     output_size: Optional[int]
     num_dims: Optional[int]
@@ -18,8 +19,8 @@ class ModuleConfig(BaseModel):
     norm_on_last_input: bool = False
     used_norm: Union[None, Normalizations] = None
     loss_fn: LossFunctions = "mpjpeloss"
-    used_profiler: Union[None, Profilers] = None
     do_lipschitz_continuation: bool = False
+    used_profiler: Union[None, Profilers] = None
 
     @root_validator
     def check_norms_have_requirements(cls, values):
