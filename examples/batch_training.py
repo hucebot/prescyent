@@ -27,22 +27,26 @@ VARIATIONS = {
     "model_config.output_size": [10],
     "model_config.feature_size": [66],
     # "model_config.name": ["MlpPredictor", "Seq2SeqPredictor", "LinearPredictor"],
-    "model_config.name": ["MlpPredictor"],
-    "model_config.hidden_size": [64, 128, 256, 512, 1024],
-    "model_config.num_layers": [2, 3, 4],
+    "model_config.name": ["siMLPe"],
+    "model_config.hidden_size": [64, 128, 256],
+    "model_config.spatial_fc_only": [True, False],
+    "model_config.norm_axis": ["spatial", "temporal", "all"],
+    "model_config.dct" : [True, False],
+    "model_config.num_layers": [12, 48, 96],
     "model_config.dropout_value": [0, 0.1, 0.25],
-    "model_config.norm_on_last_input" : [False, True],
-    "model_config.do_lipschitz_continuation" : [False, True],
+    # "model_config.norm_on_last_input" : [False, True],
+    # "model_config.do_lipschitz_continuation" : [False, True],
 # TRAINING
     "training_config.epoch": [100],
     "training_config.devices": [1],
     # "training_config.accelerator": ["cpu"],
+    "training_config.early_stopping_patience": [5],
     "training_config.use_auto_lr": [True],
 # DATASET
     "dataset_config.name": ["H36M"],
-    "dataset_config.batch_size": [2048],
+    "dataset_config.batch_size": [256],
     "dataset_config.num_workers": [2],
-    "dataset_config.pin_workers": [True]
+    "dataset_config.persistent_workers": [True]
 }
 
 
@@ -67,6 +71,7 @@ if __name__ == "__main__":
         config_dict = json.load(open(config_paths[0], encoding="utf-8"))
     # generate config variations and write them
     else:
+        config_paths = []
         combinations = [p for p in itertools.product(*list(VARIATIONS.values()))]
         config_datas = [{list(VARIATIONS.keys())[i]: value for i, value in enumerate(combination)} for combination in combinations]
         print(f"Generated {len(combinations)} different training configs")

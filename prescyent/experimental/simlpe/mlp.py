@@ -114,12 +114,12 @@ class TransMLP(nn.Module):
 
 def build_mlps(config):
     return TransMLP(
-        dim=config.feature_size,
+        dim=config.hidden_size,
         seq=config.input_size,
-        use_norm=config.motion_mlp.with_normalization,
-        use_spatial_fc=config.motion_mlp.spatial_fc_only,
-        num_layers=config.motion_mlp.num_layers,
-        layernorm_axis=config.motion_mlp.norm_axis,
+        use_norm=config.with_normalization,
+        use_spatial_fc=config.spatial_fc_only,
+        num_layers=config.num_layers,
+        layernorm_axis=config.norm_axis,
     )
 
 
