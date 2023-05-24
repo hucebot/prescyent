@@ -1,7 +1,7 @@
 {
     "model_config": {
         "name": "LinearPredictor",
-        "input_size": 50,
+        "input_size": 10,
         "output_size": 10
     },
     "training_config": {
@@ -12,9 +12,9 @@
         "use_deterministic_algorithms": false
     },
     "dataset_config": {
-        "name": "H36M",
-        "batch_size": 256,
+        "name": "TeleopIcub",
+        "batch_size": 128,
         "future_size": 10,
-        "history_size": 50
+        "history_size": 10
     }
 }
