@@ -3,6 +3,7 @@ import json
 from argparse import ArgumentParser
 import os
 from pathlib import Path
+import socket
 
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
@@ -42,7 +43,7 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
                     dataset.val_dataloader)
 
     # Save the predictor, and configs
-    model_dir = Path(f"data/models/exp/{predictor.name}/version_{predictor.version}_k2so")
+    model_dir = Path(f"data/models/exp/{predictor.name}/version_{predictor.version}_{socket.gethostname()}")
     print("model directory:", model_dir)
     predictor.save(model_dir)
     dataset.save_config(model_dir / 'dataset_config.json')
@@ -65,11 +66,11 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    default_config = Path("examples") / "configs" / "mlp_h36m.json"
+    default_config = Path("examples") / "configs" / "linear_teleop.json"
     parser.add_argument("--config_path", type=str, default=str(default_config),
-                        help="path to the config file used to build model and dataset")
+                        help="path to the config file used to build model and dataset. Default if linear_teleop.json as an example")
     parser.add_argument("--rm_config", action="store_true", default=False,
-                        help="path to the config file used to build model and dataset")
+                        help="If provided, the config file will be removed after training. Default is False")
 
     args = parser.parse_args()
     config_path = Path(args.config_path)
