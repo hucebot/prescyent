@@ -34,17 +34,20 @@ class MotionDataset(Dataset):
                                                   history_size=self.history_size,
                                                   future_size=self.future_size,
                                                   sampling_type=self.config.learning_type)
-        logger.info("Train dataset has a size of %d", len(self.train_datasample))
+        logger.info("Train dataset has a size of %d", len(self.train_datasample),
+                    group=DATASET)
         self.test_datasample = MotionDataSamples(self.trajectories.test,
                                                  history_size=self.history_size,
                                                  future_size=self.future_size,
                                                  sampling_type=self.config.learning_type)
-        logger.info("Test dataset has a size of %d", len(self.test_datasample))
+        logger.info("Test dataset has a size of %d", len(self.test_datasample),
+                    group=DATASET)
         self.val_datasample = MotionDataSamples(self.trajectories.val,
                                                 history_size=self.history_size,
                                                 future_size=self.future_size,
                                                 sampling_type=self.config.learning_type)
-        logger.info("Val dataset has a size of %d", len(self.val_datasample))
+        logger.info("Val dataset has a size of %d", len(self.val_datasample),
+                    group=DATASET)
 
     def __getitem__(self, index):
         return self.trajectories[index]
