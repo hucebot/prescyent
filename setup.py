@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from prescyent import __version__
 
 CORE_REQUIREMENTS = [
+        "easydict",
         "matplotlib",
         "numpy",
         "pydantic",
@@ -43,5 +44,4 @@ setup(
     ],
     packages=find_packages(include=CORE_MODULES),
     include_package_data=True,
-    install_requires=CORE_REQUIREMENTS
 )
