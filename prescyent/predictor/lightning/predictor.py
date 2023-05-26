@@ -132,6 +132,7 @@ class LightningPredictor(BasePredictor):
             torch.use_deterministic_algorithms(True)
             os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG",":4096:8")
             kwargs["deterministic"] = True
+        torch.set_float32_matmul_precision('high')
         self.trainer = pl.Trainer(logger=self.tb_logger,
                                   max_epochs=self.training_config.epoch,
                                   callbacks=callbacks,
