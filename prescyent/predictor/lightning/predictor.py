@@ -164,9 +164,9 @@ class LightningPredictor(BasePredictor):
     def _save_config(self, save_path: Path):
         res = dict()
         if self.training_config is not None :
-            res["training_config"] = self.training_config.dict(exclude_defaults=True)
+            res["training_config"] = self.training_config.dict(exclude_defaults=False)
         if self.config is not None :
-            res["model_config"] = self.config.dict(exclude_defaults=True)
+            res["model_config"] = self.config.dict(exclude_defaults=False)
         res["model_config"]["name"] = self.name
         res["model_config"]["version"] = self.version
         with (save_path).open('w', encoding="utf-8") as conf_file:
