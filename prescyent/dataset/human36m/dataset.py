@@ -121,8 +121,9 @@ def pathfiles_to_trajectories(files: List,
     :rtype: list
     """
     trajectory_arrray = list()
-    for file in files:
-        expmap = file.open().readlines()
+    for file_path in files:
+        with file_path.open() as file:
+            expmap = file.readlines()
         pose_info = []
         for line in expmap:
             line = line.strip().split(delimiter)
@@ -136,6 +137,6 @@ def pathfiles_to_trajectories(files: List,
         pose_info = expmap2rotmat_torch(torch.from_numpy(pose_info).float()).reshape(T, 32, 3, 3)
         xyz_info = rotmat2xyz_torch(pose_info)
         xyz_info = xyz_info[::subsampling_step, used_joints, :] / 1000  # meter conversion
-        trajectory = Trajectory(xyz_info, file, [POINT_LABELS[i] for i in used_joints])
+        trajectory = Trajectory(xyz_info, file_path, [POINT_LABELS[i] for i in used_joints])
         trajectory_arrray.append(trajectory)
     return trajectory_arrray

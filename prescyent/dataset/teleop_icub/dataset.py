@@ -100,7 +100,7 @@ def pathfiles_to_trajectories(files: List,
         file_sequence = file_sequence[start:end:subsampling_step]
         # add waist x and waist y
         tensor = torch.FloatTensor(
-            [np.concatenate((np.zeros(2), file_timestep)) for file_timestep in file_sequence]
+            np.array([np.concatenate((np.zeros(2), file_timestep)) for file_timestep in file_sequence])
         )
         # reshape (seq_len, 9) => (seq_len, 3, 3)
         seq_len = tensor.shape[0]
