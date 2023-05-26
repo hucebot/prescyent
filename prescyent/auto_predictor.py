@@ -20,6 +20,8 @@ class AutoPredictor():
                 config = config.dict()
             config_path = config.get("model_path", None)
         predictor_class_name = config.get("name", None)
+        if predictor_class_name is None:
+            predictor_class_name = config.get("model_config", {}).get("name")
         predictor_class = PREDICTOR_MAP.get(predictor_class_name, None)
         if predictor_class is None:
             logger.error("Could not find a predictor class matching %s",
@@ -38,6 +40,8 @@ class AutoPredictor():
         if isinstance(config, ModuleConfig):
             config = config.dict()
         predictor_class_name = config.get("name", None)
+        if predictor_class_name is None:
+            predictor_class_name = config.get("model_config", {}).get("name")
         predictor_class = PREDICTOR_MAP.get(predictor_class_name, None)
         if predictor_class is None:
             logger.error("Could not find a predictor class matching %s",
