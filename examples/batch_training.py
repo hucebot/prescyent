@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # retreive config variations with glob
     if args.config_folder:
-        config_paths = [Path(p) for p in glob.glob(os.path.join(args.config_folder, "*.json"))]
+        config_paths = sorted([Path(p) for p in glob.glob(os.path.join(args.config_folder, "*.json"))])
         print(f"Found {len(config_paths)} different training configs")
         if len(config_paths) < 1:
             print("Please provide a folder with compatible config files")

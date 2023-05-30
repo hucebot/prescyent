@@ -14,6 +14,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.tuner import Tuner
 from pytorch_lightning.profilers import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
 from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor, EarlyStopping
+from torch.utils.data import DataLoader
+
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
@@ -205,6 +207,7 @@ class LightningPredictor(BasePredictor):
             self.tb_logger.experiment.add_figure("lr_finder", fig)
             self.model.hparams.lr = lr_finder.suggestion()
             self.training_config.lr = lr_finder.suggestion()
+        # Add hyperparams to Tensorboard and init HP Metrics
         self.tb_logger.log_hyperparams({**self.model.hparams,
                                         **self.training_config.dict(),
                                         **self.config.dict()},
@@ -214,6 +217,7 @@ class LightningPredictor(BasePredictor):
         self.trainer.fit(model=self.model,
                          train_dataloaders=train_dataloader,
                          val_dataloaders=val_dataloader)
+        # Always save after training
         self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
         self._free_trainer()
 
