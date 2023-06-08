@@ -11,7 +11,11 @@ COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
 
 COPY prescyent prescyent
+COPY README.md README.md
+COPY setup.py setup.py
 COPY tests tests
 COPY examples examples
 
-CMD ["python3", "-m" , "unittest"]
+RUN python3 -m pip install -e .
+
+CMD ["python3", "examples/api/run_api.py"]
