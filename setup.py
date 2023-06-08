@@ -3,12 +3,14 @@ from prescyent import __version__
 
 CORE_REQUIREMENTS = [
         "easydict",
+        "fastapi",
         "matplotlib",
         "numpy",
         "pydantic",
         "pytorch_lightning>=2.0.0",
         "tensorboard",
         "torch",
+        "uvicorn"
 ]
 
 CORE_MODULES = ['prescyent.',

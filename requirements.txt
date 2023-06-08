@@ -1,7 +1,9 @@
 easydict
+fastapi
 matplotlib
 numpy
 pydantic
 pytorch_lightning>=2.0.0
 tensorboard
 torch
+uvicorn

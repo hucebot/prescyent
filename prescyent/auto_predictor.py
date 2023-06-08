@@ -24,30 +24,30 @@ class AutoPredictor():
     @classmethod
     def preprocess_config_attribute(cls, config):
         if isinstance(config, (str, Path)):
-            return cls._get_config_from_path(Path(config))
+            return cls._get_config_from_path(Path(config)), config
         if isinstance(config, ModuleConfig):
-            return config.dict()
+            return config.dict(), None
 
     @classmethod
     def load_config(cls, path):
-        config = cls.preprocess_config_attribute(path)
+        config, config_path = cls.preprocess_config_attribute(path)
         predictor_class = get_predictor_infos(config)
         return predictor_class.config_class(**config.get("model_config", {}))
 
     @classmethod
     def load_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
-        config = cls.preprocess_config_attribute(config)
-        config_path = config.get("model_path", None)
+        config, config_path = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         if config_path is None:
             logger.error("Missing model path info")
+            logger.error(config)
         logger.info("Loading %s from %s", predictor_class.PREDICTOR_NAME, config_path,
                     group=PREDICTOR)
         return predictor_class(model_path=config_path)
 
     @classmethod
     def build_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
-        config = cls.preprocess_config_attribute(config)
+        config, config_path = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         logger.info("Building new %s", predictor_class.PREDICTOR_NAME,
                     group=PREDICTOR)
