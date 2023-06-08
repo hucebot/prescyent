@@ -15,6 +15,7 @@ from prescyent.utils.logger import logger, DATASET
 
 class MotionDataset(Dataset):
     """Base classe for all motion datasets"""
+
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
     batch_size: int
@@ -25,29 +26,40 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, name:str) -> None:
-        logger.debug("Tensor pairs will be generated for a %s learning type",
-                     self.config.learning_type,
-                     group=DATASET)
+    def __init__(self, name: str) -> None:
+        logger.debug(
+            "Tensor pairs will be generated for a %s learning type",
+            self.config.learning_type,
+            group=DATASET,
+        )
         self.name = name
-        self.train_datasample = MotionDataSamples(self.trajectories.train,
-                                                  history_size=self.history_size,
-                                                  future_size=self.future_size,
-                                                  sampling_type=self.config.learning_type)
-        logger.info("Train dataset has a size of %d", len(self.train_datasample),
-                    group=DATASET)
-        self.test_datasample = MotionDataSamples(self.trajectories.test,
-                                                 history_size=self.history_size,
-                                                 future_size=self.future_size,
-                                                 sampling_type=self.config.learning_type)
-        logger.info("Test dataset has a size of %d", len(self.test_datasample),
-                    group=DATASET)
-        self.val_datasample = MotionDataSamples(self.trajectories.val,
-                                                history_size=self.history_size,
-                                                future_size=self.future_size,
-                                                sampling_type=self.config.learning_type)
-        logger.info("Val dataset has a size of %d", len(self.val_datasample),
-                    group=DATASET)
+        self.train_datasample = MotionDataSamples(
+            self.trajectories.train,
+            history_size=self.history_size,
+            future_size=self.future_size,
+            sampling_type=self.config.learning_type,
+        )
+        logger.info(
+            "Train dataset has a size of %d", len(self.train_datasample), group=DATASET
+        )
+        self.test_datasample = MotionDataSamples(
+            self.trajectories.test,
+            history_size=self.history_size,
+            future_size=self.future_size,
+            sampling_type=self.config.learning_type,
+        )
+        logger.info(
+            "Test dataset has a size of %d", len(self.test_datasample), group=DATASET
+        )
+        self.val_datasample = MotionDataSamples(
+            self.trajectories.val,
+            history_size=self.history_size,
+            future_size=self.future_size,
+            sampling_type=self.config.learning_type,
+        )
+        logger.info(
+            "Val dataset has a size of %d", len(self.val_datasample), group=DATASET
+        )
 
     def __getitem__(self, index):
         return self.trajectories[index]
@@ -57,26 +69,39 @@ class MotionDataset(Dataset):
 
     @property
     def train_dataloader(self):
-        return DataLoader(self.train_datasample, batch_size=self.batch_size,
-                          shuffle=True, num_workers=self.config.num_workers,
-                          pin_memory=self.config.pin_memory,
-                          drop_last=self.config.drop_last,
-                          persistent_workers=self.config.persistent_workers)
+        return DataLoader(
+            self.train_datasample,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory,
+            drop_last=self.config.drop_last,
+            persistent_workers=self.config.persistent_workers,
+        )
 
     @property
     def test_dataloader(self):
-        return DataLoader(self.test_datasample, batch_size=self.batch_size,
-                          shuffle=False, num_workers=1,
-                          pin_memory=self.config.pin_memory,
-                          drop_last=False, persistent_workers=False)
+        return DataLoader(
+            self.test_datasample,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=1,
+            pin_memory=self.config.pin_memory,
+            drop_last=False,
+            persistent_workers=False,
+        )
 
     @property
     def val_dataloader(self):
-        return DataLoader(self.val_datasample, batch_size=self.batch_size,
-                          shuffle=False, num_workers=self.config.num_workers,
-                          pin_memory=self.config.pin_memory,
-                          drop_last=False,
-                          persistent_workers=self.config.persistent_workers)
+        return DataLoader(
+            self.val_datasample,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory,
+            drop_last=False,
+            persistent_workers=self.config.persistent_workers,
+        )
 
     @property
     def num_points(self):
@@ -90,9 +115,11 @@ class MotionDataset(Dataset):
     def feature_size(self):
         return self.num_dims * self.num_points
 
-    def _init_from_config(self,
-                          config: Union[Dict, None, str, Path, MotionDatasetConfig],
-                          config_class: Type[MotionDatasetConfig]):
+    def _init_from_config(
+        self,
+        config: Union[Dict, None, str, Path, MotionDatasetConfig],
+        config_class: Type[MotionDatasetConfig],
+    ):
         self.config_class = config_class
         if isinstance(config, dict):  # use pydantic for dict verification
             config = config_class(**config)
@@ -102,7 +129,7 @@ class MotionDataset(Dataset):
         elif isinstance(config, str):  # load from a string
             config = Path(config)
         config = self._load_config(config)
-        assert isinstance(config, config_class)   # check our config type
+        assert isinstance(config, config_class)  # check our config type
         self.config = config
         self.history_size = config.history_size
         self.future_size = config.future_size
@@ -124,26 +151,25 @@ class MotionDataset(Dataset):
         logger.info("Saving config to %s", save_path, group=DATASET)
         config_dict = self.config.dict(exclude_defaults=True)
         config_dict["name"] = self.name
-        with save_path.open('w', encoding="utf-8") as conf_file:
+        with save_path.open("w", encoding="utf-8") as conf_file:
             logger.debug(config_dict, group=DATASET)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)
 
     def _download_files(self, url, path):
         """get the dataset files from an url"""
-        logger.info("Downloading data from %s", url,
-                    group=DATASET)
+        logger.info("Downloading data from %s", url, group=DATASET)
         data = requests.get(url, timeout=10)
         path = Path(path)
         if path.is_dir():
             path = path / "downloaded_data.zip"
         path.parent.mkdir(parents=True, exist_ok=True)
-        logger.info("Saving data to %s", path,
-                    group=DATASET)
+        logger.info("Saving data to %s", path, group=DATASET)
         with path.open("wb") as pfile:
             pfile.write(data.content)
 
     def _unzip(self, zip_path: str):
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(zip_path.replace(".zip", ""))
-        logger.info("Archive unziped at %s", zip_path.replace(".zip", ""),
-                    group=DATASET)
+        logger.info(
+            "Archive unziped at %s", zip_path.replace(".zip", ""), group=DATASET
+        )

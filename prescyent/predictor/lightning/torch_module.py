@@ -7,6 +7,7 @@ from prescyent.predictor.lightning.layers.standard_scaler import MotionLayerNorm
 
 class BaseTorchModule(torch.nn.Module):
     """Common methods for any torch module to be a lightning predictor"""
+
     def __init__(self, config) -> None:
         super().__init__()
         self.norm_on_last_input = config.norm_on_last_input
@@ -28,6 +29,7 @@ class BaseTorchModule(torch.nn.Module):
     @classmethod
     def normalize_tensor(cls, function):
         """decorator for normalization of the input tensor before forward method"""
+
         @functools.wraps(function)
         def normalize(*args, **kwargs):
             self = args[0]
@@ -43,11 +45,13 @@ class BaseTorchModule(torch.nn.Module):
             if self.norm_on_last_input:
                 predictions = predictions + seq_last
             return predictions
+
         return normalize
 
     @classmethod
     def allow_unbatched(cls, function):
         """decorator for seemless batched/unbatched forward methods"""
+
         @functools.wraps(function)
         def reshape(*args, **kwargs):
             self = args[0]
@@ -59,4 +63,5 @@ class BaseTorchModule(torch.nn.Module):
             if unbatched:
                 predictions = torch.squeeze(predictions, dim=0)
             return predictions
+
         return reshape

@@ -20,8 +20,7 @@ def cat_list_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
     # list[Tensor(future_size, feature_size)] of len == pred_len
     #   -> Tensor(pred_len, feature_size)
     return torch.cat(
-        [preds[0][:flatt_idx]] + [pred[flatt_idx].unsqueeze(0) for pred in preds],
-        dim=0
+        [preds[0][:flatt_idx]] + [pred[flatt_idx].unsqueeze(0) for pred in preds], dim=0
     )
 
 

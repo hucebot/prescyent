@@ -17,7 +17,7 @@ if __name__ == "__main__":
     input, truth = dataset.test_datasample[0]
     prediction = client.get_prediction(input, future_size=10)
     print(f"MPJPE of returned prediction: {get_mpjpe(truth=truth, pred=prediction)}")
-    client.update_predictor(args.model_path)
+    print(client.update_predictor(args.model_path))
     print(f"Updated predictor to {args.model_path}")
     prediction = client.get_prediction(input, future_size=10)
     print(f"MPJPE of returned prediction: {get_mpjpe(truth=truth, pred=prediction)}")

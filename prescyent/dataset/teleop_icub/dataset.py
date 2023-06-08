@@ -14,10 +14,17 @@ from prescyent.utils.dataset_manipulation import split_array_with_ratios
 from prescyent.dataset.teleop_icub.config import DatasetConfig
 
 
-FILE_LABELS = ["waist_z",
-               "right_hand_x", "right_hand_y", "right_hand_z",
-               "left_hand_x", "left_hand_y", "left_hand_z"]
+FILE_LABELS = [
+    "waist_z",
+    "right_hand_x",
+    "right_hand_y",
+    "right_hand_z",
+    "left_hand_x",
+    "left_hand_y",
+    "left_hand_z",
+]
 POINT_LABELS = ["waist", "right_hand", "left_hand"]
+
 
 class Dataset(MotionDataset):
     """TODO: present the dataset here
@@ -26,6 +33,7 @@ class Dataset(MotionDataset):
     Dataset is not splitted into test / train / val
     It as to be at initialisation, through the parameters
     """
+
     DATASET_NAME = "TeleopIcub"
 
     def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
@@ -37,41 +45,55 @@ class Dataset(MotionDataset):
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):
-        logger.debug("Searching Dataset files from path %s", self.config.data_path, group=DATASET)
+        logger.debug(
+            "Searching Dataset files from path %s", self.config.data_path, group=DATASET
+        )
         files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
         if len(files) == 0:
-            logger.error("No files matching '%s' rule for this path %s",
-                         self.config.glob_dir, self.config.data_path,
-                         group=DATASET)
+            logger.error(
+                "No files matching '%s' rule for this path %s",
+                self.config.glob_dir,
+                self.config.data_path,
+                group=DATASET,
+            )
             raise FileNotFoundError(self.config.data_path)
-        train_files, test_files, val_files = split_array_with_ratios(files,
-                                                                     self.config.ratio_train,
-                                                                     self.config.ratio_test,
-                                                                     self.config.ratio_val,
-                                                                     shuffle=self.config.shuffle)
-        train = pathfiles_to_trajectories(train_files,
-                                          subsampling_step=self.config.subsampling_step,
-                                          used_joints=self.config.used_joints)
-        test = pathfiles_to_trajectories(test_files,
-                                         subsampling_step=self.config.subsampling_step,
-                                         used_joints=self.config.used_joints)
-        val = pathfiles_to_trajectories(val_files,
-                                        subsampling_step=self.config.subsampling_step,
-                                        used_joints=self.config.used_joints)
+        train_files, test_files, val_files = split_array_with_ratios(
+            files,
+            self.config.ratio_train,
+            self.config.ratio_test,
+            self.config.ratio_val,
+            shuffle=self.config.shuffle,
+        )
+        train = pathfiles_to_trajectories(
+            train_files,
+            subsampling_step=self.config.subsampling_step,
+            used_joints=self.config.used_joints,
+        )
+        test = pathfiles_to_trajectories(
+            test_files,
+            subsampling_step=self.config.subsampling_step,
+            used_joints=self.config.used_joints,
+        )
+        val = pathfiles_to_trajectories(
+            val_files,
+            subsampling_step=self.config.subsampling_step,
+            used_joints=self.config.used_joints,
+        )
         return Trajectories(train, test, val)
 
     def _get_from_web(self):
-        self._download_files(self.config.url,
-                             self.config.data_path + ".zip")
+        self._download_files(self.config.url, self.config.data_path + ".zip")
         self._unzip(self.config.data_path + ".zip")
 
 
-def pathfiles_to_trajectories(files: List,
-                              delimiter: str = ',',
-                              start: int = None,
-                              end: int = None,
-                              subsampling_step: int = 0,
-                              used_joints: List[int] = None) -> list:
+def pathfiles_to_trajectories(
+    files: List,
+    delimiter: str = ",",
+    start: int = None,
+    end: int = None,
+    subsampling_step: int = 0,
+    used_joints: List[int] = None,
+) -> list:
     """util method to turn a list of pathfiles to a list of their data
 
     :param files: list of files
@@ -91,8 +113,7 @@ def pathfiles_to_trajectories(files: List,
     trajectory_arrray = list()
     for file in files:
         if not file.exists():
-            logger.error("file does not exist: %s", file,
-                         group=DATASET)
+            logger.error("file does not exist: %s", file, group=DATASET)
             raise FileNotFoundError(file)
         file_sequence = np.loadtxt(file, delimiter=delimiter)
         if end is None:
@@ -100,7 +121,12 @@ def pathfiles_to_trajectories(files: List,
         file_sequence = file_sequence[start:end:subsampling_step]
         # add waist x and waist y
         tensor = torch.FloatTensor(
-            np.array([np.concatenate((np.zeros(2), file_timestep)) for file_timestep in file_sequence])
+            np.array(
+                [
+                    np.concatenate((np.zeros(2), file_timestep))
+                    for file_timestep in file_sequence
+                ]
+            )
         )
         # reshape (seq_len, 9) => (seq_len, 3, 3)
         seq_len = tensor.shape[0]
@@ -109,6 +135,7 @@ def pathfiles_to_trajectories(files: List,
         if used_joints is None:
             used_joints = list(range(len(POINT_LABELS)))
         tensor = tensor[:, used_joints]
-        trajectory_arrray.append(Trajectory(tensor, file,
-                                            [POINT_LABELS[i] for i in used_joints]))
+        trajectory_arrray.append(
+            Trajectory(tensor, file, [POINT_LABELS[i] for i in used_joints])
+        )
     return trajectory_arrray

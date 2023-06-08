@@ -2,10 +2,12 @@ import json
 import requests
 import torch
 
+
 class APIException(Exception):
     pass
 
-class PredictorClient():
+
+class PredictorClient:
     host: str
     port: int
 
@@ -24,14 +26,16 @@ class PredictorClient():
         except json.JSONDecodeError:
             content = str(response.text)
         if response.status_code != 200:
-            raise APIException(f"API returned status code {response.status_code} with: `{content}`")
+            raise APIException(
+                f"API returned status code {response.status_code} with: `{content}`"
+            )
         return content
 
-    def update_predictor(self, model_path):
+    def update_predictor(self, model_path: str) -> str:
         url = self.url + f"update_predictor?predictor_path={model_path}"
-        self._get(url)
+        return self._get(url)
 
-    def get_prediction(self, tensor, future_size):
+    def get_prediction(self, tensor: torch.Tensor, future_size: int) -> torch.Tensor:
         payload = tensor.tolist()
         url = self.url + f"?future={future_size}"
         return torch.tensor(self._get(url, payload))

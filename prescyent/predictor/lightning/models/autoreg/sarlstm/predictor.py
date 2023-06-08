@@ -7,6 +7,7 @@ from prescyent.predictor.lightning.models.autoreg.sarlstm.config import Config
 
 class Predictor(LightningPredictor):
     """Upper class to train and use a LSTM Model"""
+
     PREDICTOR_NAME = "SARLSTMPredictor"
     module_class = TorchModule
     config_class = Config

@@ -10,18 +10,19 @@ from prescyent.predictor.lightning.torch_module import BaseTorchModule
 
 class TorchModule(BaseTorchModule):
     """Simple Multi-Layer Perceptron with flatten input"""
+
     def __init__(self, config):
         super().__init__(config)
         self.input_size = config.input_size
         self.output_size = config.output_size
 
         # select the activation function
-        if config.activation == 'ReLu':
+        if config.activation == "ReLu":
             act_fun = nn.ReLU
-        elif config.activation == 'Sigmoid':
+        elif config.activation == "Sigmoid":
             act_fun = nn.Sigmoid
         else:
-            print('ERROR: no activation function:', config.activation)
+            print("ERROR: no activation function:", config.activation)
             act_fun = None
 
         # create the layers

@@ -11,6 +11,7 @@ from prescyent.predictor.lightning.torch_module import BaseTorchModule
 
 class TorchModule(BaseTorchModule):
     """Simple linear layer with flatten input and dimensions"""
+
     def __init__(self, config):
         super().__init__(config)
         self.input_size = config.input_size

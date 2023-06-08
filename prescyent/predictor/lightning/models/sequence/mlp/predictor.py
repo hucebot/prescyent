@@ -7,6 +7,7 @@ from prescyent.predictor.lightning.models.sequence.mlp.config import Config
 
 class Predictor(SequencePredictor):
     """Upper class to train and use a MLP Model"""
+
     PREDICTOR_NAME = "MlpPredictor"
     module_class = TorchModule
     config_class = Config

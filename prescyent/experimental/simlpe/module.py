@@ -12,6 +12,7 @@ from .mlp import build_mlps
 
 class TorchModule(BaseTorchModule):
     """siMLPe implementation"""
+
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -21,23 +22,35 @@ class TorchModule(BaseTorchModule):
         self.motion_mlp = build_mlps(self.config)
         if self.config.dct:
             dct_m, idct_m = get_dct_matrix(self.config.input_size)
-            self.register_buffer("dct_m",
-                                 torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0))
-            self.register_buffer("idct_m",
-                                 torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0))
+            self.register_buffer(
+                "dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0)
+            )
+            self.register_buffer(
+                "idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0)
+            )
         self.temporal_fc_in = config.temporal_fc_in
         self.temporal_fc_out = config.temporal_fc_out
         if self.temporal_fc_in:
-            self.motion_fc_in = nn.Linear(self.config.input_size, self.config.hidden_size)
+            self.motion_fc_in = nn.Linear(
+                self.config.input_size, self.config.hidden_size
+            )
         else:
-            self.motion_fc_in = nn.Linear(self.config.feature_size, self.config.hidden_size)
+            self.motion_fc_in = nn.Linear(
+                self.config.feature_size, self.config.hidden_size
+            )
         if self.temporal_fc_out:
-            self.motion_fc_out = nn.Linear(self.config.hidden_size, self.config.output_size)
+            self.motion_fc_out = nn.Linear(
+                self.config.hidden_size, self.config.output_size
+            )
         else:
             if self.output_size > self.input_size:
-                raise NotImplementedError("This model cannot output a sequence bigger than its"
-                                          " input without the temporal_fc_out configuration")
-            self.motion_fc_out = nn.Linear(self.config.hidden_size, self.config.feature_size)
+                raise NotImplementedError(
+                    "This model cannot output a sequence bigger than its"
+                    " input without the temporal_fc_out configuration"
+                )
+            self.motion_fc_out = nn.Linear(
+                self.config.hidden_size, self.config.feature_size
+            )
 
         self.reset_parameters()
 
@@ -50,7 +63,9 @@ class TorchModule(BaseTorchModule):
         T = input_tensor.shape
         input_tensor = input_tensor.reshape(T[0], T[1], -1)
         if self.config.dct:
-            input_tensor_ = torch.matmul(self.dct_m[:, :, :self.input_size], input_tensor)
+            input_tensor_ = torch.matmul(
+                self.dct_m[:, :, : self.input_size], input_tensor
+            )
         else:
             input_tensor_ = input_tensor.clone().to(input_tensor.device)
         if self.temporal_fc_in:
@@ -68,10 +83,12 @@ class TorchModule(BaseTorchModule):
             motion_feats = self.motion_fc_out(motion_feats)
 
         if self.config.dct:
-            motion_feats = torch.matmul(self.idct_m[:, :self.input_size, :], motion_feats)
+            motion_feats = torch.matmul(
+                self.idct_m[:, : self.input_size, :], motion_feats
+            )
             offset = input_tensor[:, -1:].to(motion_feats.device)
-            motion_feats = motion_feats[:, :self.output_size] + offset
-        motion_pred = motion_feats[:, :self.output_size]
+            motion_feats = motion_feats[:, : self.output_size] + offset
+        motion_pred = motion_feats[:, : self.output_size]
         motion_pred = motion_pred.reshape(T[0], self.output_size, T[2], T[3])
         return motion_pred
 

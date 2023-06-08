@@ -7,19 +7,23 @@ import torch
 from prescyent.utils.logger import logger, DATASET
 
 
-def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
-                            ratio3: float = None, shuffle: bool = True):
+def split_array_with_ratios(
+    array: List,
+    ratio1: float,
+    ratio2: float,
+    ratio3: float = None,
+    shuffle: bool = True,
+):
     if len(array) < 1:
         raise ValueError("Can't split an empty array")
     if not isinstance(array, np.ndarray):
         array = np.array(array)
 
     if shuffle:
-        np_rng = np.random.default_rng(2)   # have a deterministic shuffle for reruns
+        np_rng = np.random.default_rng(2)  # have a deterministic shuffle for reruns
         np_rng.shuffle(array)
     if len(array) < 2:
-        logger.warning("Only the first array could contain data",
-                       group=DATASET)
+        logger.warning("Only the first array could contain data", group=DATASET)
         return array, list(), list()
     if not ratio3:
         len1 = round(len(array) * ratio1)
@@ -28,8 +32,7 @@ def split_array_with_ratios(array: List, ratio1: float, ratio2: float,
         return array[:len1], array[len1:]
 
     if len(array) < 3:
-        logger.warning("Only 2 firsts array could contain data",
-                       group=DATASET)
+        logger.warning("Only 2 firsts array could contain data", group=DATASET)
         return array[0], array[1], list()
     len1 = round(len(array) * ratio1)
     len2 = round(len(array) * (ratio1 + ratio2))
@@ -49,58 +52,182 @@ def _get_metadata():
       expmapInd: 32-long list with indices into expmap angles
     """
 
-    parent = np.array([0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 10, 1, 12, 13, 14, 15, 13,
-                       17, 18, 19, 20, 21, 20, 23, 13, 25, 26, 27, 28, 29, 28, 31]) - 1
+    parent = (
+        np.array(
+            [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                1,
+                7,
+                8,
+                9,
+                10,
+                1,
+                12,
+                13,
+                14,
+                15,
+                13,
+                17,
+                18,
+                19,
+                20,
+                21,
+                20,
+                23,
+                13,
+                25,
+                26,
+                27,
+                28,
+                29,
+                28,
+                31,
+            ]
+        )
+        - 1
+    )
 
     offset = np.array(
-        [0.000000, 0.000000, 0.000000, -132.948591, 0.000000, 0.000000, 0.000000,
-         -442.894612, 0.000000, 0.000000, -454.206447, 0.000000, 0.000000, 0.000000,
-         162.767078, 0.000000, 0.000000, 74.999437, 132.948826, 0.000000, 0.000000,
-         0.000000, -442.894413, 0.000000, 0.000000, -454.206590, 0.000000, 0.000000,
-         0.000000, 162.767426, 0.000000, 0.000000, 74.999948, 0.000000, 0.100000,
-         0.000000, 0.000000, 233.383263, 0.000000, 0.000000, 257.077681, 0.000000,
-         0.000000, 121.134938, 0.000000, 0.000000, 115.002227, 0.000000, 0.000000,
-         257.077681, 0.000000, 0.000000, 151.034226, 0.000000, 0.000000, 278.882773,
-         0.000000, 0.000000, 251.733451, 0.000000, 0.000000, 0.000000, 0.000000,
-         0.000000, 0.000000, 99.999627, 0.000000, 100.000188, 0.000000, 0.000000,
-         0.000000, 0.000000, 0.000000, 257.077681, 0.000000, 0.000000, 151.031437,
-         0.000000, 0.000000, 278.892924, 0.000000, 0.000000, 251.728680, 0.000000,
-         0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 99.999888, 0.000000,
-         137.499922, 0.000000, 0.000000, 0.000000, 0.000000])
+        [
+            0.000000,
+            0.000000,
+            0.000000,
+            -132.948591,
+            0.000000,
+            0.000000,
+            0.000000,
+            -442.894612,
+            0.000000,
+            0.000000,
+            -454.206447,
+            0.000000,
+            0.000000,
+            0.000000,
+            162.767078,
+            0.000000,
+            0.000000,
+            74.999437,
+            132.948826,
+            0.000000,
+            0.000000,
+            0.000000,
+            -442.894413,
+            0.000000,
+            0.000000,
+            -454.206590,
+            0.000000,
+            0.000000,
+            0.000000,
+            162.767426,
+            0.000000,
+            0.000000,
+            74.999948,
+            0.000000,
+            0.100000,
+            0.000000,
+            0.000000,
+            233.383263,
+            0.000000,
+            0.000000,
+            257.077681,
+            0.000000,
+            0.000000,
+            121.134938,
+            0.000000,
+            0.000000,
+            115.002227,
+            0.000000,
+            0.000000,
+            257.077681,
+            0.000000,
+            0.000000,
+            151.034226,
+            0.000000,
+            0.000000,
+            278.882773,
+            0.000000,
+            0.000000,
+            251.733451,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            99.999627,
+            0.000000,
+            100.000188,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            257.077681,
+            0.000000,
+            0.000000,
+            151.031437,
+            0.000000,
+            0.000000,
+            278.892924,
+            0.000000,
+            0.000000,
+            251.728680,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+            99.999888,
+            0.000000,
+            137.499922,
+            0.000000,
+            0.000000,
+            0.000000,
+            0.000000,
+        ]
+    )
     offset = offset.reshape(-1, 3)
 
-    rotInd = [[5, 6, 4],
-              [8, 9, 7],
-              [11, 12, 10],
-              [14, 15, 13],
-              [17, 18, 16],
-              [],
-              [20, 21, 19],
-              [23, 24, 22],
-              [26, 27, 25],
-              [29, 30, 28],
-              [],
-              [32, 33, 31],
-              [35, 36, 34],
-              [38, 39, 37],
-              [41, 42, 40],
-              [],
-              [44, 45, 43],
-              [47, 48, 46],
-              [50, 51, 49],
-              [53, 54, 52],
-              [56, 57, 55],
-              [],
-              [59, 60, 58],
-              [],
-              [62, 63, 61],
-              [65, 66, 64],
-              [68, 69, 67],
-              [71, 72, 70],
-              [74, 75, 73],
-              [],
-              [77, 78, 76],
-              []]
+    rotInd = [
+        [5, 6, 4],
+        [8, 9, 7],
+        [11, 12, 10],
+        [14, 15, 13],
+        [17, 18, 16],
+        [],
+        [20, 21, 19],
+        [23, 24, 22],
+        [26, 27, 25],
+        [29, 30, 28],
+        [],
+        [32, 33, 31],
+        [35, 36, 34],
+        [38, 39, 37],
+        [41, 42, 40],
+        [],
+        [44, 45, 43],
+        [47, 48, 46],
+        [50, 51, 49],
+        [53, 54, 52],
+        [56, 57, 55],
+        [],
+        [59, 60, 58],
+        [],
+        [62, 63, 61],
+        [65, 66, 64],
+        [68, 69, 67],
+        [71, 72, 70],
+        [74, 75, 73],
+        [],
+        [77, 78, 76],
+        [],
+    ]
 
     expmapInd = np.split(np.arange(4, 100) - 1, 32)
 
@@ -121,12 +248,21 @@ def fkl_torch(rotmat, parent, offset, rotInd, expmapInd):
     """
     n = rotmat.data.shape[0]
     j_n = offset.shape[0]
-    p3d = torch.from_numpy(offset).float().to(rotmat.device).unsqueeze(0).repeat(n, 1, 1).clone()
+    p3d = (
+        torch.from_numpy(offset)
+        .float()
+        .to(rotmat.device)
+        .unsqueeze(0)
+        .repeat(n, 1, 1)
+        .clone()
+    )
     R = rotmat.view(n, j_n, 3, 3)
     for i in np.arange(1, j_n):
         if parent[i] > 0:
             R[:, i, :, :] = torch.matmul(R[:, i, :, :], R[:, parent[i], :, :]).clone()
-            p3d[:, i, :] = torch.matmul(p3d[0, i, :], R[:, parent[i], :, :]) + p3d[:, parent[i], :]
+            p3d[:, i, :] = (
+                torch.matmul(p3d[0, i, :], R[:, parent[i], :, :]) + p3d[:, parent[i], :]
+            )
     return p3d
 
 
@@ -165,10 +301,14 @@ def rotmat2euler_torch(R):
         R_remain = R[idx_remain, :, :]
         eul_remain = torch.zeros(len(idx_remain), 3).float().to(R.device)
         eul_remain[:, 1] = -torch.asin(R_remain[:, 0, 2])
-        eul_remain[:, 0] = torch.atan2(R_remain[:, 1, 2] / torch.cos(eul_remain[:, 1]),
-                                       R_remain[:, 2, 2] / torch.cos(eul_remain[:, 1]))
-        eul_remain[:, 2] = torch.atan2(R_remain[:, 0, 1] / torch.cos(eul_remain[:, 1]),
-                                       R_remain[:, 0, 0] / torch.cos(eul_remain[:, 1]))
+        eul_remain[:, 0] = torch.atan2(
+            R_remain[:, 1, 2] / torch.cos(eul_remain[:, 1]),
+            R_remain[:, 2, 2] / torch.cos(eul_remain[:, 1]),
+        )
+        eul_remain[:, 2] = torch.atan2(
+            R_remain[:, 0, 1] / torch.cos(eul_remain[:, 1]),
+            R_remain[:, 0, 0] / torch.cos(eul_remain[:, 1]),
+        )
         eul[idx_remain, :] = eul_remain
 
     return eul
@@ -233,9 +373,14 @@ def expmap2rotmat_torch(r):
     r1 = r1.view(-1, 3, 3)
     r1 = r1 - r1.transpose(1, 2)
     n = r1.data.shape[0]
-    R = torch.eye(3, 3).repeat(n, 1, 1).float().to(r.device) + torch.mul(
-        torch.sin(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3), r1) + torch.mul(
-        (1 - torch.cos(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3)), torch.matmul(r1, r1))
+    R = (
+        torch.eye(3, 3).repeat(n, 1, 1).float().to(r.device)
+        + torch.mul(torch.sin(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3), r1)
+        + torch.mul(
+            (1 - torch.cos(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3)),
+            torch.matmul(r1, r1),
+        )
+    )
     return R
 
 

@@ -11,7 +11,7 @@ class MotionFCInConfig(BaseModel):
     # in_features =    hidden_size  # hidden_dim
     # out_features = feature_size
     with_norm = False
-    activation = 'relu'
+    activation = "relu"
     init_w_trunc_normal = False
 
 
@@ -19,12 +19,13 @@ class MotionFCOutConfig(BaseModel):
     # in_features = feature_size
     # out_features =  hidden_size  # hidden_dim
     with_norm = False
-    activation = 'relu'
+    activation = "relu"
     init_w_trunc_normal = True
 
 
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
+
     input_size: int
     output_size: int
     feature_size: int
@@ -35,6 +36,6 @@ class Config(ModuleConfig):
     temporal_fc_out: bool = False
     with_normalization: bool = True
     spatial_fc_only: bool = False
-    norm_axis: str = 'spatial'
+    norm_axis: str = "spatial"
     motion_fc_in: MotionFCInConfig = MotionFCInConfig()
     motion_fc_out: MotionFCOutConfig = MotionFCOutConfig()

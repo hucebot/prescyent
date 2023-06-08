@@ -57,8 +57,9 @@ class Temporal_FC(nn.Module):
 
 
 class MLPblock(nn.Module):
-
-    def __init__(self, dim, seq, use_norm=True, use_spatial_fc=False, layernorm_axis='spatial'):
+    def __init__(
+        self, dim, seq, use_norm=True, use_spatial_fc=False, layernorm_axis="spatial"
+    ):
         super().__init__()
 
         if not use_spatial_fc:
@@ -67,11 +68,11 @@ class MLPblock(nn.Module):
             self.fc0 = Spatial_FC(dim)
 
         if use_norm:
-            if layernorm_axis == 'spatial':
+            if layernorm_axis == "spatial":
                 self.norm0 = LN(dim)
-            elif layernorm_axis == 'temporal':
+            elif layernorm_axis == "temporal":
                 self.norm0 = LN_v2(seq)
-            elif layernorm_axis == 'all':
+            elif layernorm_axis == "all":
                 self.norm0 = nn.LayerNorm([dim, seq])
             else:
                 raise NotImplementedError
@@ -86,7 +87,6 @@ class MLPblock(nn.Module):
         nn.init.constant_(self.fc0.fc.bias, 0)
 
     def forward(self, x):
-
         x_ = self.fc0(x)
         x_ = self.norm0(x_)
         x = x + x_
@@ -103,9 +103,12 @@ class TransMLP(nn.Module):
         self.use_spatial_fc = use_spatial_fc
         self.num_layers = num_layers
         self.layernorm_axis = layernorm_axis
-        self.mlps = nn.Sequential(*[
-            MLPblock(dim, seq, use_norm, use_spatial_fc, layernorm_axis)
-            for i in range(num_layers)])
+        self.mlps = nn.Sequential(
+            *[
+                MLPblock(dim, seq, use_norm, use_spatial_fc, layernorm_axis)
+                for i in range(num_layers)
+            ]
+        )
 
     def forward(self, x):
         x = self.mlps(x)
@@ -131,15 +134,15 @@ def _get_activation_fn(activation):
         return nn.GELU
     if activation == "glu":
         return nn.GLU
-    if activation == 'silu':
+    if activation == "silu":
         return nn.SiLU
     # if activation == 'swish':
     #    return nn.Hardswish
-    if activation == 'softplus':
+    if activation == "softplus":
         return nn.Softplus
-    if activation == 'tanh':
+    if activation == "tanh":
         return nn.Tanh
-    raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
 
 
 def _get_norm_fn(norm):
@@ -147,6 +150,6 @@ def _get_norm_fn(norm):
         return nn.BatchNorm1d
     if norm == "layernorm":
         return nn.LayerNorm
-    if norm == 'instancenorm':
+    if norm == "instancenorm":
         return nn.InstanceNorm1d
-    raise RuntimeError(F"norm should be batchnorm/layernorm, not {norm}.")
+    raise RuntimeError(f"norm should be batchnorm/layernorm, not {norm}.")

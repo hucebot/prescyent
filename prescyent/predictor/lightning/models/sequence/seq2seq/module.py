@@ -15,6 +15,7 @@ class TorchModule(BaseTorchModule):
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
     output_size - This will be equal to the prediction_periods input to get_x_y_pairs
     """
+
     def __init__(self, config):
         super().__init__(config)
         self.hidden_size = config.hidden_size
@@ -23,14 +24,18 @@ class TorchModule(BaseTorchModule):
         self.num_layers = config.num_layers
         self.dropout_value = config.dropout_value if config.dropout_value else 0
 
-        self.encoder = nn.GRU(input_size=self.feature_size,
-                               hidden_size=self.hidden_size,
-                               num_layers=self.num_layers,
-                               dropout=self.dropout_value)
-        self.decoder = nn.GRU(input_size=self.feature_size,
-                               hidden_size=self.hidden_size,
-                               num_layers=self.num_layers,
-                               dropout=self.dropout_value)
+        self.encoder = nn.GRU(
+            input_size=self.feature_size,
+            hidden_size=self.hidden_size,
+            num_layers=self.num_layers,
+            dropout=self.dropout_value,
+        )
+        self.decoder = nn.GRU(
+            input_size=self.feature_size,
+            hidden_size=self.hidden_size,
+            num_layers=self.num_layers,
+            dropout=self.dropout_value,
+        )
         self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
     @BaseTorchModule.allow_unbatched
@@ -46,8 +51,9 @@ class TorchModule(BaseTorchModule):
         # we take as input for the decoder the last input form the input sample
         dec_input = input_tensor[-1].unsqueeze(0)
         # we prepare the output tensor that will be fed by the decoding loop
-        predictions = torch.zeros(self.output_size, batch_size,
-                                  self.feature_size, device=input_tensor.device)
+        predictions = torch.zeros(
+            self.output_size, batch_size, self.feature_size, device=input_tensor.device
+        )
         # decoding loop must update the hidden state and input for each wanted output
         for i in range(self.output_size):
             dec_output, hidden_state = self.decoder(dec_input, hidden_state)

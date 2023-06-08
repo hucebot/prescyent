@@ -5,7 +5,7 @@ from typing import List
 from prescyent.evaluator.eval_result import EvaluationResult
 
 
-class EvaluationSummary():
+class EvaluationSummary:
     results: List[EvaluationResult]
 
     def __init__(self, results: List[EvaluationResult] = None) -> None:
@@ -20,14 +20,16 @@ class EvaluationSummary():
         return len(self.results)
 
     def __str__(self) -> str:
-        return f"\nMean ADE: {self.mean_ade:.6f}" + \
-               f"\nMean FDE: {self.mean_fde:.6f}" + \
-               f"\nMean MPJPE: {self.mean_mpjpe:.6f}" + \
-               f"\nMean Inference Time (ms): {self.mean_inference_time_ms:.6f}" + \
-               f"\nMax ADE: {self.max_ade:.6f}" + \
-               f"\nMax FDE: {self.max_fde:.6f}" + \
-               f"\nMax MPJPE: {self.max_mpjpe:.6f}" + \
-               f"\nMax Inference Time (ms): {self.max_inference_time_ms:.6f}"
+        return (
+            f"\nMean ADE: {self.mean_ade:.6f}"
+            + f"\nMean FDE: {self.mean_fde:.6f}"
+            + f"\nMean MPJPE: {self.mean_mpjpe:.6f}"
+            + f"\nMean Inference Time (ms): {self.mean_inference_time_ms:.6f}"
+            + f"\nMax ADE: {self.max_ade:.6f}"
+            + f"\nMax FDE: {self.max_fde:.6f}"
+            + f"\nMax MPJPE: {self.max_mpjpe:.6f}"
+            + f"\nMax Inference Time (ms): {self.max_inference_time_ms:.6f}"
+        )
 
     @property
     def mean_ade(self) -> float:

@@ -2,7 +2,6 @@
 The predictor can be trained and predict
 """
 import copy
-import random
 from typing import Dict, Iterable, List, Union
 
 import torch
@@ -14,18 +13,23 @@ from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 
 
-class BasePredictor():
-    """ base class for any predictor
-        methods _build_from_config, train, predict, save must be overridden by a child class
-        This class initialize a tensorboard logger and, a test loop and a default run loop
+class BasePredictor:
+    """base class for any predictor
+    methods _build_from_config, train, predict, save must be overridden by a child class
+    This class initialize a tensorboard logger and, a test loop and a default run loop
     """
+
     log_root_path: str
     name: str
     version: int
 
-    def __init__(self, log_root_path: str,
-                 name: str = None, version: Union[str, int] = None,
-                 no_sub_dir_log: bool = False) -> None:
+    def __init__(
+        self,
+        log_root_path: str,
+        name: str = None,
+        version: Union[str, int] = None,
+        no_sub_dir_log: bool = False,
+    ) -> None:
         self.log_root_path = log_root_path
         if name is None:
             name = self.__class__.__name__
@@ -40,10 +44,9 @@ class BasePredictor():
         else:
             name = self.name
             version = self.version
-        self.tb_logger = TensorBoardLogger(self.log_root_path,
-                                           name=name,
-                                           version=version,
-                                           default_hp_metric=False)
+        self.tb_logger = TensorBoardLogger(
+            self.log_root_path, name=name, version=version, default_hp_metric=False
+        )
         # redetermine version from tb logger logic if None
         if self.version is None:
             self.version = copy.deepcopy(self.tb_logger.version)
@@ -52,8 +55,13 @@ class BasePredictor():
     def log_path(self) -> str:
         return self.tb_logger.log_dir
 
-    def __call__(self, input_batch, history_size: int = None, history_step: int = 1,
-                 future_size: int = None):
+    def __call__(
+        self,
+        input_batch,
+        history_size: int = None,
+        history_step: int = 1,
+        future_size: int = None,
+    ):
         return self.run(input_batch, history_size, history_step, future_size)
 
     def __str__(self) -> str:
@@ -61,21 +69,32 @@ class BasePredictor():
 
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""
-        raise NotImplementedError("This method must be overriden by the inherited predictor")
+        raise NotImplementedError(
+            "This method must be overriden by the inherited predictor"
+        )
 
-    def train(self, train_dataloader: Iterable,
-              train_config: BaseModel = None,
-              val_dataloader: Iterable = None):
+    def train(
+        self,
+        train_dataloader: Iterable,
+        train_config: BaseModel = None,
+        val_dataloader: Iterable = None,
+    ):
         """train predictor"""
-        raise NotImplementedError("This method must be overriden by the inherited predictor")
+        raise NotImplementedError(
+            "This method must be overriden by the inherited predictor"
+        )
 
-    def predict(self, input_t: torch.Tensor, future_size: int):
+    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
         """run the model / algorithm for one input"""
-        raise NotImplementedError("This method must be overriden by the inherited predictor")
+        raise NotImplementedError(
+            "This method must be overriden by the inherited predictor"
+        )
 
     def save(self, save_path: str):
         """save predictor"""
-        raise NotImplementedError("This method must be overriden by the inherited predictor")
+        raise NotImplementedError(
+            "This method must be overriden by the inherited predictor"
+        )
 
     def test(self, test_dataloader: Iterable):
         """test predictor"""
@@ -99,8 +118,13 @@ class BasePredictor():
         self.tb_logger.experiment.add_scalar("Test/MPJPE", mpjpe, 0)
         return mean_loss, ade, fde, mpjpe
 
-    def run(self, input_batch: Iterable, history_size: int = None,
-            history_step: int = 1, future_size: int = None) -> List[torch.Tensor]:
+    def run(
+        self,
+        input_batch: Iterable,
+        history_size: int = None,
+        history_step: int = 1,
+        future_size: int = None,
+    ) -> List[torch.Tensor]:
         """run method/model inference on the input batch
         The output is the list of predictions for each defined subpart of the input batch,
         or the single prediction for the whole input
@@ -125,24 +149,40 @@ class BasePredictor():
         if future_size is None:
             future_size = input_len
 
-        for i in tqdm(range(0, input_len - history_size + 1, history_step),
-                      desc="Iterate over input_batch"):
-            input_sub_batch = input_batch[i:i + history_size]
+        for i in tqdm(
+            range(0, input_len - history_size + 1, history_step),
+            desc="Iterate over input_batch",
+        ):
+            input_sub_batch = input_batch[i : i + history_size]
             prediction = self.predict(input_sub_batch, future_size)
             prediction_list.append(prediction)
         return prediction_list
 
     def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
-        self.tb_logger.experiment.add_scalar("Eval/mean_ade", evaluation_summary.mean_ade, 0)
-        self.tb_logger.experiment.add_scalar("Eval/mean_fde", evaluation_summary.mean_fde, 0)
-        self.tb_logger.experiment.add_scalar("Eval/mean_mpjpe", evaluation_summary.mean_mpjpe, 0)
-        self.tb_logger.experiment.add_scalar("Eval/mean_inference_time_ms",
-                                             evaluation_summary.mean_inference_time_ms, 0)
-        self.tb_logger.experiment.add_scalar("Eval/max_ade", evaluation_summary.max_ade, 0)
-        self.tb_logger.experiment.add_scalar("Eval/max_fde", evaluation_summary.max_fde, 0)
-        self.tb_logger.experiment.add_scalar("Eval/max_mpjpe", evaluation_summary.max_mpjpe, 0)
-        self.tb_logger.experiment.add_scalar("Eval/max_inference_time_ms",
-                                             evaluation_summary.max_inference_time_ms, 0)
+        self.tb_logger.experiment.add_scalar(
+            "Eval/mean_ade", evaluation_summary.mean_ade, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/mean_fde", evaluation_summary.mean_fde, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/mean_mpjpe", evaluation_summary.mean_mpjpe, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/mean_inference_time_ms", evaluation_summary.mean_inference_time_ms, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/max_ade", evaluation_summary.max_ade, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/max_fde", evaluation_summary.max_fde, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/max_mpjpe", evaluation_summary.max_mpjpe, 0
+        )
+        self.tb_logger.experiment.add_scalar(
+            "Eval/max_inference_time_ms", evaluation_summary.max_inference_time_ms, 0
+        )
 
     def log_metrics(self, metrics: dict, pre_key=""):
         for key, value in metrics.items():

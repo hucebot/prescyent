@@ -9,7 +9,6 @@ from prescyent.utils.enums import LearningTypes
 
 
 class InitTeleopIcubDatasetTest(CustomTestCase):
-
     def test_load_default(self):
         dataset = TeleopIcubDataset()
         self.assertGreater(len(dataset), 0)
@@ -27,7 +26,9 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         self.assertGreater(len(dataset), 0)
         sample, truth = dataset.test_datasample[0]
         self.assertEqual(len(sample), len(truth))
-        np.testing.assert_allclose(sample[1:], truth[:-1], err_msg="thruth and sample differ")
+        np.testing.assert_allclose(
+            sample[1:], truth[:-1], err_msg="thruth and sample differ"
+        )
 
     def test_impossible_configs(self):
         config = TeleopIcubDatasetConfig(future_size=200)

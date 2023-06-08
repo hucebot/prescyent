@@ -12,8 +12,16 @@ import pytorch_lightning as pl
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.tuner import Tuner
-from pytorch_lightning.profilers import AdvancedProfiler, PyTorchProfiler, SimpleProfiler
-from pytorch_lightning.callbacks import LearningRateMonitor, DeviceStatsMonitor, EarlyStopping
+from pytorch_lightning.profilers import (
+    AdvancedProfiler,
+    PyTorchProfiler,
+    SimpleProfiler,
+)
+from pytorch_lightning.callbacks import (
+    LearningRateMonitor,
+    DeviceStatsMonitor,
+    EarlyStopping,
+)
 from torch.utils.data import DataLoader
 
 from prescyent.predictor.base_predictor import BasePredictor
@@ -31,6 +39,7 @@ class LightningPredictor(BasePredictor):
     This class should not be called as is
     You must instanciate a class from wich LightningPredictor is a parent
     """
+
     module_class: Type[BaseTorchModule]
     config_class: Type[ModuleConfig]
     model: pl.LightningModule
@@ -41,8 +50,11 @@ class LightningPredictor(BasePredictor):
     def __init__(self, model_path=None, config=None, name=None) -> None:
         # -- Init Model and root path
         if model_path is not None:
-            log_root_path = model_path if Path(model_path).is_dir() \
+            log_root_path = (
+                model_path
+                if Path(model_path).is_dir()
                 else str(Path(model_path).parent)
+            )
             self._load_config(Path(log_root_path) / "config.json")
             name, version = self.name, self.version
             self.model = self._load_from_path(model_path)
@@ -54,8 +66,10 @@ class LightningPredictor(BasePredictor):
             super().__init__(log_root_path, name, version)
         else:
             # In later versions we can imagine a pretrained or config free version of the model
-            raise NotImplementedError("No default implementation for now, "
-                                      "please provide a config or a path to init predictor")
+            raise NotImplementedError(
+                "No default implementation for now, "
+                "please provide a config or a path to init predictor"
+            )
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None
@@ -72,7 +86,7 @@ class LightningPredictor(BasePredictor):
         return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
-        supported_extentions = [".ckpt", ".pb"]   # prefered order
+        supported_extentions = [".ckpt", ".pb"]  # prefered order
         model_path = Path(path)
         if not model_path.exists():
             raise FileNotFoundError(f"No file or directory at {model_path}")
@@ -80,13 +94,15 @@ class LightningPredictor(BasePredictor):
         if model_path.is_dir():
             found_model = None
             for extention in supported_extentions:
-                if list(model_path.glob(f'*{extention}')):
+                if list(model_path.glob(f"*{extention}")):
                     # WARNING : Chosing last file if there are many
-                    found_model = sorted(model_path.glob(f'*{extention}'))[-1]
+                    found_model = sorted(model_path.glob(f"*{extention}"))[-1]
                     break
             if found_model is None:
-                raise FileNotFoundError(f"No file matching {supported_extentions}"
-                                        f" was found in directory {model_path}")
+                raise FileNotFoundError(
+                    f"No file matching {supported_extentions}"
+                    f" was found in directory {model_path}"
+                )
             model_path = found_model
 
         if model_path.suffix == ".ckpt":
@@ -95,9 +111,11 @@ class LightningPredictor(BasePredictor):
         elif model_path.suffix == ".pb":
             return LightningModule(self.module_class, self.config)
         else:
-            raise NotImplementedError(f"Given file extention {model_path.suffix} "
-                                      "is not supported. Models exported by this module "
-                                      f"and imported to it can be {supported_extentions}")
+            raise NotImplementedError(
+                f"Given file extention {model_path.suffix} "
+                "is not supported. Models exported by this module "
+                f"and imported to it can be {supported_extentions}"
+            )
 
     @classmethod
     def _load_from_binary(cls, path: str, module_class: Callable):
@@ -117,41 +135,48 @@ class LightningPredictor(BasePredictor):
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.dict(include=cls_default_params)
-        lr_monitor = LearningRateMonitor(logging_interval='step')
+        lr_monitor = LearningRateMonitor(logging_interval="step")
         progress_bar = LightningProgressBar()
         callbacks = [lr_monitor, progress_bar]
         if devices is not None:
             kwargs["devices"] = devices
         callbacks, profiler = self._init_profilers(callbacks)
         if self.training_config.early_stopping_patience:
-            early_stopping = EarlyStopping(monitor=self.training_config.early_stopping_value,
-                                           patience=self.training_config.early_stopping_patience,
-                                           mode=self.training_config.early_stopping_mode,)
+            early_stopping = EarlyStopping(
+                monitor=self.training_config.early_stopping_value,
+                patience=self.training_config.early_stopping_patience,
+                mode=self.training_config.early_stopping_mode,
+            )
             callbacks.append(early_stopping)
         if self.training_config.seed is not None:
             pl.seed_everything(self.training_config.seed, workers=True)
         if self.training_config.use_deterministic_algorithms:
             torch.use_deterministic_algorithms(True)
-            os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG",":4096:8")
+            os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
             kwargs["deterministic"] = True
-        torch.set_float32_matmul_precision('high')
-        self.trainer = pl.Trainer(logger=self.tb_logger,
-                                  max_epochs=self.training_config.epoch,
-                                  callbacks=callbacks,
-                                  profiler=profiler,
-                                  **kwargs)
-        logger.info("Predictor logger initialised at %s", self.log_path,
-                    group=PREDICTOR)
+        torch.set_float32_matmul_precision("high")
+        self.trainer = pl.Trainer(
+            logger=self.tb_logger,
+            max_epochs=self.training_config.epoch,
+            callbacks=callbacks,
+            profiler=profiler,
+            **kwargs,
+        )
+        logger.info(
+            "Predictor logger initialised at %s", self.log_path, group=PREDICTOR
+        )
 
     def _init_profilers(self, callbacks):
         if self.config.used_profiler == "advanced":
-            profiler = (AdvancedProfiler(dirpath=self.log_path, filename="advanced_profiler"))
+            profiler = AdvancedProfiler(
+                dirpath=self.log_path, filename="advanced_profiler"
+            )
         elif self.config.used_profiler == "simple":
-            profiler = (SimpleProfiler(dirpath=self.log_path, filename="simple_profiler"))
+            profiler = SimpleProfiler(dirpath=self.log_path, filename="simple_profiler")
         elif self.config.used_profiler == "torch":
-            profiler = (PyTorchProfiler(dirpath=self.log_path,
-                                        filename="torch_profiler",
-                                        emit_nvtx=True))
+            profiler = PyTorchProfiler(
+                dirpath=self.log_path, filename="torch_profiler", emit_nvtx=True
+            )
         else:
             profiler = None
         if self.config.used_profiler is not None:
@@ -166,13 +191,13 @@ class LightningPredictor(BasePredictor):
 
     def _save_config(self, save_path: Path):
         res = dict()
-        if self.training_config is not None :
+        if self.training_config is not None:
             res["training_config"] = self.training_config.dict(exclude_defaults=False)
-        if self.config is not None :
+        if self.config is not None:
             res["model_config"] = self.config.dict(exclude_defaults=False)
         res["model_config"]["name"] = self.name
         res["model_config"]["version"] = self.version
-        with (save_path).open('w', encoding="utf-8") as conf_file:
+        with (save_path).open("w", encoding="utf-8") as conf_file:
             json.dump(res, conf_file, indent=4, sort_keys=True)
 
     def _load_config(self, config_path: Union[Path, str]):
@@ -181,7 +206,9 @@ class LightningPredictor(BasePredictor):
             raise FileNotFoundError(f"No file or directory at {config_path}")
         with config_path.open(encoding="utf-8") as conf_file:
             config_data = json.load(conf_file)
-        self.training_config = TrainingConfig(**config_data.get("training_config", None))
+        self.training_config = TrainingConfig(
+            **config_data.get("training_config", None)
+        )
         self.config = self.config_class(**config_data.get("model_config", None))
         self.name = config_data.get("model_config", {}).get("name", None)
         self.version = config_data.get("model_config", {}).get("version", None)
@@ -190,9 +217,12 @@ class LightningPredictor(BasePredictor):
     def _init_module_optimizer(self):
         self.model.training_config = self.training_config
 
-    def train(self, train_dataloader: Iterable,
-              train_config: TrainingConfig = None,
-              val_dataloader: Iterable = None):
+    def train(
+        self,
+        train_dataloader: Iterable,
+        train_config: TrainingConfig = None,
+        val_dataloader: Iterable = None,
+    ):
         """train the model"""
         if not train_config:
             train_config = TrainingConfig()
@@ -203,20 +233,20 @@ class LightningPredictor(BasePredictor):
             # Run learning rate finder
             tuner = Tuner(self.trainer)
             lr_finder = tuner.lr_find(self.model, train_dataloader)
-            fig = lr_finder.plot(suggest=True) # Plot
+            fig = lr_finder.plot(suggest=True)  # Plot
             self.tb_logger.experiment.add_figure("lr_finder", fig)
             self.model.hparams.lr = lr_finder.suggestion()
             self.training_config.lr = lr_finder.suggestion()
         # Add hyperparams to Tensorboard and init HP Metrics
-        self.tb_logger.log_hyperparams({**self.model.hparams,
-                                        **self.training_config.dict(),
-                                        **self.config.dict()},
-                                       {"hp/ADE": -1,
-                                        "hp/FDE": -1,
-                                        "hp/MPJPE": -1})
-        self.trainer.fit(model=self.model,
-                         train_dataloaders=train_dataloader,
-                         val_dataloaders=val_dataloader)
+        self.tb_logger.log_hyperparams(
+            {**self.model.hparams, **self.training_config.dict(), **self.config.dict()},
+            {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
+        )
+        self.trainer.fit(
+            model=self.model,
+            train_dataloaders=train_dataloader,
+            val_dataloaders=val_dataloader,
+        )
         # Always save after training
         self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
         self._free_trainer()
@@ -224,8 +254,9 @@ class LightningPredictor(BasePredictor):
     def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
-            logger.info("New trainer as been created at %s", self.log_path,
-                        group=PREDICTOR)
+            logger.info(
+                "New trainer as been created at %s", self.log_path, group=PREDICTOR
+            )
             self._init_trainer(devices=1)
         self.trainer.test(self.model, test_dataloader)
         self._free_trainer()

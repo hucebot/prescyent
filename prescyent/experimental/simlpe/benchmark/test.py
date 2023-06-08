@@ -12,14 +12,14 @@ from prescyent.experimental.simlpe.benchmark.h36m_eval import H36MEval
 from prescyent.predictor.constant_predictor import ConstantPredictor
 
 
-results_keys = ['#2', '#4', '#8', '#10', '#14', '#18', '#22', '#25']
+results_keys = ["#2", "#4", "#8", "#10", "#14", "#18", "#22", "#25"]
 
 
 def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
     joint_to_ignore = np.array([16, 20, 23, 24, 28, 31]).astype(np.int64)
     joint_equal = np.array([13, 19, 22, 13, 27, 30]).astype(np.int64)
 
-    for (motion_input, motion_target) in pbar:
+    for motion_input, motion_target in pbar:
         b, n, c, _ = motion_input.shape
         num_samples += b
         motion_input = motion_input.reshape(b, n, 32, 3)
@@ -54,23 +54,44 @@ def regress_pred(model, pbar, num_samples, joint_used_xyz, m_p3d_h36):
         motion_pred[:, :, joint_to_ignore] = motion_pred[:, :, joint_equal]
 
         mpjpe_p3d_h36 = torch.sum(
-            torch.mean(
-                torch.norm(motion_pred * 1000 - motion_gt * 1000, dim=3),
-                dim=2),
-            dim=0)
+            torch.mean(torch.norm(motion_pred * 1000 - motion_gt * 1000, dim=3), dim=2),
+            dim=0,
+        )
         m_p3d_h36 += mpjpe_p3d_h36.cpu().numpy()
         # break
     m_p3d_h36 = m_p3d_h36 / num_samples
     return m_p3d_h36
 
 
-def test(config, model, dataloader) :
-
+def test(config, model, dataloader):
     m_p3d_h36 = np.zeros([config.motion.h36m_target_length])
     titles = np.array(range(config.motion.h36m_target_length)) + 1
-    joint_used_xyz = np.array([2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15,
-                               17, 18, 19, 21, 22, 25, 26, 27, 29, 30]
-                              ).astype(np.int64)
+    joint_used_xyz = np.array(
+        [
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            12,
+            13,
+            14,
+            15,
+            17,
+            18,
+            19,
+            21,
+            22,
+            25,
+            26,
+            27,
+            29,
+            30,
+        ]
+    ).astype(np.int64)
     num_samples = 0
 
     pbar = dataloader
@@ -81,33 +102,46 @@ def test(config, model, dataloader) :
         ret["#{:d}".format(titles[j])] = [m_p3d_h36[j], m_p3d_h36[j]]
     return [round(ret[key][0], 1) for key in results_keys]
 
+
 def run_benchmark(predictor):
     config.motion.h36m_target_length = config.motion.h36m_target_length_eval
-    dataset = H36MEval(config, 'test')
+    dataset = H36MEval(config, "test")
 
     shuffle = False
     sampler = None
-    dataloader = DataLoader(dataset, batch_size=128,
-                            num_workers=1, drop_last=False,
-                            sampler=sampler, shuffle=shuffle, pin_memory=True)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=128,
+        num_workers=1,
+        drop_last=False,
+        sampler=sampler,
+        shuffle=shuffle,
+        pin_memory=True,
+    )
     start_time = time.time()
     res = test(config, predictor, dataloader)
     test_time = (time.time() - start_time) * 1000
-    num_params = sum(p.numel() for p in predictor.model.torch_model.parameters()) / 1000000
+    num_params = (
+        sum(p.numel() for p in predictor.model.torch_model.parameters()) / 1000000
+    )
     return {
         "SiMLPe/test_time (ms)": test_time,
         "SiMLPe/num_params (M)": num_params,
-        "SiMLPe/MPJPE": res
+        "SiMLPe/MPJPE": res,
     }
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model_path', type=str, help='=model path')
-    parser.add_argument('--do_constant', action="store_true", help='=use constant predictor')
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("--model_path", type=str, help="=model path")
+    parser.add_argument(
+        "--do_constant", action="store_true", help="=use constant predictor"
+    )
     args = parser.parse_args()
 
-    model_path = "/home/abiver-local/repositories/HuCeBot/prescyent/data/models/h36m/50_10/SARLSTMPredictor/version_1_n"
+    model_path = "data/models/exp/LinearPredictor/version_0"
 
     if args.do_constant:
         model = ConstantPredictor("ConstantPredictor/")

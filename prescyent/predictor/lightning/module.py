@@ -22,7 +22,7 @@ CRITERION_MAPPING = {
     LossFunctions.MARGINRANKINGLOSS: torch.nn.MarginRankingLoss(),
     LossFunctions.TRIPLETMARGINLOSS: torch.nn.TripletMarginLoss(),
     LossFunctions.KLDIVLOSS: torch.nn.KLDivLoss(),
-    LossFunctions.MPJPELOSS: MPJPELoss()
+    LossFunctions.MPJPELOSS: MPJPELoss(),
 }
 DEFAULT_LOSS = MPJPELoss()
 
@@ -31,21 +31,28 @@ def apply_spectral_norm(model):
     for module_name, module in copy.copy(model._modules).items():
         # recurse on sequentials
         if isinstance(module, torch.nn.Sequential):
-            logger.info("Applying Spectral Normalization to %s module",
-                        module_name, group=PREDICTOR)
+            logger.info(
+                "Applying Spectral Normalization to %s module",
+                module_name,
+                group=PREDICTOR,
+            )
             setattr(model, module_name, apply_spectral_norm(module))
         # if the module has weights
         elif hasattr(module, "weight") and isinstance(module, torch.nn.Module):
             # apply spectral norm
             module = torch.nn.utils.spectral_norm(module)
             setattr(model, module_name, module)
-            logger.info("Applying Spectral Normalization to %s module",
-                        module_name, group=PREDICTOR)
+            logger.info(
+                "Applying Spectral Normalization to %s module",
+                module_name,
+                group=PREDICTOR,
+            )
     return model
 
 
 class LightningModule(pl.LightningModule):
     """Lightning class with methods for modules training, saving, logging"""
+
     torch_model: BaseTorchModule
     criterion: torch.nn.modules.loss._Loss
     training_config: TrainingConfig
@@ -56,21 +63,28 @@ class LightningModule(pl.LightningModule):
         self.lr = 0.999
         self.torch_model = torch_model_class(config)
         if config.do_lipschitz_continuation:
-            logger.info("Parametrization of Lightning Module using the Lipschitz constant...")
+            logger.info(
+                "Parametrization of Lightning Module using the Lipschitz constant..."
+            )
             apply_spectral_norm(self.torch_model)
         if not hasattr(self.torch_model, "criterion"):
             criterion = CRITERION_MAPPING.get(config.loss_fn.lower(), None)
             if criterion is None:
-                logger.warning("provided criterion %s is not handled, please use one of the"
-                               "following %s.", config.loss_fn.lower(),
-                               list(CRITERION_MAPPING.keys()),
-                               group=PREDICTOR)
+                logger.warning(
+                    "provided criterion %s is not handled, please use one of the"
+                    "following %s.",
+                    config.loss_fn.lower(),
+                    list(CRITERION_MAPPING.keys()),
+                    group=PREDICTOR,
+                )
                 criterion = DEFAULT_LOSS
         else:
             criterion = self.torch_model.criterion
-        logger.info("Using %s loss function", criterion.__class__.__name__, group=PREDICTOR)
+        logger.info(
+            "Using %s loss function", criterion.__class__.__name__, group=PREDICTOR
+        )
         self.criterion = criterion
-        self.save_hyperparameters(ignore=['torch_model', 'criterion'])
+        self.save_hyperparameters(ignore=["torch_model", "criterion"])
         logger.info("Lightning Module ready.", group=PREDICTOR)
 
     def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
@@ -90,15 +104,18 @@ class LightningModule(pl.LightningModule):
         """return module optimizer"""
         if not self.training_config.use_auto_lr:
             self.lr = self.training_config.lr
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr,
-                                      weight_decay=self.training_config.weight_decay)
+        optimizer = torch.optim.AdamW(
+            self.parameters(),
+            lr=self.lr,
+            weight_decay=self.training_config.weight_decay,
+        )
         if self.training_config.use_scheduler:
             lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=self.training_config.max_lr,
-                total_steps=self.trainer.estimated_stepping_batches
+                total_steps=self.trainer.estimated_stepping_batches,
             )
-            return [optimizer], [{'scheduler': lr_scheduler, 'interval': 'step'}]
+            return [optimizer], [{"scheduler": lr_scheduler, "interval": "step"}]
         return [optimizer]
 
     def get_metrics(self, batch, prefix: str = "", loss_only=False):
@@ -117,7 +134,9 @@ class LightningModule(pl.LightningModule):
     def log_accuracy(self, outputs, prefix: str = "", loss_only=False):
         """log accuracy metrics from epoch"""
         mean_loss = torch.stack([x["loss"] for x in outputs]).mean().detach()
-        self.logger.experiment.add_scalar(f"{prefix}/epoch_loss", mean_loss, self.current_epoch)
+        self.logger.experiment.add_scalar(
+            f"{prefix}/epoch_loss", mean_loss, self.current_epoch
+        )
         if loss_only:
             return
         fde = torch.stack([x["FDE"] for x in outputs]).mean().detach()

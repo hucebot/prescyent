@@ -13,13 +13,19 @@ class TorchModule(BaseTorchModule):
     feature_size - The number of dimensions to predict in parallel
     hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
     """
+
     def __init__(self, config):
         super().__init__(config)
         self.hidden_size = config.hidden_size
         self.feature_size = config.feature_size
         self.num_layers = config.num_layers
         self.lstms = nn.ModuleList([nn.LSTMCell(self.feature_size, self.hidden_size)])
-        self.lstms.extend([nn.LSTMCell(self.hidden_size, self.hidden_size) for i in range(self.num_layers - 1)])
+        self.lstms.extend(
+            [
+                nn.LSTMCell(self.hidden_size, self.hidden_size)
+                for i in range(self.num_layers - 1)
+            ]
+        )
         self.linear = nn.Linear(self.hidden_size, self.feature_size)
 
     @BaseTorchModule.allow_unbatched
@@ -32,8 +38,14 @@ class TorchModule(BaseTorchModule):
         # input shape is (batch_size, seq_len, num_feature)
         batch_size = T[0]
         # init the hidden states
-        hs = [torch.zeros(batch_size, self.hidden_size, device=input_tensor.device) for i in range(self.num_layers)]
-        cs = [torch.zeros(batch_size, self.hidden_size, device=input_tensor.device) for i in range(self.num_layers)]
+        hs = [
+            torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+            for i in range(self.num_layers)
+        ]
+        cs = [
+            torch.zeros(batch_size, self.hidden_size, device=input_tensor.device)
+            for i in range(self.num_layers)
+        ]
 
         for input_frame in input_tensor.split(1, dim=1):
             # input_frame shape is (batch_size, 1, num_feature)
@@ -46,7 +58,6 @@ class TorchModule(BaseTorchModule):
             prediction = self.linear(next_input)
             predictions.append(torch.unsqueeze(prediction, 1))
 
-
         for _ in range(future_size - 1):
             next_input = prediction
             for i in range(self.num_layers):
@@ -57,8 +68,7 @@ class TorchModule(BaseTorchModule):
             predictions.append(torch.unsqueeze(prediction, 1))
 
         predictions = torch.cat(predictions, dim=1)
-        predictions = predictions.reshape(predictions.shape[0],
-                                          predictions.shape[1],
-                                          T[2],
-                                          T[3])
+        predictions = predictions.reshape(
+            predictions.shape[0], predictions.shape[1], T[2], T[3]
+        )
         return predictions

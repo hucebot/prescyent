@@ -2,7 +2,7 @@ import torch
 
 
 class MPJPELoss(torch.nn.modules.loss._Loss):
-    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+    def __init__(self, size_average=None, reduce=None, reduction: str = "mean") -> None:
         super(MPJPELoss, self).__init__(size_average, reduce, reduction)
 
     def forward(self, input_tensor: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
