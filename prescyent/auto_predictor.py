@@ -1,11 +1,20 @@
 import json
 from pathlib import Path
-from typing import Union
+from typing import Tuple, Union
 
+from prescyent.predictor.base_predictor import BasePredictor
+from prescyent.predictor.constant_predictor import ConstantPredictor
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.errors import PredictorNotFound, PredictorUnprocessable
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.predictor import PREDICTOR_MAP
+
+
+def get_predictor_from_path(predictor_path: str) -> BasePredictor:
+    if predictor_path:
+        return AutoPredictor.load_from_config(predictor_path)
+    else:
+        return ConstantPredictor("ConstantPredictor")
 
 
 def get_predictor_infos(config):
@@ -25,15 +34,15 @@ def get_predictor_infos(config):
 
 class AutoPredictor:
     @classmethod
-    def preprocess_config_attribute(cls, config):
+    def preprocess_config_attribute(cls, config) -> Tuple[dict, str]:
         if isinstance(config, (str, Path)):
-            return cls._get_config_from_path(Path(config)), config
+            return cls._get_config_from_path(Path(config)), str(config)
         if isinstance(config, ModuleConfig):
             return config.dict(), None
 
     @classmethod
     def load_config(cls, path):
-        config, config_path = cls.preprocess_config_attribute(path)
+        config, _ = cls.preprocess_config_attribute(path)
         predictor_class = get_predictor_infos(config)
         return predictor_class.config_class(**config.get("model_config", {}))
 
@@ -54,7 +63,7 @@ class AutoPredictor:
 
     @classmethod
     def build_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
-        config, config_path = cls.preprocess_config_attribute(config)
+        config, _ = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         logger.info("Building new %s", predictor_class.PREDICTOR_NAME, group=PREDICTOR)
         return predictor_class(config=config)

@@ -55,9 +55,15 @@ TODO: ADD MORE
 
 # Usage
 
-Please look into the `example/` directory to find common usages of the API  
+Please look into the `example/` directory to find common usages of the library  
 We use tensorboard for training logging, use `tensorboard --logdir {your_log_path}` to view the training infos (default log_path is `data/models/`)  
 
+## API
+
+TODO  
+## Ros2
+
+TODO  
 
 # Run tests
 

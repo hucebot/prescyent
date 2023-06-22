@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 
-from prescyent import AutoPredictor
+from prescyent.auto_predictor import AutoPredictor
 from prescyent.experimental.simlpe.benchmark.config import config
 from prescyent.experimental.simlpe.benchmark.h36m_eval import H36MEval
 from prescyent.predictor.constant_predictor import ConstantPredictor

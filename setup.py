@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
-from prescyent import __version__
+
+
+package_name = 'prescyent'
+__version__ = "0.1.0"
+
 
 CORE_REQUIREMENTS = [
         "easydict",
@@ -13,21 +17,11 @@ CORE_REQUIREMENTS = [
         "uvicorn"
 ]
 
-CORE_MODULES = ['prescyent.',
-                'prescyent.dataset','prescyent.dataset.*',
-                'prescyent.evaluator','prescyent.evaluator.*',
-                'prescyent.predictor', 'prescyent.predictor.*',
-                'prescyent.utils', 'prescyent.utils.*'
-]
-
-with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
 
 setup(
-    name="prescyent",
+    name=package_name,
     version=__version__,
     description="Data-driven trajectory prediction library",
-    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/hucebot/prescyent",
     author="Alexis Biver",
@@ -42,8 +36,20 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent"
     ],
-    packages=find_packages(include=CORE_MODULES),
-    include_package_data=True,
+    packages=find_packages(),
+    data_files=[
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
+    ],
+    install_requires=CORE_REQUIREMENTS,
+    zip_safe=True,
+    entry_points={
+        'console_scripts': [
+            'ros2_predict = prescyent.ros2.run_predictor_node:main',
+        ],
+    }
 )
