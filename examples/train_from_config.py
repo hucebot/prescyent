@@ -19,7 +19,9 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
         with config_path.open(encoding="utf-8") as config_file:
             config_dict = json.load(config_file)
     except json.JSONDecodeError as e:
-        print("The provided config_file could not be loaded as Json, please check your file")
+        print(
+            "The provided config_file could not be loaded as Json, please check your file"
+        )
         print(e)
         exit(1)
 
@@ -39,14 +41,15 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 
     # Launch training
     print("Training...")
-    predictor.train(dataset.train_dataloader, training_config,
-                    dataset.val_dataloader)
+    predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 
     # Save the predictor, and configs
-    model_dir = Path(f"data/models/exp/{predictor.name}/version_{predictor.version}_{socket.gethostname()}")
+    model_dir = Path(
+        f"data/models/exp/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
+    )
     print("model directory:", model_dir)
     predictor.save(model_dir)
-    dataset.save_config(model_dir / 'dataset_config.json')
+    dataset.save_config(model_dir / "dataset_config.json")
     if rm_config:
         os.remove(str(config_path))
 
@@ -67,10 +70,18 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 if __name__ == "__main__":
     parser = ArgumentParser()
     default_config = Path("examples") / "configs" / "linear_teleop.json"
-    parser.add_argument("--config_path", type=str, default=str(default_config),
-                        help="path to the config file used to build model and dataset. Default if linear_teleop.json as an example")
-    parser.add_argument("--rm_config", action="store_true", default=False,
-                        help="If provided, the config file will be removed after training. Default is False")
+    parser.add_argument(
+        "--config_path",
+        type=str,
+        default=str(default_config),
+        help="path to the config file used to build model and dataset. Default if linear_teleop.json as an example",
+    )
+    parser.add_argument(
+        "--rm_config",
+        action="store_true",
+        default=False,
+        help="If provided, the config file will be removed after training. Default is False",
+    )
 
     args = parser.parse_args()
     config_path = Path(args.config_path)

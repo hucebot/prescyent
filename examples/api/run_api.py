@@ -5,7 +5,6 @@ import uvicorn
 from prescyent.api import PredictorApi
 
 
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--model_path", default=None)

@@ -1,20 +1,20 @@
 from setuptools import setup, find_packages
 
 
-package_name = 'prescyent'
+package_name = "prescyent"
 __version__ = "0.1.0"
 
 
 CORE_REQUIREMENTS = [
-        "easydict",
-        "fastapi",
-        "matplotlib",
-        "numpy",
-        "pydantic",
-        "pytorch_lightning>=2.0.0",
-        "tensorboard",
-        "torch",
-        "uvicorn"
+    "easydict",
+    "fastapi",
+    "matplotlib",
+    "numpy",
+    "pydantic",
+    "pytorch_lightning>=2.0.0",
+    "tensorboard",
+    "torch",
+    "uvicorn",
 ]
 
 
@@ -37,7 +37,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Operating System :: OS Independent"
+        "Operating System :: OS Independent",
     ],
     packages=find_packages(),
     install_requires=CORE_REQUIREMENTS,
