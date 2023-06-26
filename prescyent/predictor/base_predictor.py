@@ -58,11 +58,11 @@ class BasePredictor:
     def __call__(
         self,
         input_batch,
+        future_size: int = None,
         history_size: int = None,
         history_step: int = 1,
-        future_size: int = None,
     ):
-        return self.run(input_batch, history_size, history_step, future_size)
+        return self.run(input_batch, future_size, history_size, history_step)
 
     def __str__(self) -> str:
         return f"{self.name}_v{self.version}"
@@ -121,22 +121,23 @@ class BasePredictor:
     def run(
         self,
         input_batch: Iterable,
+        future_size: int = None,
         history_size: int = None,
         history_step: int = 1,
-        future_size: int = None,
     ) -> List[torch.Tensor]:
-        """run method/model inference on the input batch
-        The output is the list of predictions for each defined subpart of the input batch,
-        or the single prediction for the whole input
+        """run method/model inference over the input batch
+        The run method outputs a List of prediction because it can iterate over the input_batch
+        according to the history_size and history step values.
 
         Args:
-            input_batch (Iterable): Input for the predictor's model
-            history_size (int, optional): If an input size is provided, the input batch will
-                be splitted sequences of len == history_size. Defaults to None
+            input_batch (Iterable): Input for the predictor's model. We expect the first
+                dimension of the array to be the temporal axis: len(input_batch) == sequence_len
+            future_size (int|None, optional): If an future size is provided, the input batch will
+                be splitted sequences of len == future_size. Defaults to None.
+            history_size (int, optional): If an history_size is provided, the input batch will
+                be splitted sequences of len == history_size. Defaults to None means no split.
             history_step (int, optional): When splitting the input_batch (history_size != None)
                 defines the step of the iteration. Defaults to 1.
-            future_size (int|None, optional): If an input size is provided, the input batch will
-                be splitted sequences of len == future_size. Defaults to None.
         Returns:
             List[torch.Tensor]: the list of model predictions
         """

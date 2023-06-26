@@ -4,7 +4,7 @@ from prescyent.utils.errors.custom_exception import CustomException
 import torch
 from fastapi import FastAPI, APIRouter, HTTPException
 
-from prescyent import get_predictor_from_path
+from prescyent.auto_predictor import get_predictor_from_path
 from prescyent.predictor.base_predictor import BasePredictor
 
 
