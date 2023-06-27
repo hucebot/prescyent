@@ -37,8 +37,12 @@ class AutoPredictor:
     def preprocess_config_attribute(cls, config) -> Tuple[dict, str]:
         if isinstance(config, (str, Path)):
             return cls._get_config_from_path(Path(config)), str(config)
-        if isinstance(config, ModuleConfig):
+        elif isinstance(config, ModuleConfig):
             return config.dict(), None
+        elif isinstance(config, dict):
+            return config, None
+        else:
+            raise NotImplementedError('Check your attr "config"\'s type')
 
     @classmethod
     def load_config(cls, path):
