@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
+from prescyent.utils.logger import logger, PREDICTOR
 
 
 class BasePredictor:
@@ -36,6 +37,7 @@ class BasePredictor:
         self.name = name
         self.version = version
         self._init_logger(no_sub_dir_log)
+        logger.info(f"Loaded {self} at path {self.log_path}")
 
     def _init_logger(self, no_sub_dir_log=False):
         if no_sub_dir_log:
