@@ -1,7 +1,13 @@
 """Common config elements for motion datasets usage"""
+from pathlib import Path
+
 from pydantic import BaseModel
 
 from prescyent.utils.enums import LearningTypes
+
+
+root_dir = Path(__file__).parent.parent.parent
+DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
 
 
 class MotionDatasetConfig(BaseModel):

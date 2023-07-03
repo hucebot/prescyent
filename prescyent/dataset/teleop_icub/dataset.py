@@ -39,6 +39,9 @@ class Dataset(MotionDataset):
     def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
+            logger.warning(
+                "Dataset files not found at path %s", self.config.data_path, group=DATASET
+            )
             self._get_from_web()
         self.trajectories = self._load_files()
         super().__init__(self.DATASET_NAME)

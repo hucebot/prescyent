@@ -63,7 +63,7 @@ We use tensorboard for training logging, use `tensorboard --logdir {your_log_pat
 TODO  
 ## Ros2
 
-TODO  
+See [dedicated repository](https://github.com/hucebot/ros2_prescyent/tree/dev)
 
 # Run tests
 
@@ -72,3 +72,8 @@ After installing, run this to make sure the installation is ok
 ```bash
 python -m unittest
 ```
+
+# Extend the lib with a custom dataset or predictor
+
+Predictors are inherit from the BasePredictor class, which define interfaces and core methods to keep consistency between each new implementation  
+Each Predictor defines its PredictorConfig with arguments that will be passed on to the core class  
