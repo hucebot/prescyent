@@ -144,7 +144,7 @@ class BasePredictor:
             List[torch.Tensor]: the list of model predictions
         """
         prediction_list = []
-        input_len = input_batch.shape[0]
+        input_len = len(input_batch)
         # if we don't split the input, the history_size is the size of input
         if history_size is None:
             history_size = input_len
