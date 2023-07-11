@@ -1,5 +1,5 @@
 """Module for trajectories classes"""
-from typing import Callable, List
+from typing import List
 
 import torch
 
@@ -31,7 +31,7 @@ class Trajectory:
         return len(self.tensor)
 
     def __str__(self) -> str:
-        return self.file_path
+        return str(self.file_path)
 
     @property
     def shape(self):

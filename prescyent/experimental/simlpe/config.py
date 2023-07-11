@@ -1,5 +1,4 @@
 """Config elements for Linear Pytorch Lightning module usage"""
-from typing import List
 from pydantic import BaseModel
 
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig

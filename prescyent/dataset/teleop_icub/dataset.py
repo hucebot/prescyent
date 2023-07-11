@@ -2,7 +2,7 @@
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
 from pathlib import Path
-from typing import Callable, List, Union, Dict
+from typing import List, Union, Dict
 
 import numpy as np
 import torch
@@ -40,7 +40,9 @@ class Dataset(MotionDataset):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             logger.warning(
-                "Dataset files not found at path %s", self.config.data_path, group=DATASET
+                "Dataset files not found at path %s",
+                self.config.data_path,
+                group=DATASET,
             )
             self._get_from_web()
         self.trajectories = self._load_files()

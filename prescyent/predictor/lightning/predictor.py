@@ -6,7 +6,7 @@ import os
 import shutil
 from collections.abc import Iterable, Callable
 from pathlib import Path
-from typing import List, Type, Union
+from typing import Type, Union
 
 import pytorch_lightning as pl
 import torch
@@ -22,7 +22,6 @@ from pytorch_lightning.callbacks import (
     DeviceStatsMonitor,
     EarlyStopping,
 )
-from torch.utils.data import DataLoader
 
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule

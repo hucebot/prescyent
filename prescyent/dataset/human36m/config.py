@@ -8,7 +8,7 @@ class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
     url: Union[str, None] = None
-    data_path: str = os.path.join(DEFAULT_DATA_PATH,"h36m")
+    data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
     subsampling_step: int = 2  # subsampling -> 50 Hz to 25Hz
     dimensions: Union[List[int], None] = None  # num features in the data
     used_joints: List[int] = [

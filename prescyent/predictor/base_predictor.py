@@ -37,7 +37,7 @@ class BasePredictor:
         self.name = name
         self.version = version
         self._init_logger(no_sub_dir_log)
-        logger.info(f"Loaded {self} at path {self.log_path}")
+        logger.info(f"Loaded {self} at path {self.log_path}", group=PREDICTOR)
 
     def _init_logger(self, no_sub_dir_log=False):
         if no_sub_dir_log:

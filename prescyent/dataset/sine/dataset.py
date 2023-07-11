@@ -2,7 +2,7 @@
    sine waves. Each trajectory is delayed in time.
    Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
-from typing import Callable, Union, Dict
+from typing import Union, Dict
 from pathlib import Path
 
 import numpy as np

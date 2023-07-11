@@ -1,6 +1,4 @@
-"""Class and methods for the TeleopIcub Dataset
-https://zenodo.org/record/5913573#.Y75xK_7MIaw
-"""
+"""Class and methods for the Human 3.6M Dataset"""
 from pathlib import Path
 from typing import List, Union, Dict
 
@@ -51,49 +49,47 @@ ROTATION_IDS = [
 # 32-long list with indices into expmap angles
 EXPMAP_IDS = np.split(np.arange(4, 100) - 1, 32)
 
-FILE_LABELS = {}
-FILE_LABELS["torso"] = list(range(6))
-FILE_LABELS["torso"].extend(list(range(36, 51)))
-FILE_LABELS["right_arm"] = list(range(75, 99))
-FILE_LABELS["left_arm"] = list(range(51, 75))
-FILE_LABELS["right_leg"] = list(range(6, 21))
-FILE_LABELS["left_leg"] = list(range(21, 36))
-
 POINT_LABELS = [
-    "torso_0",
-    "torso_1",
-    "right_leg_2",
-    "right_leg_3",
-    "right_leg_4",
-    "right_leg_5",
-    "right_leg_6",
-    "left_leg_7",
-    "left_leg_8",
-    "left_leg_9",
-    "left_leg_10",
-    "left_leg_11",
+    "crotch_0",
+    "right_hip_1",
+    "right knee_2",
+    "right_foot_3",
+    "right_foot_4",
+    "right_foot_5",
+    "left_hip_6",
+    "left_knee_7",
+    "left_foot_8",
+    "left_foot_9",
+    "left_foot_10",
+    "crotch_11",
     "torso_12",
-    "torso_13",
-    "torso_14",
-    "torso_15",
-    "torso_16",
-    "left_arm_17",
-    "left_arm_18",
-    "left_arm_19",
-    "left_arm_20",
-    "left_arm_21",
-    "left_arm_22",
-    "left_arm_23",
-    "left_arm_24",
-    "right_arm_25",
-    "right_arm_26",
-    "right_arm_27",
-    "right_arm_28",
-    "right_arm_29",
-    "right_arm_30",
-    "right_arm_31",
-    "right_arm_32",
+    "neck_13",
+    "head_14",
+    "top_head_15",
+    "neck_16",
+    "left_shoulder_17",
+    "left_elbow_18",
+    "left_wrist_19",
+    "left_wrist_20",
+    "left_hand_21",
+    "left_hand_22",
+    "left_hand_23",
+    "neck_24",
+    "right_shoulder_25",
+    "right_elbow_26",
+    "right_wrist_27",
+    "right_wrist_28",
+    "right_hand_29",
+    "right_hand_30",
+    "right_hand_31",
+    # "right_arm_32",
 ]
+
+FILE_LABELS = []
+for point in POINT_LABELS:
+    FILE_LABELS.append(point + "_x")
+    FILE_LABELS.append(point + "_y")
+    FILE_LABELS.append(point + "_z")
 
 
 class Dataset(MotionDataset):
@@ -105,7 +101,9 @@ class Dataset(MotionDataset):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             logger.warning(
-                "Dataset files not found at path %s", self.config.data_path, group=DATASET
+                "Dataset files not found at path %s",
+                self.config.data_path,
+                group=DATASET,
             )
             self._get_from_web()
         self.trajectories = self._load_files()
@@ -119,19 +117,19 @@ class Dataset(MotionDataset):
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
         # each files gives an expmap and has to be converted into xyz
-        train = pathfiles_to_trajectories(
+        train = self.pathfiles_to_trajectories(
             train_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
         logger.info("Found %d trajectories in the train set", len(train), group=DATASET)
-        test = pathfiles_to_trajectories(
+        test = self.pathfiles_to_trajectories(
             test_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
         logger.info("Found %d trajectories in the test set", len(test), group=DATASET)
-        val = pathfiles_to_trajectories(
+        val = self.pathfiles_to_trajectories(
             val_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
@@ -156,39 +154,39 @@ class Dataset(MotionDataset):
             "please follow the instructions in the README"
         )
 
-
-def pathfiles_to_trajectories(
-    files: List,
-    delimiter: str = ",",
-    subsampling_step: int = 0,
-    used_joints: List[int] = None,
-) -> list:
-    """util method to turn a list of pathfiles to a list of their data
-    :rtype: list
-    """
-    trajectory_arrray = list()
-    for file_path in files:
-        with file_path.open() as file:
-            expmap = file.readlines()
-        pose_info = []
-        for line in expmap:
-            line = line.strip().split(delimiter)
-            if len(line) > 0:
-                pose_info.append(np.array([float(x) for x in line]))
-        pose_info = np.array(pose_info)
-        T = pose_info.shape[0]
-        pose_info = pose_info.reshape(-1, 33, 3)
-        pose_info[:, :2] = 0
-        pose_info = pose_info[:, 1:, :].reshape(-1, 3)
-        pose_info = expmap2rotmat_torch(torch.from_numpy(pose_info).float()).reshape(
-            T, 32, 3, 3
-        )
-        xyz_info = rotmat2xyz_torch(pose_info)
-        xyz_info = (
-            xyz_info[::subsampling_step, used_joints, :] / 1000
-        )  # meter conversion
-        trajectory = Trajectory(
-            xyz_info, file_path, [POINT_LABELS[i] for i in used_joints]
-        )
-        trajectory_arrray.append(trajectory)
-    return trajectory_arrray
+    def pathfiles_to_trajectories(
+        self,
+        files: List,
+        delimiter: str = ",",
+        subsampling_step: int = 0,
+        used_joints: List[int] = None,
+    ) -> list:
+        """util method to turn a list of pathfiles to a list of their data
+        :rtype: list
+        """
+        trajectory_arrray = list()
+        for file_path in files:
+            with file_path.open() as file:
+                expmap = file.readlines()
+            pose_info = []
+            for line in expmap:
+                line = line.strip().split(delimiter)
+                if len(line) > 0:
+                    pose_info.append(np.array([float(x) for x in line]))
+            pose_info = np.array(pose_info)
+            T = pose_info.shape[0]
+            pose_info = pose_info.reshape(-1, 33, 3)
+            pose_info[:, :2] = 0
+            pose_info = pose_info[:, 1:, :].reshape(-1, 3)
+            pose_info = expmap2rotmat_torch(
+                torch.from_numpy(pose_info).float()
+            ).reshape(T, 32, 3, 3)
+            xyz_info = rotmat2xyz_torch(pose_info)
+            xyz_info = (
+                xyz_info[::subsampling_step, used_joints, :] / 1000
+            )  # meter conversion
+            trajectory = Trajectory(
+                xyz_info, file_path, [POINT_LABELS[i] for i in used_joints]
+            )
+            trajectory_arrray.append(trajectory)
+        return trajectory_arrray

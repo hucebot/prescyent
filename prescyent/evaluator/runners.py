@@ -11,7 +11,6 @@ from prescyent.evaluator.eval_summary import EvaluationSummary
 
 from prescyent.evaluator.plotting import (
     plot_trajectory_prediction,
-    plot_multiple_predictors,
     plot_multiple_future,
 )
 from prescyent.utils.logger import logger, EVAL
