@@ -19,17 +19,13 @@ class TorchModule(BaseTorchModule):
         self.input_size = config.input_size
         self.output_size = config.output_size
         self.hidden_size = config.hidden_size
-        self.motion_mlp = build_mlps(self.config)
+        self.temporal_fc_in = config.temporal_fc_in
+        self.temporal_fc_out = config.temporal_fc_out
         if self.config.dct:
             dct_m, idct_m = get_dct_matrix(self.config.input_size)
             self.register_buffer(
                 "dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0)
             )
-            self.register_buffer(
-                "idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0)
-            )
-        self.temporal_fc_in = config.temporal_fc_in
-        self.temporal_fc_out = config.temporal_fc_out
         if self.temporal_fc_in:
             self.motion_fc_in = nn.Linear(
                 self.config.input_size, self.config.hidden_size
@@ -38,6 +34,7 @@ class TorchModule(BaseTorchModule):
             self.motion_fc_in = nn.Linear(
                 self.config.feature_size, self.config.hidden_size
             )
+        self.motion_mlp = build_mlps(self.config)
         if self.temporal_fc_out:
             self.motion_fc_out = nn.Linear(
                 self.config.hidden_size, self.config.output_size
@@ -51,7 +48,10 @@ class TorchModule(BaseTorchModule):
             self.motion_fc_out = nn.Linear(
                 self.config.hidden_size, self.config.feature_size
             )
-
+        if self.config.dct:
+            self.register_buffer(
+                "idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0)
+            )
         self.reset_parameters()
 
     def reset_parameters(self):

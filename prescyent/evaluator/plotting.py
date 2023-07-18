@@ -203,7 +203,9 @@ def plot_trajectory_prediction(
         ],
         ylabels=trajectory.dimension_names,
     )
-    fig.set_size_inches(trajectory.tensor.shape[1] * 2 + 5, len(trajectory.dimension_names) + 5)
+    fig.set_size_inches(
+        trajectory.tensor.shape[1] * 2 + 5, len(trajectory.dimension_names) + 5
+    )
     title = "/".join(Path(trajectory.file_path).parts[-2:])
     fig.suptitle(title)
     fig.subplots_adjust(right=0.7)
