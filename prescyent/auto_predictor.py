@@ -10,11 +10,11 @@ from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.predictor import PREDICTOR_MAP
 
 
-def get_predictor_from_path(predictor_path: str) -> BasePredictor:
+def get_predictor_from_path(predictor_path: str = None) -> BasePredictor:
     if predictor_path:
         return AutoPredictor.load_from_config(predictor_path)
     else:
-        return ConstantPredictor("ConstantPredictor")
+        return ConstantPredictor()
 
 
 def get_predictor_infos(config):
