@@ -15,8 +15,8 @@ class BaseTorchModule(torch.nn.Module):
         self.output_size = config.dict().get("output_size", None)
         self.input_size = config.dict().get("input_size", None)
         self.num_points = config.dict().get("num_points", None)
-        self.dropout_value = config.dict().get("dropout_value", None)
         self.num_dims = config.dict().get("num_dims", None)
+        self.dropout_value = config.dict().get("dropout_value", None)
         if self.dropout_value is not None and self.dropout_value > 0:
             self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.used_norm is not None:

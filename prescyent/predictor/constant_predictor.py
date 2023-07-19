@@ -37,6 +37,19 @@ class ConstantPredictor(BasePredictor):
             group=PREDICTOR,
         )
 
+    def finetune(
+        self,
+        train_dataloader: Iterable,
+        train_config: BaseModel = None,
+        val_dataloader: Iterable = None,
+    ):
+        """finetune predictor"""
+        logger.warning(
+            "No training necessary for this predictor %s",
+            self.__class__.__name__,
+            group=PREDICTOR,
+        )
+
     def save(self, save_path: str):
         """train predictor"""
         logger.warning(

@@ -31,6 +31,7 @@ from prescyent.predictor.lightning.callbacks.progress_bar import LightningProgre
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.predictor.lightning.layers.reshaping_layer import ReshapingLayer
 
 
 class LightningPredictor(BasePredictor):
@@ -85,7 +86,7 @@ class LightningPredictor(BasePredictor):
         return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
-        supported_extentions = [".ckpt", ".pb"]  # prefered order
+        supported_extentions = [".pb", ".ckpt"]  # prefered order
         model_path = Path(path)
         if not model_path.exists():
             raise FileNotFoundError(f"No file or directory at {model_path}")
@@ -241,6 +242,9 @@ class LightningPredictor(BasePredictor):
             {**self.model.hparams, **self.training_config.dict(), **self.config.dict()},
             {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
         )
+        self.config.num_dims = train_dataloader.dataset[0].shape[3]
+        self.config.num_points = train_dataloader.dataset[0].shape[2]
+        self.config.feature_size = self.config.num_dims * self.config.num_points
         self.trainer.fit(
             model=self.model,
             train_dataloaders=train_dataloader,
@@ -249,6 +253,62 @@ class LightningPredictor(BasePredictor):
         # Always save after training
         self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
         self._free_trainer()
+
+    def finetune(
+        self,
+        train_dataloader: Iterable,
+        train_config: TrainingConfig = None,
+        val_dataloader: Iterable = None,
+    ):
+        """finetune the model"""
+        self.version = None
+        self.name = self.name + "_finetuned"
+        self._init_logger()
+        for input_t, truth_t in train_dataloader:
+            pass
+        input_shape = input_t.shape
+        output_shape = torch.Size(
+            [
+                input_shape[0],
+                truth_t.shape[1],
+                input_t.shape[2],
+                input_t.shape[3],
+            ]
+        )
+        try:
+            # try inference
+            self.predict(input_t, len(input_t[0]))
+        except RuntimeError:
+            # adapt model
+            model_input_shape = torch.Size(
+                (
+                    input_shape[0],
+                    self.config.input_size,
+                    self.config.num_points,
+                    self.config.num_dims,
+                )
+            )
+            model_output_shape = torch.Size(
+                (
+                    input_shape[0],
+                    self.config.output_size,
+                    self.config.num_points,
+                    self.config.num_dims,
+                )
+            )
+            # we update first and last layer with new feature_size
+            first_layer = ReshapingLayer(input_shape, model_input_shape)
+            last_layer = ReshapingLayer(model_output_shape, output_shape)
+            self.model.torch_model = torch.nn.Sequential(
+                first_layer, self.model.torch_model, last_layer
+            )
+        # we update model config with new input output infos
+        self.config.input_size = input_t.shape[1]
+        self.config.output_size = truth_t.shape[1]
+        self.config.num_points = input_t.shape[2]
+        self.config.num_dims = input_t.shape[3]
+        # train on new dataset
+        self.train(train_dataloader, train_config, val_dataloader)
 
     def test(self, test_dataloader: Iterable):
         """test the model"""

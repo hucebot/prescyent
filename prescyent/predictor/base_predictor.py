@@ -86,6 +86,17 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
+    def finetune(
+        self,
+        train_dataloader: Iterable,
+        train_config: BaseModel = None,
+        val_dataloader: Iterable = None,
+    ):
+        """finetune predictor"""
+        raise NotImplementedError(
+            "This method must be overriden by the inherited predictor"
+        )
+
     def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
         """run the model / algorithm for one input"""
         raise NotImplementedError(
