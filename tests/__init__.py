@@ -1,5 +1,5 @@
 """Test suite for the prescyent lib"""
 
-from prescyent.utils.logger import set_log_group_levels
+from prescyent.utils.logger import logger
 
-set_log_group_levels(30)
+logger.setLevel(30)

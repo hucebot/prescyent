@@ -7,6 +7,7 @@ from tests.custom_test_case import CustomTestCase
 
 class ReshapingLayerTests(CustomTestCase):
     def test_trajectory_shapes(self):
+        """test with trajectory likes shapes"""
         input_t = torch.zeros(64, 10, 10, 3)
         output_t = torch.zeros(64, 10, 3, 3)
         model = ReshapingLayer(input_shapes=input_t.shape, output_shapes=output_t.shape)

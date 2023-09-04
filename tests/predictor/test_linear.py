@@ -33,7 +33,6 @@ class LinearInitTests(CustomTestCase):
     def test_init_with_pathname(self):
         LinearPredictor(model_path="tests/mocking/linear_model")
         LinearPredictor(model_path="tests/mocking/linear_model/trainer_checkpoint.ckpt")
-        LinearPredictor(model_path="tests/mocking/linear_model/model.pb")
         with self.assertRaises(NotImplementedError) as context:
             LinearPredictor(model_path="tests/mocking/linear_model/bad_model.bin")
         self.assertTrue(

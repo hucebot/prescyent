@@ -23,10 +23,9 @@ def get_predictor_infos(config):
         predictor_class_name = config.get("model_config", {}).get("name")
     predictor_class = PREDICTOR_MAP.get(predictor_class_name, None)
     if predictor_class is None:
-        logger.error(
+        logger.getChild(PREDICTOR).error(
             "Could not find a predictor class matching %s",
             predictor_class_name,
-            group=PREDICTOR,
         )
         raise AttributeError(predictor_class_name)
     return predictor_class
@@ -55,21 +54,20 @@ class AutoPredictor:
         config, config_path = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         if config_path is None:
-            logger.error("Missing model path info")
-            logger.error(config)
-        logger.info(
+            logger.getChild(PREDICTOR).error("Missing model path info")
+            logger.getChild(PREDICTOR).error(config)
+        logger.getChild(PREDICTOR).info(
             "Loading %s from %s",
             predictor_class.PREDICTOR_NAME,
             config_path,
-            group=PREDICTOR,
         )
-        return predictor_class(model_path=config_path)
+        return predictor_class(model_path=config_path, config=config)
 
     @classmethod
     def build_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
         config, _ = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
-        logger.info("Building new %s", predictor_class.PREDICTOR_NAME, group=PREDICTOR)
+        logger.getChild(PREDICTOR).info("Building new %s", predictor_class.PREDICTOR_NAME)
         return predictor_class(config=config)
 
     @classmethod
@@ -80,7 +78,7 @@ class AutoPredictor:
             exception = PredictorNotFound(
                 message=f'No file or directory at "{config_path}"'
             )
-            logger.error(exception, group=PREDICTOR)
+            logger.getChild(PREDICTOR).error(exception)
             raise exception
         try:
             with config_path.open(encoding="utf-8") as conf_file:
@@ -89,5 +87,5 @@ class AutoPredictor:
             exception = PredictorUnprocessable(
                 message="The provided config_file" " could not be loaded as Json"
             )
-            logger.error(exception, group=PREDICTOR)
+            logger.getChild(PREDICTOR).error(exception)
             raise exception from json_exception

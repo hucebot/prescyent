@@ -290,7 +290,7 @@ def save_plot_and_close(savefig_path, dpi=300):
         if not Path(savefig_path).parent.exists():
             Path(savefig_path).parent.mkdir(parents=True)
         plt.savefig(savefig_path, dpi=dpi)
-        logger.info("Saving plot to %s", savefig_path, group=EVAL)
+        logger.getChild(EVAL).info("Saving plot to %s", savefig_path)
     plt.close()
 
 

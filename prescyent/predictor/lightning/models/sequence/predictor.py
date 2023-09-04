@@ -37,11 +37,10 @@ class SequencePredictor(LightningPredictor):
                 hasattr(self.model.torch_model, "input_size")
                 and history_size > self.model.torch_model.input_size
             ):
-                logger.warning(
+                logger.getChild(PREDICTOR).warning(
                     "Input can't be bigger than model input_size %d"
                     ", the input will be sliced",
                     self.model.torch_model.input_size,
-                    group=PREDICTOR,
                 )
                 input_t = input_t[-self.model.torch_model.input_size :]
             for _ in range(0, future_size, self.model.torch_model.output_size):

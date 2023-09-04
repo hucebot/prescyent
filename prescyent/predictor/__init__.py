@@ -32,8 +32,8 @@ try:
     use_experimental = True
 except ModuleNotFoundError:
     use_experimental = False
-    logger.warning(
-        "modules from experimental package will not be instanciable", group=PREDICTOR
+    logger.getChild(PREDICTOR).warning(
+        "modules from experimental package will not be instanciable"
     )
 
 

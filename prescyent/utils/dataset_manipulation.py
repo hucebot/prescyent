@@ -23,7 +23,7 @@ def split_array_with_ratios(
         np_rng = np.random.default_rng(2)  # have a deterministic shuffle for reruns
         np_rng.shuffle(array)
     if len(array) < 2:
-        logger.warning("Only the first array could contain data", group=DATASET)
+        logger.getChild(DATASET).warning("Only the first array could contain data")
         return array, list(), list()
     if not ratio3:
         len1 = round(len(array) * ratio1)
@@ -32,7 +32,7 @@ def split_array_with_ratios(
         return array[:len1], array[len1:]
 
     if len(array) < 3:
-        logger.warning("Only 2 firsts array could contain data", group=DATASET)
+        logger.getChild(DATASET).warning("Only 2 firsts array could contain data")
         return array[0], array[1], list()
     len1 = round(len(array) * ratio1)
     len2 = round(len(array) * (ratio1 + ratio2))

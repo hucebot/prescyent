@@ -20,13 +20,12 @@ class AutoDataset:
         dataset_class_name = config.get("name", None)
         dataset_class = DATASET_MAP.get(dataset_class_name, None)
         if dataset_class is None:
-            logger.error(
+            logger.getChild(DATASET).error(
                 "Could not find a Dataset class matching %s",
                 dataset_class_name,
-                group=DATASET,
             )
             raise AttributeError(dataset_class_name)
-        logger.info("Building new %s", dataset_class, group=DATASET)
+        logger.getChild(DATASET).info("Building new %s", dataset_class)
         return dataset_class(config=config)
 
     @classmethod
@@ -39,6 +38,6 @@ class AutoDataset:
             with config_path.open(encoding="utf-8") as conf_file:
                 return json.load(conf_file)
         except json.JSONDecodeError:
-            logger.error(
-                "The provided config_file could not be loaded as Json", group=DATASET
+            logger.getChild(DATASET).error(
+                "The provided config_file could not be loaded as Json"
             )

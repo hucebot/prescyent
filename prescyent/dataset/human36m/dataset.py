@@ -100,10 +100,9 @@ class Dataset(MotionDataset):
     def __init__(self, config: Union[Dict, DatasetConfig] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
-            logger.warning(
+            logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
                 self.config.data_path,
-                group=DATASET,
             )
             self._get_from_web()
         self.trajectories = self._load_files()
@@ -112,7 +111,7 @@ class Dataset(MotionDataset):
     # load a set of trajectory, keeping them separate
     def _load_files(self):
         """read txt files and create trajectories"""
-        logger.info("Reading files from %s", self.config.data_path, group=DATASET)
+        logger.getChild(DATASET).info("Reading files from %s", self.config.data_path)
         train_files = self._get_filenames_for_subject(self.config.subjects_train)
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
@@ -122,19 +121,19 @@ class Dataset(MotionDataset):
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
-        logger.info("Found %d trajectories in the train set", len(train), group=DATASET)
+        logger.getChild(DATASET).info("Found %d trajectories in the train set", len(train))
         test = self.pathfiles_to_trajectories(
             test_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
-        logger.info("Found %d trajectories in the test set", len(test), group=DATASET)
+        logger.getChild(DATASET).info("Found %d trajectories in the test set", len(test))
         val = self.pathfiles_to_trajectories(
             val_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
-        logger.info("Found %d trajectories in the val set", len(val), group=DATASET)
+        logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
         return Trajectories(train, test, val)
 
     def _get_filenames_for_subject(self, subject_names: List[str]):

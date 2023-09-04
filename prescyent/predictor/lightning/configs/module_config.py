@@ -15,6 +15,7 @@ class ModuleConfig(BaseModel):
     output_size: Optional[int]
     num_dims: Optional[int]
     num_points: Optional[int]
+    feature_size: Optional[int]
     model_path: str = "data/models"
     dropout_value: Union[None, float] = None
     norm_on_last_input: bool = False

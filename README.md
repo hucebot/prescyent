@@ -47,8 +47,9 @@ Feel free to add some new predictors implementation following the example of thi
 ## Evaluator
 We also provide a set of functions to run evalations and  plot some trajectories.  
 Runners take a list of predictors, with a list of trajectories and provide an evaluation summary on the following metrics:
-- Average Displacement Error(ADE)
-- Final Displacement Error(FDE)
+- Average Displacement Error (ADE)
+- Final Displacement Error (FDE)
+- Mean Per Joint Position Error (MPJPE)
 - Inference Time
 TODO: ADD MORE
 

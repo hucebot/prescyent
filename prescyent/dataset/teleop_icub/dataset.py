@@ -39,10 +39,9 @@ class Dataset(MotionDataset):
     def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
-            logger.warning(
+            logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
                 self.config.data_path,
-                group=DATASET,
             )
             self._get_from_web()
         self.trajectories = self._load_files()
@@ -50,16 +49,15 @@ class Dataset(MotionDataset):
 
     # load a set of trajectory, keeping them separate
     def _load_files(self):
-        logger.debug(
-            "Searching Dataset files from path %s", self.config.data_path, group=DATASET
+        logger.getChild(DATASET).debug(
+            "Searching Dataset files from path %s", self.config.data_path
         )
         files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
         if len(files) == 0:
-            logger.error(
+            logger.getChild(DATASET).error(
                 "No files matching '%s' rule for this path %s",
                 self.config.glob_dir,
                 self.config.data_path,
-                group=DATASET,
             )
             raise FileNotFoundError(self.config.data_path)
         train_files, test_files, val_files = split_array_with_ratios(
@@ -118,7 +116,7 @@ def pathfiles_to_trajectories(
     trajectory_arrray = list()
     for file in files:
         if not file.exists():
-            logger.error("file does not exist: %s", file, group=DATASET)
+            logger.getChild(DATASET).error("file does not exist: %s", file)
             raise FileNotFoundError(file)
         file_sequence = np.loadtxt(file, delimiter=delimiter)
         if end is None:

@@ -31,10 +31,9 @@ def apply_spectral_norm(model):
     for module_name, module in copy.copy(model._modules).items():
         # recurse on sequentials
         if isinstance(module, torch.nn.Sequential):
-            logger.info(
+            logger.getChild(PREDICTOR).info(
                 "Applying Spectral Normalization to %s module",
                 module_name,
-                group=PREDICTOR,
             )
             setattr(model, module_name, apply_spectral_norm(module))
         # if the module has weights
@@ -42,10 +41,9 @@ def apply_spectral_norm(model):
             # apply spectral norm
             module = torch.nn.utils.spectral_norm(module)
             setattr(model, module_name, module)
-            logger.info(
+            logger.getChild(PREDICTOR).info(
                 "Applying Spectral Normalization to %s module",
                 module_name,
-                group=PREDICTOR,
             )
     return model
 
@@ -58,34 +56,33 @@ class LightningModule(pl.LightningModule):
     training_config: TrainingConfig
 
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
-        logger.info("Initialization of the Lightning Module...", group=PREDICTOR)
+        logger.getChild(PREDICTOR).info("Initialization of the Lightning Module...")
         super().__init__()
         self.lr = 0.999
         self.torch_model = torch_model_class(config)
         if config.do_lipschitz_continuation:
-            logger.info(
+            logger.getChild(PREDICTOR).info(
                 "Parametrization of Lightning Module using the Lipschitz constant..."
             )
             apply_spectral_norm(self.torch_model)
         if not hasattr(self.torch_model, "criterion"):
             criterion = CRITERION_MAPPING.get(config.loss_fn.lower(), None)
             if criterion is None:
-                logger.warning(
+                logger.getChild(PREDICTOR).warning(
                     "provided criterion %s is not handled, please use one of the"
                     "following %s.",
                     config.loss_fn.lower(),
                     list(CRITERION_MAPPING.keys()),
-                    group=PREDICTOR,
                 )
                 criterion = DEFAULT_LOSS
         else:
             criterion = self.torch_model.criterion
-        logger.info(
-            "Using %s loss function", criterion.__class__.__name__, group=PREDICTOR
+        logger.getChild(PREDICTOR).info(
+            "Using %s loss function", criterion.__class__.__name__
         )
         self.criterion = criterion
         self.save_hyperparameters(ignore=["torch_model", "criterion"])
-        logger.info("Lightning Module ready.", group=PREDICTOR)
+        logger.getChild(PREDICTOR).info("Lightning Module ready.")
 
     def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
         optimizer.zero_grad(set_to_none=True)

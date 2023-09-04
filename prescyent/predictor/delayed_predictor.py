@@ -18,10 +18,9 @@ class DelayedPredictor(BasePredictor):
 
     def _build_from_config(self, config: Dict):
         """build predictor from a config"""
-        logger.warning(
+        logger.getChild(PREDICTOR).warning(
             "No config necessary for this predictor %s",
             self.__class__.__name__,
-            group=PREDICTOR,
         )
 
     def train(
@@ -31,10 +30,9 @@ class DelayedPredictor(BasePredictor):
         val_dataloader: Iterable = None,
     ):
         """train predictor"""
-        logger.warning(
+        logger.getChild(PREDICTOR).warning(
             "No training necessary for this predictor %s",
             self.__class__.__name__,
-            group=PREDICTOR,
         )
 
     def finetune(
@@ -44,18 +42,16 @@ class DelayedPredictor(BasePredictor):
         val_dataloader: Iterable = None,
     ):
         """finetune predictor"""
-        logger.warning(
+        logger.getChild(PREDICTOR).warning(
             "No training necessary for this predictor %s",
             self.__class__.__name__,
-            group=PREDICTOR,
         )
 
     def save(self, save_path: str):
         """train predictor"""
-        logger.warning(
+        logger.getChild(PREDICTOR).warning(
             "No save necessary for this predictor %s",
             self.__class__.__name__,
-            group=PREDICTOR,
         )
 
     def predict(self, input_t, future_size):

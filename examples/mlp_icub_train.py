@@ -28,7 +28,7 @@ if __name__ == "__main__":
     config = MlpConfig(
         output_size=future_size,
         input_size=history_size,
-        hidden_size=[512, 512, 512, 512],
+        hidden_size=512,
         norm_on_last_input=True,
     )
     predictor = MlpPredictor(config=config)

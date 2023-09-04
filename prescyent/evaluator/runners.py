@@ -113,10 +113,9 @@ def eval_predictors(
     """
     # TODO: reject impossible values for history_size and future_size
     evaluation_results = [EvaluationSummary() for _ in predictors]
-    logger.info(
+    logger.getChild(EVAL).info(
         f"Running evaluation for {len(predictors)} predictors"
         f" on {len(trajectories)} trajectories",
-        group=EVAL,
     )
     for t, trajectory in tqdm(enumerate(trajectories), desc="Trajectory n°"):
         predictions = []

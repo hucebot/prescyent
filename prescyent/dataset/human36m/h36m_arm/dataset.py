@@ -67,7 +67,7 @@ class Dataset(H36MDataset):
         trajectory_list = super().pathfiles_to_trajectories(
             files, delimiter, subsampling_step, used_joints
         )
-        if self.config.bimanual == True:
+        if self.config.bimanual is True:
             arm_joint_names = RIGHT_ARM_LABELS + LEFT_ARM_LABELS
             arm_joint_ids = [
                 trajectory_list[0].dimension_names.index(name)
