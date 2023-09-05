@@ -51,7 +51,7 @@ Runners take a list of predictors, with a list of trajectories and provide an ev
 - Final Displacement Error (FDE)
 - Mean Per Joint Position Error (MPJPE)
 - Inference Time
-TODO: ADD MORE
+- TODO: ADD MORE
 
 
 # Usage

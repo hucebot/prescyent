@@ -120,6 +120,9 @@ class LightningPredictor(BasePredictor):
         self.training_config = config
 
     def _init_trainer(self, devices=None):
+        logger.getChild(PREDICTOR).info(
+            "Creating new Trainer instance at %s", self.log_path
+        )
         if self.training_config is None:
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
@@ -306,9 +309,6 @@ class LightningPredictor(BasePredictor):
     def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
-            logger.getChild(PREDICTOR).info(
-                "New trainer as been created at %s", self.log_path
-            )
             self._init_trainer(devices=1)
         self.trainer.test(self.model, test_dataloader)
         self._free_trainer()

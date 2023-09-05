@@ -145,6 +145,7 @@ class Dataset(MotionDataset):
                         f"{action}_*.txt"
                     )
                 )
+        filenames.sort()
         return filenames
 
     def _get_from_web(self):

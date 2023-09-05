@@ -53,6 +53,7 @@ class Dataset(MotionDataset):
             "Searching Dataset files from path %s", self.config.data_path
         )
         files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
+        files.sort()
         if len(files) == 0:
             logger.getChild(DATASET).error(
                 "No files matching '%s' rule for this path %s",
