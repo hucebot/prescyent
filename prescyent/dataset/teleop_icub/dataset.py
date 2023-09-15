@@ -13,7 +13,7 @@ from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import split_array_with_ratios
 from prescyent.dataset.teleop_icub.config import DatasetConfig
 
-
+BASE_FREQUENCY = 100
 FILE_LABELS = [
     "waist_z",
     "right_hand_x",
@@ -139,7 +139,13 @@ def pathfiles_to_trajectories(
         if used_joints is None:
             used_joints = list(range(len(POINT_LABELS)))
         tensor = tensor[:, used_joints]
+        freq = (
+            BASE_FREQUENCY // subsampling_step if subsampling_step else BASE_FREQUENCY
+        )
+        title = f"{Path(file).parts[-3]}_{Path(file).parts[-2]}_{Path(file).stem}"
         trajectory_arrray.append(
-            Trajectory(tensor, file, [POINT_LABELS[i] for i in used_joints])
+            Trajectory(
+                tensor, freq, file, title, [POINT_LABELS[i] for i in used_joints]
+            )
         )
     return trajectory_arrray

@@ -2,7 +2,7 @@ from abc import abstractmethod
 import functools
 import torch
 
-from prescyent.predictor.lightning.layers.standard_scaler import MotionLayerNorm
+from prescyent.predictor.lightning.layers.normalization_layer import MotionLayerNorm
 
 
 class BaseTorchModule(torch.nn.Module):

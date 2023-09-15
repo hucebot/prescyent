@@ -67,7 +67,9 @@ class AutoPredictor:
     def build_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
         config, _ = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
-        logger.getChild(PREDICTOR).info("Building new %s", predictor_class.PREDICTOR_NAME)
+        logger.getChild(PREDICTOR).info(
+            "Building new %s", predictor_class.PREDICTOR_NAME
+        )
         return predictor_class(config=config)
 
     @classmethod

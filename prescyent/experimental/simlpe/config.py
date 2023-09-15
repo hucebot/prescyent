@@ -27,7 +27,8 @@ class Config(ModuleConfig):
 
     input_size: int
     output_size: int
-    feature_size: int
+    num_points: int
+    num_dims: int
     hidden_size: int = DEFAULT_HIDDEN
     num_layers: int = 48
     dct: bool = True

@@ -12,6 +12,7 @@ from prescyent.utils.dataset_manipulation import expmap2rotmat_torch, rotmat2xyz
 from prescyent.dataset.human36m.config import DatasetConfig
 
 # 32-long list with indices into angles
+BASE_FREQUENCY = 50
 ROTATION_IDS = [
     [5, 6, 4],
     [8, 9, 7],
@@ -62,10 +63,10 @@ POINT_LABELS = [
     "left_foot_9",
     "left_foot_10",
     "crotch_11",
-    "torso_12",
-    "neck_13",
-    "head_14",
-    "top_head_15",
+    "spine_12",
+    "thorax_13",
+    "nose_14",
+    "head_15",
     "neck_16",
     "left_shoulder_17",
     "left_elbow_18",
@@ -82,7 +83,6 @@ POINT_LABELS = [
     "right_hand_29",
     "right_hand_30",
     "right_hand_31",
-    # "right_arm_32",
 ]
 
 FILE_LABELS = []
@@ -121,13 +121,17 @@ class Dataset(MotionDataset):
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
-        logger.getChild(DATASET).info("Found %d trajectories in the train set", len(train))
+        logger.getChild(DATASET).info(
+            "Found %d trajectories in the train set", len(train)
+        )
         test = self.pathfiles_to_trajectories(
             test_files,
             used_joints=self.config.used_joints,
             subsampling_step=self.config.subsampling_step,
         )
-        logger.getChild(DATASET).info("Found %d trajectories in the test set", len(test))
+        logger.getChild(DATASET).info(
+            "Found %d trajectories in the test set", len(test)
+        )
         val = self.pathfiles_to_trajectories(
             val_files,
             used_joints=self.config.used_joints,
@@ -185,8 +189,14 @@ class Dataset(MotionDataset):
             xyz_info = (
                 xyz_info[::subsampling_step, used_joints, :] / 1000
             )  # meter conversion
+            freq = (
+                BASE_FREQUENCY // subsampling_step
+                if subsampling_step
+                else BASE_FREQUENCY
+            )
+            title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
             trajectory = Trajectory(
-                xyz_info, file_path, [POINT_LABELS[i] for i in used_joints]
+                xyz_info, freq, file_path, title, [POINT_LABELS[i] for i in used_joints]
             )
             trajectory_arrray.append(trajectory)
         return trajectory_arrray

@@ -50,6 +50,8 @@ class Dataset(MotionDataset):
             torch.from_numpy(np.sin(x / 1.0 / period).astype("float64")).reshape(
                 length, 1, 1
             ),
+            100,
+            "",
             "sin trajectory",
             ["sin(x)"],
         )

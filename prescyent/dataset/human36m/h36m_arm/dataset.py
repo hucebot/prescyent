@@ -34,8 +34,8 @@ RELATIVE_BOTH_ARMS_LABEL = "neck_13"
 MIRROR_AXIS_LABELS = [
     "crotch_0",
     "crotch_11",
-    "torso_12",
-    "neck_13",
+    "spine_12",
+    "thorax_13",
     "neck_16",
     "neck_24",
 ]
@@ -137,6 +137,7 @@ def get_joints(trajectory: Trajectory, idx_list: List[int]) -> Trajectory:
     """
     new_trajectory = Trajectory(
         tensor=trajectory.tensor[:, idx_list, :],
+        frequency=trajectory.frequency,
         dimension_names=[trajectory.dimension_names[idx] for idx in idx_list],
         file_path=trajectory.file_path,
     )

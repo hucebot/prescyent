@@ -123,7 +123,9 @@ class MotionDataset(Dataset):
         if isinstance(config, dict):  # use pydantic for dict verification
             config = config_class(**config)
         elif config is None:  # use default config if none
-            logger.getChild(DATASET).info("Using default config because none was provided")
+            logger.getChild(DATASET).info(
+                "Using default config because none was provided"
+            )
             config = config_class()
         elif isinstance(config, str):  # load from a string
             config = Path(config)

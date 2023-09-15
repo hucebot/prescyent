@@ -46,19 +46,20 @@ def get_rmse(truth: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
 
 # h36m_time_ms =      [80,    160,  320,   400,   560,   720,   880,  1000]
 # h36m_results_keys = ['#2', '#4', '#8', '#10', '#14', '#18', '#22', '#25']
-def get_mpjpe(truth: torch.Tensor, pred: torch.Tensor, output_mm: bool = True) -> torch.Tensor:
+def get_mpjpe(
+    truth: torch.Tensor, pred: torch.Tensor, output_mm: bool = True
+) -> torch.Tensor:
     """Mean Per Joint Position Error (MPJPE)
     Lower is better
-    We expect inputs expressed in meters, as the MPJPE is by default expressed in millimeters"""
+    We expect inputs expressed in meters, as the MPJPE is by default expressed in millimeters
+    """
     if output_mm:
         truth = truth * 1000
         pred = pred * 1000
     if is_tensor_is_batched(truth):
         batch_len = truth.shape[0]
         mpjpe = (
-            torch.sum(
-                torch.mean(torch.norm(truth - pred, dim=3), dim=2), dim=0
-            )
+            torch.sum(torch.mean(torch.norm(truth - pred, dim=3), dim=2), dim=0)
             / batch_len
         )
     else:

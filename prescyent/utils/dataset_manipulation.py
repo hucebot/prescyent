@@ -263,7 +263,7 @@ def fkl_torch(rotmat, parent, offset, rotInd, expmapInd):
             p3d[:, i, :] = (
                 torch.matmul(p3d[0, i, :], R[:, parent[i], :, :]) + p3d[:, parent[i], :]
             )
-    p3d = p3d[:,:,[0,2,1]] # (x, y, z) instead of (x, z, y)
+    p3d = p3d[:, :, [0, 2, 1]]  # (x, y, z) instead of (x, z, y)
     return p3d
 
 

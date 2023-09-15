@@ -206,8 +206,7 @@ def plot_trajectory_prediction(
     fig.set_size_inches(
         trajectory.tensor.shape[1] * 2 + 5, len(trajectory.dimension_names) + 5
     )
-    title = "/".join(Path(trajectory.file_path).parts[-2:])
-    fig.suptitle(title)
+    fig.suptitle(trajectory.title)
     fig.subplots_adjust(right=0.7)
     fig.tight_layout()
     save_plot_and_close(savefig_path)
@@ -244,7 +243,7 @@ def plot_multiple_predictors(
         ylabels=trajectory.dimension_names,
     )
     fig.set_size_inches(150, len(trajectory.dimension_names) + 10)
-    fig.suptitle(trajectory.file_path)
+    fig.suptitle(trajectory.title)
     save_plot_and_close(savefig_path)
 
 
@@ -280,7 +279,7 @@ def plot_multiple_future(
         ylabels=trajectory.dimension_names,
     )
     fig.set_size_inches(15, len(trajectory.dimension_names) + 2)
-    fig.suptitle(trajectory.file_path)
+    fig.suptitle(trajectory.title)
     save_plot_and_close(savefig_path)
 
 

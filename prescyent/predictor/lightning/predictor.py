@@ -199,9 +199,7 @@ class LightningPredictor(BasePredictor):
                 raise FileNotFoundError(f"No file or directory at {config_path}")
             with config_path.open(encoding="utf-8") as conf_file:
                 config_data = json.load(conf_file)
-        self.training_config = TrainingConfig(
-            **config_data.get("training_config", {})
-        )
+        self.training_config = TrainingConfig(**config_data.get("training_config", {}))
         if self.training_config.accelerator == "cuda" and not torch.cuda.is_available():
             self.training_config.accelerator = "auto"
         self.config = self.config_class(**config_data.get("model_config", {}))
@@ -240,7 +238,6 @@ class LightningPredictor(BasePredictor):
         sample_tensor = train_dataloader.dataset[0][0]
         self.config.num_dims = sample_tensor.shape[2]
         self.config.num_points = sample_tensor.shape[1]
-        self.config.feature_size = self.config.num_dims * self.config.num_points
         self.trainer.fit(
             model=self.model,
             train_dataloaders=train_dataloader,
@@ -329,7 +326,9 @@ class LightningPredictor(BasePredictor):
             save_path = Path(save_path)
         # save model & config
         save_path.mkdir(parents=True, exist_ok=True)
-        logger.getChild(PREDICTOR).info("Saving config at %s", (save_path / "config.json"))
+        logger.getChild(PREDICTOR).info(
+            "Saving config at %s", (save_path / "config.json")
+        )
         self._save_config(save_path / "config.json")
         # reload logger at new location
         self.log_root_path = save_path
