@@ -9,7 +9,7 @@ class Arms(str, Enum):
 
 
 class DatasetConfig(H36MDatasetConfig):
-    """Pydantic Basemodel for TeleopIcubDataset configuration"""
+    """Pydantic Basemodel for Dataset configuration"""
 
     bimanual: bool = True  # If bimanual, subsample dataset to both arms,
     # else we use the following:

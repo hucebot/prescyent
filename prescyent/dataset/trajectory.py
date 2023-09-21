@@ -15,6 +15,7 @@ class Trajectory:
     frequency: int
     file_path: str
     title: str
+    point_parents: List[int]
     dimension_names: List[str]
 
     def __init__(
@@ -23,12 +24,14 @@ class Trajectory:
         frequency: int,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
+        point_parents: List[int] = [-1],
         dimension_names: List[str] = ["y_infos"],
     ) -> None:
         self.tensor = tensor
         self.frequency = frequency
         self.file_path = file_path
         self.title = title
+        self.point_parents = point_parents
         self.dimension_names = dimension_names
 
     def __getitem__(self, index):

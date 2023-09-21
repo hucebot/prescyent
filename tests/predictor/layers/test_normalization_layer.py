@@ -14,19 +14,21 @@ class MotionLayerNormTests(CustomTestCase):
         num_points = 5
         num_dims = 3
         input_t = torch.zeros(64, input_size, num_points, num_dims)
-        config = ModuleConfig(input_size=input_size,
-                              num_points=num_points,
-                              num_dims=num_dims,
-                              used_norm=Normalizations.ALL,
-                              )
+        config = ModuleConfig(
+            input_size=input_size,
+            num_points=num_points,
+            num_dims=num_dims,
+            used_norm=Normalizations.ALL,
+        )
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
         with self.assertRaises(ValidationError) as context:
-            config = ModuleConfig(input_size=input_size,
-                              num_points=num_points,
-                              used_norm=Normalizations.ALL,
-                              )
+            config = ModuleConfig(
+                input_size=input_size,
+                num_points=num_points,
+                used_norm=Normalizations.ALL,
+            )
 
     def test_spatial_norm(self):
         """test spatial norm init and forward"""
@@ -34,17 +36,19 @@ class MotionLayerNormTests(CustomTestCase):
         num_points = 5
         num_dims = 3
         input_t = torch.zeros(64, input_size, num_points, num_dims)
-        config = ModuleConfig(num_points=num_points,
-                              num_dims=num_dims,
-                              used_norm=Normalizations.SPATIAL,
-                              )
+        config = ModuleConfig(
+            num_points=num_points,
+            num_dims=num_dims,
+            used_norm=Normalizations.SPATIAL,
+        )
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
         with self.assertRaises(ValidationError) as context:
-            config = ModuleConfig(num_points=num_points,
-                              used_norm=Normalizations.SPATIAL,
-                              )
+            config = ModuleConfig(
+                num_points=num_points,
+                used_norm=Normalizations.SPATIAL,
+            )
 
     def test_temporal_norm(self):
         """test test temporal_norm and forward"""
@@ -52,17 +56,19 @@ class MotionLayerNormTests(CustomTestCase):
         num_points = 5
         num_dims = 3
         input_t = torch.zeros(64, input_size, num_points, num_dims)
-        config = ModuleConfig(input_size=input_size,
-                              used_norm=Normalizations.TEMPORAL,
-                              )
+        config = ModuleConfig(
+            input_size=input_size,
+            used_norm=Normalizations.TEMPORAL,
+        )
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
         with self.assertRaises(ValidationError) as context:
-            config = ModuleConfig(num_dims=num_dims,
-                              num_points=num_points,
-                              used_norm=Normalizations.TEMPORAL,
-                              )
+            config = ModuleConfig(
+                num_dims=num_dims,
+                num_points=num_points,
+                used_norm=Normalizations.TEMPORAL,
+            )
 
     def test_batch_norm(self):
         """test batch norm init and forward"""
@@ -70,9 +76,10 @@ class MotionLayerNormTests(CustomTestCase):
         num_points = 5
         num_dims = 3
         input_t = torch.zeros(64, input_size, num_points, num_dims)
-        config = ModuleConfig(input_size=input_size,
-                              used_norm=Normalizations.BATCH,
-                              )
+        config = ModuleConfig(
+            input_size=input_size,
+            used_norm=Normalizations.BATCH,
+        )
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)

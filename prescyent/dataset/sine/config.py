@@ -7,7 +7,7 @@ from prescyent.dataset.config import MotionDatasetConfig
 
 
 class DatasetConfig(MotionDatasetConfig):
-    """Pydantic Basemodel for TeleopIcubDataset configuration"""
+    """Pydantic Basemodel for Dataset configuration"""
 
     dimensions: Union[List[int], None] = [2]  # dimension in the data
     # number of trajectories

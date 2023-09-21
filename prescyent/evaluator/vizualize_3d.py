@@ -1,4 +1,5 @@
 from tqdm import tqdm
+from typing import List
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -8,7 +9,14 @@ from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
 
 
-def render_3d_trajectory(traj: Trajectory, radius=2, save_mp4=True, interactive=False):
+def render_3d_trajectory(
+    traj: Trajectory,
+    radius: int = 2,
+    save_mp4: bool = True,
+    interactive: bool = False,
+    draw_bones: bool = True,
+):
+    """"""
     test_frame = traj[0].transpose(
         0, 1
     )  # at frame n we have (points, dims) => (dims, points)
@@ -31,12 +39,28 @@ def render_3d_trajectory(traj: Trajectory, radius=2, save_mp4=True, interactive=
     except NotImplementedError:
         ax_3d.set_aspect("auto")
     ax_3d.set_title(str(traj))
-    points = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
+
+    if draw_bones:
+        assert len(traj.point_parents) == len(
+            test_frame[0]
+        )  # assert that we have parent for each point
+        bone_list = [
+            ax_3d.plot([], [], [], color="red", zdir="z")
+            for _ in range(len(test_frame[0]))
+        ]
+    point_list = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
 
     def init():
-        points[0].set_data([], [])
-        points[0].set_3d_properties([])
-        return (points,)
+        if draw_bones:
+            for point, _ in enumerate(point_list):
+                bone_list[point][0].set_data([], [])
+                bone_list[point][0].set_3d_properties([])
+        point_list[0].set_data([], [])
+        point_list[0].set_3d_properties([])
+        return (
+            point_list,
+            bone_list,
+        )
 
     def animate(i):
         frame = traj[i]
@@ -45,9 +69,21 @@ def render_3d_trajectory(traj: Trajectory, radius=2, save_mp4=True, interactive=
         xs = frame[0]
         ys = frame[1]
         zs = frame[2]
-        points[0].set_data(xs, ys)
-        points[0].set_3d_properties(zs)
-        return (points,)
+        point_list[0].set_data(xs, ys)
+        point_list[0].set_3d_properties(zs)
+        if draw_bones:
+            xs, ys, zs = [], [], []
+            for point, _ in enumerate(frame[0]):
+                if traj.point_parents[point] != -1:
+                    xs = [frame[0][point], frame[0][traj.point_parents[point]]]
+                    ys = [frame[1][point], frame[1][traj.point_parents[point]]]
+                    zs = [frame[2][point], frame[2][traj.point_parents[point]]]
+                    bone_list[point][0].set_data(xs, ys)
+                    bone_list[point][0].set_3d_properties(zs)
+        return (
+            point_list,
+            bone_list,
+        )
 
     anim = FuncAnimation(
         fig,

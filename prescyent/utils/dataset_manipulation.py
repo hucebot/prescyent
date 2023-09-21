@@ -39,6 +39,12 @@ def split_array_with_ratios(
     return array[:len1], array[len1:len2], array[len2:]
 
 
+def update_parent_ids(kept_indexes: List[int], parents: List[int]) -> List[int]:
+    """update a reference map with a new list of indexes"""
+    key_map = {k: v for v, k in enumerate(kept_indexes)}
+    return [key_map.get(parents[i], -1) for i in kept_indexes]
+
+
 def _get_metadata():
     """
     code from

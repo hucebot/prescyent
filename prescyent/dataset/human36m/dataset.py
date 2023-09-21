@@ -8,88 +8,13 @@ import torch
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.dataset import MotionDataset, Trajectories
-from prescyent.utils.dataset_manipulation import expmap2rotmat_torch, rotmat2xyz_torch
+from prescyent.utils.dataset_manipulation import (
+    expmap2rotmat_torch,
+    rotmat2xyz_torch,
+    update_parent_ids,
+)
+import prescyent.dataset.human36m.metadata as metadata
 from prescyent.dataset.human36m.config import DatasetConfig
-
-# 32-long list with indices into angles
-BASE_FREQUENCY = 50
-ROTATION_IDS = [
-    [5, 6, 4],
-    [8, 9, 7],
-    [11, 12, 10],
-    [14, 15, 13],
-    [17, 18, 16],
-    [],
-    [20, 21, 19],
-    [23, 24, 22],
-    [26, 27, 25],
-    [29, 30, 28],
-    [],
-    [32, 33, 31],
-    [35, 36, 34],
-    [38, 39, 37],
-    [41, 42, 40],
-    [],
-    [44, 45, 43],
-    [47, 48, 46],
-    [50, 51, 49],
-    [53, 54, 52],
-    [56, 57, 55],
-    [],
-    [59, 60, 58],
-    [],
-    [62, 63, 61],
-    [65, 66, 64],
-    [68, 69, 67],
-    [71, 72, 70],
-    [74, 75, 73],
-    [],
-    [77, 78, 76],
-    [],
-]
-# 32-long list with indices into expmap angles
-EXPMAP_IDS = np.split(np.arange(4, 100) - 1, 32)
-
-POINT_LABELS = [
-    "crotch_0",
-    "right_hip_1",
-    "right knee_2",
-    "right_foot_3",
-    "right_foot_4",
-    "right_foot_5",
-    "left_hip_6",
-    "left_knee_7",
-    "left_foot_8",
-    "left_foot_9",
-    "left_foot_10",
-    "crotch_11",
-    "spine_12",
-    "thorax_13",
-    "nose_14",
-    "head_15",
-    "neck_16",
-    "left_shoulder_17",
-    "left_elbow_18",
-    "left_wrist_19",
-    "left_wrist_20",
-    "left_hand_21",
-    "left_hand_22",
-    "left_hand_23",
-    "neck_24",
-    "right_shoulder_25",
-    "right_elbow_26",
-    "right_wrist_27",
-    "right_wrist_28",
-    "right_hand_29",
-    "right_hand_30",
-    "right_hand_31",
-]
-
-FILE_LABELS = []
-for point in POINT_LABELS:
-    FILE_LABELS.append(point + "_x")
-    FILE_LABELS.append(point + "_y")
-    FILE_LABELS.append(point + "_z")
 
 
 class Dataset(MotionDataset):
@@ -116,27 +41,15 @@ class Dataset(MotionDataset):
         val_files = self._get_filenames_for_subject(self.config.subjects_val)
         test_files = self._get_filenames_for_subject(self.config.subjects_test)
         # each files gives an expmap and has to be converted into xyz
-        train = self.pathfiles_to_trajectories(
-            train_files,
-            used_joints=self.config.used_joints,
-            subsampling_step=self.config.subsampling_step,
-        )
+        train = self.pathfiles_to_trajectories(train_files)
         logger.getChild(DATASET).info(
             "Found %d trajectories in the train set", len(train)
         )
-        test = self.pathfiles_to_trajectories(
-            test_files,
-            used_joints=self.config.used_joints,
-            subsampling_step=self.config.subsampling_step,
-        )
+        test = self.pathfiles_to_trajectories(test_files)
         logger.getChild(DATASET).info(
             "Found %d trajectories in the test set", len(test)
         )
-        val = self.pathfiles_to_trajectories(
-            val_files,
-            used_joints=self.config.used_joints,
-            subsampling_step=self.config.subsampling_step,
-        )
+        val = self.pathfiles_to_trajectories(val_files)
         logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
         return Trajectories(train, test, val)
 
@@ -162,13 +75,15 @@ class Dataset(MotionDataset):
         self,
         files: List,
         delimiter: str = ",",
-        subsampling_step: int = 0,
-        used_joints: List[int] = None,
     ) -> list:
         """util method to turn a list of pathfiles to a list of their data
         :rtype: list
         """
+        used_joints = self.config.used_joints
+        subsampling_step = self.config.subsampling_step
         trajectory_arrray = list()
+        if used_joints is None:
+            used_joints = list(range(len(metadata.POINT_LABELS)))
         for file_path in files:
             with file_path.open() as file:
                 expmap = file.readlines()
@@ -190,13 +105,18 @@ class Dataset(MotionDataset):
                 xyz_info[::subsampling_step, used_joints, :] / 1000
             )  # meter conversion
             freq = (
-                BASE_FREQUENCY // subsampling_step
+                metadata.BASE_FREQUENCY // subsampling_step
                 if subsampling_step
-                else BASE_FREQUENCY
+                else metadata.BASE_FREQUENCY
             )
             title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
             trajectory = Trajectory(
-                xyz_info, freq, file_path, title, [POINT_LABELS[i] for i in used_joints]
+                xyz_info,
+                freq,
+                file_path,
+                title,
+                update_parent_ids(used_joints, metadata.POINT_PARENTS),
+                [metadata.POINT_LABELS[i] for i in used_joints],
             )
             trajectory_arrray.append(trajectory)
         return trajectory_arrray

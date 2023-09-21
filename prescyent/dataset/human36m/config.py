@@ -5,13 +5,13 @@ from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
 
 
 class DatasetConfig(MotionDatasetConfig):
-    """Pydantic Basemodel for TeleopIcubDataset configuration"""
+    """Pydantic Basemodel for Dataset configuration"""
 
     url: Union[str, None] = None
     data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
     subsampling_step: int = 2  # subsampling -> 50 Hz to 25Hz
     dimensions: Union[List[int], None] = None  # num features in the data
-    used_joints: List[int] = [
+    used_joints: Union[List[int], None] = [
         2,
         3,
         4,
