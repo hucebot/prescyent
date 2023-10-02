@@ -61,8 +61,15 @@ class Dataset(MotionDataset):
             shuffle=self.config.shuffle,
         )
         train = self.pathfiles_to_trajectories(train_files)
+        logger.getChild(DATASET).info(
+            "Found %d trajectories in the train set", len(train)
+        )
         test = self.pathfiles_to_trajectories(test_files)
+        logger.getChild(DATASET).info(
+            "Found %d trajectories in the test set", len(test)
+        )
         val = self.pathfiles_to_trajectories(val_files)
+        logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
         return Trajectories(train, test, val)
 
     def _get_from_web(self):

@@ -35,7 +35,9 @@ if __name__ == "__main__":
     print("OK")
 
     # Train
-    training_config = TrainingConfig(epoch=100, devices=1, use_auto_lr=True)
+    training_config = TrainingConfig(
+        epoch=10, devices="auto", accelerator="cpu", use_auto_lr=True
+    )
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 
     # Save the predictor

@@ -8,7 +8,6 @@ import socket
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
-from prescyent.experimental.simlpe.benchmark import run_benchmark
 
 
 def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
@@ -40,31 +39,21 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
     training_config = TrainingConfig(**training_config)
 
     # Launch training
-    print("Training...")
+    print("Training starts...")
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 
     # Save the predictor, and configs
     model_dir = Path(
         f"data/models/exp/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
     )
-    print("model directory:", model_dir)
+    print("Model directory:", model_dir)
     predictor.save(model_dir)
     dataset.save_config(model_dir / "dataset_config.json")
     if rm_config:
         os.remove(str(config_path))
 
-    # Test so that we know how good we are
-    print("Testing...")
+    print("Testing predictor...")
     predictor.test(dataset.test_dataloader)
-    # also run and log SiMLPe benchmark when possible
-    if dataset.name == "H36M":
-        try:
-            print("Running SiMLPe benchmark...")
-            res = run_benchmark(predictor)
-            predictor.log_metrics(res)
-        except RuntimeError as e:
-            print(e)
-            print("Aborting SiMLPe benchmark")
 
 
 if __name__ == "__main__":

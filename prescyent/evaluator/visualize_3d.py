@@ -97,5 +97,9 @@ def render_3d_trajectory(
         anim.save(title, fps=traj.frequency, extra_args=["-vcodec", "libx264"])
         logger.getChild(EVAL).info(f"Saved 3d rendered prediction at {title}")
     if interactive:
-        matplotlib.use("GTK3Agg")
+        try:
+            matplotlib.use("GTK3Agg")
+        except AttributeError:
+            print("can't use GTK3Agg backend for matplotlib")
+            matplotlib.use("agg")
         plt.show()

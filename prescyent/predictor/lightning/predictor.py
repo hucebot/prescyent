@@ -148,6 +148,7 @@ class LightningPredictor(BasePredictor):
             kwargs["deterministic"] = True
         torch.set_float32_matmul_precision("high")
         self.trainer = pl.Trainer(
+            default_root_dir=self.log_path,
             logger=self.tb_logger,
             max_epochs=self.training_config.epoch,
             callbacks=callbacks,
