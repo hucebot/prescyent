@@ -1,9 +1,9 @@
-<p align="center"><a href=""><img alt="PreScyent" src="assets/logo.png"></a></p>
+<p align="center"><img alt="PreScyent" src="assets/logo.png"></p>
 <h2 style="text-align: center;">Data-driven trajectory prediction library built in python<p>  
 
 <p align="center">
-<img alt="Trajectory plot" src="assets/mlp_icub_test_plot.png" width="46.5%" >
-<img alt="Trajectory visualization" src="assets/S5_greeting_1_animation.gif" width="40%">
+<img alt="Trajectory plot" src="assets/mlp_icub_test_plot.png" width="48%" >
+<img alt="Trajectory visualization" src="https://github.com/hucebot/prescyent/blob/dev/assets/S5_greeting_1_animation.gif" width="40%">
 </p>
 
 # Get Started
