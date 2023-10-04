@@ -1,0 +1,15 @@
+{
+    "model_config": {
+        "input_size": 10,
+        "name": "LinearPredictor",
+        "output_size": 10,
+        "version": 1
+    },
+    "training_config": {
+        "devices": "1",
+        "epoch": 10,
+        "lr": 0.02089296130854041,
+        "use_auto_lr": true,
+        "use_deterministic_algorithms": false
+    }
+}

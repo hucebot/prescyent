@@ -127,3 +127,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# VSCode project settings
+.vscode
+
+# data folder
+data/
+
+# lightning folder
+lightning_logs/
+
+# ros2 files
+install/
+log/
+
+samples/

@@ -1,0 +1,20 @@
+{
+    "model_config": {
+        "name": "LinearPredictor",
+        "input_size": 10,
+        "output_size": 10
+    },
+    "training_config": {
+        "epoch": 10,
+        "devices": 1,
+        "seed": 5,
+        "use_auto_lr": true,
+        "use_deterministic_algorithms": false
+    },
+    "dataset_config": {
+        "name": "TeleopIcub",
+        "batch_size": 128,
+        "future_size": 10,
+        "history_size": 10
+    }
+}
