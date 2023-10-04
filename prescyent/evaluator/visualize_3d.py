@@ -12,8 +12,8 @@ from prescyent.utils.logger import logger, EVAL
 def render_3d_trajectory(
     traj: Trajectory,
     radius: int = 2,
-    save_mp4: bool = True,
-    interactive: bool = False,
+    save_file: str = None, # use "mp4" or "gif"
+    interactive: bool = True,
     draw_bones: bool = True,
 ):
     """"""
@@ -26,11 +26,10 @@ def render_3d_trajectory(
             f"Trajectory with {len(test_frame)} dimensions can't be 3d plotted"
         )
 
-    plt.rcParams["figure.figsize"] = [19.20, 10.80]
+    plt.rcParams["figure.figsize"] = [12.20, 10.80]
     plt.rcParams["figure.autolayout"] = True
     fig = plt.figure()
     ax_3d = plt.axes(projection="3d")
-    ax_3d.view_init(elev=15.0)
     ax_3d.set_xlim3d([-radius / 2, radius / 2])
     ax_3d.set_zlim3d([-radius / 2, radius / 2])
     ax_3d.set_ylim3d([-radius / 2, radius / 2])
@@ -49,6 +48,7 @@ def render_3d_trajectory(
             for _ in range(len(test_frame[0]))
         ]
     point_list = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
+    ax_3d.view_init(elev=10., azim=0)
 
     def init():
         if draw_bones:
@@ -80,6 +80,7 @@ def render_3d_trajectory(
                     zs = [frame[2][point], frame[2][traj.point_parents[point]]]
                     bone_list[point][0].set_data(xs, ys)
                     bone_list[point][0].set_3d_properties(zs)
+        ax_3d.view_init(elev=10., azim=i%360)
         return (
             point_list,
             bone_list,
@@ -92,10 +93,20 @@ def render_3d_trajectory(
         frames=tqdm(range(len(traj)), "Rendering trajectory frames"),
     )
 
-    if save_mp4:
+    if not save_file:
+        pass
+    elif save_file == "mp4":
         title = f"{traj}_animation.mp4"
         anim.save(title, fps=traj.frequency, extra_args=["-vcodec", "libx264"])
         logger.getChild(EVAL).info(f"Saved 3d rendered prediction at {title}")
+    elif save_file == "gif":
+        title = f"{traj}_animation.gif"
+        writer = matplotlib.animation.PillowWriter(fps=traj.frequency, bitrate=1800)
+        anim.save(title, writer=writer)
+    else:
+        raise AttributeError(
+            f'save_file can be "mp4", "gif" or None, not "{save_file}"'
+        )
     if interactive:
         try:
             matplotlib.use("GTK3Agg")
