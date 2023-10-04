@@ -1,6 +1,8 @@
 """
-Simple Auto Regressive LSTM implementation
-Inspired by: https://github.com/pytorch/examples/tree/main/time_sequence_prediction
+Simple Auto Regressive LSTM implementation,
+for benchmark, example and tests of autoregressive method
+inspired by pytorch Time Sequence prediction:
+https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
 import torch
 from torch import nn

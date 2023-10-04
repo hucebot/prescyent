@@ -1,7 +1,5 @@
 """
-simple Linear implementation
-[short description]
-[link to the paper]
+simple Linear layer to use as baseline in early benchmarks
 """
 import torch
 from torch import nn

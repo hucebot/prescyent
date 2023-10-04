@@ -1,4 +1,4 @@
-"""Pytorch module et Lightning module for LSTMs"""
+"""Predictor class for SARLSTM"""
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.lightning.models.autoreg.sarlstm.module import TorchModule

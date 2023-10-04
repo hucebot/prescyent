@@ -1,7 +1,7 @@
 # this example shows how to learn a MLP on the TeleopIcubDataset
 from prescyent.predictor import MlpPredictor, MlpConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
-
+from prescyent.utils.enums import Normalizations
 
 if __name__ == "__main__":
     # -- Init dataset
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     history_size = 10  # 1 second
     future_size = 10  # 1 second
     dimensions = None  # None equals ALL dimensions !
-    # for TeleopIcub dimension = [0, 1, 2] is waist, right_hand, left_hand
+    # for TeleopIcub dimension = [0, 1, 2] is [waist, right_hand, left_hand]
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
         history_size=history_size,
@@ -26,23 +26,26 @@ if __name__ == "__main__":
     print("Initializing predictor...", end="")
     feature_size = dataset.feature_size
     config = MlpConfig(
-        output_size=future_size,
-        input_size=history_size,
+        num_dims=dataset.num_dims,
+        num_points=dataset.num_points,
+        output_size=dataset.future_size,
+        input_size=dataset.history_size,
         hidden_size=512,
-        norm_on_last_input=True,
+        norm_on_last_input=True
+        # used_norm= Normalizations.ALL
     )
     predictor = MlpPredictor(config=config)
     print("OK")
 
     # Train
     training_config = TrainingConfig(
-        epoch=10, devices="auto", accelerator="cpu", use_auto_lr=True
+        epoch=100, devices="auto", accelerator="cpu", use_auto_lr=True
     )
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 
     # Save the predictor
     model_dir = (
-        f"data/models/teleopicub/all/{predictor.name}/version_{predictor.version}"
+        f"data/models/teleopicub/all_10hz/{predictor.name}/version_{predictor.version}"
     )
     print("model directory:", model_dir)
     predictor.save(model_dir)

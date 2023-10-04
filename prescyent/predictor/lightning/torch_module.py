@@ -24,7 +24,7 @@ class BaseTorchModule(torch.nn.Module):
 
     @abstractmethod
     def forward(self, input_tensor: torch.Tensor, future_size: int):
-        pass
+        raise NotImplementedError("This method must be overriden")
 
     @classmethod
     def normalize_tensor(cls, function):

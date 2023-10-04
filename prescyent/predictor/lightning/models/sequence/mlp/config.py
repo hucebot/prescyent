@@ -1,4 +1,4 @@
-"""Config elements for Linear Pytorch Lightning module usage"""
+"""Config elements for MLP Pytorch Lightning module usage"""
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 

@@ -58,11 +58,9 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    default_config = Path("examples") / "configs" / "linear_teleop.json"
     parser.add_argument(
-        "--config_path",
+        "config_path",
         type=str,
-        default=str(default_config),
         help="path to the config file used to build model and dataset. Default if linear_teleop.json as an example",
     )
     parser.add_argument(
@@ -73,5 +71,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    config_path = Path(args.config_path)
-    train_from_config(config_path=config_path, rm_config=args.rm_config)
+    train_from_config(config_path=Path(args.config_path), rm_config=args.rm_config)

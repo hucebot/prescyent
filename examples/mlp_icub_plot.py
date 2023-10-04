@@ -23,7 +23,7 @@ if __name__ == "__main__":
         path = max(glob.glob(sys.argv[2] + "/version_*"), key=os.path.getctime)
     else:
         print("Error: use --last or --model")
-        exit(1)
+        sys.exit(1)
 
     print("Path:", path)
     # we load with the same config as for the training

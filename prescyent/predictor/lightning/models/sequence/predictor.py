@@ -1,4 +1,4 @@
-"""class for auto regressive lightning models"""
+"""class for sequence based lightning models"""
 import torch
 
 from prescyent.predictor.lightning.predictor import LightningPredictor

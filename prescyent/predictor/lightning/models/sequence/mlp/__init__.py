@@ -1,4 +1,4 @@
-"""Linear Lightning Module and Predictor"""
+"""MLP Config, Module and Predictor"""
 from prescyent.predictor.lightning.models.sequence.mlp.predictor import (
     Predictor as MlpPredictor,
 )

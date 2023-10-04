@@ -12,7 +12,7 @@ from prescyent.utils.logger import logger, EVAL
 def render_3d_trajectory(
     traj: Trajectory,
     radius: int = 2,
-    save_file: str = None, # use "mp4" or "gif"
+    save_file: str = None,  # use "mp4" or "gif"
     interactive: bool = True,
     draw_bones: bool = True,
 ):
@@ -48,7 +48,7 @@ def render_3d_trajectory(
             for _ in range(len(test_frame[0]))
         ]
     point_list = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
-    ax_3d.view_init(elev=10., azim=0)
+    ax_3d.view_init(elev=10.0, azim=0)
 
     def init():
         if draw_bones:
@@ -80,7 +80,7 @@ def render_3d_trajectory(
                     zs = [frame[2][point], frame[2][traj.point_parents[point]]]
                     bone_list[point][0].set_data(xs, ys)
                     bone_list[point][0].set_3d_properties(zs)
-        ax_3d.view_init(elev=10., azim=i%360)
+        ax_3d.view_init(elev=10.0, azim=i % 360)
         return (
             point_list,
             bone_list,

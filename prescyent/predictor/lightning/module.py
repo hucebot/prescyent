@@ -1,6 +1,6 @@
 """Module with methods common to every lightning modules"""
 import copy
-from typing import Type
+from typing import Any, Dict, List, Type
 
 import pytorch_lightning as pl
 import torch
@@ -52,14 +52,21 @@ class LightningModule(pl.LightningModule):
     """Lightning class with methods for modules training, saving, logging"""
 
     torch_model: BaseTorchModule
-    criterion: torch.nn.modules.loss._Loss
     training_config: TrainingConfig
+    criterion: torch.nn.modules.loss._Loss
+    lr: float
+    val_output: List[Dict[str, float]]
+    test_output: List[Dict[str, float]]
+    train_output: List[Dict[str, float]]
 
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
         logger.getChild(PREDICTOR).info("Initialization of the Lightning Module...")
         super().__init__()
         self.lr = 0.999
         self.torch_model = torch_model_class(config)
+        self.val_output = []
+        self.test_output = []
+        self.train_output = []
         if config.do_lipschitz_continuation:
             logger.getChild(PREDICTOR).info(
                 "Parametrization of Lightning Module using the Lipschitz constant..."

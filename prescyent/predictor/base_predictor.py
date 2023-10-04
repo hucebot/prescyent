@@ -23,6 +23,7 @@ class BasePredictor:
     log_root_path: str
     name: str
     version: int
+    tb_logger: TensorBoardLogger
 
     def __init__(
         self,
@@ -37,7 +38,9 @@ class BasePredictor:
         self.name = name
         self.version = version
         self._init_logger(no_sub_dir_log)
-        logger.getChild(PREDICTOR).info(f"Loaded {self} at path {self.log_path}")
+        logger.getChild(PREDICTOR).info(
+            f"Predictor {self} is initialized, and will log in {self.log_path}"
+        )
 
     def _init_logger(self, no_sub_dir_log=False):
         if no_sub_dir_log:

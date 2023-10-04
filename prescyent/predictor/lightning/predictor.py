@@ -10,6 +10,7 @@ from typing import Type, Union
 
 import pytorch_lightning as pl
 import torch
+from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.tuner import Tuner
 from pytorch_lightning.profilers import (
@@ -182,8 +183,14 @@ class LightningPredictor(BasePredictor):
         torch.cuda.empty_cache()
         gc.collect()
 
-    def _save_config(self, save_path: Path):
+    def _save_config(
+        self, save_path: Path, dataset_config: Union[dict, BaseModel, None] = None
+    ):
         res = dict()
+        if dataset_config:
+            if isinstance(dataset_config, BaseModel):
+                dataset_config = dataset_config.dict(exclude_defaults=False)
+            res["dataset_config"] = dataset_config
         if self.training_config is not None:
             res["training_config"] = self.training_config.dict(exclude_defaults=False)
         if self.config is not None:
@@ -311,7 +318,11 @@ class LightningPredictor(BasePredictor):
         self.trainer.test(self.model, test_dataloader)
         self._free_trainer()
 
-    def save(self, save_path: Union[str, Path] = None):
+    def save(
+        self,
+        save_path: Union[str, Path] = None,
+        dataset_config: Union[dict, BaseModel, None] = None,
+    ):
         """save model to path"""
         save_path = str(save_path)
         if save_path is None:
@@ -319,7 +330,11 @@ class LightningPredictor(BasePredictor):
         else:  # we cp the tensorflow logger content first
             while True:
                 try:
-                    shutil.copytree(self.log_path, save_path)
+                    shutil.copytree(
+                        self.log_path,
+                        save_path,
+                        ignore=shutil.ignore_patterns("checkpoints"),
+                    )
                     break
                 except FileExistsError:
                     save_path += "_"
@@ -330,7 +345,7 @@ class LightningPredictor(BasePredictor):
         logger.getChild(PREDICTOR).info(
             "Saving config at %s", (save_path / "config.json")
         )
-        self._save_config(save_path / "config.json")
+        self._save_config(save_path / "config.json", dataset_config)
         # reload logger at new location
         self.log_root_path = save_path
         super()._init_logger(no_sub_dir_log=True)

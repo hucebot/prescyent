@@ -1,4 +1,4 @@
-"""LSTM Lightning Module and Predictor"""
+"""LSTM Lightning Module, Config and Predictor"""
 from prescyent.predictor.lightning.models.autoreg.sarlstm.predictor import (
     Predictor as SARLSTMPredictor,
 )
