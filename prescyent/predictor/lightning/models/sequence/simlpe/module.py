@@ -7,7 +7,7 @@ import torch
 from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
-from .mlp import build_mlps
+from .mlp import TransMLP
 
 
 class TorchModule(BaseTorchModule):
@@ -34,7 +34,7 @@ class TorchModule(BaseTorchModule):
             self.motion_fc_in = nn.Linear(
                 self.config.feature_size, self.config.hidden_size
             )
-        self.motion_mlp = build_mlps(self.config)
+        self.motion_mlp = TransMLP(self.config)
         if self.temporal_fc_out:
             self.motion_fc_out = nn.Linear(
                 self.config.hidden_size, self.config.output_size

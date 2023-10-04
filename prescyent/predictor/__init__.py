@@ -4,7 +4,7 @@ Create a predictor object from a config
 Predictors can be a specific NN architecture or an algorithm
 Predictors can be trained, loaded from a checkpoint, and runned
 
-Built with pytorch_lightning and pydantic (for now)
+Built with pytorch_lightning and pydantic
 """
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.delayed_predictor import DelayedPredictor
@@ -17,6 +17,10 @@ from prescyent.predictor.lightning.models.sequence.seq2seq import (
     Seq2SeqConfig,
     Seq2SeqPredictor,
 )
+from prescyent.predictor.lightning.models.sequence.simlpe import (
+    SiMLPeConfig,
+    SiMLPePredictor,
+)
 from prescyent.predictor.lightning.models.sequence.mlp import MlpPredictor, MlpConfig
 from prescyent.predictor.lightning.models.autoreg.sarlstm import (
     SARLSTMConfig,
@@ -25,21 +29,21 @@ from prescyent.predictor.lightning.models.autoreg.sarlstm import (
 
 from prescyent.utils.logger import logger, PREDICTOR
 
+## No more experimental predictor for now, kept logic for later use
+# try:  
+#     # from prescyent.experimental.simlpe import SiMLPePredictor
+    
+#     use_experimental = True
+# except ModuleNotFoundError:
+#     use_experimental = False
+#     logger.getChild(PREDICTOR).warning(
+#         "modules from experimental package will not be instanciable"
+#     )
 
-try:
-    from prescyent.experimental.simlpe import SiMLPePredictor
 
-    use_experimental = True
-except ModuleNotFoundError:
-    use_experimental = False
-    logger.getChild(PREDICTOR).warning(
-        "modules from experimental package will not be instanciable"
-    )
-
-
-PREDICTOR_LIST = [LinearPredictor, SARLSTMPredictor, Seq2SeqPredictor, MlpPredictor]
-if use_experimental:
-    PREDICTOR_LIST.append(SiMLPePredictor)
+PREDICTOR_LIST = [LinearPredictor, SARLSTMPredictor, Seq2SeqPredictor, MlpPredictor, SiMLPePredictor]
+# if use_experimental:
+#     PREDICTOR_LIST.append(SiMLPePredictor)
 
 
 PREDICTOR_MAP = {p.PREDICTOR_NAME: p for p in PREDICTOR_LIST}

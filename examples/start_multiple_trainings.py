@@ -10,7 +10,7 @@ from pathlib import Path
 
 from train_from_config import train_from_config
 from prescyent.auto_dataset import AutoDataset
-from prescyent.utils.enums import LearningTypes
+from prescyent.utils.enums import LearningTypes, Normalizations
 
 
 def get_dataset(size: int, config_dict):
@@ -37,15 +37,19 @@ VARIATIONS = {
     ],
     "model_config.hidden_size": [32],
     "model_config.num_layers": [2],
+    # "model_config.used_norm": [Normalizations.ALL,
+    #                            Normalizations.SPATIAL,
+    #                            Normalizations.TEMPORAL,
+    #                            Normalizations.BATCH,
+    #                            None],
     # "model_config.spatial_fc_only": [True, False],
-    # "model_config.norm_axis": ["spatial", "temporal", "all"],
     # "model_config.dct": [True, False],
     # "model_config.dropout_value": [0, 0.1, 0.25],
-    # "model_config.norm_on_last_input" : [False, True],
+    # "model_config.norm_on_last_input" : [True, False],
     # "model_config.do_lipschitz_continuation" : [False, True],
     # ...
     # TRAINING
-    "training_config.epoch": [2],
+    "training_config.epoch": [5],
     "training_config.devices": [1],
     # "training_config.accelerator": ["cpu"],
     "training_config.early_stopping_patience": [5],
