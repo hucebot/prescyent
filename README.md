@@ -1,5 +1,5 @@
 <p align="center"><img alt="PreScyent" src="assets/logo.png"></p>
-<h2 style="text-align: center;">Data-driven trajectory prediction library built in python<p>  
+<h2 style="text-align: center;">Data-driven trajectory prediction library built in python<h2>  
 
 <p align="center">
 <img alt="Trajectory plot" src="assets/mlp_icub_test_plot.png" width="48%" >
