@@ -19,16 +19,15 @@ from prescyent.dataset.teleop_icub.metadata import *
 
 
 class Dataset(MotionDataset):
-    """TODO: present the dataset here
-    Architecture
-
+    """
+    https://zenodo.org/record/5913573#.Y75xK_7MIaw
     Dataset is not splitted into test / train / val
     It as to be at initialisation, through the parameters
     """
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None):
+    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None) -> None:
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
@@ -40,7 +39,7 @@ class Dataset(MotionDataset):
         super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
-    def _load_files(self):
+    def _load_files(self) -> Trajectories:
         logger.getChild(DATASET).debug(
             "Searching Dataset files from path %s", self.config.data_path
         )
@@ -72,7 +71,7 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
         return Trajectories(train, test, val)
 
-    def _get_from_web(self):
+    def _get_from_web(self) -> None:
         self._download_files(self.config.url, self.config.data_path + ".zip")
         self._unzip(self.config.data_path + ".zip")
 
@@ -82,7 +81,7 @@ class Dataset(MotionDataset):
         delimiter: str = ",",
         start: int = None,
         end: int = None,
-    ) -> list:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
 
         :param files: list of files

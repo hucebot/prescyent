@@ -22,7 +22,7 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "H36M"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = None):
+    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
         self._init_from_config(config, DatasetConfig)
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
@@ -34,7 +34,7 @@ class Dataset(MotionDataset):
         super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
-    def _load_files(self):
+    def _load_files(self) -> Trajectories:
         """read txt files and create trajectories"""
         logger.getChild(DATASET).info("Reading files from %s", self.config.data_path)
         train_files = self._get_filenames_for_subject(self.config.subjects_train)
@@ -53,7 +53,7 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
         return Trajectories(train, test, val)
 
-    def _get_filenames_for_subject(self, subject_names: List[str]):
+    def _get_filenames_for_subject(self, subject_names: List[str]) -> List[Path]:
         filenames = []
         for subject_name in subject_names:
             for action in self.config.actions:
@@ -65,7 +65,7 @@ class Dataset(MotionDataset):
         filenames.sort()
         return filenames
 
-    def _get_from_web(self):
+    def _get_from_web(self) -> None:
         raise NotImplementedError(
             "This dataset must be downloaded manually, "
             "please follow the instructions in the README"
@@ -75,9 +75,9 @@ class Dataset(MotionDataset):
         self,
         files: List,
         delimiter: str = ",",
-    ) -> list:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
-        :rtype: list
+        :rtype: List[Trajectory]
         """
         used_joints = self.config.used_joints
         subsampling_step = self.config.subsampling_step

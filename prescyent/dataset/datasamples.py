@@ -31,7 +31,7 @@ class MotionDataSamples:
         self.sample_ids = self._map_to_flatten_trajs()
 
     def _map_to_flatten_trajs(self):
-        map = []
+        _map = []
         if self.sampling_type == LearningTypes.SEQ2SEQ:
             invalid_frames_per_traj = self.history_size + self.future_size
         if self.sampling_type == LearningTypes.AUTOREG:
@@ -43,10 +43,10 @@ class MotionDataSamples:
                     f" dataset. Trajectory of size {len(trajectory)} can't be split "
                     f"in samples of sizes {invalid_frames_per_traj}"
                 )
-            map += [
+            _map += [
                 (t, i) for i in range(len(trajectory) - invalid_frames_per_traj + 1)
             ]
-        return map
+        return _map
 
     def _get_item_seq2seq(self, index: int):
         traj_id, tensor_id = self.sample_ids[index]

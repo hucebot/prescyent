@@ -1,4 +1,4 @@
-"""Config elements for TeleopIcub dataset usage"""
+"""Config elements for H36M dataset usage"""
 import os
 from typing import List, Union
 from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH

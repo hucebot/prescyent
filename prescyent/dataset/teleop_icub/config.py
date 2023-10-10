@@ -8,7 +8,7 @@ from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
-    url = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
+    url: str = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
     data_path: str = os.path.join(
         DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub", "datasetMultipleTasks"
     )

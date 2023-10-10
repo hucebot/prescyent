@@ -51,3 +51,13 @@ class Trajectory:
     def duration(self) -> float:
         """duration in seconds"""
         return len(self.tensor) / self.frequency
+
+    @property
+    def num_points(self) -> int:
+        """number of points in the trajectory"""
+        return self.tensor.shape[1]
+
+    @property
+    def num_dims(self) -> int:
+        """number of dimensions of each point in the trajectory"""
+        return self.tensor.shape[2]
