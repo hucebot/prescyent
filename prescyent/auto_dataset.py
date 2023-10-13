@@ -25,7 +25,7 @@ class AutoDataset:
                 dataset_class_name,
             )
             raise AttributeError(dataset_class_name)
-        logger.getChild(DATASET).info("Building new %s", dataset_class)
+        logger.getChild(DATASET).info("Building new %s", dataset_class.__name__)
         return dataset_class(config=config)
 
     @classmethod

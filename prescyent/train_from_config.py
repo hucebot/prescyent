@@ -8,9 +8,15 @@ import socket
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
+from prescyent.evaluator.runners import eval_predictors
 
 
-def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
+DEFAULT_EXP_PATH = str(Path("data") / "models" / "exp")
+
+
+def train_from_config(
+    config_path: Path, rm_config: bool = False, dataset=None, exp_path=DEFAULT_EXP_PATH
+):
     if not config_path.exists():
         print("The provided config_file does not exist.")
         exit(1)
@@ -44,7 +50,7 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 
     # Save the predictor, and configs
     model_dir = Path(
-        f"data/models/exp/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
+        f"{exp_path}/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
     )
     print("Model directory:", model_dir)
     predictor.save(model_dir)
@@ -54,6 +60,13 @@ def train_from_config(config_path: Path, rm_config: bool = False, dataset=None):
 
     print("Testing predictor...")
     predictor.test(dataset.test_dataloader)
+    eval_predictors(
+        predictors=[predictor],
+        trajectories=dataset.trajectories.test,
+        history_size=dataset.history_size,
+        future_size=dataset.future_size,
+        do_plotting=False,
+    )
 
 
 if __name__ == "__main__":
