@@ -1,6 +1,6 @@
 """Config elements for TeleopIcub dataset usage"""
 import os
-from typing import List, Union
+from typing import List, Optional
 
 from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
 
@@ -14,7 +14,7 @@ class DatasetConfig(MotionDatasetConfig):
     )
     glob_dir: str = "p*.csv"
     subsampling_step: int = 10  # subsampling -> 100 Hz to 10Hz
-    used_joints: Union[List[int], None] = None  # None == all
+    used_joints: Optional[List[int]] = None  # None == all
     ratio_train: float = 0.8
     ratio_test: float = 0.15
     ratio_val: float = 0.05

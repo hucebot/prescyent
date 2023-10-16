@@ -1,17 +1,17 @@
 """Config elements for H36M dataset usage"""
 import os
-from typing import List, Union
+from typing import List, Optional
 from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
 
 
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
-    url: Union[str, None] = None
+    url: Optional[str] = None
     data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
     subsampling_step: int = 2  # subsampling -> 50 Hz to 25Hz
-    dimensions: Union[List[int], None] = None  # num features in the data
-    used_joints: Union[List[int], None] = [
+    dimensions: Optional[List[int]] = None  # num features in the data
+    used_joints: Optional[List[int]] = [
         2,
         3,
         4,

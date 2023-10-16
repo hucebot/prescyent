@@ -155,7 +155,7 @@ class MotionDataset(Dataset):
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.getChild(DATASET).info("Saving config to %s", save_path)
-        config_dict = self.config.dict(exclude_defaults=True)
+        config_dict = self.config.model_dump(exclude_defaults=True)
         config_dict["name"] = self.name
         with save_path.open("w", encoding="utf-8") as conf_file:
             logger.getChild(DATASET).debug(config_dict)

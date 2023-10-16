@@ -6,6 +6,8 @@ import torch
 from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.enums import ActivationFunctions
+from prescyent.utils.logger import logger, PREDICTOR
 
 
 class TorchModule(BaseTorchModule):
@@ -17,12 +19,14 @@ class TorchModule(BaseTorchModule):
         self.output_size = config.output_size
 
         # select the activation function
-        if config.activation == "ReLu":
+        if config.activation == ActivationFunctions.RELU:
             act_fun = nn.ReLU
-        elif config.activation == "Sigmoid":
+        elif config.activation == ActivationFunctions.SIGMOID:
             act_fun = nn.Sigmoid
         else:
-            print("ERROR: no activation function:", config.activation)
+            logger.getChild(PREDICTOR).error(
+                "No activation function for: %s" % config.activation,
+            )
             act_fun = None
 
         # create the layers

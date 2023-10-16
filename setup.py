@@ -2,19 +2,16 @@ from setuptools import setup, find_packages
 
 
 package_name = "prescyent"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 CORE_REQUIREMENTS = [
-    "easydict",
-    "fastapi",
-    "matplotlib",
-    "numpy",
-    "pydantic",
-    "pytorch_lightning>=2.0.0",
-    "tensorboard",
-    "torch",
-    "uvicorn",
+    "matplotlib>=3.0,<3.8",
+    "numpy>=1.0,<1.26",
+    "pydantic>=2.0,<2.5",
+    "pytorch_lightning>=2.0, <2.1",
+    "tensorboard>=2.0,<2.14",
+    "torch>=2.0,<2.1",
 ]
 
 

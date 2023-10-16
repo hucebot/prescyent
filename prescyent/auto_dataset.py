@@ -16,7 +16,7 @@ class AutoDataset:
         if isinstance(config, (str, Path)):
             config = cls._get_config_from_path(Path(config))
         if isinstance(config, MotionDatasetConfig):
-            config = config.dict()
+            config = config.model_dump()
         dataset_class_name = config.get("name", None)
         dataset_class = DATASET_MAP.get(dataset_class_name, None)
         if dataset_class is None:

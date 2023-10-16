@@ -1,8 +1,8 @@
 """Common config elements for Pytorch Lightning training usage"""
 import random
-from typing import Union
+from typing import Union, Optional
 
-from pydantic import root_validator, validator
+from pydantic import model_validator, field_validator
 
 from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
 
@@ -15,25 +15,25 @@ class TrainingConfig(OptimizerConfig):
     accelerator: str = "auto"
     devices: Union[str, int] = "auto"
     accumulate_grad_batches: int = 1
-    seed: Union[None, int] = None
+    seed: Optional[int] = None
     log_every_n_steps: int = 1
     use_auto_lr: bool = False
     use_deterministic_algorithms: bool = True
     early_stopping_value: str = "Val/loss"
-    early_stopping_patience: Union[None, int] = None
+    early_stopping_patience: Optional[int] = None
     early_stopping_mode: str = "min"
 
-    @root_validator
-    def training_has_at_least_one_positive_limit(cls, values):
-        epoch, max_steps = values.get("epoch"), values.get("max_steps")
-        if epoch > 0 and max_steps > 0:
+    @model_validator(mode="after")
+    def training_has_at_least_one_positive_limit(self):
+        if self.epoch < 0 and self.max_steps < 0:
             raise ValueError(
                 "Please set at least one positive limit for the training: "
                 '("max_steps" > 0 or "epoch" > 0)'
             )
-        return values
+        return self
 
-    @validator("seed", pre=True, always=True)
-    def generate_random_seed_if_none(cls, v):
+    @field_validator("seed")
+    @classmethod
+    def generate_random_seed_if_none(cls, v: int):
         if v is None:
             return random.randint(1, 10**9)

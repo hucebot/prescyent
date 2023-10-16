@@ -14,5 +14,5 @@ class LightningProgressBar(TQDMProgressBar):
         if max_epoch < 0:
             max_epoch = calculate_max_epoch(trainer)
         self.train_progress_bar.set_description(
-            f"Epoch {trainer.current_epoch}/{max_epoch}"
+            f"Epoch {trainer.current_epoch + 1}/{max_epoch}"
         )

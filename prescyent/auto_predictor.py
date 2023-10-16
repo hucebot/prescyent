@@ -37,7 +37,7 @@ class AutoPredictor:
         if isinstance(config, (str, Path)):
             return cls._get_config_from_path(Path(config)), str(config)
         elif isinstance(config, ModuleConfig):
-            return config.dict(), None
+            return config.model_dump(), None
         elif isinstance(config, dict):
             return config, None
         else:
