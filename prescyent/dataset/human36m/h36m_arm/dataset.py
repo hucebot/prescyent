@@ -1,5 +1,4 @@
-"""Subset of h36m with arms only
-"""
+"""Subset of h36m with arms only"""
 from typing import List, Union, Dict
 
 import prescyent.dataset.human36m.h36m_arm.metadata as metadata
@@ -14,16 +13,16 @@ class Dataset(H36MDataset):
 
     DATASET_NAME = "H36MSArm"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = DatasetConfig()):
+    def __init__(self, config: Union[Dict, DatasetConfig] = DatasetConfig()) -> None:
         super().__init__(config)
 
     def pathfiles_to_trajectories(
         self,
         files: List,
         delimiter: str = ",",
-    ) -> list:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
-        :rtype: list
+        :rtype: List[Trajectory]
         """
         trajectory_list = super().pathfiles_to_trajectories(files, delimiter)
         if self.config.bimanual is True:

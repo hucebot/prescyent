@@ -80,8 +80,8 @@ def run_predictor(
 def eval_predictors(
     predictors: List[Callable],
     trajectories: List[Trajectory],
-    history_size: int,
-    future_size: int,
+    history_size: int = None,
+    future_size: int = None,
     run_method: str = "step_every_timestamp",
     do_plotting: bool = True,
     saveplot_pattern: str = "%d_%s_prediction.png",
@@ -92,8 +92,8 @@ def eval_predictors(
     Args:
         predictors (List[Callable]): list of predictors
         trajectories (List[Trajectory]): list of trajectories
-        history_size (int): size used as input for the predictor.
-        future_size (int): size used as output for the predictor
+        history_size (int): size used as input for the predictor. (default is 1 second)
+        future_size (int): size used as output for the predictor. (default is 1 second)
         custom_step (int, optional): step used to loop over the input_tensor.
                 If omitted, the step is determined by the run_method
                 Defaults to None
@@ -112,6 +112,10 @@ def eval_predictors(
         List[EvaluationSummary]: list of an evaluation summary for each predictor
     """
     # TODO: reject impossible values for history_size and future_size
+    if future_size is None:
+        future_size = trajectories[0].frequency
+    if history_size is None:
+        history_size = trajectories[0].frequency
     evaluation_results = [EvaluationSummary() for _ in predictors]
     logger.getChild(EVAL).info(
         f"Running evaluation for {len(predictors)} predictors"

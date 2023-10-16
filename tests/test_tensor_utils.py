@@ -1,8 +1,10 @@
 import unittest
 import torch
 
-
-from prescyent.utils.tensor_manipulation import cat_tensor_with_seq_idx
+from prescyent.utils.tensor_manipulation import (
+    cat_tensor_with_seq_idx,
+    trajectory_tensor_get_dim_limits,
+)
 
 
 class TestFlattenListPreds(unittest.TestCase):
@@ -22,3 +24,34 @@ class TestFlattenListPreds(unittest.TestCase):
         )
         output_pred = cat_tensor_with_seq_idx(input_pred)
         self.assertTrue(torch.equal(expected_output, output_pred))
+
+
+class TestMinMaxDim(unittest.TestCase):
+    def test_logic(self):
+        a = [
+            [
+                [1, -2, 3],
+                [2, -1, 3],
+            ],
+            [
+                [1, 0, 3],
+                [2, -2, 5],
+            ],
+            [
+                [2, -2, 3],
+                [1, -2, 3],
+            ],
+            [
+                [3, -2, 3],
+                [4, -2, -3],
+            ],
+            [
+                [-1, -2, 3],
+                [1, -5, 3],
+            ],
+        ]
+        expected_max = torch.FloatTensor([4, 0, 5])
+        expected_min = torch.FloatTensor([-1, -5, -3])
+        min_t, max_t = trajectory_tensor_get_dim_limits(torch.FloatTensor(a))
+        self.assertTrue(torch.equal(expected_min, min_t))
+        self.assertTrue(torch.equal(expected_max, max_t))

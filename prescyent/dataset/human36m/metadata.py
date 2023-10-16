@@ -1,5 +1,3 @@
-import numpy as np
-
 BASE_FREQUENCY = 50
 POINT_LABELS = [
     "hips_0",

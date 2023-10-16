@@ -9,6 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.trajectories import Trajectories
+from prescyent.dataset.trajectory import Trajectory
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.utils.logger import logger, DATASET
 
@@ -18,6 +19,7 @@ class MotionDataset(Dataset):
 
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
+    name: str
     batch_size: int
     history_size: int
     future_size: int
@@ -60,14 +62,17 @@ class MotionDataset(Dataset):
             "Val dataset has a size of %d", len(self.val_datasample)
         )
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.trajectories)
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_datasample,
             batch_size=self.batch_size,
@@ -79,7 +84,7 @@ class MotionDataset(Dataset):
         )
 
     @property
-    def test_dataloader(self):
+    def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.test_datasample,
             batch_size=self.batch_size,
@@ -91,7 +96,7 @@ class MotionDataset(Dataset):
         )
 
     @property
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.val_datasample,
             batch_size=self.batch_size,
@@ -103,22 +108,22 @@ class MotionDataset(Dataset):
         )
 
     @property
-    def num_points(self):
+    def num_points(self) -> int:
         return self.trajectories.train[0].shape[1]
 
     @property
-    def num_dims(self):
+    def num_dims(self) -> int:
         return self.trajectories.train[0].shape[2]
 
     @property
-    def feature_size(self):
+    def feature_size(self) -> int:
         return self.num_dims * self.num_points
 
     def _init_from_config(
         self,
         config: Union[Dict, None, str, Path, MotionDatasetConfig],
         config_class: Type[MotionDatasetConfig],
-    ):
+    ) -> None:
         self.config_class = config_class
         if isinstance(config, dict):  # use pydantic for dict verification
             config = config_class(**config)
@@ -136,27 +141,27 @@ class MotionDataset(Dataset):
         self.future_size = config.future_size
         self.batch_size = config.batch_size
 
-    def _load_config(self, config):
+    def _load_config(self, config) -> MotionDatasetConfig:
         if isinstance(config, Path):  # load from a Path
             logger.getChild(DATASET).info("Loading config from %s", config)
             with open(config, encoding="utf-8") as conf_file:
                 return self.config_class(**json.load(conf_file))
         return config
 
-    def save_config(self, save_path: Path):
+    def save_config(self, save_path: Path) -> None:
         # check if parent folder exist, or create it
         if isinstance(save_path, str):
             save_path = Path(save_path)
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.getChild(DATASET).info("Saving config to %s", save_path)
-        config_dict = self.config.dict(exclude_defaults=True)
+        config_dict = self.config.model_dump(exclude_defaults=True)
         config_dict["name"] = self.name
         with save_path.open("w", encoding="utf-8") as conf_file:
             logger.getChild(DATASET).debug(config_dict)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)
 
-    def _download_files(self, url, path):
+    def _download_files(self, url, path) -> None:
         """get the dataset files from an url"""
         logger.getChild(DATASET).info("Downloading data from %s", url)
         data = requests.get(url, timeout=10)
@@ -168,7 +173,7 @@ class MotionDataset(Dataset):
         with path.open("wb") as pfile:
             pfile.write(data.content)
 
-    def _unzip(self, zip_path: str):
+    def _unzip(self, zip_path: str) -> None:
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(zip_path.replace(".zip", ""))
         logger.getChild(DATASET).info(

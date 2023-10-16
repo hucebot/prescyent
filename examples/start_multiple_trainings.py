@@ -8,21 +8,9 @@ import json
 import os
 from pathlib import Path
 
-from train_from_config import train_from_config
+from prescyent.train_from_config import train_from_config
 from prescyent.auto_dataset import AutoDataset
 from prescyent.utils.enums import LearningTypes, Normalizations
-
-
-def get_dataset(size: int, config_dict):
-    main_dataset = AutoDataset.build_from_config(config_dict["dataset_config"])
-    for _ in range(size):
-        yield copy.deepcopy(main_dataset)
-
-
-def start_model_training(config_path, training_id, dataset=None):
-    print(f"Starting Training {training_id}")
-    train_from_config(config_path, rm_config=True, dataset=dataset)
-    print(f"Training {training_id} ended.")
 
 
 VARIATIONS = {
@@ -123,8 +111,11 @@ if __name__ == "__main__":
                 json.dump(config_dict, config_file, indent=4)
 
     # Start a new training per config file
+    exp_path = "data/models/TeleopIcub/10Hz_1s/"
     for i, config_path in enumerate(config_paths):
-        start_model_training(config_path, i)
+        print(f"Training {i} starting...")
+        train_from_config(config_path, rm_config=True, exp_path=exp_path)
+        print(f"Training {i} ended.")
 
     # I removed any notion of multithreading for now as we often
     # want lightning trainer to use multiple devices for one training

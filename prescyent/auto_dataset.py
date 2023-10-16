@@ -16,7 +16,7 @@ class AutoDataset:
         if isinstance(config, (str, Path)):
             config = cls._get_config_from_path(Path(config))
         if isinstance(config, MotionDatasetConfig):
-            config = config.dict()
+            config = config.model_dump()
         dataset_class_name = config.get("name", None)
         dataset_class = DATASET_MAP.get(dataset_class_name, None)
         if dataset_class is None:
@@ -25,7 +25,7 @@ class AutoDataset:
                 dataset_class_name,
             )
             raise AttributeError(dataset_class_name)
-        logger.getChild(DATASET).info("Building new %s", dataset_class)
+        logger.getChild(DATASET).info("Building new %s", dataset_class.__name__)
         return dataset_class(config=config)
 
     @classmethod

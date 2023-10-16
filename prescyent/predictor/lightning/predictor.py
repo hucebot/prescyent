@@ -6,7 +6,7 @@ import os
 import shutil
 from collections.abc import Iterable, Callable
 from pathlib import Path
-from typing import Type, Union
+from typing import Dict, Type, Union
 
 import pytorch_lightning as pl
 import torch
@@ -63,7 +63,7 @@ class LightningPredictor(BasePredictor):
         elif config is not None:
             self.model = self._build_from_config(config)
             version = self.config.version
-            log_root_path = self.config.model_path
+            log_root_path = self.config.save_path
             super().__init__(log_root_path, name, version)
         else:
             # In later versions we can imagine a pretrained or config free version of the model
@@ -77,7 +77,7 @@ class LightningPredictor(BasePredictor):
         if not hasattr(self, "trainer"):
             self.trainer = None
 
-    def _build_from_config(self, config):
+    def _build_from_config(self, config: Union[Dict, ModuleConfig]):
         # -- We check that the input config is valid through pydantic model
         if isinstance(config, dict):
             config = self.config_class(**config)
@@ -127,7 +127,7 @@ class LightningPredictor(BasePredictor):
         if self.training_config is None:
             self.training_config = TrainingConfig()
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
-        kwargs = self.training_config.dict(include=cls_default_params)
+        kwargs = self.training_config.model_dump(include=cls_default_params)
         lr_monitor = LearningRateMonitor(logging_interval="step")
         progress_bar = LightningProgressBar()
         callbacks = [lr_monitor, progress_bar]
@@ -189,12 +189,14 @@ class LightningPredictor(BasePredictor):
         res = dict()
         if dataset_config:
             if isinstance(dataset_config, BaseModel):
-                dataset_config = dataset_config.dict(exclude_defaults=False)
+                dataset_config = dataset_config.model_dump(exclude_defaults=False)
             res["dataset_config"] = dataset_config
         if self.training_config is not None:
-            res["training_config"] = self.training_config.dict(exclude_defaults=False)
+            res["training_config"] = self.training_config.model_dump(
+                exclude_defaults=False
+            )
         if self.config is not None:
-            res["model_config"] = self.config.dict(exclude_defaults=False)
+            res["model_config"] = self.config.model_dump(exclude_defaults=False)
         res["model_config"]["name"] = self.name
         res["model_config"]["version"] = self.version
         with (save_path).open("w", encoding="utf-8") as conf_file:
@@ -240,7 +242,11 @@ class LightningPredictor(BasePredictor):
             self.training_config.lr = lr_finder.suggestion()
         # Add hyperparams to Tensorboard and init HP Metrics
         self.tb_logger.log_hyperparams(
-            {**self.model.hparams, **self.training_config.dict(), **self.config.dict()},
+            {
+                **self.model.hparams,
+                **self.training_config.model_dump(),
+                **self.config.model_dump(),
+            },
             {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
         )
         sample_tensor = train_dataloader.dataset[0][0]
@@ -265,17 +271,9 @@ class LightningPredictor(BasePredictor):
         self.version = None
         self.name = self.name + "_finetuned"
         self._init_logger()
-        for input_t, truth_t in train_dataloader:
-            pass
+        input_t, truth_t = next(iter(train_dataloader))
         input_shape = input_t.shape
-        output_shape = torch.Size(
-            [
-                input_shape[0],
-                truth_t.shape[1],
-                input_t.shape[2],
-                input_t.shape[3],
-            ]
-        )
+        output_shape = truth_t.shape
         try:
             # try inference
             self.predict(input_t, len(input_t[0]))
@@ -320,7 +318,7 @@ class LightningPredictor(BasePredictor):
 
     def save(
         self,
-        save_path: Union[str, Path] = None,
+        save_path: Union[str, Path, None] = None,
         dataset_config: Union[dict, BaseModel, None] = None,
     ):
         """save model to path"""

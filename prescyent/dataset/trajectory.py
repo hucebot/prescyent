@@ -34,15 +34,30 @@ class Trajectory:
         self.point_parents = point_parents
         self.dimension_names = dimension_names
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> torch.Tensor:
         return self.tensor[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.tensor)
 
     def __str__(self) -> str:
         return self.title
 
     @property
-    def shape(self):
+    def shape(self) -> torch.Size:
         return self.tensor.shape
+
+    @property
+    def duration(self) -> float:
+        """duration in seconds"""
+        return len(self.tensor) / self.frequency
+
+    @property
+    def num_points(self) -> int:
+        """number of points in the trajectory"""
+        return self.tensor.shape[1]
+
+    @property
+    def num_dims(self) -> int:
+        """number of dimensions of each point in the trajectory"""
+        return self.tensor.shape[2]

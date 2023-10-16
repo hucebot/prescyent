@@ -1,8 +1,6 @@
 """Module for trajectories classes"""
 from typing import List
 
-import torch
-
 from prescyent.dataset.trajectory import Trajectory
 
 
@@ -20,11 +18,11 @@ class Trajectories:
         self.test = test
         self.val = val
 
-    def _all_len(self):
+    def _all_len(self) -> int:
         return len(self.train) + len(self.test) + len(self.val)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._all_len()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Trajectory:
         return self.train[index]

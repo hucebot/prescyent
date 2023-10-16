@@ -7,14 +7,16 @@ from matplotlib.animation import FuncAnimation
 
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
+from prescyent.utils.tensor_manipulation import trajectory_tensor_get_dim_limits
 
 
 def render_3d_trajectory(
     traj: Trajectory,
-    radius: int = 2,
     save_file: str = None,  # use "mp4" or "gif"
+    min_max_layout: bool = True,
     interactive: bool = True,
     draw_bones: bool = True,
+    turn_view: bool = True,
 ):
     """"""
     test_frame = traj[0].transpose(
@@ -30,9 +32,11 @@ def render_3d_trajectory(
     plt.rcParams["figure.autolayout"] = True
     fig = plt.figure()
     ax_3d = plt.axes(projection="3d")
-    ax_3d.set_xlim3d([-radius / 2, radius / 2])
-    ax_3d.set_zlim3d([-radius / 2, radius / 2])
-    ax_3d.set_ylim3d([-radius / 2, radius / 2])
+    if min_max_layout:
+        min_t, max_t = trajectory_tensor_get_dim_limits(traj.tensor)
+        ax_3d.set_xlim3d([min_t[0], max_t[0]])
+        ax_3d.set_ylim3d([min_t[1], max_t[1]])
+        ax_3d.set_zlim3d([min_t[2], max_t[2]])
     try:
         ax_3d.set_aspect("equal")
     except NotImplementedError:
@@ -80,7 +84,10 @@ def render_3d_trajectory(
                     zs = [frame[2][point], frame[2][traj.point_parents[point]]]
                     bone_list[point][0].set_data(xs, ys)
                     bone_list[point][0].set_3d_properties(zs)
-        ax_3d.view_init(elev=10.0, azim=i % 360)
+        if not interactive and turn_view:
+            ax_3d.view_init(elev=10.0, azim=i % 360)
+        else:
+            ax_3d.view_init(elev=10.0, azim=45)
         return (
             point_list,
             bone_list,

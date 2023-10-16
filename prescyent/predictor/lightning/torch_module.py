@@ -12,18 +12,18 @@ class BaseTorchModule(torch.nn.Module):
         super().__init__()
         self.norm_on_last_input = config.norm_on_last_input
         self.used_norm = config.used_norm
-        self.output_size = config.dict().get("output_size", None)
-        self.input_size = config.dict().get("input_size", None)
-        self.num_points = config.dict().get("num_points", None)
-        self.num_dims = config.dict().get("num_dims", None)
-        self.dropout_value = config.dict().get("dropout_value", None)
+        self.output_size = config.output_size
+        self.input_size = config.input_size
+        self.num_points = config.num_points
+        self.num_dims = config.num_dims
+        self.dropout_value = config.dropout_value
         if self.dropout_value is not None and self.dropout_value > 0:
             self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.used_norm is not None:
             self.norm = MotionLayerNorm(config)
 
     @abstractmethod
-    def forward(self, input_tensor: torch.Tensor, future_size: int):
+    def forward(self, input_tensor: torch.Tensor, future_size: int) -> torch.Tensor:
         raise NotImplementedError("This method must be overriden")
 
     @classmethod

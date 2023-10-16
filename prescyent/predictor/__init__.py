@@ -30,9 +30,9 @@ from prescyent.predictor.lightning.models.autoreg.sarlstm import (
 from prescyent.utils.logger import logger, PREDICTOR
 
 ## No more experimental predictor for now, kept logic for later use
-# try:  
+# try:
 #     # from prescyent.experimental.simlpe import SiMLPePredictor
-    
+
 #     use_experimental = True
 # except ModuleNotFoundError:
 #     use_experimental = False
@@ -41,7 +41,13 @@ from prescyent.utils.logger import logger, PREDICTOR
 #     )
 
 
-PREDICTOR_LIST = [LinearPredictor, SARLSTMPredictor, Seq2SeqPredictor, MlpPredictor, SiMLPePredictor]
+PREDICTOR_LIST = [
+    LinearPredictor,
+    SARLSTMPredictor,
+    Seq2SeqPredictor,
+    MlpPredictor,
+    SiMLPePredictor,
+]
 # if use_experimental:
 #     PREDICTOR_LIST.append(SiMLPePredictor)
 

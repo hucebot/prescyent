@@ -29,7 +29,7 @@ class BasePredictor:
         self,
         log_root_path: str,
         name: str = None,
-        version: Union[str, int] = None,
+        version: Union[str, int, None] = None,
         no_sub_dir_log: bool = False,
     ) -> None:
         self.log_root_path = log_root_path

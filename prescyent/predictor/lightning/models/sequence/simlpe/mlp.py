@@ -80,12 +80,7 @@ class MLPblock(nn.Module):
 class TransMLP(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.mlps = nn.Sequential(
-            *[
-                MLPblock(config)
-                for i in range(config.num_layers)
-            ]
-        )
+        self.mlps = nn.Sequential(*[MLPblock(config) for i in range(config.num_layers)])
 
     def forward(self, x):
         x = self.mlps(x)
