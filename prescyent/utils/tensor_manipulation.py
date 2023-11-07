@@ -1,9 +1,11 @@
 """util functions for tensors"""
-from typing import Iterable, Tuple
+from typing import Iterable, List, Tuple, Union
 import torch
 
 
-def cat_tensor_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
+def cat_tensor_with_seq_idx(preds: Union[List[torch.Tensor], torch.Tensor], flatt_idx: int = -1):
+    if isinstance(preds, list):
+        preds = torch.stack(preds, dim=0)
     # if we have a list of preds
     if len(preds.shape) == 4:
         # we flatten the prediction to the last output of each prediciton
