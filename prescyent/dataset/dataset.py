@@ -8,9 +8,9 @@ import json
 from torch.utils.data import Dataset, DataLoader
 
 from prescyent.dataset.config import MotionDatasetConfig
-from prescyent.dataset.trajectories import Trajectories
-from prescyent.dataset.trajectory import Trajectory
 from prescyent.dataset.datasamples import MotionDataSamples
+from prescyent.dataset.trajectories.trajectories import Trajectories
+from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
 
 

@@ -1,7 +1,7 @@
 """Module for trajectories classes"""
 from typing import List
 
-from prescyent.dataset.trajectory import Trajectory
+from prescyent.dataset.trajectories.trajectory import Trajectory
 
 
 class Trajectories:
