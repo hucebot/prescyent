@@ -9,9 +9,10 @@ Built with torch dataset and dataloader
 from prescyent.dataset.human36m import H36MDataset, H36MDatasetConfig
 from prescyent.dataset.sine import SineDataset, SineDatasetConfig
 from prescyent.dataset.teleop_icub import TeleopIcubDataset, TeleopIcubDatasetConfig
-from prescyent.dataset.trajectories import Trajectories, Trajectory
+from prescyent.dataset.trajectories import PositionsTrajectory, Trajectories, Trajectory
 from prescyent.dataset.config import MotionDatasetConfig as DatasetConfig
 from prescyent.dataset.custom_dataset import CustomDataset
+from prescyent.dataset.trajectories.features import Position, Coordinates
 
 
 DATASET_LIST = [

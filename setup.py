@@ -7,11 +7,12 @@ __version__ = "0.1.1"
 
 CORE_REQUIREMENTS = [
     "matplotlib>=3.0,<3.8",
-    "numpy>=1.0,<1.26",
+    "numpy>=1.17.3,<1.25.0",
     "pydantic>=2.0,<2.5",
     "pytorch_lightning>=2.0, <2.1",
     "tensorboard>=2.0,<2.14",
     "torch>=2.0,<2.1",
+    "scipy>=1.11,<1.12",
 ]
 
 
