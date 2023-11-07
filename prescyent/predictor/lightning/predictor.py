@@ -107,7 +107,14 @@ class LightningPredictor(BasePredictor):
             model_path = found_model
 
         if model_path.suffix == ".ckpt":
-            return LightningModule.load_from_checkpoint(model_path)
+            try:
+                return LightningModule.load_from_checkpoint(
+                    model_path, torch.device("gpu")
+                )
+            except RuntimeError:
+                return LightningModule.load_from_checkpoint(
+                    model_path, torch.device("cpu")
+                )
         else:
             raise NotImplementedError(
                 f"Given file extention {model_path.suffix} "

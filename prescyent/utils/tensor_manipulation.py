@@ -3,7 +3,9 @@ from typing import Iterable, List, Tuple, Union
 import torch
 
 
-def cat_tensor_with_seq_idx(preds: Union[List[torch.Tensor], torch.Tensor], flatt_idx: int = -1):
+def cat_tensor_with_seq_idx(
+    preds: Union[List[torch.Tensor], torch.Tensor], flatt_idx: int = -1
+):
     if isinstance(preds, list):
         preds = torch.stack(preds, dim=0)
     # if we have a list of preds
