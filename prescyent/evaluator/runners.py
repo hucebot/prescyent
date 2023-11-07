@@ -30,7 +30,7 @@ def run_predictor(
     Args:
         predictor (Callable):  Any predictor module (or any callable)
         trajectory (torch.Tensor): a tensor of positions to predict in the shape
-                (batch_len, seq_len, features) or (seq_len, features)
+                (batch_len, seq_len, num_points, num_dims) or (seq_len, num_points, num_dims)
         history_size (int): size used as input for the predictor.
         future_size (int): size used as output for the predictor
         run_method (str, optional): method used to generate the predictions.
