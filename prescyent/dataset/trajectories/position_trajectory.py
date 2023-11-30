@@ -4,6 +4,7 @@ import torch
 
 from prescyent.dataset.trajectories.features import Position
 from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.evaluator.visualize_3d import render_3d_trajectory
 from prescyent.utils.enums import RotationRepresentation
 
 
@@ -14,8 +15,8 @@ class PositionsTrajectory(Trajectory):
         frequency: int,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
-        point_parents: List[int] = ...,
-        dimension_names: List[str] = ...,
+        point_parents: List[int] = None,
+        dimension_names: List[str] = ["y_infos"],
     ) -> None:
         self.sequence_of_positions = sequence_of_positions
         super().__init__(
@@ -75,4 +76,30 @@ class PositionsTrajectory(Trajectory):
         super().augment_frequency(augmentation_ratio)
         self.sequence_of_positions = self.get_sequence_of_positions(
             self.rotation_representation
+        )
+
+    def visualize_3d(
+        self,
+        save_file: str = None,  # use "mp4" or "gif"
+        min_max_layout: bool = True,
+        interactive: bool = True,
+        draw_bones: bool = True,
+        turn_view: bool = False,
+        draw_rotation: bool = None,
+    ) -> None:
+        if (
+            draw_rotation is None
+            and self.sequence_of_positions[0][0].rotation is not None
+        ):
+            draw_rotation = True
+        elif draw_rotation is None:
+            draw_rotation = False
+        render_3d_trajectory(
+            self,
+            save_file,
+            min_max_layout,
+            interactive,
+            draw_bones,
+            draw_rotation,
+            turn_view,
         )

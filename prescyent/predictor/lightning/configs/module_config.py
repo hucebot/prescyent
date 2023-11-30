@@ -21,7 +21,7 @@ class ModuleConfig(BaseModel):
     dropout_value: Optional[float] = None
     norm_on_last_input: bool = False
     used_norm: Optional[Normalizations] = None
-    loss_fn: LossFunctions = "mpjpeloss"
+    loss_fn: LossFunctions = LossFunctions.MSELOSS
     do_lipschitz_continuation: bool = False
     used_profiler: Optional[Profilers] = None
 
