@@ -11,6 +11,7 @@ from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, DATASET
 
 
@@ -39,6 +40,8 @@ class MotionDataset(Dataset):
             history_size=self.history_size,
             future_size=self.future_size,
             sampling_type=self.config.learning_type,
+            in_dims=self.config.in_dims,
+            out_dims=self.config.in_dims,
         )
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
@@ -48,6 +51,8 @@ class MotionDataset(Dataset):
             history_size=self.history_size,
             future_size=self.future_size,
             sampling_type=self.config.learning_type,
+            in_dims=self.config.in_dims,
+            out_dims=self.config.in_dims,
         )
         logger.getChild(DATASET).info(
             "Test dataset has a size of %d", len(self.test_datasample)
@@ -57,10 +62,14 @@ class MotionDataset(Dataset):
             history_size=self.history_size,
             future_size=self.future_size,
             sampling_type=self.config.learning_type,
+            in_dims=self.config.in_dims,
+            out_dims=self.config.out_dims,
         )
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
         )
+        if self.config.learning_type == LearningTypes.SEQ2ONE:
+            self.future_size = 1
 
     def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]

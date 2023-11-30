@@ -1,5 +1,6 @@
 """Common config elements for motion datasets usage"""
 from pathlib import Path
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -22,3 +23,5 @@ class MotionDatasetConfig(BaseModel):
     pin_memory: bool = True
     history_size: int  # number of timesteps as input
     future_size: int  # number of predicted timesteps
+    out_dims: Optional[List[int]] = None
+    in_dims: Optional[List[int]] = None

@@ -65,5 +65,5 @@ class DelayedPredictor(BasePredictor):
             new_inputs = torch.cat(new_inputs, dim=0)
             input_t = torch.cat((new_inputs, input_t), dim=0)
         if is_tensor_is_batched(input_t):
-            input_t = torch.transpose(input_t, 0, 1)
+            input_t = torch.transpose(input_t[-future_size:], 0, 1)
         return input_t

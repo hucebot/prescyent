@@ -30,6 +30,17 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             sample[1:], truth[:-1], err_msg="thruth and sample differ"
         )
 
+    def test_load_seq2one(self):
+        dataset = TeleopIcubDataset(
+            TeleopIcubDatasetConfig(
+                actions=["directions"], learning_type=LearningTypes.SEQ2ONE
+            )
+        )
+        self.assertGreater(len(dataset), 0)
+        _, truth = dataset.test_datasample[0]
+        self.assertEqual(1, len(truth))
+        self.assertEqual(1, dataset.future_size)
+
     def test_impossible_configs(self):
         config = TeleopIcubDatasetConfig(future_size=200)
         self.assertRaises(ValueError, TeleopIcubDataset, config)
