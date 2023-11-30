@@ -8,6 +8,11 @@ from prescyent.utils.interpolate import interpolate_iterable_with_ratio, interpo
 class TestInterpolation(unittest.TestCase):
     def test_interpolate(self):
         in_list = [2., 3., 4., 5.]
+        out = interpolate_iterable_with_ratio(in_list, 1)
+        self.assertEqual(in_list, out)
+        out_truth =  [2., 2.5, 3., 3.5, 4., 4.5, 5.]
+        out = interpolate_iterable_with_ratio(in_list, 2)
+        self.assertEqual(out_truth, out)
         out_truth = [2.0, 2.2, 2.4, 2.6, 2.8,
                      3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.0]
         out = interpolate_iterable_with_ratio(in_list, 5)
@@ -75,6 +80,8 @@ class TestInterpolation(unittest.TestCase):
                                 [[4, 5, 6],[2, 1, 0]],
                                 [[5, 6, 7],[1, 0, -1]]])
         traj = Trajectory(in_tensor, frequency=5)
+        traj.augment_frequency(1)
+        self.assertTrue(torch.equal(in_tensor, traj.tensor))
         traj.augment_frequency(5)
         out_truth = torch.FloatTensor([[[ 1.0000,  2.0000,  3.0000],
          [ 5.0000,  4.0000,  3.0000]],

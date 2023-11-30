@@ -8,7 +8,7 @@ from prescyent.dataset.trajectories.features.coordinates import Coordinates
 from prescyent.utils.enums import RotationRepresentation
 
 
-DEFAULT_EULER_SEQ = "zyx"
+DEFAULT_EULER_SEQ = "ZYX"
 DEFAULT_EULER_IS_DEGREES = False
 
 
@@ -41,8 +41,6 @@ class Position:
         qw: float = None,
     ) -> None:
         rotation = Rotation.from_quat([qx, qy, qz, qw])
-        rotation_array = rotation.as_matrix()
-        rotation_array = np.transpose(rotation_array)
         return cls(x, y, z, rotation, RotationRepresentation.QUATERNIONS)
 
     @classmethod
@@ -85,15 +83,9 @@ class Position:
                 rotation_array = self.rotation.as_euler(
                     DEFAULT_EULER_SEQ, degrees=DEFAULT_EULER_IS_DEGREES
                 )
-            # TODO REMOVE: temporary push for data remaping
-            elif self.rotation_representation == RotationRepresentation.INRIA_WBC:
-                rotation_array = self.rotation.as_matrix()
-                rotation_array = np.array(
-                    [rotation_array[0], rotation_array[2], rotation_array[1]]
-                )  # xzy
-                rotation_array = rotation_array.flatten()
             elif self.rotation_representation == RotationRepresentation.ROTMATRICES:
                 rotation_array = self.rotation.as_matrix()
+                rotation_array = np.transpose(rotation_array)
                 rotation_array = rotation_array.flatten()
             elif self.rotation_representation == RotationRepresentation.QUATERNIONS:
                 rotation_array = self.rotation.as_quat()
@@ -117,8 +109,6 @@ class Position:
                 dim_names += [f"e{dim}" for dim in DEFAULT_EULER_SEQ]
             elif self.rotation_representation == RotationRepresentation.ROTMATRICES:
                 dim_names += ["x1", "x2", "x3", "y1", "y2", "y3", "z1", "z2", "z3"]
-            elif self.rotation_representation == RotationRepresentation.INRIA_WBC:
-                dim_names += ["x1", "x2", "x3", "z1", "z2", "z3", "y1", "y2", "y3"]
         return dim_names
 
     @classmethod
