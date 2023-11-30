@@ -29,6 +29,20 @@ class InitH36MArmDatasetTest(CustomTestCase):
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
 
+    def test_load_seq2one(self):
+        try:
+            dataset = H36MArmDataset(
+                H36MArmDatasetConfig(
+                    actions=["directions"], learning_type=LearningTypes.SEQ2ONE
+                )
+            )
+            self.assertGreater(len(dataset), 0)
+            _, truth = dataset.test_datasample[0]
+            self.assertEqual(1, len(truth))
+            self.assertEqual(1, dataset.future_size)
+        except NotImplementedError:
+            warnings.warn(NO_DATA_WARNING)
+
     def test_load_autoreg(self):
         try:
             dataset = H36MArmDataset(
