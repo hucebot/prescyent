@@ -41,7 +41,7 @@ class MotionDataset(Dataset):
             future_size=self.future_size,
             sampling_type=self.config.learning_type,
             in_dims=self.config.in_dims,
-            out_dims=self.config.in_dims,
+            out_dims=self.config.out_dims,
         )
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
@@ -52,7 +52,7 @@ class MotionDataset(Dataset):
             future_size=self.future_size,
             sampling_type=self.config.learning_type,
             in_dims=self.config.in_dims,
-            out_dims=self.config.in_dims,
+            out_dims=self.config.out_dims,
         )
         logger.getChild(DATASET).info(
             "Test dataset has a size of %d", len(self.test_datasample)
