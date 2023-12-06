@@ -12,12 +12,21 @@ class MotionLayerNorm(nn.Module):
         if self.used_norm is None:
             self.norm_layer = nn.Identity()
         elif self.used_norm == Normalizations.SPATIAL:
-            self.norm_layer = nn.LayerNorm([config.num_points, config.num_dims])
+            self.norm_layer = nn.LayerNorm(
+                [
+                    len(config.dataset_config.in_points),
+                    len(config.dataset_config.in_dims),
+                ]
+            )
         elif self.used_norm == Normalizations.TEMPORAL:
             self.norm_layer = nn.LayerNorm(config.input_size)
         elif self.used_norm == Normalizations.ALL:
             self.norm_layer = nn.LayerNorm(
-                [config.input_size, config.num_points, config.num_dims]
+                [
+                    config.input_size,
+                    len(config.dataset_config.in_points),
+                    len(config.dataset_config.in_dims),
+                ]
             )
         elif self.used_norm == Normalizations.BATCH:
             self.norm_layer = nn.BatchNorm2d(config.input_size)

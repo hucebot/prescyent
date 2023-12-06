@@ -41,6 +41,7 @@ def train_from_config(
     # Validate config content and create Dataset and Predictor
     if not dataset:
         dataset = AutoDataset.build_from_config(dataset_config)
+    model_config["dataset_config"] = dataset.config
     predictor = AutoPredictor.build_from_config(model_config)
     training_config = TrainingConfig(**training_config)
 
@@ -63,8 +64,8 @@ def train_from_config(
     eval_predictors(
         predictors=[predictor],
         trajectories=dataset.trajectories.test,
-        history_size=dataset.history_size,
-        future_size=dataset.future_size,
+        history_size=dataset.config.history_size,
+        future_size=dataset.config.future_size,
         do_plotting=False,
     )
 

@@ -67,7 +67,7 @@ if __name__ == "__main__":
             f"data/plots/pred_{i}.pdf",
             # we shift the predictions of the history_size (data we need to predict)
             # and of future_size (because given 1 s of data, we predict 1 second from now)
-            shifts=[0, history_size + future_size, future_size],
+            shifts=[0, history_size, future_size],
             group_labels=dims,
             dim_labels=["x", "y", "z"],
             title=title,

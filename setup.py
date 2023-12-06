@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 package_name = "prescyent"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 
 CORE_REQUIREMENTS = [

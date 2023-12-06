@@ -22,7 +22,7 @@ class InitSineDatasetTest(CustomTestCase):
         self.assertGreater(len(dataset), 0)
         _, truth = dataset.test_datasample[0]
         self.assertEqual(1, len(truth))
-        self.assertEqual(1, dataset.future_size)
+        self.assertEqual(1, dataset.config.future_size)
 
     def test_load_autoreg(self):
         dataset = SineDataset(SineDatasetConfig(learning_type=LearningTypes.AUTOREG))

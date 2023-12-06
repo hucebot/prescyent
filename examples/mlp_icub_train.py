@@ -1,7 +1,8 @@
 # this example shows how to learn a MLP on the TeleopIcubDataset
+import copy
 from prescyent.predictor import MlpPredictor, MlpConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
-from prescyent.utils.enums import Normalizations
+from prescyent.utils.enums import Normalizations, LossFunctions
 
 if __name__ == "__main__":
     # -- Init dataset
@@ -23,29 +24,27 @@ if __name__ == "__main__":
     print("OK")
 
     # -- Init predictor
-    print("Initializing predictor...", end="")
-    feature_size = dataset.feature_size
-    config = MlpConfig(
-        num_dims=dataset.num_dims,
-        num_points=dataset.num_points,
-        output_size=dataset.future_size,
-        input_size=dataset.history_size,
-        hidden_size=512,
-        norm_on_last_input=True
-        # used_norm= Normalizations.ALL
+    print("Initializing predictor...", end=" ")
+    config = MlpConfig(dataset_config=copy.deepcopy(dataset_config),
+        hidden_size=256,
+        num_layers=4,
+        norm_on_last_input=True,
+        loss_fn=LossFunctions.MSELOSS,
     )
+    sample, truth = dataset.val_datasample[0]
+    print(sample.shape)
     predictor = MlpPredictor(config=config)
     print("OK")
 
     # Train
     training_config = TrainingConfig(
-        epoch=100, devices="auto", accelerator="cpu", use_auto_lr=True
+        epoch=100, devices="auto", accelerator="cpu", use_auto_lr=True, early_stopping_patience=10
     )
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 
     # Save the predictor
     model_dir = (
-        f"data/models/teleopicub/all_10hz/{predictor.name}/version_{predictor.version}"
+        f"data/models/teleopicub/1sec_10hz/{predictor.name}/version_{predictor.version}"
     )
     print("model directory:", model_dir)
     predictor.save(model_dir)

@@ -19,24 +19,24 @@ class TorchModule(BaseTorchModule):
     def __init__(self, config):
         super().__init__(config)
         self.hidden_size = config.hidden_size
-        self.feature_size = config.feature_size
-        self.output_size = config.output_size
         self.num_layers = config.num_layers
         self.dropout_value = config.dropout_value if config.dropout_value else 0
+        self.in_features = self.in_num_dims * self.in_num_points
+        self.out_features = self.out_num_dims * self.out_num_points
 
         self.encoder = nn.GRU(
-            input_size=self.feature_size,
+            input_size=self.in_features,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             dropout=self.dropout_value,
         )
         self.decoder = nn.GRU(
-            input_size=self.feature_size,
+            input_size=self.out_features,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             dropout=self.dropout_value,
         )
-        self.linear = nn.Linear(self.hidden_size, self.feature_size)
+        self.linear = nn.Linear(self.hidden_size, self.out_features)
 
     @BaseTorchModule.allow_unbatched
     @BaseTorchModule.normalize_tensor
@@ -52,7 +52,7 @@ class TorchModule(BaseTorchModule):
         dec_input = input_tensor[-1].unsqueeze(0)
         # we prepare the output tensor that will be fed by the decoding loop
         predictions = torch.zeros(
-            self.output_size, batch_size, self.feature_size, device=input_tensor.device
+            self.output_size, batch_size, self.out_features, device=input_tensor.device
         )
         # decoding loop must update the hidden state and input for each wanted output
         for i in range(self.output_size):
@@ -62,5 +62,7 @@ class TorchModule(BaseTorchModule):
             predictions[i] = prediction
         # (seq_len, batch_size, num_point * num_dim) => (batch_size, seq_len, num_point, num_dim)
         predictions = torch.transpose(predictions, 0, 1)
-        predictions = predictions.reshape(T[0], -1, T[2], T[3])
+        predictions = predictions.reshape(
+            T[0], -1, self.out_num_points, self.out_num_dims
+        )
         return predictions

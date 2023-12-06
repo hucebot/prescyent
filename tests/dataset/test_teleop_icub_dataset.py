@@ -32,14 +32,29 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_load_seq2one(self):
         dataset = TeleopIcubDataset(
-            TeleopIcubDatasetConfig(
-                actions=["directions"], learning_type=LearningTypes.SEQ2ONE
-            )
+            TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2ONE)
         )
         self.assertGreater(len(dataset), 0)
         _, truth = dataset.test_datasample[0]
         self.assertEqual(1, len(truth))
-        self.assertEqual(1, dataset.future_size)
+        self.assertEqual(1, dataset.config.future_size)
+
+    def test_indims_outdims(self):
+        dataset = TeleopIcubDataset(
+            TeleopIcubDatasetConfig(
+                out_dims=[0,1],
+            )
+        )
+        self.assertGreater(len(dataset), 0)
+        sample, truth = dataset.test_datasample[0]
+        self.assertEqual(sample.shape[-1], 3)
+        self.assertEqual(truth.shape[-1], 2)
+        sample, truth = dataset.train_datasample[0]
+        self.assertEqual(sample.shape[-1], 3)
+        self.assertEqual(truth.shape[-1], 2)
+        sample, truth = dataset.val_datasample[0]
+        self.assertEqual(sample.shape[-1], 3)
+        self.assertEqual(truth.shape[-1], 2)
 
     def test_impossible_configs(self):
         config = TeleopIcubDatasetConfig(future_size=200)

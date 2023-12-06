@@ -1,22 +1,18 @@
 """Config elements for Pytorch Lightning Modules usage"""
-from typing import Union, Optional
+from typing import Optional
 from pydantic import BaseModel, model_validator
 
 from prescyent.utils.enums import Normalizations
 from prescyent.utils.enums import LossFunctions
 from prescyent.utils.enums import Profilers
+from prescyent.dataset.config import MotionDatasetConfig
 
 
 class ModuleConfig(BaseModel):
     """Pydantic Basemodel for Torch Module configuration"""
 
+    dataset_config: MotionDatasetConfig
     version: Optional[int] = None
-    input_size: Optional[int] = None
-    output_size: Optional[int] = None
-    num_dims: Optional[int] = None
-    num_points: Optional[int] = None
-    input_frequency: Optional[int] = None
-    output_frequency: Optional[int] = None
     save_path: str = "data/models"
     dropout_value: Optional[float] = None
     norm_on_last_input: bool = False
@@ -26,24 +22,38 @@ class ModuleConfig(BaseModel):
     used_profiler: Optional[Profilers] = None
 
     @property
-    def feature_size(self):
-        return self.num_dims * self.num_points
+    def input_size(self):
+        return self.dataset_config.history_size
+
+    @property
+    def output_size(self):
+        return self.dataset_config.future_size
+
+    @property
+    def in_feature_size(self):
+        return len(self.dataset_config.in_dims) * len(self.dataset_config.in_points)
+
+    @property
+    def out_feature_size(self):
+        return len(self.dataset_config.out_dims) * len(self.dataset_config.out_points)
 
     @model_validator(mode="after")
     def check_norms_have_requirements(self):
         if self.used_norm in [Normalizations.ALL] and (
-            self.input_size is None or self.num_dims is None or self.num_points is None
+            self.input_size is None
+            or self.dataset_config.in_dims is None
+            or self.dataset_config.in_points is None
         ):
             raise ValueError(
                 f"{self.used_norm} normalization necessitate a valid "
-                "input_size, num_dims and num_points in config"
+                "input_size, in_dims and in_points in config"
             )
         elif self.used_norm == Normalizations.SPATIAL and (
-            self.num_dims is None or self.num_points is None
+            self.dataset_config.in_dims is None or self.dataset_config.in_points is None
         ):
             raise ValueError(
                 f"{self.used_norm} normalization necessitate a valid "
-                "num_dims and num_points in config"
+                "in_dims and in_points in config"
             )
         elif self.used_norm in [Normalizations.TEMPORAL, Normalizations.BATCH] and (
             self.input_size is None

@@ -7,9 +7,7 @@ from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 class Config(ModuleConfig):
     """Pydantic Basemodel for SARLSTM configuration"""
 
-    num_points: int
-    num_dims: int
-    hidden_size: int = 10
+    hidden_size: int = 128
     num_layers: int = 2
 
     @field_validator("num_layers")

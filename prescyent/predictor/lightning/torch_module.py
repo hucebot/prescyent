@@ -12,11 +12,13 @@ class BaseTorchModule(torch.nn.Module):
         super().__init__()
         self.norm_on_last_input = config.norm_on_last_input
         self.used_norm = config.used_norm
-        self.output_size = config.output_size
-        self.input_size = config.input_size
-        self.num_points = config.num_points
-        self.num_dims = config.num_dims
         self.dropout_value = config.dropout_value
+        self.input_size = config.input_size
+        self.in_num_points = len(config.dataset_config.in_points)
+        self.in_num_dims = len(config.dataset_config.in_dims)
+        self.output_size = config.output_size
+        self.out_num_points = len(config.dataset_config.out_points)
+        self.out_num_dims = len(config.dataset_config.out_dims)
         if self.dropout_value is not None and self.dropout_value > 0:
             self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.used_norm is not None:

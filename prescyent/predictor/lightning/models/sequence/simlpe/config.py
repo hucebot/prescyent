@@ -10,10 +10,6 @@ DEFAULT_HIDDEN = 64
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
-    input_size: int
-    output_size: int
-    num_points: int
-    num_dims: int
     hidden_size: int = DEFAULT_HIDDEN
     num_layers: int = 48
     dct: bool = True
