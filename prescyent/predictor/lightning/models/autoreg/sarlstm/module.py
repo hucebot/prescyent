@@ -19,16 +19,17 @@ class TorchModule(BaseTorchModule):
     def __init__(self, config):
         super().__init__(config)
         self.hidden_size = config.hidden_size
-        self.feature_size = config.feature_size
         self.num_layers = config.num_layers
-        self.lstms = nn.ModuleList([nn.LSTMCell(self.feature_size, self.hidden_size)])
+        self.in_features = self.in_num_dims * self.in_num_points
+        self.out_features = self.out_num_dims * self.out_num_points
+        self.lstms = nn.ModuleList([nn.LSTMCell(self.in_features, self.hidden_size)])
         self.lstms.extend(
             [
                 nn.LSTMCell(self.hidden_size, self.hidden_size)
                 for i in range(self.num_layers - 1)
             ]
         )
-        self.linear = nn.Linear(self.hidden_size, self.feature_size)
+        self.linear = nn.Linear(self.hidden_size, self.out_features)
 
     @BaseTorchModule.allow_unbatched
     @BaseTorchModule.normalize_tensor
@@ -71,6 +72,9 @@ class TorchModule(BaseTorchModule):
 
         predictions = torch.cat(predictions, dim=1)
         predictions = predictions.reshape(
-            predictions.shape[0], predictions.shape[1], T[2], T[3]
+            predictions.shape[0],
+            predictions.shape[1],
+            self.out_num_points,
+            self.out_num_dims,
         )
         return predictions

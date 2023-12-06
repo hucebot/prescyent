@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from prescyent.utils.enums import LearningTypes
 
-
 root_dir = Path(__file__).parent.parent.parent
 DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
 
@@ -21,7 +20,11 @@ class MotionDatasetConfig(BaseModel):
     drop_last: bool = True
     persistent_workers: bool = False
     pin_memory: bool = True
+    # x, y pairs related variables for motion data samples:
     history_size: int  # number of timesteps as input
     future_size: int  # number of predicted timesteps
     out_dims: Optional[List[int]] = None
     in_dims: Optional[List[int]] = None
+    # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
+    in_points: Optional[List[int]] = None
+    out_points: Optional[List[int]] = None

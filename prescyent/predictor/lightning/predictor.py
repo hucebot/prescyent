@@ -4,7 +4,7 @@ import inspect
 import json
 import os
 import shutil
-from collections.abc import Iterable, Callable
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Dict, Type, Union
 
@@ -252,13 +252,10 @@ class LightningPredictor(BasePredictor):
             {
                 **self.model.hparams,
                 **self.training_config.model_dump(),
-                **self.config.model_dump(),
+                **self.config.model_dump(exclude=["dataset"]),
             },
             {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
         )
-        sample_tensor = train_dataloader.dataset[0][0]
-        self.config.num_dims = sample_tensor.shape[2]
-        self.config.num_points = sample_tensor.shape[1]
         self.trainer.fit(
             model=self.model,
             train_dataloaders=train_dataloader,
@@ -290,16 +287,16 @@ class LightningPredictor(BasePredictor):
                 (
                     input_shape[0],
                     self.config.input_size,
-                    self.config.num_points,
-                    self.config.num_dims,
+                    len(self.config.dataset_config.in_points),
+                    len(self.config.dataset_config.in_dims),
                 )
             )
             model_output_shape = torch.Size(
                 (
                     input_shape[0],
                     self.config.output_size,
-                    self.config.num_points,
-                    self.config.num_dims,
+                    len(self.config.dataset_config.out_points),
+                    len(self.config.dataset_config.out_dims),
                 )
             )
             # we update first and last layer with new feature_size
@@ -311,8 +308,10 @@ class LightningPredictor(BasePredictor):
         # we update model config with new input output infos
         self.config.input_size = input_t.shape[1]
         self.config.output_size = truth_t.shape[1]
-        self.config.num_points = input_t.shape[2]
-        self.config.num_dims = input_t.shape[3]
+        self.config.dataset_config.in_points = list(range(input_t.shape[2]))
+        self.config.dataset_config.in_dims = list(range(input_t.shape[3]))
+        self.config.dataset_config.out_points = list(range(truth_t.shape[2]))
+        self.config.dataset_config.out_dims = list(range(truth_t.shape[3]))
         # train on new dataset
         self.train(train_dataloader, train_config, val_dataloader)
 

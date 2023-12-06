@@ -9,10 +9,6 @@ Built with pytorch_lightning and pydantic
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.delayed_predictor import DelayedPredictor
 from prescyent.predictor.constant_predictor import ConstantPredictor
-from prescyent.predictor.lightning.models.sequence.linear import (
-    LinearConfig,
-    LinearPredictor,
-)
 from prescyent.predictor.lightning.models.sequence.seq2seq import (
     Seq2SeqConfig,
     Seq2SeqPredictor,
@@ -42,7 +38,6 @@ from prescyent.utils.logger import logger, PREDICTOR
 
 
 PREDICTOR_LIST = [
-    LinearPredictor,
     SARLSTMPredictor,
     Seq2SeqPredictor,
     MlpPredictor,

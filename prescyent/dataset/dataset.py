@@ -21,9 +21,6 @@ class MotionDataset(Dataset):
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
     name: str
-    batch_size: int
-    history_size: int
-    future_size: int
     trajectories: Trajectories
     train_datasample: MotionDataSamples
     test_datasample: MotionDataSamples
@@ -34,42 +31,29 @@ class MotionDataset(Dataset):
             "Tensor pairs will be generated for a %s learning type",
             self.config.learning_type,
         )
+        if self.config.in_points is None:
+            self.config.in_points = list(range(self.trajectories[0].shape[1]))
+        if self.config.out_points is None:
+            self.config.out_points = list(range(self.trajectories[0].shape[1]))
+        if self.config.in_dims is None:
+            self.config.in_dims = list(range(self.trajectories[0].shape[2]))
+        if self.config.out_dims is None:
+            self.config.out_dims = list(range(self.trajectories[0].shape[2]))
         self.name = name
-        self.train_datasample = MotionDataSamples(
-            self.trajectories.train,
-            history_size=self.history_size,
-            future_size=self.future_size,
-            sampling_type=self.config.learning_type,
-            in_dims=self.config.in_dims,
-            out_dims=self.config.out_dims,
-        )
+        self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
         )
-        self.test_datasample = MotionDataSamples(
-            self.trajectories.test,
-            history_size=self.history_size,
-            future_size=self.future_size,
-            sampling_type=self.config.learning_type,
-            in_dims=self.config.in_dims,
-            out_dims=self.config.out_dims,
-        )
+        self.test_datasample = MotionDataSamples(self.trajectories.test, self.config)
         logger.getChild(DATASET).info(
             "Test dataset has a size of %d", len(self.test_datasample)
         )
-        self.val_datasample = MotionDataSamples(
-            self.trajectories.val,
-            history_size=self.history_size,
-            future_size=self.future_size,
-            sampling_type=self.config.learning_type,
-            in_dims=self.config.in_dims,
-            out_dims=self.config.out_dims,
-        )
+        self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
         )
         if self.config.learning_type == LearningTypes.SEQ2ONE:
-            self.future_size = 1
+            self.config.future_size = 1
 
     def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]
@@ -84,7 +68,7 @@ class MotionDataset(Dataset):
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_datasample,
-            batch_size=self.batch_size,
+            batch_size=self.config.batch_size,
             shuffle=True,
             num_workers=self.config.num_workers,
             pin_memory=self.config.pin_memory,
@@ -96,7 +80,7 @@ class MotionDataset(Dataset):
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.test_datasample,
-            batch_size=self.batch_size,
+            batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=1,
             pin_memory=self.config.pin_memory,
@@ -108,7 +92,7 @@ class MotionDataset(Dataset):
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             self.val_datasample,
-            batch_size=self.batch_size,
+            batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
             pin_memory=self.config.pin_memory,
@@ -146,9 +130,6 @@ class MotionDataset(Dataset):
         config = self._load_config(config)
         assert isinstance(config, config_class)  # check our config type
         self.config = config
-        self.history_size = config.history_size
-        self.future_size = config.future_size
-        self.batch_size = config.batch_size
 
     def _load_config(self, config) -> MotionDatasetConfig:
         if isinstance(config, Path):  # load from a Path

@@ -16,8 +16,6 @@ class TorchModule(BaseTorchModule):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
-        self.input_size = config.input_size
-        self.output_size = config.output_size
         self.hidden_size = config.hidden_size
         self.temporal_fc_in = config.temporal_fc_in
         self.temporal_fc_out = config.temporal_fc_out
@@ -32,10 +30,15 @@ class TorchModule(BaseTorchModule):
             )
         else:
             self.motion_fc_in = nn.Linear(
-                self.config.feature_size, self.config.hidden_size
+                self.config.in_feature_size, self.config.hidden_size
             )
         self.motion_mlp = TransMLP(self.config)
         if self.temporal_fc_out:
+            if self.config.out_feature_size > self.config.in_feature_size:
+                raise NotImplementedError(
+                    "This model cannot output feature dimensions bigger than its"
+                    " input feature size with the temporal_fc_out configuration"
+                )
             self.motion_fc_out = nn.Linear(
                 self.config.hidden_size, self.config.output_size
             )
@@ -46,7 +49,7 @@ class TorchModule(BaseTorchModule):
                     " input without the temporal_fc_out configuration"
                 )
             self.motion_fc_out = nn.Linear(
-                self.config.hidden_size, self.config.feature_size
+                self.config.hidden_size, self.config.out_feature_size
             )
         if self.config.dct:
             self.register_buffer(
@@ -89,7 +92,9 @@ class TorchModule(BaseTorchModule):
             offset = input_tensor[:, -1:].to(motion_feats.device)
             motion_feats = motion_feats[:, : self.output_size] + offset
         motion_pred = motion_feats[:, : self.output_size]
-        motion_pred = motion_pred.reshape(T[0], self.output_size, T[2], T[3])
+        motion_pred = motion_pred.reshape(
+            T[0], self.output_size, self.out_num_points, self.out_num_dims
+        )
         return motion_pred
 
     def criterion(self, motion_pred, motion_truth):
