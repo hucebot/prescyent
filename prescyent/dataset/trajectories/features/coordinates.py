@@ -26,3 +26,14 @@ class Coordinates:
         if self.z is not None:
             dim_names.append("z")
         return dim_names
+
+    def calc_distance(self, other: object) -> float:
+        assert isinstance(other, Coordinates)
+        distances = []
+        if self.x and other.x:
+            distances.append(pow(self.x - other.x, 2))
+        if self.y and other.y:
+            distances.append(pow(self.y - other.y, 2))
+        if self.z and other.z:
+            distances.append(pow(self.z - other.z, 2))
+        return pow(sum(distances), 0.5)

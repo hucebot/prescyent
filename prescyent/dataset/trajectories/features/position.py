@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import torch
 import numpy as np
@@ -6,6 +6,7 @@ from scipy.spatial.transform import Rotation
 
 from prescyent.dataset.trajectories.features.coordinates import Coordinates
 from prescyent.utils.enums import RotationRepresentation
+from prescyent.utils.quaternion_manipulation import get_distance_rotations
 
 
 DEFAULT_EULER_SEQ = "ZYX"
@@ -126,3 +127,11 @@ class Position:
         if rotation_representation == RotationRepresentation.EULER:
             return cls.init_from_euler(*list(tensor))
         raise NotImplementedError()
+
+    def calc_distance(self, other: object) -> Tuple[float, float]:
+        assert isinstance(other, Position)
+        coordinate_distance = self.coordinates.calc_distance(other.coordinates)
+        rotation_distance = 0
+        if self.rotation is not None and other.rotation is not None:
+            rotation_distance = get_distance_rotations(self.rotation, other.rotation)
+        return coordinate_distance, rotation_distance

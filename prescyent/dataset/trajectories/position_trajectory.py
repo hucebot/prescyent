@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 import torch
 
 from prescyent.dataset.trajectories.features import Position
@@ -28,20 +29,24 @@ class PositionsTrajectory(Trajectory):
             dimension_names,
         )
 
-    def dump(
-        self,
-        output_format="csv",
-        output_path=None,
-        rotation_representation: RotationRepresentation = None,
-    ) -> None:
-        if rotation_representation is not None:
-            for points in self.sequence_of_positions:
-                for position in points:
-                    position.rotation_representation = rotation_representation
-        self.tensor = self.get_tensor()
-        super().dump(
-            output_format=output_format,
-            output_path=output_path,
+    @property
+    def sequence_of_positions(self):
+        return self._sequence_of_positions
+
+    @sequence_of_positions.setter
+    def sequence_of_positions(self, value):
+        self._sequence_of_positions = value
+        self._tensor = self.get_tensor()
+
+    @property
+    def tensor(self):
+        return self._tensor
+
+    @tensor.setter
+    def tensor(self, value):
+        self._tensor = value
+        self._sequence_of_positions = self.get_sequence_of_positions(
+            self.rotation_representation
         )
 
     @property
@@ -78,6 +83,22 @@ class PositionsTrajectory(Trajectory):
             self.rotation_representation
         )
 
+    def dump(
+        self,
+        output_format="csv",
+        output_path=None,
+        rotation_representation: RotationRepresentation = None,
+    ) -> None:
+        if rotation_representation is not None:
+            for points in self.sequence_of_positions:
+                for position in points:
+                    position.rotation_representation = rotation_representation
+        self.tensor = self.get_tensor()
+        super().dump(
+            output_format=output_format,
+            output_path=output_path,
+        )
+
     def visualize_3d(
         self,
         save_file: str = None,  # use "mp4" or "gif"
@@ -103,3 +124,23 @@ class PositionsTrajectory(Trajectory):
             draw_rotation,
             turn_view,
         )
+
+    def compare(self, other: object, offsets: List[int] = [0, 0]) -> float:
+        assert isinstance(other, PositionsTrajectory)
+        assert len(offsets) == 2
+        seq1 = self.sequence_of_positions[offsets[0] :]
+        seq2 = (other.sequence_of_positions[offsets[1] :])[: len(seq1)]
+        assert len(seq1) == len(seq2)
+        assert len(seq1[0]) == len(seq2[0])
+        frame_dists = []
+        for f, frame in enumerate(seq1):
+            point_dists = []
+            for p, point in enumerate(frame):
+                coordonate_dist, rotation_dist = point.calc_distance(
+                    other.sequence_of_positions[f][p]
+                )
+                point_dists.append((coordonate_dist, rotation_dist))
+            frame_dists.append(point_dists)
+        frame_means = [np.mean(point_dists, 0) for point_dists in frame_dists]
+        mean_dist = np.mean(frame_means, 0)
+        return mean_dist
