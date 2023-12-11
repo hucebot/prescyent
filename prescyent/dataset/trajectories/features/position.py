@@ -59,6 +59,18 @@ class Position:
         rotation = Rotation.from_euler(euler_seq, [e1, e2, e3], degrees=degrees)
         return cls(x, y, z, rotation, RotationRepresentation.EULER)
 
+    @classmethod
+    def init_from_rotmatrice(
+        cls,
+        x: float,
+        y: float = None,
+        z: float = None,
+        matrix: np.ndarray = None
+    ) -> None:
+        rotation = Rotation.from_matrix(matrix)
+        return cls(x, y, z, rotation, RotationRepresentation.ROTMATRICES)
+
+
     def num_dims(self) -> int:
         rotation_dim = 0
         if self.rotation is not None:
@@ -126,7 +138,10 @@ class Position:
             return Position(*list(tensor))
         if rotation_representation == RotationRepresentation.EULER:
             return cls.init_from_euler(*list(tensor))
-        raise NotImplementedError()
+        if rotation_representation == RotationRepresentation.ROTMATRICES:
+            return cls.init_from_rotmatrice(*list(tensor[:3]), np.array(tensor[3:]).reshape(3,3).transpose())
+        raise NotImplementedError(f'No method for "{rotation_representation}"'
+                                  ' representation in "get_from_tensor()"')
 
     def calc_distance(self, other: object) -> Tuple[float, float]:
         assert isinstance(other, Position)
