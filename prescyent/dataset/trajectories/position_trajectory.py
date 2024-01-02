@@ -97,11 +97,7 @@ class PositionsTrajectory(Trajectory):
         output_path=None,
         rotation_representation: RotationRepresentation = None,
     ) -> None:
-        if rotation_representation is not None:
-            for points in self.sequence_of_positions:
-                for position in points:
-                    position.rotation_representation = rotation_representation
-        self.tensor = self.get_tensor()
+        self.rotation_representation = rotation_representation
         super().dump(
             output_format=output_format,
             output_path=output_path,

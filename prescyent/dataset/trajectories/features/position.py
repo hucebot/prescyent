@@ -78,10 +78,10 @@ class Position:
             rotation_dim = len(self._get_rotation_array())
         return self.coordinates.num_dims + rotation_dim
 
-    def get_tensor(self) -> torch.Tensor:
+    def get_tensor(self, rotation_representation=None) -> torch.Tensor:
         tensor = self.coordinates.get_tensor()
         if self.rotation is not None:
-            rotation_array = self._get_rotation_array()
+            rotation_array = self._get_rotation_array(rotation_representation)
             tensor = torch.cat(
                 (
                     tensor,
@@ -91,7 +91,9 @@ class Position:
             )
         return tensor
 
-    def _get_rotation_array(self) -> np.ndarray:
+    def _get_rotation_array(self, rotation_representation=None) -> np.ndarray:
+        if rotation_representation is not None:
+            self.rotation_representation = rotation_representation
         if self.rotation is not None:
             if self.rotation_representation == RotationRepresentation.EULER:
                 rotation_array = self.rotation.as_euler(

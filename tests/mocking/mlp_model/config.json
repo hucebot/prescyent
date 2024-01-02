@@ -1,0 +1,65 @@
+{
+    "model_config": {
+        "activation": "relu",
+        "dataset_config": {
+            "batch_size": 256,
+            "drop_last": true,
+            "future_size": 10,
+            "history_size": 10,
+            "in_dims": [
+                0,
+                1,
+                2
+            ],
+            "in_points": [
+                0,
+                1,
+                2
+            ],
+            "learning_type": "sequence_2_sequence",
+            "num_workers": 0,
+            "out_dims": [
+                0,
+                1,
+                2
+            ],
+            "out_points": [
+                0,
+                1,
+                2
+            ],
+            "persistent_workers": false,
+            "pin_memory": true,
+            "shuffle": true
+        },
+        "do_lipschitz_continuation": false,
+        "dropout_value": null,
+        "hidden_size": 512,
+        "loss_fn": "mseloss",
+        "name": "MlpPredictor",
+        "norm_on_last_input": true,
+        "num_layers": 8,
+        "save_path": "data/models",
+        "used_norm": null,
+        "used_profiler": null,
+        "version": 14
+    },
+    "training_config": {
+        "accelerator": "cpu",
+        "accumulate_grad_batches": 1,
+        "devices": "auto",
+        "early_stopping_mode": "min",
+        "early_stopping_patience": 10,
+        "early_stopping_value": "Val/loss",
+        "epoch": 200,
+        "log_every_n_steps": 1,
+        "lr": 0.04365158322401657,
+        "max_lr": 0.01,
+        "max_steps": -1,
+        "seed": null,
+        "use_auto_lr": true,
+        "use_deterministic_algorithms": true,
+        "use_scheduler": false,
+        "weight_decay": 0.01
+    }
+}
