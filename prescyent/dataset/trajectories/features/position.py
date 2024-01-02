@@ -2,12 +2,11 @@ from typing import List, Union, Tuple
 
 import torch
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from prescyent.dataset.trajectories.features.coordinates import Coordinates
 from prescyent.utils.enums import RotationRepresentation
 from prescyent.utils.quaternion_manipulation import get_distance_rotations
-
+from prescyent.utils.rotation_6d import Rotation6d
 
 DEFAULT_EULER_SEQ = "ZYX"
 DEFAULT_EULER_IS_DEGREES = False
@@ -15,7 +14,7 @@ DEFAULT_EULER_IS_DEGREES = False
 
 class Position:
     coordinates: Coordinates
-    rotation: Rotation
+    rotation: Rotation6d
     rotation_representation: RotationRepresentation
 
     def __init__(
@@ -23,7 +22,7 @@ class Position:
         x: float,
         y: float = None,
         z: float = None,
-        rotation: Rotation = None,
+        rotation: Rotation6d = None,
         rotation_representation: RotationRepresentation = None,
     ) -> None:
         self.coordinates = Coordinates(x, y, z)
@@ -41,7 +40,7 @@ class Position:
         qz: float = None,
         qw: float = None,
     ) -> None:
-        rotation = Rotation.from_quat([qx, qy, qz, qw])
+        rotation = Rotation6d.from_quat([qx, qy, qz, qw])
         return cls(x, y, z, rotation, RotationRepresentation.QUATERNIONS)
 
     @classmethod
@@ -56,20 +55,22 @@ class Position:
         euler_seq: str = DEFAULT_EULER_SEQ,
         degrees: bool = DEFAULT_EULER_IS_DEGREES,
     ) -> None:
-        rotation = Rotation.from_euler(euler_seq, [e1, e2, e3], degrees=degrees)
+        rotation = Rotation6d.from_euler(euler_seq, [e1, e2, e3], degrees=degrees)
         return cls(x, y, z, rotation, RotationRepresentation.EULER)
 
     @classmethod
     def init_from_rotmatrice(
-        cls,
-        x: float,
-        y: float = None,
-        z: float = None,
-        matrix: np.ndarray = None
+        cls, x: float, y: float = None, z: float = None, matrix: np.ndarray = None
     ) -> None:
-        rotation = Rotation.from_matrix(matrix)
+        rotation = Rotation6d.from_matrix(matrix)
         return cls(x, y, z, rotation, RotationRepresentation.ROTMATRICES)
 
+    @classmethod
+    def init_from_rep6d(
+        cls, x: float, y: float = None, z: float = None, rep6d: np.ndarray = None
+    ) -> None:
+        rotation = Rotation6d.from_rep6d(rep6d)
+        return cls(x, y, z, rotation, RotationRepresentation.REP6D)
 
     def num_dims(self) -> int:
         rotation_dim = 0
@@ -106,6 +107,9 @@ class Position:
                 rotation_array = self.rotation.as_rotvec()
             elif self.rotation_representation == RotationRepresentation.RODRIGUES:
                 rotation_array = self.rotation.as_mrp()
+            elif self.rotation_representation == RotationRepresentation.REP6D:
+                rotation_array = self.rotation.as_rep6d()
+                rotation_array = rotation_array.flatten()
             else:
                 raise NotImplementedError(
                     f"No tensor representation available for {self.rotation_representation}"
@@ -122,6 +126,8 @@ class Position:
                 dim_names += [f"e{dim}" for dim in DEFAULT_EULER_SEQ]
             elif self.rotation_representation == RotationRepresentation.ROTMATRICES:
                 dim_names += ["x1", "x2", "x3", "y1", "y2", "y3", "z1", "z2", "z3"]
+            elif self.rotation_representation == RotationRepresentation.REP6D:
+                dim_names += ["x1", "x2", "x3", "y1", "y2", "y3"]
         return dim_names
 
     @classmethod
@@ -138,10 +144,18 @@ class Position:
             return Position(*list(tensor))
         if rotation_representation == RotationRepresentation.EULER:
             return cls.init_from_euler(*list(tensor))
+        if rotation_representation == RotationRepresentation.REP6D:
+            return cls.init_from_rep6d(
+                *list(tensor[:3]), np.array(tensor[3:]).reshape(3, 2)
+            )
         if rotation_representation == RotationRepresentation.ROTMATRICES:
-            return cls.init_from_rotmatrice(*list(tensor[:3]), np.array(tensor[3:]).reshape(3,3).transpose())
-        raise NotImplementedError(f'No method for "{rotation_representation}"'
-                                  ' representation in "get_from_tensor()"')
+            return cls.init_from_rotmatrice(
+                *list(tensor[:3]), np.array(tensor[3:]).reshape(3, 3).transpose()
+            )
+        raise NotImplementedError(
+            f'No method for "{rotation_representation}"'
+            ' representation in "get_from_tensor()"'
+        )
 
     def calc_distance(self, other: object) -> Tuple[float, float]:
         assert isinstance(other, Position)

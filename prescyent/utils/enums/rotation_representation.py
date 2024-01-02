@@ -7,4 +7,7 @@ class RotationRepresentation(str, Enum):
     ROTVECTORS = "rotvectors"
     RODRIGUES = "rodrigues"
     EULER = "euler"
-    INRIA_WBC = "inria_wbc"  # TODO REMOVE: temporary for data remaping
+    REP6D = "representation_6d"
+    # from Zhou, Y., Barnes, C., Lu, J., Yang, J., & Li, H. (2020).
+    # On the continuity of rotation representations in neural networks.
+    # arXiv preprint arXiv:1812.07035.
