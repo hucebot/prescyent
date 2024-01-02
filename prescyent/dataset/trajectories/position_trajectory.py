@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -52,6 +52,14 @@ class PositionsTrajectory(Trajectory):
     @property
     def rotation_representation(self) -> RotationRepresentation:
         return self.sequence_of_positions[0][0].rotation_representation
+
+    @rotation_representation.setter
+    def rotation_representation(self, value):
+        assert isinstance(value, RotationRepresentation)
+        for f, frame in enumerate(self._sequence_of_positions):
+            for p, _ in enumerate(frame):
+                self._sequence_of_positions[f][p].rotation_representation = value
+        self._tensor = self.get_tensor()
 
     def get_tensor(self) -> torch.Tensor:
         return torch.FloatTensor(
@@ -107,6 +115,7 @@ class PositionsTrajectory(Trajectory):
         draw_bones: bool = True,
         turn_view: bool = False,
         draw_rotation: bool = None,
+        others: Optional[List[object]] = None,
     ) -> None:
         if (
             draw_rotation is None
@@ -115,6 +124,8 @@ class PositionsTrajectory(Trajectory):
             draw_rotation = True
         elif draw_rotation is None:
             draw_rotation = False
+        for other in others:
+            assert isinstance(other, PositionsTrajectory)
         render_3d_trajectory(
             self,
             save_file,
