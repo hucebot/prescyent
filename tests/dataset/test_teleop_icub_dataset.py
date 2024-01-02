@@ -42,7 +42,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_indims_outdims(self):
         dataset = TeleopIcubDataset(
             TeleopIcubDatasetConfig(
-                out_dims=[0,1],
+                out_dims=[0, 1],
             )
         )
         self.assertGreater(len(dataset), 0)

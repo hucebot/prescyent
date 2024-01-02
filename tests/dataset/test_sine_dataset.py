@@ -16,9 +16,7 @@ class InitSineDatasetTest(CustomTestCase):
         self.assertGreater(len(dataset), 0)
 
     def test_load_seq2one(self):
-        dataset = SineDataset(
-            SineDatasetConfig(learning_type=LearningTypes.SEQ2ONE)
-        )
+        dataset = SineDataset(SineDatasetConfig(learning_type=LearningTypes.SEQ2ONE))
         self.assertGreater(len(dataset), 0)
         _, truth = dataset.test_datasample[0]
         self.assertEqual(1, len(truth))
