@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 from scipy.spatial.transform import Rotation
+import torch
 
 
 def scipy_rotation_conversion(function):
@@ -98,3 +99,16 @@ def get_distance_rotations(q1: Rotation, q2: Rotation, degrees=False) -> float:
     if degrees:
         magnitude = math.degrees(magnitude)
     return magnitude
+
+
+def quaternion_to_rotmatrix(q: torch.Tensor) -> torch.Tensor:
+    if not isinstance(q, torch.Tensor):
+        q = torch.from_numpy(q)
+    x, y, z, w = q[0].float(), q[1].float(), q[2].float(), q[3].float()
+    return torch.FloatTensor(
+        [
+            [1 - 2 * y * y - 2 * z * z, 2 * x * y - 2 * w * z, 2 * x * z + 2 * w * y],
+            [2 * x * y + 2 * w * z, 1 - 2 * x * x - 2 * z * z, 2 * y * z - 2 * w * x],
+            [2 * x * z - 2 * w * y, 2 * y * z + 2 * w * x, 1 - 2 * x * x - 2 * y * y],
+        ]
+    )

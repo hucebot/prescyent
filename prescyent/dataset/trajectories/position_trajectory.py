@@ -5,7 +5,6 @@ import torch
 
 from prescyent.dataset.trajectories.features import Position
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.evaluator.visualize_3d import render_3d_trajectory
 from prescyent.utils.enums import RotationRepresentation
 
 
@@ -113,6 +112,8 @@ class PositionsTrajectory(Trajectory):
         draw_rotation: bool = None,
         others: Optional[List[object]] = None,
     ) -> None:
+        from prescyent.evaluator.visualize_3d import render_3d_trajectory
+
         if (
             draw_rotation is None
             and self.sequence_of_positions[0][0].rotation is not None

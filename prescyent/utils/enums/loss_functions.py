@@ -11,3 +11,4 @@ class LossFunctions(str, Enum):
     TRIPLETMARGINLOSS = "tripletmarginloss"
     KLDIVLOSS = "kldivloss"
     MPJPELOSS = "mpjpeloss"
+    POSITION3DLOSS = "position3dloss"

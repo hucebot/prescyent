@@ -25,7 +25,8 @@ if __name__ == "__main__":
 
     # -- Init predictor
     print("Initializing predictor...", end=" ")
-    config = MlpConfig(dataset_config=copy.deepcopy(dataset_config),
+    config = MlpConfig(
+        dataset_config=copy.deepcopy(dataset_config),
         hidden_size=256,
         num_layers=4,
         norm_on_last_input=True,
@@ -38,7 +39,11 @@ if __name__ == "__main__":
 
     # Train
     training_config = TrainingConfig(
-        epoch=100, devices="auto", accelerator="cpu", use_auto_lr=True, early_stopping_patience=10
+        epoch=100,
+        devices="auto",
+        accelerator="cpu",
+        use_auto_lr=True,
+        early_stopping_patience=10,
     )
     predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
 

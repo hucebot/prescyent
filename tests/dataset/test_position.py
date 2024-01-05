@@ -25,7 +25,7 @@ class TestPositionRotations(unittest.TestCase):
             # rotation of 120 degrees around axis equally weighted
         ]
         for position in positions_quaternions:
-            test_position = copy.deepcopy(position)
             for test_rotation in test_rotations:
-                position.rotation_representation = test_rotation
+                tensor = position.get_tensor(test_rotation)
+                test_position = Position.get_from_tensor(tensor, test_rotation)
                 self.assertEqual(position.rotation, test_position.rotation)
