@@ -8,7 +8,10 @@ import torch
 from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 from prescyent.predictor.lightning.configs.module_config import LossFunctions
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
-from prescyent.predictor.lightning.layers.mpjpe_loss import MPJPELoss
+from prescyent.predictor.lightning.losses.mpjpe_loss import MPJPELoss
+from prescyent.predictor.lightning.losses.position_3d_geodesic_loss import (
+    Position3DGeodesicLoss,
+)
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.logger import logger, PREDICTOR
 
@@ -23,6 +26,7 @@ CRITERION_MAPPING = {
     LossFunctions.TRIPLETMARGINLOSS: torch.nn.TripletMarginLoss(),
     LossFunctions.KLDIVLOSS: torch.nn.KLDivLoss(),
     LossFunctions.MPJPELOSS: MPJPELoss(),
+    LossFunctions.POSITION3DLOSS: Position3DGeodesicLoss(),
 }
 DEFAULT_LOSS = MPJPELoss()
 
@@ -73,15 +77,22 @@ class LightningModule(pl.LightningModule):
             )
             apply_spectral_norm(self.torch_model)
         if not hasattr(self.torch_model, "criterion"):
-            criterion = CRITERION_MAPPING.get(config.loss_fn.lower(), None)
-            if criterion is None:
-                logger.getChild(PREDICTOR).warning(
-                    "provided criterion %s is not handled, please use one of the"
-                    "following %s.",
-                    config.loss_fn.lower(),
-                    list(CRITERION_MAPPING.keys()),
-                )
+            if config.loss_fn is None:
                 criterion = DEFAULT_LOSS
+                logger.getChild(PREDICTOR).warning(
+                    "No loos function provided in config, using default %s instead",
+                    DEFAULT_LOSS,
+                )
+            else:
+                criterion = CRITERION_MAPPING.get(config.loss_fn, None)
+                if criterion is None:
+                    logger.getChild(PREDICTOR).error(
+                        "provided criterion %s is not handled, please use one of the"
+                        " following %s.",
+                        config.loss_fn,
+                        list(CRITERION_MAPPING.keys()),
+                    )
+                    raise AttributeError(config.loss_fn)
         else:
             criterion = self.torch_model.criterion
         logger.getChild(PREDICTOR).info(

@@ -1,0 +1,33 @@
+import numpy as np
+import torch
+
+
+class GeodesicLoss(torch.nn.modules.loss._Loss):
+    def __init__(self, size_average=None, reduce=None, reduction: str = "mean") -> None:
+        super(GeodesicLoss, self).__init__(size_average, reduce, reduction)
+        self.reduction = reduction
+
+    def forward(
+        self, rotmatrix_inputs: torch.Tensor, rotmatrix_targets: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Compute the geodesic loss between two sets of rotation matrices.
+        """
+        # Compute the trace of the product of the two matrices
+        # This computes the sum of the diagonal elements of the matrix product for each pair of matrices
+        rotmatrix_inputs = torch.reshape(rotmatrix_inputs, [-1, 3, 3])
+        rotmatrix_targets = torch.reshape(rotmatrix_targets, [-1, 3, 3])
+        R_diffs = rotmatrix_inputs @ rotmatrix_targets.permute(0, 2, 1)
+        all_traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
+        # all_traces = torch.zeros(rotmatrix_inputs.shape[0])
+        # for B, _ in enumerate(all_traces):
+        #     all_traces[B] = torch.trace(torch.matmul(rotmatrix_inputs[B], rotmatrix_targets[B].transpose(0, 1)))
+        # Clip the trace to ensure it is within the valid range for arcos
+        all_traces = torch.clamp((all_traces - 1) / 2, -1.0, 1.0)
+        # Compute the loss
+        loss = torch.arccos(all_traces)
+        if self.reduction == "mean":
+            return torch.mean(loss)
+        elif self.reduction == "sum":
+            return torch.sum(loss)
+        return loss

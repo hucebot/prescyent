@@ -11,6 +11,7 @@ from pathlib import Path
 from prescyent.train_from_config import train_from_config
 from prescyent.auto_dataset import AutoDataset
 from prescyent.utils.enums import LearningTypes, Normalizations
+from prescyent.utils.enums.loss_functions import LossFunctions
 
 
 VARIATIONS = {
@@ -24,12 +25,15 @@ VARIATIONS = {
     ],
     "model_config.hidden_size": [256],
     "model_config.num_layers": [4],
+    "model_config.loss_fn": [
+            LossFunctions.MPJPELOSS,
+            ],
     "model_config.used_norm": [
-                               Normalizations.ALL,
-    #                            Normalizations.SPATIAL,
-    #                            Normalizations.TEMPORAL,
-    #                            Normalizations.BATCH,
-    #                            None
+        Normalizations.ALL,
+        # Normalizations.SPATIAL,
+        # Normalizations.TEMPORAL,
+        # Normalizations.BATCH,
+        # None
     ],
     # "model_config.spatial_fc_only": [True, False],
     # "model_config.dct": [True, False],

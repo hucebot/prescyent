@@ -2,6 +2,11 @@
 from typing import Iterable, List, Tuple, Union
 import torch
 
+from prescyent.dataset.trajectories.features.position import Position
+from prescyent.utils.enums.rotation_representation import RotationRepresentation
+from prescyent.utils.quaternion_manipulation import quaternion_to_rotmatrix
+from prescyent.utils.rotation_6d import rep6d_to_rotmatrix
+
 
 def cat_tensor_with_seq_idx(
     preds: Union[List[torch.Tensor], torch.Tensor], flatt_idx: int = -1
@@ -48,3 +53,52 @@ def trajectory_tensor_get_dim_limits(
     max_t = max_t.values.transpose(0, 1)
     max_t = torch.max(max_t, dim=1)
     return min_t.values, max_t.values
+
+
+def reshape_position_tensor(
+    tensor: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Takes a tensor of shape (B, S, P, D) or (S, P, D)
+    With :
+        B = Batch size
+        S = Sequence size
+        P = Number of points
+        D = Number of dimensions/features
+    Here we accept tensors with D = 9, with each dimension being:
+        Coordinate(x, y, z) and rep6d
+    Or D=12
+        Coordinate(x, y, z) and rotmatrix
+    Or D=7
+        Coordinate(x, y, z) and quaternion(x,y,z,w)
+    Or D=6
+        Coordinate(x, y, z) and euler(Z,Y,X)
+    We  splits them in two new shapes with a x,y,z and rotmatrix"""
+    batched = True
+    assert isinstance(tensor, torch.Tensor)
+    if not is_tensor_is_batched(tensor):  # add a B shape if none
+        batched = False
+        tensor.unsqueeze(0)
+    if tensor.shape[-1] == 12:  # assert that this is a rotation as a rotmatrix
+        pos_tensor = tensor
+    elif tensor.shape[-1] in [6, 7, 9]:
+        if tensor.shape[-1] == 6:  # assert that this is a rotation as a euler
+            convert_method = NotImplementedError
+        if tensor.shape[-1] == 7:  # assert that this is a rotation as a quaternion
+            convert_method = quaternion_to_rotmatrix
+        else:  # assert that this is a rotation as a rep6d
+            convert_method = rep6d_to_rotmatrix
+        pos_tensor = torch.zeros(*tensor.shape[:-1], 12)
+        for b, batch in enumerate(tensor):
+            for s, sequence in enumerate(batch):
+                for p, point in enumerate(sequence):
+                    pos_tensor[b][s][p] = torch.cat(
+                        (point[:3], convert_method(point[3:]).flatten())
+                    )
+    else:
+        raise AttributeError(
+            "please check your tensor shape and that it represent a 3d position"
+        )
+    if batched is False:  # remove a B shape if none in input_tensor
+        pos_tensor.squeeze(0)
+    return pos_tensor

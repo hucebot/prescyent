@@ -5,7 +5,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.animation import FuncAnimation
-from scipy.spatial.transform import Rotation as R
 
 from prescyent.dataset.trajectories import Trajectory
 from prescyent.utils.logger import logger, EVAL
@@ -38,7 +37,7 @@ def render_3d_trajectory(
 ):
     """"""
     elevation = 20.0
-    colors = ("#FF6666", "#005533", "#1199EE")  # Colorblind-safe RGB
+    rot_colors = ("#FF6666", "#005533", "#1199EE")  # Colorblind-safe RGB
     test_frame = traj[0].transpose(
         0, 1
     )  # at frame n we have (points, dims) => (dims, points)
@@ -60,7 +59,7 @@ def render_3d_trajectory(
     if draw_rotation:
         rotation_scale = 0.025
         rotation_list = [
-            [ax_3d.plot([], [], [], c) for c in colors]
+            [ax_3d.plot([], [], [], c) for c in rot_colors]
             for _ in range(len(test_frame[0]))
         ]
     if draw_bones:
@@ -72,7 +71,9 @@ def render_3d_trajectory(
             for _ in range(len(test_frame[0]))
         ]
     point_list = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
-    for i, (axis, c) in enumerate(zip((ax_3d.xaxis, ax_3d.yaxis, ax_3d.zaxis), colors)):
+    for i, (axis, c) in enumerate(
+        zip((ax_3d.xaxis, ax_3d.yaxis, ax_3d.zaxis), rot_colors)
+    ):
         axlabel = axis.axis_name
         axis.set_label_text(axlabel)
         axis.label.set_color(c)
@@ -115,7 +116,7 @@ def render_3d_trajectory(
                 offset = (x, ys[point], zs[point])
                 loc = np.array([offset, offset])
                 rotation = traj.sequence_of_positions[i][point].rotation
-                for col, _ in enumerate(colors):
+                for col, _ in enumerate(rot_colors):
                     line = np.zeros((2, 3))
                     line[1, col] = rotation_scale
                     line_rot = rotation.apply(line)
