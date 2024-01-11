@@ -71,7 +71,7 @@ def render_3d_trajectory(
             for _ in range(len(test_frame[0]))
         ]
     point_list = ax_3d.plot([], [], [], "o", c="k", zdir="z", ms=6)
-    for i, (axis, c) in enumerate(
+    for _, (axis, c) in enumerate(
         zip((ax_3d.xaxis, ax_3d.yaxis, ax_3d.zaxis), rot_colors)
     ):
         axlabel = axis.axis_name
@@ -115,7 +115,7 @@ def render_3d_trajectory(
             for point, x in enumerate(xs):
                 offset = (x, ys[point], zs[point])
                 loc = np.array([offset, offset])
-                rotation = traj.sequence_of_positions[i][point].rotation
+                rotation = traj.get_scipy_rotation(i, point)
                 for col, _ in enumerate(rot_colors):
                     line = np.zeros((2, 3))
                     line[1, col] = rotation_scale

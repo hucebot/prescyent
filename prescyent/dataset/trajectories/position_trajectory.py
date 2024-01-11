@@ -3,92 +3,85 @@ from typing import List, Optional
 import numpy as np
 import torch
 
-from prescyent.dataset.trajectories.features import Position
+import prescyent.utils.torch_rotation as tr
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.enums import RotationRepresentation
+from prescyent.utils.rotation_6d import Rotation6d
+
+
+DEFAULT_EULER_SEQ = "XYZ"
 
 
 class PositionsTrajectory(Trajectory):
     def __init__(
         self,
-        sequence_of_positions: List[List[Position]],
+        tensor: torch.Tensor,
+        rotation_representation: RotationRepresentation,
         frequency: int,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
         point_parents: List[int] = None,
         dimension_names: List[str] = ["y_infos"],
     ) -> None:
-        self.sequence_of_positions = sequence_of_positions
         super().__init__(
-            self.get_tensor(),
+            tensor,
             frequency,
             file_path,
             title,
             point_parents,
             dimension_names,
         )
-
-    @property
-    def sequence_of_positions(self):
-        return self._sequence_of_positions
-
-    @sequence_of_positions.setter
-    def sequence_of_positions(self, value):
-        self._sequence_of_positions = value
-        self._tensor = self.get_tensor()
-
-    @property
-    def tensor(self):
-        return self._tensor
-
-    @tensor.setter
-    def tensor(self, value):
-        self._tensor = value
-        self._sequence_of_positions = self.get_sequence_of_positions(
-            self.rotation_representation
-        )
+        self._rotation_representation = rotation_representation
 
     @property
     def rotation_representation(self) -> RotationRepresentation:
-        return self.sequence_of_positions[0][0].rotation_representation
+        return self._rotation_representation
 
     @rotation_representation.setter
-    def rotation_representation(self, value):
-        assert isinstance(value, RotationRepresentation)
-        for f, frame in enumerate(self._sequence_of_positions):
-            for p, _ in enumerate(frame):
-                self._sequence_of_positions[f][p].rotation_representation = value
-        self._tensor = self.get_tensor()
+    def rotation_representation(self, value: RotationRepresentation):
+        """do tensor rotation format conversion at rotation_representation update
 
-    def get_tensor(self) -> torch.Tensor:
-        return torch.FloatTensor(
-            [
-                [point.get_tensor().tolist() for point in sequence]
-                for sequence in self.sequence_of_positions
-            ]
-        )
-
-    def get_sequence_of_positions(
-        self, rotation_rep: RotationRepresentation
-    ) -> List[List[Position]]:
-        return [
-            [Position.get_from_tensor(point, rotation_rep) for point in sequence]
-            for sequence in self.tensor
-        ]
+        Args:
+            value (RotationRepresentation): the new rotation format
+        """
+        if self.rotation_representation == None:
+            raise AttributeError(
+                "Cannot convert actual tensor without rotation to a new rotation format"
+            )
+        coordinates = self.tensor[:, :, :3]
+        S, P = coordinates.shape[0], coordinates.shape[1]
+        rotation = self.tensor[:, :, 3:]
+        rotation = rotation.reshape(-1, rotation.shape[-1])
+        if value == RotationRepresentation.EULER:
+            rotation = tr.convert_to_euler(rotation)
+        elif value == RotationRepresentation.QUATERNIONS:
+            rotation = tr.convert_to_quat(rotation)
+        elif value == RotationRepresentation.ROTMATRICES:
+            rotation = tr.convert_to_rotmatrix(rotation)
+        elif value == RotationRepresentation.REP6D:
+            rotation = tr.convert_to_rep6d(rotation)
+        else:
+            raise AttributeError(f"{value} is not an handled RotationRepresentation")
+        self.tensor = torch.cat((coordinates, rotation.reshape(S, P, -1)), dim=2)
+        self._rotation_representation = value
 
     def _get_header(self) -> List[str]:
-        dims = self.sequence_of_positions[0][0].dim_names()
+        dim_names = ["x", "y", "z"]
+        if self.rotation_representation is None:  # No rotation
+            pass
+        elif self.rotation_representation == RotationRepresentation.QUATERNIONS:
+            dim_names += ["qx", "qy", "qz", "qw"]
+        elif self.rotation_representation == RotationRepresentation.EULER:
+            dim_names += [f"e{dim}" for dim in DEFAULT_EULER_SEQ]
+        elif self.rotation_representation == RotationRepresentation.ROTMATRICES:
+            dim_names += ["x1", "x2", "x3", "y1", "y2", "y3", "z1", "z2", "z3"]
+        elif self.rotation_representation == RotationRepresentation.REP6D:
+            dim_names += ["x1", "x2", "x3", "y1", "y2", "y3"]
         return [
             f"{self.dimension_names[p]}_{d}"
-            for d in dims
+            for d in dim_names
             for p in range(self.num_points)
         ]
-
-    def augment_frequency(self, augmentation_ratio: int) -> None:
-        super().augment_frequency(augmentation_ratio)
-        self.sequence_of_positions = self.get_sequence_of_positions(
-            self.rotation_representation
-        )
 
     def dump(
         self,
@@ -110,19 +103,13 @@ class PositionsTrajectory(Trajectory):
         draw_bones: bool = True,
         turn_view: bool = False,
         draw_rotation: bool = None,
-        others: Optional[List[object]] = None,
     ) -> None:
         from prescyent.evaluator.visualize_3d import render_3d_trajectory
 
-        if (
-            draw_rotation is None
-            and self.sequence_of_positions[0][0].rotation is not None
-        ):
+        if draw_rotation is None and self.rotation_representation is not None:
             draw_rotation = True
         elif draw_rotation is None:
             draw_rotation = False
-        for other in others:
-            assert isinstance(other, PositionsTrajectory)
         render_3d_trajectory(
             self,
             save_file,
@@ -133,14 +120,30 @@ class PositionsTrajectory(Trajectory):
             turn_view,
         )
 
+    def get_scipy_rotation(self, frame: int, point: int) -> Rotation6d:
+        rotation_tensor = self.tensor[frame][point][3:]
+        if self.rotation_representation == RotationRepresentation.QUATERNIONS:
+            return Rotation6d.from_quat(rotation_tensor)
+        if self.rotation_representation == RotationRepresentation.EULER:
+            return Rotation6d.from_euler(rotation_tensor)
+        if self.rotation_representation == RotationRepresentation.ROTMATRICES:
+            return Rotation6d.from_matrix(rotation_tensor.reshape(3, 3))
+        if self.rotation_representation == RotationRepresentation.REP6D:
+            return Rotation6d.from_rep6d(rotation_tensor.reshape(3, 2))
+        raise AttributeError(
+            "Can't output a rotation with the actual rotation_representation "
+            f"{self.rotation_representation}"
+        )
+
     def compare(self, other: object, offsets: List[int] = [0, 0]) -> float:
         assert isinstance(other, PositionsTrajectory)
         assert len(offsets) == 2
-        seq1 = self.sequence_of_positions[offsets[0] :]
-        seq2 = (other.sequence_of_positions[offsets[1] :])[: len(seq1)]
+        seq1 = self.tensor[offsets[0] :]
+        seq2 = (other.tensor[offsets[1] :])[: len(seq1)]
         assert len(seq1) == len(seq2)
         assert len(seq1[0]) == len(seq2[0])
         frame_dists = []
+        # TODO: some position aware loss with coordinate error and geodesic error
         for f, frame in enumerate(seq1):
             point_dists = []
             for p, point in enumerate(frame):

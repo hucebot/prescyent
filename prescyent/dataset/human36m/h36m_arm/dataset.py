@@ -4,7 +4,7 @@ from typing import List, Union, Dict
 import prescyent.dataset.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.human36m.dataset import Dataset as H36MDataset
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 
@@ -20,9 +20,9 @@ class Dataset(H36MDataset):
         self,
         files: List,
         delimiter: str = ",",
-    ) -> List[Trajectory]:
+    ) -> List[PositionsTrajectory]:
         """util method to turn a list of pathfiles to a list of their data
-        :rtype: List[Trajectory]
+        :rtype: List[PositionsTrajectory]
         """
         trajectory_list = super().pathfiles_to_trajectories(files, delimiter)
         if self.config.bimanual is True:
@@ -67,10 +67,10 @@ class Dataset(H36MDataset):
 
 
 def subsample_trajectories(
-    trajectory_list: List[Trajectory],
+    trajectory_list: List[PositionsTrajectory],
     arm_joint_ids: List[int],
     relative_joint_label: str,
-) -> List[Trajectory]:
+) -> List[PositionsTrajectory]:
     new_trajectory_list = []
     for trajectory in trajectory_list:
         new_trajectory = get_joints(trajectory, arm_joint_ids)
@@ -87,18 +87,21 @@ def subsample_trajectories(
     return new_trajectory_list
 
 
-def get_joints(trajectory: Trajectory, idx_list: List[int]) -> Trajectory:
+def get_joints(
+    trajectory: PositionsTrajectory, idx_list: List[int]
+) -> PositionsTrajectory:
     """return a subset of the given trajectory on given points ids
 
     Args:
-        trajectory (Trajectory): trajectory to split
+        trajectory (PositionsTrajectory): trajectory to split
         idx_list (List[int]): list of point ids we want to keep
 
     Returns:
-        Trajectory: the trajectory point subset
+        PositionsTrajectory: the trajectory point subset
     """
-    new_trajectory = Trajectory(
+    new_trajectory = PositionsTrajectory(
         tensor=trajectory.tensor[:, idx_list, :],
+        rotation_representation=trajectory.rotation_representation,
         frequency=trajectory.frequency,
         file_path=trajectory.file_path,
         title=trajectory.title,
@@ -108,13 +111,13 @@ def get_joints(trajectory: Trajectory, idx_list: List[int]) -> Trajectory:
     return new_trajectory
 
 
-def mirror_trajectory(trajectory: Trajectory) -> Trajectory:
+def mirror_trajectory(trajectory: PositionsTrajectory) -> PositionsTrajectory:
     """returns a new trajectory mirrored given the MIRROR_AXIS
 
     Args:
-        trajectory (Trajectory): trajectory to mirror
+        trajectory (PositionsTrajectory): trajectory to mirror
 
     Returns:
-        Trajectory: mirrored trajectory
+        PositionsTrajectory: mirrored trajectory
     """
     raise NotImplementedError("TODO, method not implemented yet")

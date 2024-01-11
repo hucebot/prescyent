@@ -80,7 +80,7 @@ class LightningModule(pl.LightningModule):
             if config.loss_fn is None:
                 criterion = DEFAULT_LOSS
                 logger.getChild(PREDICTOR).warning(
-                    "No loos function provided in config, using default %s instead",
+                    "No loss function provided in config, using default %s instead",
                     DEFAULT_LOSS,
                 )
             else:
