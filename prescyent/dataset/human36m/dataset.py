@@ -5,8 +5,9 @@ from typing import List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
 from prescyent.utils.logger import logger, DATASET
+from prescyent.utils.enums.rotation_representation import RotationRepresentation
 from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import (
     expmap2rotmat_torch,
@@ -15,6 +16,7 @@ from prescyent.utils.dataset_manipulation import (
 )
 import prescyent.dataset.human36m.metadata as metadata
 from prescyent.dataset.human36m.config import DatasetConfig
+from prescyent.utils.torch_rotation import convert_to_rep6d, apply_rotation
 
 
 class Dataset(MotionDataset):
@@ -75,7 +77,7 @@ class Dataset(MotionDataset):
         self,
         files: List,
         delimiter: str = ",",
-    ) -> List[Trajectory]:
+    ) -> List[PositionsTrajectory]:
         """util method to turn a list of pathfiles to a list of their data
         :rtype: List[Trajectory]
         """
@@ -92,26 +94,48 @@ class Dataset(MotionDataset):
                 line = line.strip().split(delimiter)
                 if len(line) > 0:
                     pose_info.append(np.array([float(x) for x in line]))
+            # get expmap from file
             pose_info = np.array(pose_info)
-            T = pose_info.shape[0]
+            S = pose_info.shape[0]
             pose_info = pose_info.reshape(-1, 33, 3)
             pose_info[:, :2] = 0
             pose_info = pose_info[:, 1:, :].reshape(-1, 3)
-            pose_info = expmap2rotmat_torch(
+            # get rotmatrices from expmap
+            rotmatrices = expmap2rotmat_torch(
                 torch.from_numpy(pose_info).float()
-            ).reshape(T, 32, 3, 3)
-            xyz_info = rotmat2xyz_torch(pose_info)
+            ).reshape(S, 32, 3, 3)
+            # get xyz and world relative rotmatrice from joint rotmatrices and bone/parent infos
+            xyz_info, world_rotmatrices = rotmat2xyz_torch(
+                rotmatrices.clone().detach(), metadata._get_metadata
+            )
             xyz_info = (
                 xyz_info[::subsampling_step, used_joints, :] / 1000
-            )  # meter conversion
+            )  # mm to meter conversion
+            rotmatrices = world_rotmatrices[::subsampling_step, used_joints, :]
+            S, P = xyz_info.shape[0], xyz_info.shape[1]
+            # as we permuted x and y in "fkl_torch", we permute x and y axis in rotmatrices
+            permute_x_y = torch.FloatTensor(
+                [
+                    [0.0000000, 1.0000000, 0.0000000],
+                    [1.0000000, 0.0000000, 0.0000000],
+                    [0.0000000, 0.0000000, 1.0000000],
+                ]
+            )
+            rotmatrices = (
+                permute_x_y @ rotmatrices.reshape(-1, 3, 3) @ permute_x_y.T
+            ).reshape(S, P, 3, 3)
+            # We use REP6D as default representation for our rotations
+            rot6d_info = convert_to_rep6d(rotmatrices.reshape(S, P, 9)).reshape(S, P, 6)
+            position_traj_tensor = torch.cat((xyz_info, rot6d_info), dim=-1)
             freq = (
                 metadata.BASE_FREQUENCY // subsampling_step
                 if subsampling_step
                 else metadata.BASE_FREQUENCY
             )
             title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
-            trajectory = Trajectory(
-                xyz_info,
+            trajectory = PositionsTrajectory(
+                position_traj_tensor,
+                RotationRepresentation.REP6D,
                 freq,
                 file_path,
                 title,

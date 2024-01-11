@@ -9,7 +9,7 @@ from prescyent.utils.enums.rotation_representation import RotationRepresentation
 
 class TestPositionRotations(unittest.TestCase):
     def test_conversion_sanity_check(self):
-        """tests rotations representations with 3 base quaternions and 0, 0, 0 x,y,z translation"""
+        """tests rotations representations with 3 basics quaternions and 0, 0, 0 x,y,z translation"""
         test_rotations = [
             RotationRepresentation.QUATERNIONS,
             RotationRepresentation.EULER,

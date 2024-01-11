@@ -19,9 +19,6 @@ class GeodesicLoss(torch.nn.modules.loss._Loss):
         rotmatrix_targets = torch.reshape(rotmatrix_targets, [-1, 3, 3])
         R_diffs = rotmatrix_inputs @ rotmatrix_targets.permute(0, 2, 1)
         all_traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
-        # all_traces = torch.zeros(rotmatrix_inputs.shape[0])
-        # for B, _ in enumerate(all_traces):
-        #     all_traces[B] = torch.trace(torch.matmul(rotmatrix_inputs[B], rotmatrix_targets[B].transpose(0, 1)))
         # Clip the trace to ensure it is within the valid range for arcos
         all_traces = torch.clamp((all_traces - 1) / 2, -1.0, 1.0)
         # Compute the loss
