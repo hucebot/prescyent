@@ -165,6 +165,22 @@ def rotmatrix_to_rep6d(rotmatrix: torch.Tensor) -> torch.Tensor:
     return rep6d
 
 
+def _squeeze_batch(func):
+    def reshape_tensors(rotation_tensor: torch.Tensor):
+        shape = rotation_tensor.shape
+        if len(shape) > 2:
+            rotation_tensor = rotation_tensor.reshape(-1, shape[-1])
+        rotation_tensor = func(rotation_tensor)
+        if len(shape) > 2:
+            rotation_tensor = rotation_tensor.reshape(
+                *shape[:-1], rotation_tensor.shape[-1]
+            )
+        return rotation_tensor
+
+    return reshape_tensors
+
+
+@_squeeze_batch
 def convert_to_rotmatrix(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotation tensor to rotmatrix
@@ -181,6 +197,7 @@ def convert_to_rotmatrix(rotation_tensor: torch.Tensor) -> torch.Tensor:
         return euler_to_rotmatrix(rotation_tensor).reshape(-1, 9)
 
 
+@_squeeze_batch
 def convert_to_rep6d(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to rep6d
@@ -195,6 +212,7 @@ def convert_to_rep6d(rotation_tensor: torch.Tensor) -> torch.Tensor:
     return rotmatrix_to_rep6d(rotation_tensor).reshape(-1, 6)
 
 
+@_squeeze_batch
 def convert_to_quat(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to quat
@@ -209,6 +227,7 @@ def convert_to_quat(rotation_tensor: torch.Tensor) -> torch.Tensor:
     return rotmatrix_to_quat(rotation_tensor)
 
 
+@_squeeze_batch
 def convert_to_euler(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to euler
@@ -221,19 +240,3 @@ def convert_to_euler(rotation_tensor: torch.Tensor) -> torch.Tensor:
         rotation_tensor = convert_to_rotmatrix(rotation_tensor)
     rotation_tensor = rotation_tensor.reshape(-1, 3, 3)
     return rotmatrix_to_euler(rotation_tensor)
-
-
-def apply_rotation(
-    rotmatrices: torch.Tensor, transformation_matrix: torch.Tensor
-) -> torch.Tensor:
-    """
-    Apply rotation upon a batch of rotation matrices
-    :param rotmatrices: A batch of rotation matrices with shape (N, 3, 3)
-    :param transformation_matrix: The transformation matrix with shape (3, 3)
-    :return: A tensor of transformed rotation matrices with the shape (N, 3, 3).
-    """
-    # Unsqueeze the transformation matrix to match the batch dimension
-    # transformation_matrix = transformation_matrix.unsqueeze(0)
-    # Multiply the transformation matrix with each rotation matrix in the batch
-    transformed_matrices = torch.matmul(transformation_matrix, rotmatrices)
-    return transformed_matrices

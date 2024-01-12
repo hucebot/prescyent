@@ -49,9 +49,7 @@ class PositionsTrajectory(Trajectory):
                 "Cannot convert actual tensor without rotation to a new rotation format"
             )
         coordinates = self.tensor[:, :, :3]
-        S, P = coordinates.shape[0], coordinates.shape[1]
         rotation = self.tensor[:, :, 3:]
-        rotation = rotation.reshape(-1, rotation.shape[-1])
         if value == RotationRepresentation.EULER:
             rotation = tr.convert_to_euler(rotation)
         elif value == RotationRepresentation.QUATERNIONS:
@@ -62,7 +60,7 @@ class PositionsTrajectory(Trajectory):
             rotation = tr.convert_to_rep6d(rotation)
         else:
             raise AttributeError(f"{value} is not an handled RotationRepresentation")
-        self.tensor = torch.cat((coordinates, rotation.reshape(S, P, -1)), dim=2)
+        self.tensor = torch.cat((coordinates, rotation), dim=2)
         self._rotation_representation = value
 
     def _get_header(self) -> List[str]:
