@@ -17,5 +17,7 @@ or
     arXiv preprint arXiv:2207.01567 2022`
 """
 
-from prescyent.dataset.human36m.dataset import Dataset as H36MDataset
-from prescyent.dataset.human36m.config import DatasetConfig as H36MDatasetConfig
+from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
+from prescyent.dataset.datasets.human36m.config import (
+    DatasetConfig as H36MDatasetConfig,
+)

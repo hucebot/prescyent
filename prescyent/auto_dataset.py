@@ -2,8 +2,7 @@ import json
 from pathlib import Path
 from typing import Union
 
-from prescyent.dataset.dataset import MotionDataset
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.dataset import MotionDataset, MotionDatasetConfig
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset import DATASET_MAP
 

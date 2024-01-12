@@ -1,7 +1,7 @@
 import torch
 from pydantic import ValidationError
 
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset import MotionDatasetConfig
 from prescyent.predictor.lightning.layers.normalization_layer import MotionLayerNorm
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.enums import Normalizations

@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 
 from tests.custom_test_case import CustomTestCase
-from prescyent.dataset.human36m.h36m_arm import H36MArmDataset, H36MArmDatasetConfig
+from prescyent.dataset import H36MArmDataset, H36MArmDatasetConfig
 from prescyent.utils.enums import LearningTypes
 
 

@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.cm import get_cmap
 
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset import Trajectory
 from prescyent.utils.logger import logger, EVAL
 
 matplotlib.use("agg")

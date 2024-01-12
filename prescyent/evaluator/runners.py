@@ -5,7 +5,7 @@ import timeit
 
 import torch
 from tqdm import tqdm
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset import Trajectory
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
 
