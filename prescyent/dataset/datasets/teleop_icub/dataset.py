@@ -14,8 +14,8 @@ from prescyent.utils.dataset_manipulation import (
     split_array_with_ratios,
     update_parent_ids,
 )
-from prescyent.dataset.teleop_icub.config import DatasetConfig
-from prescyent.dataset.teleop_icub.metadata import *
+from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
+from prescyent.dataset.datasets.teleop_icub.metadata import *
 
 
 class Dataset(MotionDataset):

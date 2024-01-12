@@ -3,9 +3,8 @@ import unittest
 
 import torch
 
-from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
-from prescyent.dataset.trajectories.features.position import Position
-from prescyent.utils.enums.rotation_representation import RotationRepresentation
+from prescyent.dataset import PositionsTrajectory
+from prescyent.utils.enums import RotationRepresentation
 
 
 class TestPositionTrajRotations(unittest.TestCase):

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.animation import FuncAnimation
 
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset import Trajectory
 from prescyent.utils.logger import logger, EVAL
 from prescyent.utils.tensor_manipulation import trajectory_tensor_get_dim_limits
 

@@ -2,8 +2,6 @@
 from typing import Iterable, List, Tuple, Union
 import torch
 
-from prescyent.dataset.trajectories.features.position import Position
-from prescyent.utils.enums.rotation_representation import RotationRepresentation
 from prescyent.utils.quaternion_manipulation import quaternion_to_rotmatrix
 from prescyent.utils.rotation_6d import rep6d_to_rotmatrix
 

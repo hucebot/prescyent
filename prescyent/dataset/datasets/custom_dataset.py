@@ -1,7 +1,7 @@
 "simple interface to create a motion dataset from already loaded trajectories"
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.config import MotionDatasetConfig
-from prescyent.dataset.trajectories import Trajectories
+from prescyent.dataset.trajectories.trajectories import Trajectories
 
 
 class CustomDataset(MotionDataset):

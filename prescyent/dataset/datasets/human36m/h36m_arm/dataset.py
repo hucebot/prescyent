@@ -1,9 +1,9 @@
 """Subset of h36m with arms only"""
 from typing import List, Union, Dict
 
-import prescyent.dataset.human36m.h36m_arm.metadata as metadata
-from prescyent.dataset.human36m.h36m_arm.config import DatasetConfig
-from prescyent.dataset.human36m.dataset import Dataset as H36MDataset
+import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
+from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
+from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
 from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
 from prescyent.utils.dataset_manipulation import update_parent_ids
 

@@ -1,6 +1,8 @@
 from enum import Enum
 
-from prescyent.dataset.human36m.config import DatasetConfig as H36MDatasetConfig
+from prescyent.dataset.datasets.human36m.config import (
+    DatasetConfig as H36MDatasetConfig,
+)
 
 
 class Arms(str, Enum):
