@@ -351,9 +351,9 @@ class LightningPredictor(BasePredictor):
             "Saving config at %s", (save_path / "config.json")
         )
         self._save_config(save_path / "config.json", dataset_config)
-        # reload logger at new location
         if rm_log_path:
             shutil.rmtree(self.log_path, ignore_errors=True)
+        # reload logger at new location
         self.log_root_path = save_path
         super()._init_logger(no_sub_dir_log=True)
 
