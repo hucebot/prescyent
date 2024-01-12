@@ -326,6 +326,7 @@ class LightningPredictor(BasePredictor):
         self,
         save_path: Union[str, Path, None] = None,
         dataset_config: Union[dict, BaseModel, None] = None,
+        rm_log_path: bool = True,
     ):
         """save model to path"""
         save_path = str(save_path)
@@ -351,6 +352,8 @@ class LightningPredictor(BasePredictor):
         )
         self._save_config(save_path / "config.json", dataset_config)
         # reload logger at new location
+        if rm_log_path:
+            shutil.rmtree(self.log_path, ignore_errors=True)
         self.log_root_path = save_path
         super()._init_logger(no_sub_dir_log=True)
 
