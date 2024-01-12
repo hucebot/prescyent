@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from prescyent.predictor.lightning.losses.geodesic_loss import GeodesicLoss
-from prescyent.utils.tensor_manipulation import reshape_position_tensor
+from prescyent.utils.torch_rotation import convert_to_rotmatrix
 
 
 class Position3DGeodesicLoss(torch.nn.modules.loss._Loss):
@@ -27,25 +27,30 @@ class Position3DGeodesicLoss(torch.nn.modules.loss._Loss):
         Compute a rotation aware loss using geodesic loss on rotation and mse on coordinates
         """
         # ensure we manipulate positions with coordinates and rotmatrices
-        # it is way too long as is, as we convert rotations 1 by 1
-        # TODO: improve reshaping to be batched
         # or have a loss function for each representation, not just rotmatrices
-        # start_time = time.time()
-        pos_tensor_preds = reshape_position_tensor(pos_tensor_preds)
-        pos_tensor_targets = reshape_position_tensor(pos_tensor_targets)
-        # intermediate_time = time.time()
+        B = pos_tensor_preds.shape[0]
+        S = pos_tensor_preds.shape[1]
+        P = pos_tensor_preds.shape[2]
+        coordinate_preds, rotation_preds = (
+            pos_tensor_preds[:, :, :, :3],
+            pos_tensor_preds[:, :, :, 3:],
+        )
+        coordinate_targets, rotation_targets = (
+            pos_tensor_targets[:, :, :, :3],
+            pos_tensor_targets[:, :, :, 3:],
+        )
+        # ensure we manipulate positions with coordinates as rotmatrices
+        rotation_preds = convert_to_rotmatrix(
+            rotation_preds.reshape(-1, rotation_preds.shape[-1])
+        ).reshape(B, S, P, 9)
+        rotation_targets = convert_to_rotmatrix(
+            rotation_targets.reshape(-1, rotation_targets.shape[-1])
+        ).reshape(B, S, P, 9)
         # mse on coordinates
-        mse_loss = self.mse_loss(
-            pos_tensor_preds[:, :, :, :3], pos_tensor_targets[:, :, :, :3]
-        )
+        mse_loss = self.mse_loss(coordinate_preds, coordinate_targets)
         # geodesic on rotations
-        geodesic_loss = self.geodesic_loss(
-            pos_tensor_preds[:, :, :, 3:], pos_tensor_targets[:, :, :, 3:]
-        )
+        geodesic_loss = self.geodesic_loss(rotation_preds, rotation_targets)
         position_loss = geodesic_loss * self.geodesic_ratio + mse_loss * (
             1 - self.geodesic_ratio
         )
-        # final_time = time.time()
-        # print(f"Reshaping_time: {intermediate_time - start_time}")
-        # print(f"Loss_calculation_time: {final_time - intermediate_time}")
         return position_loss
