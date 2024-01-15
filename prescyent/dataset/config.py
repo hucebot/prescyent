@@ -28,3 +28,19 @@ class MotionDatasetConfig(BaseModel):
     # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
     in_points: Optional[List[int]] = None
     out_points: Optional[List[int]] = None
+
+    @property
+    def num_out_dims(self):
+        return len(self.out_dims)
+
+    @property
+    def num_in_dims(self):
+        return len(self.in_dims)
+
+    @property
+    def num_out_points(self):
+        return len(self.out_points)
+
+    @property
+    def num_in_points(self):
+        return len(self.in_points)

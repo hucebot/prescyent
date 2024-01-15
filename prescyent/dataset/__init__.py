@@ -17,6 +17,7 @@ from prescyent.dataset.datasets.teleop_icub import (
 )
 from prescyent.dataset.trajectories import PositionsTrajectory, Trajectories, Trajectory
 from prescyent.dataset.config import MotionDatasetConfig as DatasetConfig
+from prescyent.dataset.three_dimensional_dataset.config import Dataset3dConfig
 from prescyent.dataset.datasets.custom_dataset import CustomDataset
 
 

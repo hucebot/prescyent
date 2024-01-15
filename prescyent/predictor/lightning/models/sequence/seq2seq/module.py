@@ -21,8 +21,8 @@ class TorchModule(BaseTorchModule):
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
         self.dropout_value = config.dropout_value if config.dropout_value else 0
-        self.in_features = self.in_num_dims * self.in_num_points
-        self.out_features = self.out_num_dims * self.out_num_points
+        self.in_features = self.num_in_dims * self.num_in_points
+        self.out_features = self.num_out_dims * self.num_out_points
 
         self.encoder = nn.GRU(
             input_size=self.in_features,
@@ -63,6 +63,6 @@ class TorchModule(BaseTorchModule):
         # (seq_len, batch_size, num_point * num_dim) => (batch_size, seq_len, num_point, num_dim)
         predictions = torch.transpose(predictions, 0, 1)
         predictions = predictions.reshape(
-            T[0], -1, self.out_num_points, self.out_num_dims
+            T[0], -1, self.num_out_points, self.num_out_dims
         )
         return predictions

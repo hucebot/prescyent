@@ -93,7 +93,7 @@ class TorchModule(BaseTorchModule):
             motion_feats = motion_feats[:, : self.output_size] + offset
         motion_pred = motion_feats[:, : self.output_size]
         motion_pred = motion_pred.reshape(
-            T[0], self.output_size, self.out_num_points, self.out_num_dims
+            T[0], self.output_size, self.num_out_points, self.num_out_dims
         )
         return motion_pred
 

@@ -10,6 +10,20 @@ QUAT_FEATURE_SIZE = 4
 EULER_FEATURE_SIZE = 3
 
 
+def rotrep2size(rotation_representation: RotationRepresentation) -> int:
+    if rotation_representation == RotationRepresentation.ROTMATRICES:
+        return ROTMATRIX_FEATURE_SIZE
+    if rotation_representation == RotationRepresentation.REP6D:
+        return REP6D_FEATURE_SIZE
+    if rotation_representation == RotationRepresentation.QUATERNIONS:
+        return QUAT_FEATURE_SIZE
+    if rotation_representation == RotationRepresentation.EULER:
+        return EULER_FEATURE_SIZE
+    if rotation_representation == None:
+        return 0
+    raise AttributeError(f"No lenght for {rotation_representation} representation")
+
+
 def euler_to_rotmatrix(euler: torch.Tensor) -> torch.Tensor:
     """
     Converts batch of euler rotations to batch of rotmatrix
