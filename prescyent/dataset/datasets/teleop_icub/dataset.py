@@ -7,18 +7,19 @@ from typing import List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.trajectories import Trajectory
+from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
+from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.utils.logger import logger, DATASET
-from prescyent.dataset.dataset import MotionDataset, Trajectories
 from prescyent.utils.dataset_manipulation import (
     split_array_with_ratios,
     update_parent_ids,
 )
+from prescyent.dataset.three_dimensional_dataset.dataset import Dataset3D
 from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
 from prescyent.dataset.datasets.teleop_icub.metadata import *
 
 
-class Dataset(MotionDataset):
+class Dataset(Dataset3D):
     """
     https://zenodo.org/record/5913573#.Y75xK_7MIaw
     Dataset is not splitted into test / train / val
@@ -81,7 +82,7 @@ class Dataset(MotionDataset):
         delimiter: str = ",",
         start: int = None,
         end: int = None,
-    ) -> List[Trajectory]:
+    ) -> List[PositionsTrajectory]:
         """util method to turn a list of pathfiles to a list of their data
 
         :param files: list of files
@@ -128,8 +129,9 @@ class Dataset(MotionDataset):
             )
             title = f"{Path(file).parts[-3]}_{Path(file).parts[-2]}_{Path(file).stem}"
             trajectory_arrray.append(
-                Trajectory(
+                PositionsTrajectory(
                     tensor=tensor,
+                    rotation_representation=None,  # We don't have rotations in this dataset
                     frequency=freq,
                     file_path=file,
                     title=title,

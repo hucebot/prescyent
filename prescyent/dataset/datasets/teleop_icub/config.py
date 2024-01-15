@@ -2,10 +2,11 @@
 import os
 from typing import List, Optional
 
-from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
+from prescyent.dataset.config import DEFAULT_DATA_PATH
+from prescyent.dataset.three_dimensional_dataset.config import Dataset3dConfig
 
 
-class DatasetConfig(MotionDatasetConfig):
+class DatasetConfig(Dataset3dConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
     url: str = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
@@ -18,5 +19,7 @@ class DatasetConfig(MotionDatasetConfig):
     ratio_train: float = 0.8
     ratio_test: float = 0.15
     ratio_val: float = 0.05
-    history_size: int = 10  # number of timesteps as input
-    future_size: int = 10  # number of predicted timesteps
+    history_size: int = 10  # number of timesteps as input, default to 1s at 10Hz
+    future_size: int = 10  # number of predicted timesteps, default to 1s at 10Hz
+    rotation_representation_in: None = None  # No rotations available for this dataset
+    rotation_representation_out: None = None  # No rotations available for this dataset

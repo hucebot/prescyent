@@ -3,10 +3,10 @@ from typing import List, Optional
 import numpy as np
 import torch
 
-import prescyent.utils.torch_rotation as tr
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.enums import RotationRepresentation
 from prescyent.utils.rotation_6d import Rotation6d
+from prescyent.utils.torch_rotation import convert_rotation_tensor_to
 
 
 DEFAULT_EULER_SEQ = "XYZ"
@@ -50,16 +50,7 @@ class PositionsTrajectory(Trajectory):
             )
         coordinates = self.tensor[:, :, :3]
         rotation = self.tensor[:, :, 3:]
-        if value == RotationRepresentation.EULER:
-            rotation = tr.convert_to_euler(rotation)
-        elif value == RotationRepresentation.QUATERNIONS:
-            rotation = tr.convert_to_quat(rotation)
-        elif value == RotationRepresentation.ROTMATRICES:
-            rotation = tr.convert_to_rotmatrix(rotation)
-        elif value == RotationRepresentation.REP6D:
-            rotation = tr.convert_to_rep6d(rotation)
-        else:
-            raise AttributeError(f"{value} is not an handled RotationRepresentation")
+        rotation = convert_rotation_tensor_to(rotation, value)
         self.tensor = torch.cat((coordinates, rotation), dim=2)
         self._rotation_representation = value
 

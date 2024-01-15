@@ -39,10 +39,10 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         self.assertEqual(1, len(truth))
         self.assertEqual(1, dataset.config.future_size)
 
-    def test_indims_outdims(self):
+    def test_coordinates_2d(self):
         dataset = TeleopIcubDataset(
             TeleopIcubDatasetConfig(
-                out_dims=[0, 1],
+                coordinates_out=[0, 1],
             )
         )
         self.assertGreater(len(dataset), 0)

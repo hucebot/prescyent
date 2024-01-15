@@ -20,6 +20,7 @@ class MotionDataset(Dataset):
 
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
+    sample_class: Type[MotionDataSamples]
     name: str
     trajectories: Trajectories
     train_datasample: MotionDataSamples
@@ -27,6 +28,8 @@ class MotionDataset(Dataset):
     val_datasample: MotionDataSamples
 
     def __init__(self, name: str) -> None:
+        if self.sample_class is None:
+            self.sample_class = MotionDataSamples  # Define default sample_class
         logger.getChild(DATASET).debug(
             "Tensor pairs will be generated for a %s learning type",
             self.config.learning_type,
@@ -40,15 +43,15 @@ class MotionDataset(Dataset):
         if self.config.out_dims is None:
             self.config.out_dims = list(range(self.trajectories[0].shape[2]))
         self.name = name
-        self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
+        self.train_datasample = self.sample_class(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
         )
-        self.test_datasample = MotionDataSamples(self.trajectories.test, self.config)
+        self.test_datasample = self.sample_class(self.trajectories.test, self.config)
         logger.getChild(DATASET).info(
             "Test dataset has a size of %d", len(self.test_datasample)
         )
-        self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
+        self.val_datasample = self.sample_class(self.trajectories.val, self.config)
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
         )
