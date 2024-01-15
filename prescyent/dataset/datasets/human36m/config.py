@@ -1,16 +1,18 @@
 """Config elements for H36M dataset usage"""
 import os
 from typing import List, Optional
-from prescyent.dataset.config import MotionDatasetConfig, DEFAULT_DATA_PATH
+
+from prescyent.dataset.config import DEFAULT_DATA_PATH
+from prescyent.dataset.three_dimensional_dataset.config import Dataset3dConfig
+from prescyent.utils.enums import RotationRepresentation
 
 
-class DatasetConfig(MotionDatasetConfig):
+class DatasetConfig(Dataset3dConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
     url: Optional[str] = None
     data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
     subsampling_step: int = 2  # subsampling -> 50 Hz to 25Hz
-    dimensions: Optional[List[int]] = None  # num features in the data
     used_joints: Optional[List[int]] = [
         2,
         3,
@@ -56,5 +58,11 @@ class DatasetConfig(MotionDatasetConfig):
     subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]
     subjects_test: List[str] = ["S5"]
     subjects_val: List[str] = ["S11"]
-    history_size: int = 50  # number of timesteps as input
-    future_size: int = 10  # number of predicted timesteps
+    history_size: int = 25  # number of timesteps as input, default to 1sec at 25Hz
+    future_size: int = 25  # number of predicted timesteps, default to 1sec at 25Hz
+    rotation_representation_in: RotationRepresentation | None = (
+        None  # We wont use rotations by default
+    )
+    rotation_representation_out: RotationRepresentation | None = (
+        None  # We wont use rotations by default
+    )

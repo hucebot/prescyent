@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from prescyent.utils.enums import RotationRepresentation
+
 
 ROTMATRIX_FEATURE_SIZE = 9
 REP6D_FEATURE_SIZE = 6
@@ -240,3 +242,53 @@ def convert_to_euler(rotation_tensor: torch.Tensor) -> torch.Tensor:
         rotation_tensor = convert_to_rotmatrix(rotation_tensor)
     rotation_tensor = rotation_tensor.reshape(-1, 3, 3)
     return rotmatrix_to_euler(rotation_tensor)
+
+
+def convert_rotation_tensor_to(
+    tensor: torch.Tensor, rotation_rep: RotationRepresentation
+) -> torch.Tensor:
+    """Upper level function to map conversion method given rot_rep
+
+    Args:
+        tensor (torch.Tensor): the rotation tensor to convert
+        rotation_rep (RotationRepresentation): format to convert tensor to
+
+    Returns:
+        torch.Tensor: new tensor
+    """
+    if rotation_rep == None:
+        return torch.zeros(*tensor.shape[:-1], 0)
+    elif rotation_rep == RotationRepresentation.EULER:
+        return convert_to_euler(tensor)
+    elif rotation_rep == RotationRepresentation.QUATERNIONS:
+        return convert_to_quat(tensor)
+    elif rotation_rep == RotationRepresentation.ROTMATRICES:
+        return convert_to_rotmatrix(tensor)
+    elif rotation_rep == RotationRepresentation.REP6D:
+        return convert_to_rep6d(tensor)
+    else:
+        raise AttributeError(f"{rotation_rep} is not an handled RotationRepresentation")
+
+
+def get_tensor_rotation_representation(tensor: torch.Tensor) -> RotationRepresentation:
+    """Return the RotationRepresentation of a tensor based on its shapes
+
+    Args:
+        tensor (torch.Tensor): tensor with rotation only
+
+    Returns:
+        RotationRepresentation: the rotation representation of the input tensor, or None if tensor is empty
+    """
+    if tensor.shape[-1] == 0:
+        return None
+    if tensor.shape[-1] == ROTMATRIX_FEATURE_SIZE:
+        return RotationRepresentation.ROTMATRICES
+    if tensor.shape[-1] == REP6D_FEATURE_SIZE:
+        return RotationRepresentation.REP6D
+    if tensor.shape[-1] == QUAT_FEATURE_SIZE:
+        return RotationRepresentation.QUATERNIONS
+    if tensor.shape[-1] == EULER_FEATURE_SIZE:
+        return RotationRepresentation.EULER
+    raise NotImplementedError(
+        f"Found no matching representation for shape {tensor.shape[-1]}"
+    )

@@ -8,7 +8,8 @@ import torch
 from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
 from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.enums.rotation_representation import RotationRepresentation
-from prescyent.dataset.dataset import MotionDataset, Trajectories
+from prescyent.dataset.three_dimensional_dataset.dataset import Dataset3D
+from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.utils.dataset_manipulation import (
     expmap2rotmat_torch,
     rotmat2xyz_torch,
@@ -19,7 +20,7 @@ from prescyent.dataset.datasets.human36m.config import DatasetConfig
 from prescyent.utils.torch_rotation import convert_to_rep6d
 
 
-class Dataset(MotionDataset):
+class Dataset(Dataset3D):
     """Class for data loading et preparation before the MotionDataset sampling"""
 
     DATASET_NAME = "H36M"
