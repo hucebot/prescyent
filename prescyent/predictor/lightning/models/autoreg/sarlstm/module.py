@@ -20,8 +20,8 @@ class TorchModule(BaseTorchModule):
         super().__init__(config)
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
-        self.in_features = self.in_num_dims * self.in_num_points
-        self.out_features = self.out_num_dims * self.out_num_points
+        self.in_features = self.num_in_dims * self.num_in_points
+        self.out_features = self.num_out_dims * self.num_out_points
         self.lstms = nn.ModuleList([nn.LSTMCell(self.in_features, self.hidden_size)])
         self.lstms.extend(
             [
@@ -74,7 +74,7 @@ class TorchModule(BaseTorchModule):
         predictions = predictions.reshape(
             predictions.shape[0],
             predictions.shape[1],
-            self.out_num_points,
-            self.out_num_dims,
+            self.num_out_points,
+            self.num_out_dims,
         )
         return predictions
