@@ -201,10 +201,10 @@ def plot_trajectory_prediction(
             "Prediction_y",
             "Prediction_z",
         ],
-        ylabels=trajectory.dimension_names,
+        ylabels=trajectory.point_names,
     )
     fig.set_size_inches(
-        trajectory.tensor.shape[1] * 2 + 5, len(trajectory.dimension_names) + 5
+        trajectory.tensor.shape[1] * 2 + 5, len(trajectory.point_names) + 5
     )
     fig.suptitle(trajectory.title)
     fig.subplots_adjust(right=0.7)
@@ -240,9 +240,9 @@ def plot_multiple_predictors(
     legend_plot(
         axes,
         ["Truth"] + [str(predictor) for predictor in predictors],
-        ylabels=trajectory.dimension_names,
+        ylabels=trajectory.point_names,
     )
-    fig.set_size_inches(150, len(trajectory.dimension_names) + 10)
+    fig.set_size_inches(150, len(trajectory.point_names) + 10)
     fig.suptitle(trajectory.title)
     save_plot_and_close(savefig_path)
 
@@ -276,9 +276,9 @@ def plot_multiple_future(
     legend_plot(
         axes,
         ["Truth"] + [str(predictor) + f"f_{future}" for future in future_sizes],
-        ylabels=trajectory.dimension_names,
+        ylabels=trajectory.point_names,
     )
-    fig.set_size_inches(15, len(trajectory.dimension_names) + 2)
+    fig.set_size_inches(15, len(trajectory.point_names) + 2)
     fig.suptitle(trajectory.title)
     save_plot_and_close(savefig_path)
 

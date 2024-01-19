@@ -21,22 +21,22 @@ class TorchModule(BaseTorchModule):
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
         self.dropout_value = config.dropout_value if config.dropout_value else 0
-        self.in_features = self.num_in_dims * self.num_in_points
-        self.out_features = self.num_out_dims * self.num_out_points
+        self.encoder_in_size = self.num_in_dims * self.num_in_points
+        self.decoder_in_size = self.num_out_dims * self.num_out_points
 
         self.encoder = nn.GRU(
-            input_size=self.in_features,
+            input_size=self.encoder_in_size,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             dropout=self.dropout_value,
         )
         self.decoder = nn.GRU(
-            input_size=self.out_features,
+            input_size=self.decoder_in_size,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             dropout=self.dropout_value,
         )
-        self.linear = nn.Linear(self.hidden_size, self.out_features)
+        self.linear = nn.Linear(self.hidden_size, self.decoder_in_size)
 
     @BaseTorchModule.allow_unbatched
     @BaseTorchModule.normalize_tensor
@@ -52,7 +52,7 @@ class TorchModule(BaseTorchModule):
         dec_input = input_tensor[-1].unsqueeze(0)
         # we prepare the output tensor that will be fed by the decoding loop
         predictions = torch.zeros(
-            self.output_size, batch_size, self.out_features, device=input_tensor.device
+            self.output_size, batch_size, self.decoder_in_size, device=input_tensor.device
         )
         # decoding loop must update the hidden state and input for each wanted output
         for i in range(self.output_size):

@@ -1,5 +1,6 @@
 """Module with methods common to every lightning modules"""
 import copy
+import inspect
 from typing import Any, Dict, List, Type
 
 import pytorch_lightning as pl
@@ -17,18 +18,18 @@ from prescyent.utils.logger import logger, PREDICTOR
 
 
 CRITERION_MAPPING = {
-    LossFunctions.L1LOSS: torch.nn.L1Loss(),
-    LossFunctions.MSELOSS: torch.nn.MSELoss(),
-    LossFunctions.NLLLOSS: torch.nn.NLLLoss(),
-    LossFunctions.CROSSENTROPYLOSS: torch.nn.CrossEntropyLoss(),
-    LossFunctions.HINGEEMBEDDINGLOSS: torch.nn.HingeEmbeddingLoss(),
-    LossFunctions.MARGINRANKINGLOSS: torch.nn.MarginRankingLoss(),
-    LossFunctions.TRIPLETMARGINLOSS: torch.nn.TripletMarginLoss(),
-    LossFunctions.KLDIVLOSS: torch.nn.KLDivLoss(),
-    LossFunctions.MPJPELOSS: MPJPELoss(),
-    LossFunctions.POSITION3DLOSS: Position3DGeodesicLoss(),
+    LossFunctions.L1LOSS: torch.nn.L1Loss,
+    LossFunctions.MSELOSS: torch.nn.MSELoss,
+    LossFunctions.NLLLOSS: torch.nn.NLLLoss,
+    LossFunctions.CROSSENTROPYLOSS: torch.nn.CrossEntropyLoss,
+    LossFunctions.HINGEEMBEDDINGLOSS: torch.nn.HingeEmbeddingLoss,
+    LossFunctions.MARGINRANKINGLOSS: torch.nn.MarginRankingLoss,
+    LossFunctions.TRIPLETMARGINLOSS: torch.nn.TripletMarginLoss,
+    LossFunctions.KLDIVLOSS: torch.nn.KLDivLoss,
+    LossFunctions.MPJPELOSS: MPJPELoss,
+    LossFunctions.POSITION3DLOSS: Position3DGeodesicLoss,
 }
-DEFAULT_LOSS = MPJPELoss()
+DEFAULT_LOSS = MPJPELoss
 
 
 def apply_spectral_norm(model):
@@ -98,7 +99,11 @@ class LightningModule(pl.LightningModule):
         logger.getChild(PREDICTOR).info(
             "Using %s loss function", criterion.__class__.__name__
         )
-        self.criterion = criterion
+        # Init criterion
+        args = [arg for arg in inspect.signature(criterion).parameters]
+        kwargs = {key:getattr(config, key, None) for key in args if getattr(config, key, None) is not None}
+        kwargs.update({key:getattr(config.dataset_config, key, None) for key in args if getattr(config.dataset_config, key, None) is not None})
+        self.criterion = criterion(**kwargs)
         self.save_hyperparameters(ignore=["torch_model", "criterion"])
         logger.getChild(PREDICTOR).info("Lightning Module ready.")
 

@@ -2,9 +2,11 @@
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from prescyent.utils.enums import LearningTypes
+import prescyent.dataset.features as tensor_features
+
 
 root_dir = Path(__file__).parent.parent.parent
 DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
@@ -23,24 +25,62 @@ class MotionDatasetConfig(BaseModel):
     # x, y pairs related variables for motion data samples:
     history_size: int  # number of timesteps as input
     future_size: int  # number of predicted timesteps
-    out_dims: Optional[List[int]] = None
-    in_dims: Optional[List[int]] = None
+    in_features: Optional[List[tensor_features.Feature]] = None
+    out_features: Optional[List[tensor_features.Feature]] = None
     # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
     in_points: Optional[List[int]] = None
     out_points: Optional[List[int]] = None
 
     @property
-    def num_out_dims(self):
-        return len(self.out_dims)
+    def num_out_features(self) -> int:
+        return len(self.out_features)
 
     @property
-    def num_in_dims(self):
-        return len(self.in_dims)
+    def num_in_features(self) -> int:
+        return len(self.in_features)
 
     @property
-    def num_out_points(self):
+    def num_out_dims(self) -> int:
+        if self.out_features is None:
+            self.out_features = []
+        return sum([len(feat.ids) for feat in self.out_features])
+
+    @property
+    def num_in_dims(self) -> int:
+        if self.in_features is None:
+            self.in_features = []
+        return sum([len(feat.ids) for feat in self.in_features])
+
+    @property
+    def num_out_points(self) -> int:
         return len(self.out_points)
 
     @property
-    def num_in_points(self):
+    def num_in_points(self) -> int:
         return len(self.in_points)
+
+    @property
+    def out_dims(self) -> List[int]:
+        dims = []
+        for feature in self.out_features:
+            dims += feature.ids
+        return dims
+
+    @property
+    def in_dims(self) -> List[int]:
+        dims = []
+        for feature in self.in_features:
+            dims += feature.ids
+        return dims
+
+
+    @model_validator(mode="before")
+    def unserialize_features(self):
+        if self.get("out_features", None) and not isinstance(self["out_features"], tensor_features.Feature):
+            self["out_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in self["out_features"]]
+        if self.get("in_features", None) and not isinstance(self["in_features"], tensor_features.Feature):
+            self["in_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in self["in_features"]]
+        return self
+
+    class Config:
+        arbitrary_types_allowed = True

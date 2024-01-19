@@ -4,7 +4,8 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import H36MArmDataset, H36MArmDatasetConfig
-from prescyent.utils.enums import LearningTypes, RotationRepresentation
+from prescyent.dataset.features import CoordinateXYZ, CoordinateXY, CoordinateX, RotationRep6D, RotationQuat, RotationEuler, RotationRotMat
+from prescyent.utils.enums import LearningTypes
 
 
 NO_DATA_WARNING = "H36MArm dataset is not installed, please refer to the README if you intend to use it"
@@ -61,13 +62,32 @@ class InitH36MArmDatasetTest(CustomTestCase):
 
 
 class H36MArmRotationsDatasetTest(CustomTestCase):
+    def test_inverse_inputs(self):
+        try:
+            dataset = H36MArmDataset(
+                H36MArmDatasetConfig(
+                    actions=["directions"],
+                    in_features = [CoordinateXYZ(list(range(3))), RotationRep6D(list(range(3, 9)))],
+                    out_features = [CoordinateXYZ(list(range(6, 9))), RotationRep6D(list(range(6)))],
+                )
+            )
+            self.assertGreater(len(dataset), 0)
+            _, truth = dataset.test_datasample[0]
+            sample, _ = dataset.test_datasample[dataset.config.history_size]
+            self.assertEqual(len(sample), len(truth))
+            self.assertEqual(sample.shape[-1], 9)
+            self.assertEqual(truth.shape[-1], 9)
+            np.testing.assert_allclose(sample[:,:,[0, 1, 2]], truth[:,:,[6, 7, 8]])
+        except NotImplementedError:
+            warnings.warn(NO_DATA_WARNING)
+
     def test_load_rep6d_none(self):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
                     actions=["directions"],
-                    rotation_representation_in=RotationRepresentation.REP6D,
-                    rotation_representation_out=None,
+                    in_features = [CoordinateXYZ(range(3)), RotationRep6D([3, 4, 5, 6, 7, 8])],
+                    out_features = [CoordinateXYZ(range(3))],
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -83,15 +103,15 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
                     actions=["directions"],
-                    rotation_representation_in=RotationRepresentation.ROTMATRICES,
-                    rotation_representation_out=RotationRepresentation.EULER,
+                    in_features = [CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
+                    out_features = [CoordinateXY(range(2)), RotationEuler(range(2, 5))],
                 )
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 12)
-            self.assertEqual(truth.shape[-1], 6)
+            self.assertEqual(truth.shape[-1], 5)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
 
@@ -100,15 +120,14 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
                     actions=["directions"],
-                    rotation_representation_in=RotationRepresentation.QUATERNIONS,
-                    rotation_representation_out=RotationRepresentation.QUATERNIONS,
-                    coordinates_out=[1],
+                    in_features = [CoordinateXYZ(range(3)), RotationRep6D([3, 4, 5, 6, 7, 8])],
+                    out_features = [CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
                 )
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
-            self.assertEqual(sample.shape[-1], 7)
+            self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 5)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)

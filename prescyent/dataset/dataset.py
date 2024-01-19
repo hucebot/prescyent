@@ -1,12 +1,13 @@
 """Standard class for motion datasets"""
 import zipfile
 from pathlib import Path
-from typing import Dict, Union, Type
+from typing import Dict, List, Union, Type
 
-import requests
 import json
+import requests
 from torch.utils.data import Dataset, DataLoader
 
+import prescyent.dataset.features as tensor_features
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.dataset.trajectories.trajectories import Trajectories
@@ -20,7 +21,6 @@ class MotionDataset(Dataset):
 
     config: MotionDatasetConfig
     config_class: Type[MotionDatasetConfig]
-    sample_class: Type[MotionDataSamples]
     name: str
     trajectories: Trajectories
     train_datasample: MotionDataSamples
@@ -28,30 +28,28 @@ class MotionDataset(Dataset):
     val_datasample: MotionDataSamples
 
     def __init__(self, name: str) -> None:
-        if self.sample_class is None:
-            self.sample_class = MotionDataSamples  # Define default sample_class
         logger.getChild(DATASET).debug(
             "Tensor pairs will be generated for a %s learning type",
             self.config.learning_type,
         )
         if self.config.in_points is None:
-            self.config.in_points = list(range(self.trajectories[0].shape[1]))
+            self.config.in_points = list(range(self.trajectories.train[0].shape[1]))
         if self.config.out_points is None:
-            self.config.out_points = list(range(self.trajectories[0].shape[1]))
-        if self.config.in_dims is None:
-            self.config.in_dims = list(range(self.trajectories[0].shape[2]))
-        if self.config.out_dims is None:
-            self.config.out_dims = list(range(self.trajectories[0].shape[2]))
+            self.config.out_points = list(range(self.trajectories.train[0].shape[1]))
+        if self.config.in_features is None:
+            self.config.in_features = self.trajectories.train[0].tensor_features
+        if self.config.out_features is None:
+            self.config.out_features = self.trajectories.train[0].tensor_features
         self.name = name
-        self.train_datasample = self.sample_class(self.trajectories.train, self.config)
+        self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
         )
-        self.test_datasample = self.sample_class(self.trajectories.test, self.config)
+        self.test_datasample = MotionDataSamples(self.trajectories.test, self.config)
         logger.getChild(DATASET).info(
             "Test dataset has a size of %d", len(self.test_datasample)
         )
-        self.val_datasample = self.sample_class(self.trajectories.val, self.config)
+        self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
         )
@@ -112,6 +110,10 @@ class MotionDataset(Dataset):
         return self.trajectories.train[0].shape[2]
 
     @property
+    def tensor_features(self) -> List[tensor_features.Feature]:
+        return self.trajectories.train[0].tensor_features
+
+    @property
     def feature_size(self) -> int:
         return self.num_dims * self.num_points
 
@@ -135,10 +137,16 @@ class MotionDataset(Dataset):
         self.config = config
 
     def _load_config(self, config) -> MotionDatasetConfig:
-        if isinstance(config, Path):  # load from a Path
+        if isinstance(config, Path) or isinstance(config, str):  # load from a Path
             logger.getChild(DATASET).info("Loading config from %s", config)
+            # serialize features manually
             with open(config, encoding="utf-8") as conf_file:
-                return self.config_class(**json.load(conf_file))
+                data = json.load(conf_file)
+            # if data.get("in_features", None):
+            #     data["in_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in data["in_features"]]
+            # if data.get("out_features", None):
+            #     data["out_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in data["out_features"]]
+            return self.config_class(**data)
         return config
 
     def save_config(self, save_path: Path) -> None:

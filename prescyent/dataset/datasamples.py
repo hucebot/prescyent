@@ -1,11 +1,13 @@
 """Data pair of sample and truth for motion data in ML"""
+import copy
 from typing import List
 
 import torch
 
-from prescyent.utils.enums import LearningTypes
-from prescyent.dataset.trajectories import Trajectory
 from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.dataset.features import convert_tensor_features_to
+from prescyent.utils.enums import LearningTypes
 
 
 class MotionDataSamples:
@@ -86,10 +88,11 @@ class MotionDataSamples:
             raise NotImplementedError(
                 f"We don't handle {self.config.learning_type} sampling for now."
             )
+        tensor_feats = self.trajectories[self.sample_ids[index][0]].tensor_features
         _in = _in[:, self.config.in_points]
-        _in = _in[:, :, self.config.in_dims]
+        _in = convert_tensor_features_to(_in, copy.deepcopy(tensor_feats), copy.deepcopy((self.config.in_features)))
         _out = _out[:, self.config.out_points]
-        _out = _out[:, :, self.config.out_dims]
+        _out = convert_tensor_features_to(_out, copy.deepcopy(tensor_feats), copy.deepcopy((self.config.out_features)))
         return _in, _out
 
     def __len__(self):

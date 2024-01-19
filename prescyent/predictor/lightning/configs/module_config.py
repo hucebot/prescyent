@@ -31,11 +31,11 @@ class ModuleConfig(BaseModel):
 
     @property
     def in_feature_size(self):
-        return len(self.dataset_config.in_dims) * len(self.dataset_config.in_points)
+        return self.dataset_config.num_in_dims * len(self.dataset_config.in_points)
 
     @property
     def out_feature_size(self):
-        return len(self.dataset_config.out_dims) * len(self.dataset_config.out_points)
+        return self.dataset_config.num_out_dims * len(self.dataset_config.out_points)
 
     @model_validator(mode="after")
     def check_norms_have_requirements(self):
