@@ -7,7 +7,7 @@ import torch
 
 from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
 from prescyent.utils.logger import logger, DATASET
-
+from prescyent.dataset.features import Feature, Any, convert_tensor_features_to
 
 class Trajectory:
     """
@@ -17,19 +17,21 @@ class Trajectory:
 
     tensor: torch.Tensor
     frequency: int
+    tensor_features: List[Feature]
     file_path: str
     title: str
     point_parents: List[int]
-    dimension_names: List[str]
+    point_names: List[str]
 
     def __init__(
         self,
         tensor: torch.Tensor,
         frequency: int,
+        tensor_features: List[Feature] = None,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
         point_parents: List[int] = None,
-        dimension_names: List[str] = ["y_infos"],
+        point_names: List[str] = None,
     ) -> None:
         self.tensor = tensor
         self.frequency = frequency
@@ -40,7 +42,14 @@ class Trajectory:
                 -1 for i in range(tensor.shape[1])
             ]  # default is -1 foreach point
         self.point_parents = point_parents
-        self.dimension_names = dimension_names
+        if not point_names:
+            point_names = [
+                f"point_{i}" for i in range(tensor.shape[1])
+            ]  # default is -1 foreach point
+        self.point_names = point_names
+        if tensor_features is None:
+            tensor_features = [Any(list(range(tensor.shape[-1])))]
+        self.tensor_features = tensor_features
 
     def __getitem__(self, index) -> torch.Tensor:
         return self.tensor[index]
@@ -74,9 +83,11 @@ class Trajectory:
         # todo
         pass
 
-    def visualize_3d(self) -> None:
-        # todo
-        pass
+    def convert_tensor_features(self, new_tensor_feats: List[Feature]):
+        self.tensor = convert_tensor_features_to(self.tensor,
+                                                 self.tensor_features,
+                                                 new_tensor_feats)
+        self.tensor_features = new_tensor_feats
 
     def augment_frequency(self, augmentation_ratio: int) -> None:
         self.frequency = self.frequency * augmentation_ratio
@@ -115,7 +126,7 @@ class Trajectory:
 
     def _get_header(self) -> List[str]:
         return [
-            f"{self.dimension_names[p]}_{d}"
+            f"{self.point_names[p]}_{d}"
             for d in range(self.num_dims)
             for p in range(self.num_points)
         ]

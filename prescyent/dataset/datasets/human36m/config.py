@@ -3,11 +3,10 @@ import os
 from typing import List, Optional
 
 from prescyent.dataset.config import DEFAULT_DATA_PATH
-from prescyent.dataset.three_dimensional_dataset.config import Dataset3dConfig
-from prescyent.utils.enums import RotationRepresentation
+from prescyent.dataset.config import MotionDatasetConfig
 
 
-class DatasetConfig(Dataset3dConfig):
+class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
     url: Optional[str] = None
@@ -60,9 +59,3 @@ class DatasetConfig(Dataset3dConfig):
     subjects_val: List[str] = ["S11"]
     history_size: int = 25  # number of timesteps as input, default to 1sec at 25Hz
     future_size: int = 25  # number of predicted timesteps, default to 1sec at 25Hz
-    rotation_representation_in: RotationRepresentation | None = (
-        None  # We wont use rotations by default
-    )
-    rotation_representation_out: RotationRepresentation | None = (
-        None  # We wont use rotations by default
-    )

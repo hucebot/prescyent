@@ -5,22 +5,21 @@ from typing import List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
 from prescyent.utils.logger import logger, DATASET
-from prescyent.utils.enums.rotation_representation import RotationRepresentation
-from prescyent.dataset.three_dimensional_dataset.dataset import Dataset3D
+from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
+from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.dataset_manipulation import (
     expmap2rotmat_torch,
     rotmat2xyz_torch,
     update_parent_ids,
 )
+from prescyent.dataset.features import CoordinateXYZ, RotationRep6D, convert_to_rep6d
 import prescyent.dataset.datasets.human36m.metadata as metadata
 from prescyent.dataset.datasets.human36m.config import DatasetConfig
-from prescyent.utils.torch_rotation import convert_to_rep6d
 
 
-class Dataset(Dataset3D):
+class Dataset(MotionDataset):
     """Class for data loading et preparation before the MotionDataset sampling"""
 
     DATASET_NAME = "H36M"
@@ -78,7 +77,7 @@ class Dataset(Dataset3D):
         self,
         files: List,
         delimiter: str = ",",
-    ) -> List[PositionsTrajectory]:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
         :rtype: List[Trajectory]
         """
@@ -134,14 +133,15 @@ class Dataset(Dataset3D):
                 else metadata.BASE_FREQUENCY
             )
             title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
-            trajectory = PositionsTrajectory(
-                position_traj_tensor,
-                RotationRepresentation.REP6D,
-                freq,
-                file_path,
-                title,
-                update_parent_ids(used_joints, metadata.POINT_PARENTS),
-                [metadata.POINT_LABELS[i] for i in used_joints],
+            trajectory = Trajectory(
+                tensor=position_traj_tensor,
+                frequency=freq,
+                tensor_features=[CoordinateXYZ(list(range(3))),
+                                 RotationRep6D(list(range(3,9)))],
+                file_path=file_path,
+                title=title,
+                point_parents=update_parent_ids(used_joints, metadata.POINT_PARENTS),
+                point_names=[metadata.POINT_LABELS[i] for i in used_joints],
             )
             trajectory_arrray.append(trajectory)
         return trajectory_arrray

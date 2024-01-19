@@ -1,12 +1,13 @@
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 import torch
 
 from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.dataset.features.feature import Feature
 from prescyent.utils.enums import RotationRepresentation
 from prescyent.utils.rotation_6d import Rotation6d
-from prescyent.utils.torch_rotation import convert_rotation_tensor_to
+from prescyent.utils.tensor_manipulation import update_position_rotation
 
 
 DEFAULT_EULER_SEQ = "XYZ"
@@ -16,22 +17,23 @@ class PositionsTrajectory(Trajectory):
     def __init__(
         self,
         tensor: torch.Tensor,
-        rotation_representation: RotationRepresentation,
         frequency: int,
+        tensor_features: List[Feature] = None,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
         point_parents: List[int] = None,
-        dimension_names: List[str] = ["y_infos"],
+        point_names: List[str] = None,
     ) -> None:
         super().__init__(
             tensor,
             frequency,
+            tensor_features,
             file_path,
             title,
             point_parents,
-            dimension_names,
+            point_names,
         )
-        self._rotation_representation = rotation_representation
+        # self._rotation_representation = rotation_representation
 
     @property
     def rotation_representation(self) -> RotationRepresentation:
@@ -48,10 +50,7 @@ class PositionsTrajectory(Trajectory):
             raise AttributeError(
                 "Cannot convert actual tensor without rotation to a new rotation format"
             )
-        coordinates = self.tensor[:, :, :3]
-        rotation = self.tensor[:, :, 3:]
-        rotation = convert_rotation_tensor_to(rotation, value)
-        self.tensor = torch.cat((coordinates, rotation), dim=2)
+        self.tensor = update_position_rotation(self.tensor, value)
         self._rotation_representation = value
 
     def _get_header(self) -> List[str]:
@@ -67,7 +66,7 @@ class PositionsTrajectory(Trajectory):
         elif self.rotation_representation == RotationRepresentation.REP6D:
             dim_names += ["x1", "x2", "x3", "y1", "y2", "y3"]
         return [
-            f"{self.dimension_names[p]}_{d}"
+            f"{self.point_names[p]}_{d}"
             for d in dim_names
             for p in range(self.num_points)
         ]

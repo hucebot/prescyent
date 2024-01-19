@@ -20,7 +20,7 @@ class TestPositionTrajRotations(unittest.TestCase):
         ]
         pos_sequence = torch.FloatTensor([positions_quaternions])
         traj = PositionsTrajectory(
-            pos_sequence, RotationRepresentation.QUATERNIONS, frequency=1
+            pos_sequence, frequency=1
         )
         quat_tensor = copy.deepcopy(traj.tensor)
         traj.rotation_representation = RotationRepresentation.ROTMATRICES

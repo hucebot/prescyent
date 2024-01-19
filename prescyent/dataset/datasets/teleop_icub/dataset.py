@@ -7,19 +7,20 @@ from typing import List, Union, Dict
 import numpy as np
 import torch
 
-from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
-from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.dataset_manipulation import (
     split_array_with_ratios,
     update_parent_ids,
 )
-from prescyent.dataset.three_dimensional_dataset.dataset import Dataset3D
 from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
 from prescyent.dataset.datasets.teleop_icub.metadata import *
+from prescyent.dataset.features.coordinate import CoordinateXYZ
+from prescyent.dataset.trajectories.trajectories import Trajectories
+from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.dataset.dataset import MotionDataset
 
 
-class Dataset(Dataset3D):
+class Dataset(MotionDataset):
     """
     https://zenodo.org/record/5913573#.Y75xK_7MIaw
     Dataset is not splitted into test / train / val
@@ -82,7 +83,7 @@ class Dataset(Dataset3D):
         delimiter: str = ",",
         start: int = None,
         end: int = None,
-    ) -> List[PositionsTrajectory]:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
 
         :param files: list of files
@@ -129,14 +130,16 @@ class Dataset(Dataset3D):
             )
             title = f"{Path(file).parts[-3]}_{Path(file).parts[-2]}_{Path(file).stem}"
             trajectory_arrray.append(
-                PositionsTrajectory(
+                Trajectory(
                     tensor=tensor,
-                    rotation_representation=None,  # We don't have rotations in this dataset
+                    tensor_features=[
+                        CoordinateXYZ(list(range(3)))
+                    ],
                     frequency=freq,
                     file_path=file,
                     title=title,
                     point_parents=update_parent_ids(used_joints, POINT_PARENTS),
-                    dimension_names=[POINT_LABELS[i] for i in used_joints],
+                    point_names=[POINT_LABELS[i] for i in used_joints],
                 )
             )
         return trajectory_arrray

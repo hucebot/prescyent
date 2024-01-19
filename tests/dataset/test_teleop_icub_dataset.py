@@ -5,6 +5,7 @@ import torch
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
+from prescyent.dataset.features import CoordinateXY
 from prescyent.utils.enums import LearningTypes
 
 
@@ -42,7 +43,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_coordinates_2d(self):
         dataset = TeleopIcubDataset(
             TeleopIcubDatasetConfig(
-                coordinates_out=[0, 1],
+                out_features=[CoordinateXY([0, 1])],
             )
         )
         self.assertGreater(len(dataset), 0)
@@ -67,6 +68,6 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_load_from_path(self):
         dataset = TeleopIcubDataset()
         dataset.save_config("tmp/test.json")
-        dataset._load_config("tmp/test.json")
+        config = dataset._load_config("tmp/test.json")
         TeleopIcubDataset("tmp/test.json")
         shutil.rmtree("tmp", ignore_errors=True)

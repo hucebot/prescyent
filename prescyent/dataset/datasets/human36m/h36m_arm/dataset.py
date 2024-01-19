@@ -4,7 +4,7 @@ from typing import List, Union, Dict
 import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
-from prescyent.dataset.trajectories.position_trajectory import PositionsTrajectory
+from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 
@@ -13,24 +13,26 @@ class Dataset(H36MDataset):
 
     DATASET_NAME = "H36MSArm"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = DatasetConfig()) -> None:
+    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
+        if config is None:
+            config = DatasetConfig()
         super().__init__(config)
 
     def pathfiles_to_trajectories(
         self,
         files: List,
         delimiter: str = ",",
-    ) -> List[PositionsTrajectory]:
+    ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
-        :rtype: List[PositionsTrajectory]
+        :rtype: List[Trajectory]
         """
         trajectory_list = super().pathfiles_to_trajectories(files, delimiter)
         if self.config.bimanual is True:
             arm_joint_names = metadata.RIGHT_ARM_LABELS + metadata.LEFT_ARM_LABELS
             arm_joint_ids = [
-                trajectory_list[0].dimension_names.index(name)
+                trajectory_list[0].point_names.index(name)
                 for name in arm_joint_names
-                if name in trajectory_list[0].dimension_names
+                if name in trajectory_list[0].point_names
             ]
             relative_joint_label = metadata.RELATIVE_BOTH_ARMS_LABEL
             return subsample_trajectories(
@@ -41,9 +43,9 @@ class Dataset(H36MDataset):
             self.config.main_arm
         )
         arm_joint_ids = [
-            trajectory_list[0].dimension_names.index(name)
+            trajectory_list[0].point_names.index(name)
             for name in arm_joint_names
-            if name in trajectory_list[0].dimension_names
+            if name in trajectory_list[0].point_names
         ]
         new_trajectory_list = subsample_trajectories(
             trajectory_list, arm_joint_ids, relative_joint_label
@@ -54,9 +56,9 @@ class Dataset(H36MDataset):
                 second_arm_name
             )
             arm_joint_ids = [
-                trajectory_list[0].dimension_names.index(name)
+                trajectory_list[0].point_names.index(name)
                 for name in arm_joint_names
-                if name in trajectory_list[0].dimension_names
+                if name in trajectory_list[0].point_names
             ]
             if self.config.mirror_second_arm:
                 trajectory_list = mirror_trajectory(trajectory_list)
@@ -67,16 +69,16 @@ class Dataset(H36MDataset):
 
 
 def subsample_trajectories(
-    trajectory_list: List[PositionsTrajectory],
+    trajectory_list: List[Trajectory],
     arm_joint_ids: List[int],
     relative_joint_label: str,
-) -> List[PositionsTrajectory]:
+) -> List[Trajectory]:
     new_trajectory_list = []
     for trajectory in trajectory_list:
         new_trajectory = get_joints(trajectory, arm_joint_ids)
         relative_joint_id = (
-            trajectory.dimension_names.index(relative_joint_label)
-            if relative_joint_label in trajectory.dimension_names
+            trajectory.point_names.index(relative_joint_label)
+            if relative_joint_label in trajectory.point_names
             else None
         )
         if relative_joint_id is not None:
@@ -88,36 +90,36 @@ def subsample_trajectories(
 
 
 def get_joints(
-    trajectory: PositionsTrajectory, idx_list: List[int]
-) -> PositionsTrajectory:
+    trajectory: Trajectory, idx_list: List[int]
+) -> Trajectory:
     """return a subset of the given trajectory on given points ids
 
     Args:
-        trajectory (PositionsTrajectory): trajectory to split
+        trajectory (Trajectory): trajectory to split
         idx_list (List[int]): list of point ids we want to keep
 
     Returns:
-        PositionsTrajectory: the trajectory point subset
+        Trajectory: the trajectory point subset
     """
-    new_trajectory = PositionsTrajectory(
+    new_trajectory = Trajectory(
         tensor=trajectory.tensor[:, idx_list, :],
-        rotation_representation=trajectory.rotation_representation,
         frequency=trajectory.frequency,
+        tensor_features=trajectory.tensor_features,
         file_path=trajectory.file_path,
         title=trajectory.title,
         point_parents=update_parent_ids(idx_list, trajectory.point_parents),
-        dimension_names=[trajectory.dimension_names[idx] for idx in idx_list],
+        point_names=[trajectory.point_names[idx] for idx in idx_list],
     )
     return new_trajectory
 
 
-def mirror_trajectory(trajectory: PositionsTrajectory) -> PositionsTrajectory:
+def mirror_trajectory(trajectory: Trajectory) -> Trajectory:
     """returns a new trajectory mirrored given the MIRROR_AXIS
 
     Args:
-        trajectory (PositionsTrajectory): trajectory to mirror
+        trajectory (Trajectory): trajectory to mirror
 
     Returns:
-        PositionsTrajectory: mirrored trajectory
+        Trajectory: mirrored trajectory
     """
     raise NotImplementedError("TODO, method not implemented yet")

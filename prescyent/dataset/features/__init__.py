@@ -1,3 +1,60 @@
+from typing import List
+import torch
+
+from prescyent.dataset.features.feature import Feature
+from prescyent.dataset.features.any import Any
+from prescyent.dataset.features.coordinate import (
+    Coordinate,
+    CoordinateX,
+    CoordinateXY,
+    CoordinateXYZ,
+)
+from prescyent.dataset.features.rotation import (
+    Rotation,
+    RotationQuat,
+    RotationRotMat,
+    RotationEuler,
+    RotationRep6D,
+)
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+
+
+def convert_tensor_features_to(
+    tensor:torch.Tensor,
+    tensor_feats:List[Feature],
+    new_tensor_feats:List[Feature]
+    ) -> torch.Tensor:
+    if tensor_feats == new_tensor_feats:
+        return tensor
+    unbatch = False
+    if not is_tensor_is_batched(tensor):
+        unbatch = True
+        tensor = tensor.unsqueeze(0)
+    new_shapes = list(tensor.shape)[:-1] + [sum([len(feat.ids) for feat in new_tensor_feats])]
+    new_tensor = torch.zeros(new_shapes, dtype=tensor.dtype, device=tensor.device)
+    for feat in new_tensor_feats:
+        # for i in [i for i, _feat in tensor_feats if isinstance(feat, feat.__class__)]:
+        equals = [i for i, _feat in enumerate(tensor_feats) if feat == _feat]
+        if equals:
+            new_tensor[:,:,:,feat.ids] = tensor[:,:,:,tensor_feats.pop(equals[0]).ids]
+            continue
+        alike = [i for i, _feat in enumerate(tensor_feats) if feat._is_alike(_feat)]
+        if alike:
+            new_tensor[:,:,:,feat.ids] = tensor[:,:,:,tensor_feats.pop(alike[0]).ids]
+            continue
+        convertible = [i for i, _feat in enumerate(tensor_feats) if _feat._is_convertible(feat)]
+        if convertible:
+            old_tensor = tensor[:,:,:,tensor_feats.pop(convertible[0]).ids]
+            if isinstance(feat, Rotation):
+                old_tensor = convert_rotation_tensor_to(old_tensor, feat)
+            new_tensor[:,:,:,feat.ids] = old_tensor[:,:,:,:len(feat.ids)]
+            continue
+        raise AttributeError(f"Cannot convert feature any of {tensor_feats} to match {feat}")
+    if unbatch:
+        new_tensor = new_tensor.squeeze(0)
+    return new_tensor
+
+
 import numpy as np
 import torch
 
@@ -268,7 +325,7 @@ def convert_rotation_tensor_to(
     elif isinstance(rotation_rep, RotationRep6D):
         return convert_to_rep6d(tensor)
     else:
-        raise AttributeError(f"{rotation_rep} is not an handled RotationRepresentation")
+        raise AttributeError(f"{rotation_rep} is not an handled Rotation Feature")
 
 
 def get_tensor_rotation_representation(tensor: torch.Tensor) -> Rotation:
@@ -311,10 +368,10 @@ def get_relative_rotation_from(
     """
     if not isinstance(rotation_rep, RotationRotMat):
         input_tensor = convert_rotation_tensor_to(
-            input_tensor, RotationRotMat
+            input_tensor, RotationRotMat(range(9))
         )
         basis_tensor = convert_rotation_tensor_to(
-            basis_tensor, RotationRotMat
+            basis_tensor, RotationRotMat(range(9))
         )
     input_tensor = input_tensor.reshape(*input_tensor.shape[:-1], 3, 3)
     input_tensor = input_tensor.transpose(3, 4)
@@ -344,10 +401,10 @@ def get_absolute_rotation_from(
     """
     if not isinstance(rotation_rep, RotationRotMat):
         input_tensor = convert_rotation_tensor_to(
-            input_tensor, RotationRotMat
+            input_tensor, RotationRotMat(range(9))
         )
         basis_tensor = convert_rotation_tensor_to(
-            basis_tensor, RotationRotMat
+            basis_tensor, RotationRotMat(range(9))
         )
     input_tensor = input_tensor.reshape(*input_tensor.shape[:-1], 3, 3)
     basis_tensor = basis_tensor.reshape(*basis_tensor.shape[:-1], 3, 3).expand(

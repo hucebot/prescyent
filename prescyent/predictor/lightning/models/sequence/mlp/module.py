@@ -15,8 +15,8 @@ class TorchModule(BaseTorchModule):
 
     def __init__(self, config):
         super().__init__(config)
-        self.in_features = self.input_size * self.num_in_dims * self.num_in_points
-        self.out_features = self.output_size * self.num_out_dims * self.num_out_points
+        self.mlps_in_size = self.input_size * self.num_in_dims * self.num_in_points
+        self.mlps_out_size = self.output_size * self.num_out_dims * self.num_out_points
 
         # select the activation function
         if config.activation == ActivationFunctions.RELU:
@@ -33,14 +33,14 @@ class TorchModule(BaseTorchModule):
 
         # create the layers
         if config.num_layers == 1:
-            self.layers = nn.Linear(self.in_features, self.out_features)
+            self.layers = nn.Linear(self.mlps_in_size, self.mlps_out_size)
         else:
-            layers = [nn.Linear(self.in_features, config.hidden_size)]
+            layers = [nn.Linear(self.mlps_in_size, config.hidden_size)]
             layers += [act_fun()]
             for _ in range(0, config.num_layers - 2):
                 layers += [nn.Linear(config.hidden_size, config.hidden_size)]
                 layers += [act_fun()]
-            layers += [nn.Linear(config.hidden_size, self.out_features)]
+            layers += [nn.Linear(config.hidden_size, self.mlps_out_size)]
             self.layers = nn.Sequential(*layers)
 
     @BaseTorchModule.allow_unbatched

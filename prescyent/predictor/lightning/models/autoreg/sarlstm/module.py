@@ -20,16 +20,16 @@ class TorchModule(BaseTorchModule):
         super().__init__(config)
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
-        self.in_features = self.num_in_dims * self.num_in_points
-        self.out_features = self.num_out_dims * self.num_out_points
-        self.lstms = nn.ModuleList([nn.LSTMCell(self.in_features, self.hidden_size)])
+        self.lstm_in_size = self.num_in_dims * self.num_in_points
+        self.decoder_out_size = self.num_out_dims * self.num_out_points
+        self.lstms = nn.ModuleList([nn.LSTMCell(self.lstm_in_size, self.hidden_size)])
         self.lstms.extend(
             [
                 nn.LSTMCell(self.hidden_size, self.hidden_size)
                 for i in range(self.num_layers - 1)
             ]
         )
-        self.linear = nn.Linear(self.hidden_size, self.out_features)
+        self.linear = nn.Linear(self.hidden_size, self.decoder_out_size)
 
     @BaseTorchModule.allow_unbatched
     @BaseTorchModule.normalize_tensor
