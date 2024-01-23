@@ -90,9 +90,11 @@ class MotionDataSamples:
             )
         tensor_feats = self.trajectories[self.sample_ids[index][0]].tensor_features
         _in = _in[:, self.config.in_points]
-        _in = convert_tensor_features_to(_in, copy.deepcopy(tensor_feats), copy.deepcopy((self.config.in_features)))
+        _in = convert_tensor_features_to(_in, tensor_feats, (self.config.in_features))
         _out = _out[:, self.config.out_points]
-        _out = convert_tensor_features_to(_out, copy.deepcopy(tensor_feats), copy.deepcopy((self.config.out_features)))
+        _out = convert_tensor_features_to(
+            _out, tensor_feats, (self.config.out_features)
+        )
         return _in, _out
 
     def __len__(self):

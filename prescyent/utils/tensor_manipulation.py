@@ -11,7 +11,7 @@ def cat_tensor_with_seq_idx(
     # if we have a list of preds
     if len(preds.shape) == 4:
         # we flatten the prediction to the last output of each prediciton
-        # (seq_len, input_size, num_points, num_dim) -> (seq_len, num_points, num_dim)
+        # (seq_len, in_sequence_size, num_points, num_dim) -> (seq_len, num_points, num_dim)
         cat_preds = torch.zeros(preds.shape[0], preds.shape[2], preds.shape[3])
         for j, pred in enumerate(preds):
             cat_preds[j] = pred[flatt_idx]
@@ -48,4 +48,3 @@ def trajectory_tensor_get_dim_limits(
     max_t = max_t.values.transpose(0, 1)
     max_t = torch.max(max_t, dim=1)
     return min_t.values, max_t.values
-

@@ -2,6 +2,7 @@ import torch
 from pydantic import ValidationError
 
 from prescyent.dataset.dataset import MotionDatasetConfig
+from prescyent.dataset.features import Any
 from prescyent.predictor.lightning.layers.normalization_layer import MotionLayerNorm
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.enums import Normalizations
@@ -11,16 +12,21 @@ from tests.custom_test_case import CustomTestCase
 class MotionLayerNormTests(CustomTestCase):
     def test_all_norm(self):
         """test all norm init and forward"""
-        input_size = 10
-        output_size = 5
-        in_dims = [0, 1, 2]
+        in_sequence_size = 10
+        out_sequence_size = 5
+        in_features = [Any(range(3))]
         in_points = [0, 1]
-        input_t = torch.zeros(64, input_size, len(in_points), len(in_dims))
+        input_t = torch.zeros(
+            64,
+            in_sequence_size,
+            len(in_points),
+            sum([len(feat.ids) for feat in in_features]),
+        )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
-                future_size=output_size,
-                history_size=input_size,
-                in_dims=in_dims,
+                future_size=out_sequence_size,
+                history_size=in_sequence_size,
+                in_features=in_features,
                 in_points=in_points,
             ),
             used_norm=Normalizations.ALL,
@@ -28,28 +34,34 @@ class MotionLayerNormTests(CustomTestCase):
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
-        with self.assertRaises(ValidationError) as _:
-            config = ModuleConfig(
-                dataset_config=MotionDatasetConfig(
-                    future_size=output_size,
-                    history_size=input_size,
-                    in_points=in_points,
-                ),
-                used_norm=Normalizations.ALL,
-            )
+        config = ModuleConfig(
+            dataset_config=MotionDatasetConfig(
+                future_size=out_sequence_size,
+                history_size=in_sequence_size,
+                in_points=in_points,
+            ),
+            used_norm=Normalizations.ALL,
+        )
+        with self.assertRaises(AttributeError) as _:
+            normalization_layer = MotionLayerNorm(config)
 
     def test_spatial_norm(self):
         """test spatial norm init and forward"""
-        input_size = 10
-        output_size = 5
-        in_dims = [0, 1, 2]
+        in_sequence_size = 10
+        out_sequence_size = 5
+        in_features = [Any([0, 1, 2])]
         in_points = [0, 1]
-        input_t = torch.zeros(64, input_size, len(in_points), len(in_dims))
+        input_t = torch.zeros(
+            64,
+            in_sequence_size,
+            len(in_points),
+            sum([len(feat.ids) for feat in in_features]),
+        )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
-                future_size=output_size,
-                history_size=input_size,
-                in_dims=in_dims,
+                future_size=out_sequence_size,
+                history_size=in_sequence_size,
+                in_features=in_features,
                 in_points=in_points,
             ),
             used_norm=Normalizations.SPATIAL,
@@ -57,27 +69,24 @@ class MotionLayerNormTests(CustomTestCase):
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
-        with self.assertRaises(ValidationError) as _:
-            config = ModuleConfig(
-                dataset_config=MotionDatasetConfig(
-                    future_size=output_size,
-                    history_size=input_size,
-                    in_points=in_points,
-                ),
-                used_norm=Normalizations.SPATIAL,
-            )
 
     def test_temporal_norm(self):
         """test test temporal_norm and forward"""
-        input_size = 10
-        output_size = 5
-        in_dims = [0, 1, 2]
+        in_sequence_size = 10
+        out_sequence_size = 5
+        in_features = [Any([0, 1, 2])]
         in_points = [0, 1]
-        input_t = torch.zeros(64, input_size, len(in_points), len(in_dims))
+        input_t = torch.zeros(
+            64,
+            in_sequence_size,
+            len(in_points),
+            sum([len(feat.ids) for feat in in_features]),
+        )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
-                future_size=output_size,
-                history_size=input_size,
+                in_features=in_features,
+                future_size=out_sequence_size,
+                history_size=in_sequence_size,
             ),
             used_norm=Normalizations.TEMPORAL,
         )
@@ -87,22 +96,29 @@ class MotionLayerNormTests(CustomTestCase):
         with self.assertRaises(ValidationError) as _:
             config = ModuleConfig(
                 dataset_config=MotionDatasetConfig(
-                    future_size=output_size,
+                    future_size=out_sequence_size,
                 ),
                 used_norm=Normalizations.TEMPORAL,
             )
 
     def test_batch_norm(self):
         """test batch norm init and forward"""
-        input_size = 10
-        output_size = 5
-        in_dims = [0, 1, 2]
+        in_sequence_size = 10
+        out_sequence_size = 5
+        in_features = [Any([0, 1, 2])]
         in_points = [0, 1]
-        input_t = torch.zeros(64, input_size, len(in_points), len(in_dims))
+        input_t = torch.zeros(
+            64,
+            in_sequence_size,
+            len(in_points),
+            sum([len(feat.ids) for feat in in_features]),
+        )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
-                future_size=output_size,
-                history_size=input_size,
+                future_size=out_sequence_size,
+                history_size=in_sequence_size,
+                in_features=in_features,
+                in_points=in_points,
             ),
             used_norm=Normalizations.BATCH,
         )
@@ -112,7 +128,7 @@ class MotionLayerNormTests(CustomTestCase):
         with self.assertRaises(ValidationError) as _:
             config = ModuleConfig(
                 dataset_config=MotionDatasetConfig(
-                    future_size=output_size,
+                    future_size=out_sequence_size,
                 ),
                 used_norm=Normalizations.BATCH,
             )

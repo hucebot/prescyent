@@ -19,10 +19,10 @@ RIGHT_ARM_LABELS = [
 
 RELATIVE_LEFT_ARM_LABEL = LEFT_ARM_LABELS[0]
 RELATIVE_RIGHT_ARM_LABEL = RIGHT_ARM_LABELS[0]
-RELATIVE_BOTH_ARMS_LABEL = "crotch_0"
+RELATIVE_BOTH_ARMS_LABEL = "hips_0"
 
 MIRROR_AXIS_LABELS = [
-    "crotch_0",
+    "hips_0",
     "crotch_11",
     "spine_12",
     "thorax_13",

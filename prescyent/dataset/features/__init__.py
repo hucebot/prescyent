@@ -1,3 +1,12 @@
+"""
+We define features as metadatas of our tensors
+They are used to perform feature wise operations
+Like normalization, loss calculation, input conversion
+
+Here we'll have the definitions of the features,
+and methods to convert them, like from rotation matrices to quaternions
+"""
+import copy
 from typing import List
 import torch
 
@@ -20,43 +29,75 @@ from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 def convert_tensor_features_to(
-    tensor:torch.Tensor,
-    tensor_feats:List[Feature],
-    new_tensor_feats:List[Feature]
-    ) -> torch.Tensor:
+    tensor: torch.Tensor, tensor_feats: List[Feature], new_tensor_feats: List[Feature]
+) -> torch.Tensor:
+    """convert a tensor with given features to new tensor according to given features
+
+    Args:
+        tensor (torch.Tensor): tensor
+        tensor_feats (List[Feature]): actual features of the tensor
+        new_tensor_feats (List[Feature]): expected features of the returned tensor
+
+    Raises:
+        AttributeError: Can be raised if the conversion is not possible
+
+    Returns:
+        torch.Tensor: new tensor matching new features
+    """
     if tensor_feats == new_tensor_feats:
         return tensor
+    tf = copy.deepcopy(tensor_feats)
+    new_tf = copy.deepcopy(new_tensor_feats)
     unbatch = False
     if not is_tensor_is_batched(tensor):
         unbatch = True
         tensor = tensor.unsqueeze(0)
-    new_shapes = list(tensor.shape)[:-1] + [sum([len(feat.ids) for feat in new_tensor_feats])]
+    new_shapes = list(tensor.shape)[:-1] + [sum([len(feat.ids) for feat in new_tf])]
     new_tensor = torch.zeros(new_shapes, dtype=tensor.dtype, device=tensor.device)
-    for feat in new_tensor_feats:
-        # for i in [i for i, _feat in tensor_feats if isinstance(feat, feat.__class__)]:
-        equals = [i for i, _feat in enumerate(tensor_feats) if feat == _feat]
+    for feat in new_tf:
+        equals = [i for i, _feat in enumerate(tf) if feat == _feat]
         if equals:
-            new_tensor[:,:,:,feat.ids] = tensor[:,:,:,tensor_feats.pop(equals[0]).ids]
+            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, tf.pop(equals[0]).ids]
             continue
-        alike = [i for i, _feat in enumerate(tensor_feats) if feat._is_alike(_feat)]
+        alike = [i for i, _feat in enumerate(tf) if feat._is_alike(_feat)]
         if alike:
-            new_tensor[:,:,:,feat.ids] = tensor[:,:,:,tensor_feats.pop(alike[0]).ids]
+            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, tf.pop(alike[0]).ids]
             continue
-        convertible = [i for i, _feat in enumerate(tensor_feats) if _feat._is_convertible(feat)]
+        convertible = [i for i, _feat in enumerate(tf) if _feat._is_convertible(feat)]
         if convertible:
-            old_tensor = tensor[:,:,:,tensor_feats.pop(convertible[0]).ids]
+            old_tensor = tensor[:, :, :, tf.pop(convertible[0]).ids]
             if isinstance(feat, Rotation):
                 old_tensor = convert_rotation_tensor_to(old_tensor, feat)
-            new_tensor[:,:,:,feat.ids] = old_tensor[:,:,:,:len(feat.ids)]
+            new_tensor[:, :, :, feat.ids] = old_tensor[:, :, :, : len(feat.ids)]
             continue
-        raise AttributeError(f"Cannot convert feature any of {tensor_feats} to match {feat}")
+        raise AttributeError(f"Cannot convert feature any of {tf} to match {feat}")
     if unbatch:
         new_tensor = new_tensor.squeeze(0)
     return new_tensor
 
 
-import numpy as np
-import torch
+def features_are_convertible_to(
+    features_a: List[Feature], features_b: List[Feature]
+) -> bool:
+    feats_a = copy.deepcopy(features_a)
+    for feat in features_b:
+        equals = [i for i, _feat in enumerate(feats_a) if feat == _feat]
+        if equals:
+            feats_a.pop(equals[0])
+            continue
+        alike = [i for i, _feat in enumerate(feats_a) if feat._is_alike(_feat)]
+        if alike:
+            feats_a.pop(alike[0])
+            continue
+        convertible = [
+            i for i, _feat in enumerate(feats_a) if _feat._is_convertible(feat)
+        ]
+        if convertible:
+            feats_a.pop(convertible[0])
+            continue
+        return False
+    return True
+
 
 ROTMATRIX_FEATURE_SIZE = 9
 REP6D_FEATURE_SIZE = 6

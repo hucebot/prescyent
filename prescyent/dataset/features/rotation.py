@@ -1,16 +1,18 @@
+"""Feature for rotations"""
 from typing import List
 
 from prescyent.dataset.features.feature import Feature
 
 
 class Rotation(Feature):
-    """"""
+    """base class used for conversion"""
+
     def _is_convertible(self, __value: object) -> bool:
         return isinstance(__value, Rotation)
 
 
 class RotationEuler(Rotation):
-    """"""
+    """euler roll pitch yaw representation"""
 
     @property
     def num_dims(self) -> int:
@@ -22,12 +24,11 @@ class RotationEuler(Rotation):
 
 
 class RotationQuat(Rotation):
-    """"""
+    """quaternion x, y, z, w representation"""
 
     @property
     def num_dims(self) -> int:
         return 4
-
 
     @property
     def dims_names(self) -> List[str]:
@@ -35,7 +36,10 @@ class RotationQuat(Rotation):
 
 
 class RotationRep6D(Rotation):
-    """"""
+    """Continuous minimal representation from the rotmatrix, from:
+    Zhou, Y., Barnes, C., Lu, J., Yang, J., & Li, H. (2020).
+    On the continuity of rotation representations in neural networks.
+    arXiv preprint arXiv:1812.07035."""
 
     @property
     def num_dims(self) -> int:
@@ -47,7 +51,7 @@ class RotationRep6D(Rotation):
 
 
 class RotationRotMat(Rotation):
-    """"""
+    """rotation matrix"""
 
     @property
     def num_dims(self) -> int:

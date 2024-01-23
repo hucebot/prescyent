@@ -7,6 +7,10 @@ import torch
 from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.dataset.features import (
+    convert_tensor_features_to,
+    features_are_convertible_to,
+)
 from .mlp import TransMLP
 
 
@@ -20,36 +24,40 @@ class TorchModule(BaseTorchModule):
         self.temporal_fc_in = config.temporal_fc_in
         self.temporal_fc_out = config.temporal_fc_out
         if self.config.dct:
-            dct_m, idct_m = get_dct_matrix(self.config.input_size)
+            if not features_are_convertible_to(self.in_features, self.out_features):
+                raise AttributeError(
+                    "We cannot apply DCT with non matching in and out features"
+                )
+            dct_m, idct_m = get_dct_matrix(self.config.in_sequence_size)
             self.register_buffer(
                 "dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0)
             )
         if self.temporal_fc_in:
             self.motion_fc_in = nn.Linear(
-                self.config.input_size, self.config.hidden_size
+                self.config.in_sequence_size, self.config.hidden_size
             )
         else:
             self.motion_fc_in = nn.Linear(
-                self.config.in_feature_size, self.config.hidden_size
+                self.config.in_points_dims, self.config.hidden_size
             )
         self.motion_mlp = TransMLP(self.config)
         if self.temporal_fc_out:
-            if self.config.out_feature_size > self.config.in_feature_size:
+            if self.config.out_points_dims > self.config.in_points_dims:
                 raise NotImplementedError(
                     "This model cannot output feature dimensions bigger than its"
                     " input feature size with the temporal_fc_out configuration"
                 )
             self.motion_fc_out = nn.Linear(
-                self.config.hidden_size, self.config.output_size
+                self.config.hidden_size, self.config.out_sequence_size
             )
         else:
-            if self.output_size > self.input_size:
+            if self.out_sequence_size > self.in_sequence_size:
                 raise NotImplementedError(
                     "This model cannot output a sequence bigger than its"
                     " input without the temporal_fc_out configuration"
                 )
             self.motion_fc_out = nn.Linear(
-                self.config.hidden_size, self.config.out_feature_size
+                self.config.hidden_size, self.config.out_points_dims
             )
         if self.config.dct:
             self.register_buffer(
@@ -63,11 +71,12 @@ class TorchModule(BaseTorchModule):
 
     @BaseTorchModule.allow_unbatched
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
-        T = input_tensor.shape
-        input_tensor = input_tensor.reshape(T[0], T[1], -1)
+        batch_size = input_tensor.shape[0]
+        # (batch_size, seq_len, num_point, num_dim) => (batch_size, seq_len, num_point * num_dim)
+        input_tensor = input_tensor.reshape(batch_size, self.in_sequence_size, -1)
         if self.config.dct:
             input_tensor_ = torch.matmul(
-                self.dct_m[:, :, : self.input_size], input_tensor
+                self.dct_m[:, :, : self.in_sequence_size], input_tensor
             )
         else:
             input_tensor_ = input_tensor.clone().to(input_tensor.device)
@@ -87,21 +96,18 @@ class TorchModule(BaseTorchModule):
 
         if self.config.dct:
             motion_feats = torch.matmul(
-                self.idct_m[:, : self.input_size, :], motion_feats
+                self.idct_m[:, : self.in_sequence_size, :], motion_feats
             )
             offset = input_tensor[:, -1:].to(motion_feats.device)
-            motion_feats = motion_feats[:, : self.output_size] + offset
-        motion_pred = motion_feats[:, : self.output_size]
+            offset = convert_tensor_features_to(
+                offset, self.in_features, self.out_features
+            )
+            motion_feats = motion_feats[:, : self.out_sequence_size] + offset
+        motion_pred = motion_feats[:, : self.out_sequence_size]
         motion_pred = motion_pred.reshape(
-            T[0], self.output_size, self.num_out_points, self.num_out_dims
+            batch_size, self.out_sequence_size, self.num_out_points, self.num_out_dims
         )
         return motion_pred
-
-    def criterion(self, motion_pred, motion_truth):
-        dimensions = motion_truth.shape[-1]
-        pred = motion_pred.reshape(-1, dimensions)
-        truth = motion_truth.reshape(-1, dimensions)
-        return torch.mean(torch.norm(pred - truth, 2, 1))
 
 
 def get_dct_matrix(N):

@@ -24,7 +24,9 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.SEQ2SEQ
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.SEQ2SEQ,
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -35,7 +37,9 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.AUTOREG
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.AUTOREG,
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -51,7 +55,9 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.SEQ2ONE
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.SEQ2ONE,
                 )
             )
             self.assertGreater(len(dataset), 0)

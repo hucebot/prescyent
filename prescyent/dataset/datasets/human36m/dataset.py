@@ -136,8 +136,10 @@ class Dataset(MotionDataset):
             trajectory = Trajectory(
                 tensor=position_traj_tensor,
                 frequency=freq,
-                tensor_features=[CoordinateXYZ(list(range(3))),
-                                 RotationRep6D(list(range(3,9)))],
+                tensor_features=[
+                    CoordinateXYZ(list(range(3))),
+                    RotationRep6D(list(range(3, 9))),
+                ],
                 file_path=file_path,
                 title=title,
                 point_parents=update_parent_ids(used_joints, metadata.POINT_PARENTS),

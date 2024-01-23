@@ -1,6 +1,7 @@
 from pydantic import ValidationError
 from prescyent.predictor import MlpPredictor, MlpConfig
 from prescyent.dataset import DatasetConfig
+from prescyent.dataset.features import Any
 
 from tests.custom_test_case import CustomTestCase
 
@@ -10,8 +11,8 @@ dataset_config = DatasetConfig(
     future_size=10,
     in_points=[0],
     out_points=[0],
-    in_dims=[0],
-    out_dims=[0],
+    in_features=[Any([0])],
+    out_features=[Any([0])],
 )
 
 
@@ -26,11 +27,11 @@ class MlpInitTests(CustomTestCase):
         self.assertHasAttr(predictor.model, "criterion")
         self.assertEqual(
             predictor.model.torch_model.layers[0].in_features,
-            config.in_feature_size * config.input_size,
+            config.in_points_dims * config.in_sequence_size,
         )  # mandatory value
         self.assertEqual(
             predictor.model.torch_model.layers[-1].out_features,
-            config.out_feature_size * config.output_size,
+            config.out_points_dims * config.out_sequence_size,
         )  # mandatory value
         self.assertEqual(
             len(predictor.model.torch_model.layers), config.num_layers * 2 - 1
@@ -63,14 +64,3 @@ class MlpInitTests(CustomTestCase):
             model_path=model_path,
         )
         MlpPredictor(config=config)
-
-
-class MlpFunctionalTests(CustomTestCase):
-    def setUp(self):
-        feature_size = 1
-        output_size = 10
-        config = MlpConfig(
-            feature_size=feature_size,
-            output_size=output_size,
-        )
-        self.predictor = MlpPredictor(config=config)

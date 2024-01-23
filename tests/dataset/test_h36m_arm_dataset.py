@@ -4,7 +4,15 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import H36MArmDataset, H36MArmDatasetConfig
-from prescyent.dataset.features import CoordinateXYZ, CoordinateXY, CoordinateX, RotationRep6D, RotationQuat, RotationEuler, RotationRotMat
+from prescyent.dataset.features import (
+    CoordinateXYZ,
+    CoordinateXY,
+    CoordinateX,
+    RotationRep6D,
+    RotationQuat,
+    RotationEuler,
+    RotationRotMat,
+)
 from prescyent.utils.enums import LearningTypes
 
 
@@ -23,7 +31,9 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.SEQ2SEQ
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.SEQ2SEQ,
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -34,7 +44,9 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.SEQ2ONE
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.SEQ2ONE,
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -48,7 +60,9 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    actions=["directions"], learning_type=LearningTypes.AUTOREG
+                    subjects_train=["S1"],
+                    actions=["directions"],
+                    learning_type=LearningTypes.AUTOREG,
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -66,9 +80,16 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    subjects_train=["S1"],
                     actions=["directions"],
-                    in_features = [CoordinateXYZ(list(range(3))), RotationRep6D(list(range(3, 9)))],
-                    out_features = [CoordinateXYZ(list(range(6, 9))), RotationRep6D(list(range(6)))],
+                    in_features=[
+                        CoordinateXYZ(list(range(3))),
+                        RotationRep6D(list(range(3, 9))),
+                    ],
+                    out_features=[
+                        CoordinateXYZ(list(range(6, 9))),
+                        RotationRep6D(list(range(6))),
+                    ],
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -77,7 +98,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 9)
-            np.testing.assert_allclose(sample[:,:,[0, 1, 2]], truth[:,:,[6, 7, 8]])
+            np.testing.assert_allclose(sample[:, :, [0, 1, 2]], truth[:, :, [6, 7, 8]])
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
 
@@ -85,9 +106,13 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    subjects_train=["S1"],
                     actions=["directions"],
-                    in_features = [CoordinateXYZ(range(3)), RotationRep6D([3, 4, 5, 6, 7, 8])],
-                    out_features = [CoordinateXYZ(range(3))],
+                    in_features=[
+                        CoordinateXYZ(range(3)),
+                        RotationRep6D([3, 4, 5, 6, 7, 8]),
+                    ],
+                    out_features=[CoordinateXYZ(range(3))],
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -102,9 +127,10 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    subjects_train=["S1"],
                     actions=["directions"],
-                    in_features = [CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
-                    out_features = [CoordinateXY(range(2)), RotationEuler(range(2, 5))],
+                    in_features=[CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
+                    out_features=[CoordinateXY(range(2)), RotationEuler(range(2, 5))],
                 )
             )
             self.assertGreater(len(dataset), 0)
@@ -119,9 +145,13 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    subjects_train=["S1"],
                     actions=["directions"],
-                    in_features = [CoordinateXYZ(range(3)), RotationRep6D([3, 4, 5, 6, 7, 8])],
-                    out_features = [CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
+                    in_features=[
+                        CoordinateXYZ(range(3)),
+                        RotationRep6D([3, 4, 5, 6, 7, 8]),
+                    ],
+                    out_features=[CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
                 )
             )
             self.assertGreater(len(dataset), 0)

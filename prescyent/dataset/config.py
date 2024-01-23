@@ -33,35 +33,45 @@ class MotionDatasetConfig(BaseModel):
 
     @property
     def num_out_features(self) -> int:
+        if self.out_features is None:
+            return 0
         return len(self.out_features)
 
     @property
     def num_in_features(self) -> int:
+        if self.in_features is None:
+            return 0
         return len(self.in_features)
 
     @property
     def num_out_dims(self) -> int:
         if self.out_features is None:
-            self.out_features = []
+            return 0
         return sum([len(feat.ids) for feat in self.out_features])
 
     @property
     def num_in_dims(self) -> int:
         if self.in_features is None:
-            self.in_features = []
+            return 0
         return sum([len(feat.ids) for feat in self.in_features])
 
     @property
     def num_out_points(self) -> int:
+        if self.out_points is None:
+            return 0
         return len(self.out_points)
 
     @property
     def num_in_points(self) -> int:
+        if self.in_points is None:
+            return 0
         return len(self.in_points)
 
     @property
     def out_dims(self) -> List[int]:
         dims = []
+        if self.out_features is None:
+            return dims
         for feature in self.out_features:
             dims += feature.ids
         return dims
@@ -69,17 +79,28 @@ class MotionDatasetConfig(BaseModel):
     @property
     def in_dims(self) -> List[int]:
         dims = []
+        if self.in_features is None:
+            return dims
         for feature in self.in_features:
             dims += feature.ids
         return dims
 
-
     @model_validator(mode="before")
     def unserialize_features(self):
-        if self.get("out_features", None) and not isinstance(self["out_features"], tensor_features.Feature):
-            self["out_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in self["out_features"]]
-        if self.get("in_features", None) and not isinstance(self["in_features"], tensor_features.Feature):
-            self["in_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in self["in_features"]]
+        if self.get("out_features", None) and not isinstance(
+            self["out_features"][0], tensor_features.Feature
+        ):
+            self["out_features"] = [
+                getattr(tensor_features, feature["name"])(feature["ids"])
+                for feature in self["out_features"]
+            ]
+        if self.get("in_features", None) and not isinstance(
+            self["in_features"][0], tensor_features.Feature
+        ):
+            self["in_features"] = [
+                getattr(tensor_features, feature["name"])(feature["ids"])
+                for feature in self["in_features"]
+            ]
         return self
 
     class Config:

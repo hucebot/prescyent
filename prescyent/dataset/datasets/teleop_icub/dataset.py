@@ -132,9 +132,7 @@ class Dataset(MotionDataset):
             trajectory_arrray.append(
                 Trajectory(
                     tensor=tensor,
-                    tensor_features=[
-                        CoordinateXYZ(list(range(3)))
-                    ],
+                    tensor_features=[CoordinateXYZ(range(3))],
                     frequency=freq,
                     file_path=file,
                     title=title,
