@@ -22,31 +22,31 @@ class ModuleConfig(BaseModel):
     used_profiler: Optional[Profilers] = None
 
     @property
-    def input_size(self):
+    def in_sequence_size(self):
         return self.dataset_config.history_size
 
     @property
-    def output_size(self):
+    def out_sequence_size(self):
         return self.dataset_config.future_size
 
     @property
-    def in_feature_size(self):
-        return self.dataset_config.num_in_dims * len(self.dataset_config.in_points)
+    def in_points_dims(self):
+        return self.dataset_config.num_in_dims * self.dataset_config.num_in_points
 
     @property
-    def out_feature_size(self):
-        return self.dataset_config.num_out_dims * len(self.dataset_config.out_points)
+    def out_points_dims(self):
+        return self.dataset_config.num_out_dims * self.dataset_config.num_out_points
 
     @model_validator(mode="after")
     def check_norms_have_requirements(self):
         if self.used_norm in [Normalizations.ALL] and (
-            self.input_size is None
+            self.in_sequence_size is None
             or self.dataset_config.in_dims is None
             or self.dataset_config.in_points is None
         ):
             raise ValueError(
                 f"{self.used_norm} normalization necessitate a valid "
-                "input_size, in_dims and in_points in config"
+                "in_sequence_size, in_dims and in_points in config"
             )
         elif self.used_norm == Normalizations.SPATIAL and (
             self.dataset_config.in_dims is None or self.dataset_config.in_points is None
@@ -56,10 +56,10 @@ class ModuleConfig(BaseModel):
                 "in_dims and in_points in config"
             )
         elif self.used_norm in [Normalizations.TEMPORAL, Normalizations.BATCH] and (
-            self.input_size is None
+            self.in_sequence_size is None
         ):
             raise ValueError(
                 f"{self.used_norm} normalization necessitate a valid "
-                "input_size in config"
+                "in_sequence_size in config"
             )
         return self

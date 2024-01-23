@@ -9,6 +9,7 @@ from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import Feature, Any, convert_tensor_features_to
 
+
 class Trajectory:
     """
     An trajectory represents a full dataset sample, that we can retrieve with its file name
@@ -49,6 +50,8 @@ class Trajectory:
         self.point_names = point_names
         if tensor_features is None:
             tensor_features = [Any(list(range(tensor.shape[-1])))]
+        elif isinstance(tensor_features, Feature):
+            tensor_features = [tensor_features]
         self.tensor_features = tensor_features
 
     def __getitem__(self, index) -> torch.Tensor:
@@ -83,10 +86,18 @@ class Trajectory:
         # todo
         pass
 
+    def vizualize_3d(self) -> None:
+        # todo
+        pass
+
+    def compare(self, other) -> None:
+        # todo
+        pass
+
     def convert_tensor_features(self, new_tensor_feats: List[Feature]):
-        self.tensor = convert_tensor_features_to(self.tensor,
-                                                 self.tensor_features,
-                                                 new_tensor_feats)
+        self.tensor = convert_tensor_features_to(
+            self.tensor, self.tensor_features, new_tensor_feats
+        )
         self.tensor_features = new_tensor_feats
 
     def augment_frequency(self, augmentation_ratio: int) -> None:
@@ -97,8 +108,8 @@ class Trajectory:
 
     def dump(
         self,
-        output_format: str = "csv",
         output_path: str = None,
+        output_format: str = "csv",
         write_header: bool = True,
     ) -> None:
         SUPPORTED_FORMATS = ["tsv", "csv"]
@@ -126,10 +137,18 @@ class Trajectory:
 
     def _get_header(self) -> List[str]:
         return [
-            f"{self.point_names[p]}_{d}"
-            for d in range(self.num_dims)
+            f"{self.point_names[p]}_{self.dim_names[d]}"
             for p in range(self.num_points)
+            for d in range(self.num_dims)
         ]
+
+    @property
+    def dim_names(self) -> List[str]:
+        feature_dim_names = {}
+        for feature in self.tensor_features:
+            for i, feat_name in enumerate(feature.dims_names):
+                feature_dim_names[feature.ids[i]] = feat_name
+        return list(dict(sorted(feature_dim_names.items())).values())
 
     def _get_data(self) -> List[List[str]]:
         return self.tensor.flatten(1, 2).tolist()

@@ -57,47 +57,73 @@ class TestMinMaxDim(unittest.TestCase):
         self.assertTrue(torch.equal(expected_min, min_t))
         self.assertTrue(torch.equal(expected_max, max_t))
 
+
 class TestFeatureConversion(unittest.TestCase):
     def test_swap(self):
         tensor = torch.Tensor([[[0, 1, 2]]])
         truth = torch.Tensor([[[0, 2, 1]]])
-        test = tensor_features.convert_tensor_features_to(tensor,
-                                            [tensor_features.Any(range(3))],
-                                            [tensor_features.Any([0, 2, 1])])
+        test = tensor_features.convert_tensor_features_to(
+            tensor, [tensor_features.Any(range(3))], [tensor_features.Any([0, 2, 1])]
+        )
         self.assertTrue(torch.equal(test, truth))
         truth = torch.Tensor([[[0, 1]]])
-        test = tensor_features.convert_tensor_features_to(tensor,
-                                            [tensor_features.Any(range(3))],
-                                            [tensor_features.Any(range(2))])
+        test = tensor_features.convert_tensor_features_to(
+            tensor, [tensor_features.Any(range(3))], [tensor_features.Any(range(2))]
+        )
         self.assertTrue(torch.equal(test, truth))
         with self.assertRaises(AttributeError) as context:
-            test = tensor_features.convert_tensor_features_to(tensor,
-                                            [tensor_features.Any(range(3))],
-                                            [tensor_features.Any(range(4))])
+            test = tensor_features.convert_tensor_features_to(
+                tensor, [tensor_features.Any(range(3))], [tensor_features.Any(range(4))]
+            )
         self.assertTrue(
-            "Cannot convert feature any of [{'ids': [0, 1, 2], 'name': 'Any'}] to match {'ids': [0, 1, 2, 3], 'name': 'Any'}" in str(context.exception)
+            "Cannot convert feature any of [{'ids': [0, 1, 2], 'name': 'Any'}] to match {'ids': [0, 1, 2, 3], 'name': 'Any'}"
+            in str(context.exception)
         )
 
     def test_rotations(self):
         tensor = torch.Tensor([[[0, 0, 0, 0.7071, 0, 0, 0.7071]]])
         test_rotmat = tensor_features.convert_tensor_features_to(
             tensor,
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationQuat(range(3, 7))],
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationRotMat(range(3, 12))],
-            )
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationQuat(range(3, 7)),
+            ],
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationRotMat(range(3, 12)),
+            ],
+        )
         test_rep6d = tensor_features.convert_tensor_features_to(
             test_rotmat,
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationRotMat(range(3, 12))],
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationRep6D(range(3, 9))],
-            )
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationRotMat(range(3, 12)),
+            ],
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationRep6D(range(3, 9)),
+            ],
+        )
         test_euler = tensor_features.convert_tensor_features_to(
             test_rep6d,
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationRep6D(range(3, 9))],
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationEuler(range(3, 6))],
-            )
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationRep6D(range(3, 9)),
+            ],
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationEuler(range(3, 6)),
+            ],
+        )
         test_quat = tensor_features.convert_tensor_features_to(
             test_euler,
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationEuler(range(3, 6))],
-            [tensor_features.CoordinateXYZ(range(3)), tensor_features.RotationQuat(range(3, 7))],
-            )
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationEuler(range(3, 6)),
+            ],
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationQuat(range(3, 7)),
+            ],
+        )
         self.assertTrue(torch.allclose(tensor, test_quat))

@@ -1,8 +1,8 @@
 {
     "model_config": {
         "name": "MlpPredictor",
-        "input_size": 50,
-        "output_size": 10,
+        "in_sequence_size": 50,
+        "out_sequence_size": 10,
         "dropout_value": 0.2,
         "hidden_size": 256,
         "num_layers": 3

@@ -1,4 +1,6 @@
+"""Pydantic config for H36M Arm dataset"""
 from enum import Enum
+from typing import Optional, List
 
 from prescyent.dataset.datasets.human36m.config import (
     DatasetConfig as H36MDatasetConfig,
@@ -13,6 +15,7 @@ class Arms(str, Enum):
 class DatasetConfig(H36MDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
+    used_joints: Optional[List[int]] = None
     bimanual: bool = True  # If bimanual, subsample dataset to both arms,
     # else we use the following:
     main_arm: Arms = None  # For mono arm, decide which is main arm

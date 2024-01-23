@@ -3,9 +3,15 @@ import copy
 import functools
 import torch
 
-from prescyent.dataset.features import convert_tensor_features_to
+from prescyent.dataset.features import (
+    convert_tensor_features_to,
+    features_are_convertible_to,
+)
 from prescyent.predictor.lightning.layers.normalization_layer import MotionLayerNorm
-from prescyent.predictor.lightning.layers.relative_norm import get_absolute_tensor_from, get_relative_tensor_from
+from prescyent.utils.tensor_relative import (
+    get_relative_tensor_from,
+    get_absolute_tensor_from,
+)
 
 
 class BaseTorchModule(torch.nn.Module):
@@ -16,14 +22,22 @@ class BaseTorchModule(torch.nn.Module):
         self.norm_on_last_input = config.norm_on_last_input
         self.used_norm = config.used_norm
         self.dropout_value = config.dropout_value
-        self.input_size = config.input_size
+        self.in_sequence_size = config.in_sequence_size
         self.num_in_points = config.dataset_config.num_in_points
         self.num_in_dims = config.dataset_config.num_in_dims
-        self.output_size = config.output_size
+        self.out_sequence_size = config.out_sequence_size
         self.num_out_points = config.dataset_config.num_out_points
         self.num_out_dims = config.dataset_config.num_out_dims
         self.in_features = config.dataset_config.in_features
         self.out_features = config.dataset_config.out_features
+        if self.norm_on_last_input and (
+            not features_are_convertible_to(self.in_features, self.out_features)
+        ):
+            raise AttributeError(
+                "Cannot use 'norm_on_last_input' with non equivalent"
+                f"in_features {self.in_features} and "
+                f"out_features {self.out_features}"
+            )
         if self.dropout_value is not None and self.dropout_value > 0:
             self.dropout = torch.nn.Dropout(self.dropout_value)
         if self.used_norm is not None:
@@ -42,8 +56,7 @@ class BaseTorchModule(torch.nn.Module):
             self = args[0]
             input_tensor = args[1]
             if self.norm_on_last_input:
-                # TODO: Add some relative_norm_layer
-                seq_last = copy.deepcopy(input_tensor[:, -1:, :, :].detach())
+                seq_last = input_tensor[:, -1:, :, :].detach()
                 input_tensor = get_relative_tensor_from(
                     input_tensor, seq_last, self.in_features
                 )
@@ -53,8 +66,11 @@ class BaseTorchModule(torch.nn.Module):
                 input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
             if self.norm_on_last_input:
-                # TODO: Add some relative_norm_layer
-                seq_last = convert_tensor_features_to(seq_last, copy.deepcopy(self.in_features), copy.deepcopy(self.out_features))
+                seq_last = convert_tensor_features_to(
+                    seq_last,
+                    self.in_features,
+                    self.out_features,
+                )
                 predictions = get_absolute_tensor_from(
                     predictions, seq_last, self.out_features
                 )

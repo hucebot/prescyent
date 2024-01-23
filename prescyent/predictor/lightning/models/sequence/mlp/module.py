@@ -15,8 +15,12 @@ class TorchModule(BaseTorchModule):
 
     def __init__(self, config):
         super().__init__(config)
-        self.mlps_in_size = self.input_size * self.num_in_dims * self.num_in_points
-        self.mlps_out_size = self.output_size * self.num_out_dims * self.num_out_points
+        self.mlps_in_size = (
+            self.in_sequence_size * self.num_in_dims * self.num_in_points
+        )
+        self.mlps_out_size = (
+            self.out_sequence_size * self.num_out_dims * self.num_out_points
+        )
 
         # select the activation function
         if config.activation == ActivationFunctions.RELU:
@@ -53,6 +57,11 @@ class TorchModule(BaseTorchModule):
         prediction = self.layers(input_tensor)
         output_tensor = torch.reshape(
             prediction,
-            (batch_size, self.output_size, self.num_out_points, self.num_out_dims),
+            (
+                batch_size,
+                self.out_sequence_size,
+                self.num_out_points,
+                self.num_out_dims,
+            ),
         )
         return output_tensor

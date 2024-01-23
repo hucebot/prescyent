@@ -1,8 +1,8 @@
 {
     "model_config": {
         "name": "LinearPredictor",
-        "input_size": 10,
-        "output_size": 10
+        "in_sequence_size": 10,
+        "out_sequence_size": 10
     },
     "training_config": {
         "epoch": 10,

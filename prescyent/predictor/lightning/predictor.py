@@ -286,7 +286,7 @@ class LightningPredictor(BasePredictor):
             model_input_shape = torch.Size(
                 (
                     input_shape[0],
-                    self.config.input_size,
+                    self.config.in_sequence_size,
                     len(self.config.dataset_config.in_points),
                     len(self.config.dataset_config.in_dims),
                 )
@@ -294,7 +294,7 @@ class LightningPredictor(BasePredictor):
             model_output_shape = torch.Size(
                 (
                     input_shape[0],
-                    self.config.output_size,
+                    self.config.out_sequence_size,
                     len(self.config.dataset_config.out_points),
                     len(self.config.dataset_config.out_dims),
                 )
@@ -306,8 +306,8 @@ class LightningPredictor(BasePredictor):
                 first_layer, self.model.torch_model, last_layer
             )
         # we update model config with new input output infos
-        self.config.input_size = input_t.shape[1]
-        self.config.output_size = truth_t.shape[1]
+        self.config.in_sequence_size = input_t.shape[1]
+        self.config.out_sequence_size = truth_t.shape[1]
         self.config.dataset_config.in_points = list(range(input_t.shape[2]))
         self.config.dataset_config.in_dims = list(range(input_t.shape[3]))
         self.config.dataset_config.out_points = list(range(truth_t.shape[2]))

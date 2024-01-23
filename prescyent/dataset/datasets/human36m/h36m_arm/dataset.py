@@ -5,6 +5,7 @@ import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
 from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.utils.tensor_relative import get_relative_tensor_from
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 
@@ -73,6 +74,16 @@ def subsample_trajectories(
     arm_joint_ids: List[int],
     relative_joint_label: str,
 ) -> List[Trajectory]:
+    """Subsampling method for arm joints in the h36m trajectories
+
+    Args:
+        trajectory_list (List[Trajectory]): list of Trajectories to subsample
+        arm_joint_ids (List[int]): ids of the arm joints we want to keep
+        relative_joint_label (str): names of the joint to use as new base
+
+    Returns:
+        List[Trajectory]: New list of Trajectory
+    """
     new_trajectory_list = []
     for trajectory in trajectory_list:
         new_trajectory = get_joints(trajectory, arm_joint_ids)
@@ -82,16 +93,16 @@ def subsample_trajectories(
             else None
         )
         if relative_joint_id is not None:
-            new_trajectory.tensor = new_trajectory.tensor - trajectory.tensor[
-                :, relative_joint_id, :
-            ].detach().unsqueeze(1)
+            new_trajectory.tensor = get_relative_tensor_from(
+                new_trajectory.tensor,
+                trajectory.tensor[:, relative_joint_id].unsqueeze(1),
+                trajectory.tensor_features,
+            )
         new_trajectory_list.append(new_trajectory)
     return new_trajectory_list
 
 
-def get_joints(
-    trajectory: Trajectory, idx_list: List[int]
-) -> Trajectory:
+def get_joints(trajectory: Trajectory, idx_list: List[int]) -> Trajectory:
     """return a subset of the given trajectory on given points ids
 
     Args:

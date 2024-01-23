@@ -1,3 +1,4 @@
+"""Default feature without constraints and convertions"""
 from typing import List
 
 import torch
@@ -6,7 +7,6 @@ from prescyent.dataset.features.feature import Feature
 
 
 class Any(Feature):
-
     @property
     def num_dims(self) -> int:
         return -1

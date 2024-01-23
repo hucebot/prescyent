@@ -94,16 +94,28 @@ class LightningModule(pl.LightningModule):
                         list(CRITERION_MAPPING.keys()),
                     )
                     raise AttributeError(config.loss_fn)
+            # Init criterion
+            args = [arg for arg in inspect.signature(criterion).parameters]
+            kwargs = {
+                key: getattr(config, key, None)
+                for key in args
+                if getattr(config, key, None) is not None
+            }
+            kwargs.update(
+                {
+                    key: getattr(config.dataset_config, key, None)
+                    for key in args
+                    if getattr(config.dataset_config, key, None) is not None
+                }
+            )
+            self.criterion = criterion(**kwargs)
+            logger.getChild(PREDICTOR).info(
+                "Using %s loss function", self.criterion.__class__.__name__
+            )
         else:
-            criterion = self.torch_model.criterion
-        logger.getChild(PREDICTOR).info(
-            "Using %s loss function", criterion.__class__.__name__
-        )
-        # Init criterion
-        args = [arg for arg in inspect.signature(criterion).parameters]
-        kwargs = {key:getattr(config, key, None) for key in args if getattr(config, key, None) is not None}
-        kwargs.update({key:getattr(config.dataset_config, key, None) for key in args if getattr(config.dataset_config, key, None) is not None})
-        self.criterion = criterion(**kwargs)
+            # If a child module comes with its own criterion method
+            self.criterion = self.torch_model.criterion
+            logger.getChild(PREDICTOR).info("Using Predictor's default loss function")
         self.save_hyperparameters(ignore=["torch_model", "criterion"])
         logger.getChild(PREDICTOR).info("Lightning Module ready.")
 

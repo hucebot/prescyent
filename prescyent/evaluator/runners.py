@@ -6,6 +6,7 @@ import timeit
 import torch
 from tqdm import tqdm
 from prescyent.dataset import Trajectory
+from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
 
@@ -126,12 +127,20 @@ def eval_predictors(
         for p, predictor in tqdm(enumerate(predictors), desc="Predictor n°"):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
+            trajectory.convert_tensor_features(
+                predictor.config.dataset_config.in_features
+            )
             prediction = run_predictor(
                 predictor, trajectory.tensor, history_size, future_size, run_method
             )
             elapsed = (timeit.default_timer() - start) * 1000.0
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
+            truth = convert_tensor_features_to(
+                truth,
+                trajectory.tensor_features,
+                predictor.config.dataset_config.out_features,
+            )
             # plot_truth_and_pred(trajectory.tensor,
             #                     truth,
             #                     prediction,
