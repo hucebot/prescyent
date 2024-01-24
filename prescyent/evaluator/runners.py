@@ -127,25 +127,22 @@ def eval_predictors(
         for p, predictor in tqdm(enumerate(predictors), desc="Predictor n°"):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
-            trajectory.convert_tensor_features(
-                predictor.config.dataset_config.in_features
-            )
+            if hasattr(predictor, "config"):
+                trajectory.convert_tensor_features(
+                    predictor.config.dataset_config.in_features
+                )
             prediction = run_predictor(
                 predictor, trajectory.tensor, history_size, future_size, run_method
             )
             elapsed = (timeit.default_timer() - start) * 1000.0
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
-            truth = convert_tensor_features_to(
-                truth,
-                trajectory.tensor_features,
-                predictor.config.dataset_config.out_features,
-            )
-            # plot_truth_and_pred(trajectory.tensor,
-            #                     truth,
-            #                     prediction,
-            #                     history_size,
-            #                     "test.png")
+            if hasattr(predictor, "config"):
+                truth = convert_tensor_features_to(
+                    truth,
+                    trajectory.tensor_features,
+                    predictor.config.dataset_config.out_features,
+                )
             evaluation_results[p].results.append(
                 EvaluationResult(trajectory.tensor, truth, prediction, elapsed)
             )

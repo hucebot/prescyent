@@ -2,6 +2,7 @@
 import copy
 from prescyent.predictor import MlpPredictor, MlpConfig, TrainingConfig
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
+from prescyent.dataset.features import CoordinateXYZ
 from prescyent.utils.enums import Normalizations, LossFunctions
 
 if __name__ == "__main__":
@@ -11,14 +12,16 @@ if __name__ == "__main__":
     history_size = 10  # 1 second
     future_size = 10  # 1 second
     dimensions = None  # None equals ALL dimensions !
+    features = CoordinateXYZ(range(3))
     # for TeleopIcub dimension = [0, 1, 2] is [waist, right_hand, left_hand]
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
         history_size=history_size,
         future_size=future_size,
-        dimensions=dimensions,
         subsampling_step=subsampling_step,
         batch_size=batch_size,
+        in_features=features,
+        out_features=features
     )
     dataset = TeleopIcubDataset(dataset_config)
     print("OK")
@@ -26,7 +29,7 @@ if __name__ == "__main__":
     # -- Init predictor
     print("Initializing predictor...", end=" ")
     config = MlpConfig(
-        dataset_config=copy.deepcopy(dataset_config),
+        dataset_config=dataset_config,
         hidden_size=256,
         num_layers=4,
         norm_on_last_input=True,
@@ -52,7 +55,7 @@ if __name__ == "__main__":
         f"data/models/teleopicub/1sec_10hz/{predictor.name}/version_{predictor.version}"
     )
     print("model directory:", model_dir)
-    predictor.save(model_dir)
+    predictor.save(model_dir, rm_log_path=False)
     # We save also the config so that we can load it later if needed
     dataset.save_config(model_dir + "/dataset.config")
 

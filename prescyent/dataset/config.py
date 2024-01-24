@@ -87,20 +87,22 @@ class MotionDatasetConfig(BaseModel):
 
     @model_validator(mode="before")
     def unserialize_features(self):
-        if self.get("out_features", None) and not isinstance(
-            self["out_features"][0], tensor_features.Feature
-        ):
-            self["out_features"] = [
-                getattr(tensor_features, feature["name"])(feature["ids"])
-                for feature in self["out_features"]
-            ]
-        if self.get("in_features", None) and not isinstance(
-            self["in_features"][0], tensor_features.Feature
-        ):
-            self["in_features"] = [
-                getattr(tensor_features, feature["name"])(feature["ids"])
-                for feature in self["in_features"]
-            ]
+        if self.get("out_features", None):
+            if isinstance(self["out_features"], tensor_features.Feature):
+                self["out_features"] = [self["out_features"]]
+            if  not isinstance( self["out_features"][0], tensor_features.Feature):
+                self["out_features"] = [
+                    getattr(tensor_features, feature["name"])(feature["ids"])
+                    for feature in self["out_features"]
+                ]
+        if self.get("in_features", None):
+            if isinstance(self["in_features"], tensor_features.Feature):
+                self["in_features"] = [self["in_features"]]
+            if not isinstance(self["in_features"][0], tensor_features.Feature):
+                self["in_features"] = [
+                    getattr(tensor_features, feature["name"])(feature["ids"])
+                    for feature in self["in_features"]
+                ]
         return self
 
     class Config:
