@@ -56,7 +56,7 @@ class BaseTorchModule(torch.nn.Module):
             self = args[0]
             input_tensor = args[1]
             if self.norm_on_last_input:
-                seq_last = input_tensor[:, -1:, :, :].detach()
+                seq_last = input_tensor[:, -1:, :, :]
                 input_tensor = get_relative_tensor_from(
                     input_tensor, seq_last, self.in_features
                 )

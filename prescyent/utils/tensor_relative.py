@@ -29,22 +29,23 @@ def get_relative_tensor_from(
     unbatch = False
     if not is_tensor_is_batched(input_tensor):
         unbatch = True
-        input_tensor = input_tensor.unsqueeze(0)
-        basis_tensor = basis_tensor.unsqueeze(0)
+        input_tensor = torch.unsqueeze(input_tensor, 0)
+        basis_tensor = torch.unsqueeze(basis_tensor, 0)
+    output = torch.zeros(input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device)
     for feat in tensor_features:
         # Relative for Rotation is the transform rotation
         if isinstance(feat, Rotation):
-            input_tensor[:, :, :, feat.ids] = get_relative_rotation_from(
+            output[:, :, :, feat.ids] = get_relative_rotation_from(
                 input_tensor[:, :, :, feat.ids], basis_tensor[:, :, :, feat.ids], feat
             )
         # Relative for Any and Coordonate is a substraction
         elif isinstance(feat, Coordinate) or isinstance(feat, Any):
-            input_tensor[:, :, :, feat.ids] = (
+            output[:, :, :, feat.ids] = (
                 input_tensor[:, :, :, feat.ids] - basis_tensor[:, :, :, feat.ids]
             )
     if unbatch:
-        input_tensor = input_tensor.squeeze(0)
-    return input_tensor
+        output = output.squeeze(0)
+    return output
 
 
 def get_absolute_tensor_from(
@@ -64,19 +65,20 @@ def get_absolute_tensor_from(
     unbatch = False
     if not is_tensor_is_batched(input_tensor):
         unbatch = True
-        input_tensor = input_tensor.unsqueeze(0)
-        basis_tensor = basis_tensor.unsqueeze(0)
+        input_tensor = torch.unsqueeze(input_tensor, 0)
+        basis_tensor = torch.unsqueeze(basis_tensor, 0)
+    output = torch.zeros(input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device)
     for feat in tensor_features:
         # Relative for Rotation is the matmul of rotations matrices
         if isinstance(feat, Rotation):
-            input_tensor[:, :, :, feat.ids] = get_absolute_rotation_from(
+            output[:, :, :, feat.ids] = get_absolute_rotation_from(
                 input_tensor[:, :, :, feat.ids], basis_tensor[:, :, :, feat.ids], feat
             )
         # Relative for Any and Coordonate is a addition
         elif isinstance(feat, Coordinate) or isinstance(feat, Any):
-            input_tensor[:, :, :, feat.ids] = (
+            output[:, :, :, feat.ids] = (
                 input_tensor[:, :, :, feat.ids] + basis_tensor[:, :, :, feat.ids]
             )
     if unbatch:
-        input_tensor = input_tensor.squeeze(0)
-    return input_tensor
+        output = output.squeeze(0)
+    return output

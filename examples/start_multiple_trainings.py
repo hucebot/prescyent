@@ -19,15 +19,15 @@ VARIATIONS = {
     # MODEL
     "model_config.name": [
         "MlpPredictor",
-        "Seq2SeqPredictor",
-        "siMLPe",
-        "SARLSTMPredictor",
+        # "Seq2SeqPredictor",
+        # "siMLPe",
+        # "SARLSTMPredictor",
     ],
-    "model_config.hidden_size": [256],
+    "model_config.hidden_size": [64],
     "model_config.num_layers": [4],
     "model_config.loss_fn": [
-            LossFunctions.MPJPELOSS,
-            ],
+        LossFunctions.MPJPELOSS,
+    ],
     "model_config.used_norm": [
         Normalizations.ALL,
         # Normalizations.SPATIAL,
@@ -38,7 +38,7 @@ VARIATIONS = {
     # "model_config.spatial_fc_only": [True, False],
     # "model_config.dct": [True, False],
     # "model_config.dropout_value": [0, 0.1, 0.25],
-    # "model_config.norm_on_last_input" : [True, False],
+    "model_config.norm_on_last_input" : [True],
     # "model_config.do_lipschitz_continuation" : [False, True],
     # ...
     # TRAINING
@@ -114,7 +114,7 @@ if __name__ == "__main__":
                 json.dump(config_dict, config_file, indent=4)
 
     # Start a new training per config file
-    exp_path = "data/models/TeleopIcub/10Hz_1s/"
+    exp_path = "data/models/H36M/10Hz_1s/"
     for i, config_path in enumerate(config_paths):
         print(f"Training {i} starting...")
         train_from_config(config_path, rm_config=True, exp_path=exp_path)

@@ -5,9 +5,10 @@ import sys
 import torch
 from tqdm import tqdm
 
-from prescyent.predictor import MlpPredictor
+from prescyent.predictor import MlpPredictor, DelayedPredictor
 from prescyent.dataset import TeleopIcubDataset
 from prescyent.evaluator.plotting import plot_trajs
+from prescyent.evaluator.runners import run_predictor
 
 
 if __name__ == "__main__":
@@ -24,7 +25,6 @@ if __name__ == "__main__":
     else:
         print("Error: use --last or --model")
         sys.exit(1)
-
     print("Path:", path)
     # we load with the same config as for the training
     print("Loading the dataset...")
@@ -43,6 +43,10 @@ if __name__ == "__main__":
         f"Computing predictions for all the test trajectories for {predictor.name}..."
     )
     all_preds = []
+
+    # for traj in tqdm(dataset.trajectories.test):  # for each test trajectories
+    #     prediction = run_predictor(predictor, traj.tensor, history_size, future_size, "windowed")
+    #     all_preds.append(prediction)
     with torch.no_grad():
         for traj in tqdm(dataset.trajectories.test):  # for each test trajectories
             pred = torch.zeros(
@@ -52,24 +56,25 @@ if __name__ == "__main__":
                 # --- this is the prediction
                 p = predictor.predict(traj[i : i + history_size, :, :], future_size)
                 # ---
-                pred[i, :, :] = p[-1]
+                # We keep last frame of the predicted sequence (so {history_size + future_size} seconds from first input)
+                pred[i] = p[-1]
             all_preds += [pred]
     print("Predictions OK")
 
     # plot everything in the current directory
     print("Plotting...")
-    for i in tqdm(range(len(all_preds))):  # for each test trajectory
+    for i in tqdm(range(len(all_preds))):  # for each test trtrzajectory
         ref_traj = dataset.trajectories.test[i]
         title = "/".join(ref_traj.file_path.parts[-2:])
-        dims = ref_traj.dimension_names
+        dims = ref_traj.point_names
         plot_trajs(
             [ref_traj.tensor, all_preds[i], ref_traj.tensor],
             f"data/plots/pred_{i}.pdf",
             # we shift the predictions of the history_size (data we need to predict)
             # and of future_size (because given 1 s of data, we predict 1 second from now)
-            shifts=[0, history_size, future_size],
+            shifts=[0, history_size + future_size - 1, future_size],
             group_labels=dims,
-            dim_labels=["x", "y", "z"],
+            dim_labels=ref_traj.dim_names,
             title=title,
             traj_labels=["Truth", "Prediction", "delayed (1s)"],
         )
