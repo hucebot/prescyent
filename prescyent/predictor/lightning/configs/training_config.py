@@ -3,6 +3,7 @@ import random
 from typing import Union, Optional
 
 from pydantic import model_validator, field_validator
+from pydantic_core.core_schema import FieldValidationInfo
 
 from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
 
@@ -32,8 +33,8 @@ class TrainingConfig(OptimizerConfig):
             )
         return self
 
-    @field_validator("seed")
-    @classmethod
-    def generate_random_seed_if_none(cls, v: int):
-        if v is None:
-            return random.randint(1, 10**9)
+    @model_validator(mode="after")
+    def generate_random_seed_if_none(self):
+        if self.use_deterministic_algorithms and self.seed is None:
+            self.seed = random.randint(1, 10**9)
+        return self
