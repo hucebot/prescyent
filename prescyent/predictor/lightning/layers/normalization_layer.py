@@ -1,5 +1,4 @@
 import torch
-from torch import Tensor
 
 from prescyent.dataset.features import Rotation
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
@@ -14,7 +13,7 @@ class MotionLayerNorm(torch.nn.Module):
         self.in_sequence_size = config.in_sequence_size
         self.in_features = config.dataset_config.in_features
         self.num_in_points = config.dataset_config.num_in_points
-        self.norm_layers = []
+        self.norm_layers = torch.nn.ModuleList()
         if not self.in_features and self.used_norm is not None:
             raise AttributeError(
                 f"Cannot perform {self.used_norm} feature wise normalization"
@@ -48,7 +47,7 @@ class MotionLayerNorm(torch.nn.Module):
                     f"Couldn't match {self.used_norm} with a valid normalization"
                 )
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Perform feature aware normalization
         for f, feat in enumerate(self.in_features):
             x[:, :, :, feat.ids] = self.norm_layers[f](x[:, :, :, feat.ids])
