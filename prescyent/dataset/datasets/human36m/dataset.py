@@ -14,7 +14,7 @@ from prescyent.utils.dataset_manipulation import (
     rotmat2xyz_torch,
     update_parent_ids,
 )
-from prescyent.dataset.features import CoordinateXYZ, RotationRep6D, convert_to_rep6d
+from prescyent.dataset.features import CoordinateXYZ, RotationRotMat
 import prescyent.dataset.datasets.human36m.metadata as metadata
 from prescyent.dataset.datasets.human36m.config import DatasetConfig
 
@@ -124,9 +124,7 @@ class Dataset(MotionDataset):
             rotmatrices = (
                 permute_x_y @ rotmatrices.reshape(-1, 3, 3) @ permute_x_y.T
             ).reshape(S, P, 9)
-            # We use REP6D as default representation for our rotations
-            rot6d_info = convert_to_rep6d(rotmatrices)
-            position_traj_tensor = torch.cat((xyz_info, rot6d_info), dim=-1)
+            position_traj_tensor = torch.cat((xyz_info, rotmatrices), dim=-1)
             freq = (
                 metadata.BASE_FREQUENCY // subsampling_step
                 if subsampling_step
@@ -138,7 +136,7 @@ class Dataset(MotionDataset):
                 frequency=freq,
                 tensor_features=[
                     CoordinateXYZ(list(range(3))),
-                    RotationRep6D(list(range(3, 9))),
+                    RotationRotMat(list(range(3, 12))),
                 ],
                 file_path=file_path,
                 title=title,

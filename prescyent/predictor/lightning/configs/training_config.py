@@ -19,6 +19,8 @@ class TrainingConfig(OptimizerConfig):
     seed: Optional[int] = None
     log_every_n_steps: int = 1
     use_auto_lr: bool = False
+    gradient_clip_val: Optional[float] = None
+    gradient_clip_algorithm: Optional[str] = None
     use_deterministic_algorithms: bool = True
     early_stopping_value: str = "Val/loss"
     early_stopping_patience: Optional[int] = None

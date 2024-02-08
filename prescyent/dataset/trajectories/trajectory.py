@@ -3,11 +3,19 @@ import csv
 from pathlib import Path
 from typing import List
 
+from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
 
 from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
 from prescyent.utils.logger import logger, DATASET
-from prescyent.dataset.features import Feature, Any, convert_tensor_features_to
+from prescyent.dataset.features import (
+    Feature,
+    Any,
+    convert_tensor_features_to,
+    Rotation,
+    RotationQuat,
+)
+from prescyent.dataset.features.rotation_methods import convert_to_quat
 
 
 class Trajectory:
@@ -152,3 +160,12 @@ class Trajectory:
 
     def _get_data(self) -> List[List[str]]:
         return self.tensor.flatten(1, 2).tolist()
+
+    def get_scipy_rotation(self, seq_id: int, point_id: int):
+        tensor = self.tensor[seq_id, point_id].clone()
+        for feat in self.tensor_features:
+            if isinstance(feat, Rotation):
+                if not isinstance(feat, RotationQuat):
+                    return ScipyRotation.from_quat(convert_to_quat(tensor[feat.ids]))
+                return ScipyRotation.from_quat(tensor[feat.ids].numpy())
+        return None

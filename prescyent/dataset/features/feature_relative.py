@@ -1,11 +1,8 @@
 import torch
 from typing import List
 
-from prescyent.dataset.features import (
-    Feature,
-    Rotation,
-    Any,
-    Coordinate,
+from prescyent.dataset.features.feature import Feature, Rotation, Any, Coordinate
+from prescyent.dataset.features.rotation_methods import (
     get_relative_rotation_from,
     get_absolute_rotation_from,
 )
@@ -31,7 +28,9 @@ def get_relative_tensor_from(
         unbatch = True
         input_tensor = torch.unsqueeze(input_tensor, 0)
         basis_tensor = torch.unsqueeze(basis_tensor, 0)
-    output = torch.zeros(input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device)
+    output = torch.zeros(
+        input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device
+    )
     for feat in tensor_features:
         # Relative for Rotation is the transform rotation
         if isinstance(feat, Rotation):
@@ -67,7 +66,9 @@ def get_absolute_tensor_from(
         unbatch = True
         input_tensor = torch.unsqueeze(input_tensor, 0)
         basis_tensor = torch.unsqueeze(basis_tensor, 0)
-    output = torch.zeros(input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device)
+    output = torch.zeros(
+        input_tensor.shape, dtype=input_tensor.dtype, device=input_tensor.device
+    )
     for feat in tensor_features:
         # Relative for Rotation is the matmul of rotations matrices
         if isinstance(feat, Rotation):

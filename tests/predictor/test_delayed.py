@@ -1,7 +1,12 @@
 import shutil
 import torch
-from torch.utils.data import DataLoader
 
+from prescyent.dataset import (
+    DatasetConfig,
+    CustomDataset,
+    Trajectories,
+    Trajectory,
+)
 from prescyent.predictor import DelayedPredictor
 from tests.custom_test_case import CustomTestCase
 
@@ -23,8 +28,13 @@ class DelayedPredictorTests(CustomTestCase):
 
     def test_test_loop(self):
         predictor = DelayedPredictor("tmp")
-        dataloader = DataLoader(
-            [(torch.rand(64, 10, 7), torch.rand(64, 10, 7)) for i in range(50)]
+        trajs = Trajectories(
+            [(Trajectory(torch.rand(500, 9, 7), 10)) for i in range(1)],
+            [(Trajectory(torch.rand(500, 9, 7), 10)) for i in range(10)],
+            [(Trajectory(torch.rand(500, 9, 7), 10)) for i in range(1)],
         )
-        predictor.test(dataloader)
+        dataset = CustomDataset(
+            DatasetConfig(history_size=10, future_size=10), trajs
+        )
+        predictor.test(dataset)
         shutil.rmtree("tmp", ignore_errors=True)

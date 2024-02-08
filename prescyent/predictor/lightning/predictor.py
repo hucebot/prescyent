@@ -109,11 +109,11 @@ class LightningPredictor(BasePredictor):
         if model_path.suffix == ".ckpt":
             try:
                 return LightningModule.load_from_checkpoint(
-                    model_path, torch.device("gpu")
+                    model_path, device=torch.device("gpu")
                 )
             except RuntimeError:
                 return LightningModule.load_from_checkpoint(
-                    model_path, torch.device("cpu")
+                    model_path, device=torch.device("cpu")
                 )
         else:
             raise NotImplementedError(
@@ -123,16 +123,19 @@ class LightningPredictor(BasePredictor):
             )
 
     def _init_training_config(self, config):
-        if isinstance(config, dict):
+        if self.config is None:
+            config = TrainingConfig()
+        elif isinstance(config, dict):
             config = TrainingConfig(**config)
         self.training_config = config
+        self.model.lr = self.training_config.lr
 
     def _init_trainer(self, devices=None):
         logger.getChild(PREDICTOR).info(
             "Creating new Trainer instance at %s", self.log_path
         )
         if self.training_config is None:
-            self.training_config = TrainingConfig()
+            self._init_training_config(None)
         cls_default_params = {arg for arg in inspect.signature(pl.Trainer).parameters}
         kwargs = self.training_config.model_dump(include=cls_default_params)
         lr_monitor = LearningRateMonitor(logging_interval="step")
@@ -256,6 +259,7 @@ class LightningPredictor(BasePredictor):
             },
             {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
         )
+
         self.trainer.fit(
             model=self.model,
             train_dataloaders=train_dataloader,
@@ -315,11 +319,11 @@ class LightningPredictor(BasePredictor):
         # train on new dataset
         self.train(train_dataloader, train_config, val_dataloader)
 
-    def test(self, test_dataloader: Iterable):
+    def test(self, dataset: Iterable):
         """test the model"""
         if self.trainer is None:
             self._init_trainer(devices=1)
-        self.trainer.test(self.model, test_dataloader)
+        self.trainer.test(self.model, dataset.test_dataloader)
         self._free_trainer()
 
     def save(

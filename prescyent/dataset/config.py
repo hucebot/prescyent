@@ -90,7 +90,7 @@ class MotionDatasetConfig(BaseModel):
         if self.get("out_features", None):
             if isinstance(self["out_features"], tensor_features.Feature):
                 self["out_features"] = [self["out_features"]]
-            if  not isinstance( self["out_features"][0], tensor_features.Feature):
+            if not isinstance(self["out_features"][0], tensor_features.Feature):
                 self["out_features"] = [
                     getattr(tensor_features, feature["name"])(feature["ids"])
                     for feature in self["out_features"]

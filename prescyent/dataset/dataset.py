@@ -102,6 +102,10 @@ class MotionDataset(Dataset):
         )
 
     @property
+    def frequency(self) -> int:
+        return self.trajectories.train[0].frequency
+
+    @property
     def num_points(self) -> int:
         return self.trajectories.train[0].shape[1]
 

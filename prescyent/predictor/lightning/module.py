@@ -6,13 +6,11 @@ from typing import Any, Dict, List, Type
 import pytorch_lightning as pl
 import torch
 
-from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
+from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
 from prescyent.predictor.lightning.configs.module_config import LossFunctions
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
-from prescyent.predictor.lightning.losses.mpjpe_loss import MPJPELoss
-from prescyent.predictor.lightning.losses.position_3d_geodesic_loss import (
-    Position3DGeodesicLoss,
-)
+from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalRigidDistanceLoss
+from prescyent.predictor.lightning.losses.mfrd_loss import MeanFinalRigidDistanceLoss
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.logger import logger, PREDICTOR
 
@@ -26,10 +24,10 @@ CRITERION_MAPPING = {
     LossFunctions.MARGINRANKINGLOSS: torch.nn.MarginRankingLoss,
     LossFunctions.TRIPLETMARGINLOSS: torch.nn.TripletMarginLoss,
     LossFunctions.KLDIVLOSS: torch.nn.KLDivLoss,
-    LossFunctions.MPJPELOSS: MPJPELoss,
-    LossFunctions.POSITION3DLOSS: Position3DGeodesicLoss,
+    LossFunctions.MFRDLOSS: MeanFinalRigidDistanceLoss,
+    LossFunctions.MTRDLOSS: MeanTotalRigidDistanceLoss,
 }
-DEFAULT_LOSS = MPJPELoss
+DEFAULT_LOSS = torch.nn.MSELoss
 
 
 def apply_spectral_norm(model):
@@ -94,21 +92,11 @@ class LightningModule(pl.LightningModule):
                         list(CRITERION_MAPPING.keys()),
                     )
                     raise AttributeError(config.loss_fn)
-            # Init criterion
-            args = [arg for arg in inspect.signature(criterion).parameters]
-            kwargs = {
-                key: getattr(config, key, None)
-                for key in args
-                if getattr(config, key, None) is not None
-            }
-            kwargs.update(
-                {
-                    key: getattr(config.dataset_config, key, None)
-                    for key in args
-                    if getattr(config.dataset_config, key, None) is not None
-                }
-            )
-            self.criterion = criterion(**kwargs)
+            # Init criterion with config argument if required
+            if "config" in inspect.signature(criterion).parameters:
+                self.criterion = criterion(config=config)
+            else:
+                self.criterion = criterion()
             logger.getChild(PREDICTOR).info(
                 "Using %s loss function", self.criterion.__class__.__name__
             )
@@ -154,33 +142,67 @@ class LightningModule(pl.LightningModule):
         """get loss and accuracy metrics from batch"""
         sample, truth = batch
         pred = self.torch_model(sample)
+        if torch.any(torch.isnan(pred)):
+            print("NAN")
         loss = self.criterion(pred, truth)
-        self.log(f"{prefix}/loss", loss.detach())
+        if torch.any(torch.isnan(loss)):
+            print("NAN")
+        self.log(f"{prefix}/loss", loss.detach(), prog_bar=True)
         if loss_only:
             return {"loss": loss}
-        ade = get_ade(truth, pred).detach()
-        fde = get_fde(truth, pred).detach()
-        mpjpe = get_mpjpe(truth, pred).detach()[-1]
-        return {"loss": loss, "ADE": ade, "FDE": fde, "MPJPE": mpjpe}
+        # Evaluation metrics
+        # eval step
+        features = self.torch_model.out_features
+        feat2distances = dict()
+        for feat in features:
+            feat2distances[feat.name] = cal_distance_for_feat(
+                pred[..., feat.ids], truth[..., feat.ids], feat
+            ).detach()
+        feat2distances["loss"] = loss
+        return feat2distances
 
     def log_accuracy(self, outputs, prefix: str = "", loss_only=False):
         """log accuracy metrics from epoch"""
         mean_loss = torch.stack([x["loss"] for x in outputs]).mean().detach()
         self.logger.experiment.add_scalar(
-            f"{prefix}/epoch_loss", mean_loss, self.current_epoch
+            f"{prefix}/loss_epoch", mean_loss, self.current_epoch
         )
         if loss_only:
             return
-        fde = torch.stack([x["FDE"] for x in outputs]).mean().detach()
-        ade = torch.stack([x["ADE"] for x in outputs]).mean().detach()
-        mpjpe = torch.stack([x["MPJPE"] for x in outputs]).mean().detach()
-        self.logger.experiment.add_scalar(f"{prefix}/FDE", fde, self.current_epoch)
-        self.logger.experiment.add_scalar(f"{prefix}/ADE", ade, self.current_epoch)
-        self.logger.experiment.add_scalar(f"{prefix}/MPJPE", mpjpe, self.current_epoch)
-        if prefix in ["Val", "Test"]:
-            self.logger.experiment.add_scalar("hp/FDE", fde, self.current_epoch)
-            self.logger.experiment.add_scalar("hp/ADE", ade, self.current_epoch)
-            self.logger.experiment.add_scalar("hp/MPJPE", mpjpe, self.current_epoch)
+        # eval epoch
+        features = self.torch_model.out_features
+        for feat in features:
+            batch_feat_distances = torch.cat(
+                [feat2distances[feat.name] for feat2distances in outputs]
+            )
+            ade = batch_feat_distances.mean()
+            fde = batch_feat_distances[:, -1].mean()
+            mpjpe = (
+                batch_feat_distances.transpose(0, 1)
+                .reshape(self.torch_model.out_sequence_size, -1)
+                .mean(-1)
+            )
+            self.logger.experiment.add_scalar(
+                f"{prefix}/{feat.name}/ADE", ade, self.current_epoch
+            )
+            self.logger.experiment.add_scalar(
+                f"{prefix}/{feat.name}/FDE", fde, self.current_epoch
+            )
+            for v, val in enumerate(mpjpe):
+                self.logger.experiment.add_scalar(
+                    f"{prefix}/{feat.name}/MPJPE", val, v + 1
+                )
+            if prefix in ["Val", "Test"]:
+                self.logger.experiment.add_scalar(
+                    f"hp/{feat.name}/ADE", ade, self.current_epoch
+                )
+                self.logger.experiment.add_scalar(
+                    f"hp/{feat.name}/FDE", fde, self.current_epoch
+                )
+                for v, val in enumerate(mpjpe):
+                    self.logger.experiment.add_scalar(
+                        f"hp/{feat.name}/MPJPE", val, v + 1
+                    )
 
     def on_validation_epoch_start(self) -> None:
         super().on_validation_epoch_start()
