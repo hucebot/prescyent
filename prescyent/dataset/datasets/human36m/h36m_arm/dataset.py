@@ -5,7 +5,7 @@ import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.utils.tensor_relative import get_relative_tensor_from
+from prescyent.dataset.features.feature_relative import get_relative_tensor_from
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 

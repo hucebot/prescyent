@@ -9,8 +9,9 @@ from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
+from prescyent.dataset.features import get_distance
+from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
 from prescyent.evaluator.eval_summary import EvaluationSummary
-from prescyent.evaluator.metrics import get_ade, get_fde, get_mpjpe
 from prescyent.utils.logger import logger, PREDICTOR
 
 
@@ -112,27 +113,48 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
-    def test(self, test_dataloader: Iterable):
+    def test(self, dataset) -> Dict[str, torch.Tensor]:
         """test predictor"""
         # log in tensorboard
-        losses, ades, fdes, mpjpes = [], [], [], []
-        for sample, truth in test_dataloader:
+        distances = list()
+        features = dataset.config.out_features
+        pbar = tqdm(dataset.test_dataloader)
+        pbar.set_description(f"Testing {self}:")
+        for sample, truth in pbar:
             # eval step
-            pred = self.predict(sample, len(truth[0]))
-            losses.append(torch.nn.MSELoss()(truth, pred).detach())
-            ades.append(get_ade(truth, pred).detach())
-            fdes.append(get_fde(truth, pred).detach())
-            mpjpes.append(get_mpjpe(truth, pred).detach()[-1])
+            feat2distances = dict()
+            pred = self.predict(sample, dataset.config.future_size)
+            feat2distances["loss"] = torch.nn.functional.l1_loss(pred, truth)
+            for feat in features:
+                feat2distances[feat.name] = cal_distance_for_feat(
+                    pred[..., feat.ids], truth[..., feat.ids], feat
+                ).detach()
+            distances.append(feat2distances)
         # eval epoch
-        mean_loss = torch.stack(losses).mean()
-        ade = torch.stack(ades).mean()
-        fde = torch.stack(fdes).mean()
-        mpjpe = torch.stack(mpjpes).mean()
-        self.tb_logger.experiment.add_scalar("Test/epoch_loss", mean_loss, 0)
-        self.tb_logger.experiment.add_scalar("Test/ADE", ade, 0)
-        self.tb_logger.experiment.add_scalar("Test/FDE", fde, 0)
-        self.tb_logger.experiment.add_scalar("Test/MPJPE", mpjpe, 0)
-        return mean_loss, ade, fde, mpjpe
+        losses = dict()
+        mean_loss = torch.stack([x["loss"] for x in distances]).mean().detach()
+        losses["Test/loss_epoch"] = mean_loss
+        for feat in features:
+            batch_feat_distances = torch.cat(
+                [feat2distances[feat.name] for feat2distances in distances]
+            )
+            ade = batch_feat_distances.mean()
+            fde = batch_feat_distances[:, -1].mean()
+            mpjpe = (
+                batch_feat_distances.transpose(0, 1)
+                .reshape(dataset.config.future_size, -1)
+                .mean(-1)
+            )
+            losses[f"Test/{feat.name}/ADE"] = ade
+            losses[f"Test/{feat.name}/FDE"] = fde
+            losses[f"Test/{feat.name}/MPJPE"] = mpjpe
+        for key, value in losses.items():
+            if value.ndim > 0 and len(value) > 1:  # if tensor is iterable
+                for v, val in enumerate(value):
+                    self.tb_logger.experiment.add_scalar(key, val, v + 1)
+            else:
+                self.tb_logger.experiment.add_scalar(key, value, 0)
+        return losses
 
     def run(
         self,

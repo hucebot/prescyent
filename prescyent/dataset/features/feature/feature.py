@@ -2,6 +2,8 @@
 from abc import abstractmethod
 from typing import List, Union
 
+import torch
+
 
 class Feature(dict):
     """Base class with equivalence methods and checks on constructor
@@ -47,4 +49,8 @@ class Feature(dict):
     @property
     @abstractmethod
     def dims_names(self) -> List[str]:
+        return NotImplemented
+
+    @abstractmethod
+    def get_distance(self, tensor_a: torch.Tensor, tensor_b: torch.Tensor):
         return NotImplemented

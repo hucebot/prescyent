@@ -8,7 +8,7 @@ from prescyent.dataset.features import (
     features_are_convertible_to,
 )
 from prescyent.predictor.lightning.layers.normalization_layer import MotionLayerNorm
-from prescyent.utils.tensor_relative import (
+from prescyent.dataset.features.feature_relative import (
     get_relative_tensor_from,
     get_absolute_tensor_from,
 )

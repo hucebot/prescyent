@@ -14,7 +14,7 @@ from prescyent.utils.dataset_manipulation import (
 )
 from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
 from prescyent.dataset.datasets.teleop_icub.metadata import *
-from prescyent.dataset.features.coordinate import CoordinateXYZ
+from prescyent.dataset.features import CoordinateXYZ
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.dataset import MotionDataset
