@@ -13,7 +13,9 @@ class MeanFinalRigidDistanceLoss(torch.nn.modules.loss._Loss):
         reduce=None,
         reduction: str = "mean",
     ) -> None:
-        super(MeanFinalRigidDistanceLoss, self).__init__(size_average, reduce, reduction)
+        super(MeanFinalRigidDistanceLoss, self).__init__(
+            size_average, reduce, reduction
+        )
         self.out_features = config.dataset_config.out_features
 
     def forward(self, input_tensor: torch.Tensor, target: torch.Tensor) -> torch.Tensor:

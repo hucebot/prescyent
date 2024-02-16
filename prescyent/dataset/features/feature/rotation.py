@@ -104,7 +104,7 @@ class RotationRotMat(Rotation):
         rotmatrix_b = torch.reshape(tensor_b, [*tensor_b.shape[:-1], 3, 3])
         R_diffs = rotmatrix_a @ rotmatrix_b.transpose(-1, -2)
         all_traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
-        all_traces = all_traces - 1 / 2
+        all_traces = (all_traces - 1) / 2
         # Clip the trace to ensure it is within the valid range for arcos
         all_traces = torch.clamp(all_traces, -1.0, 1.0)
         # Compute the loss

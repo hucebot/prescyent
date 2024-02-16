@@ -109,11 +109,11 @@ class LightningPredictor(BasePredictor):
         if model_path.suffix == ".ckpt":
             try:
                 return LightningModule.load_from_checkpoint(
-                    model_path, device=torch.device("gpu")
+                    model_path, map_location=torch.device("gpu")
                 )
             except RuntimeError:
                 return LightningModule.load_from_checkpoint(
-                    model_path, device=torch.device("cpu")
+                    model_path, map_location=torch.device("cpu")
                 )
         else:
             raise NotImplementedError(
@@ -251,13 +251,18 @@ class LightningPredictor(BasePredictor):
             self.model.hparams.lr = lr_finder.suggestion()
             self.training_config.lr = lr_finder.suggestion()
         # Add hyperparams to Tensorboard and init HP Metrics
+        hp_metrics = {}
+        for feat in self.config.dataset_config.out_features:
+            hp_metrics[f"hp/{feat.name}/ADE"] = -1
+            hp_metrics[f"hp/{feat.name}/FDE"] = -1
+            hp_metrics[f"hp/{feat.name}/MPJPE"] = -1
         self.tb_logger.log_hyperparams(
             {
                 **self.model.hparams,
                 **self.training_config.model_dump(),
                 **self.config.model_dump(exclude=["dataset"]),
             },
-            {"hp/ADE": -1, "hp/FDE": -1, "hp/MPJPE": -1},
+            hp_metrics,
         )
 
         self.trainer.fit(

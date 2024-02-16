@@ -198,29 +198,22 @@ class BasePredictor:
         return prediction_list
 
     def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
+        for feat in evaluation_summary.features:
+            self.tb_logger.experiment.add_scalar(
+                f"Eval/{feat.name}average_prediction_error",
+                evaluation_summary.average_prediction_error[feat.name],
+                0,
+            )
+            self.tb_logger.experiment.add_scalar(
+                f"Eval/{feat.name}max_prediction_error",
+                evaluation_summary.max_prediction_error[feat.name],
+                0,
+            )
         self.tb_logger.experiment.add_scalar(
-            "Eval/mean_ade", evaluation_summary.mean_ade, 0
+            "Eval/mean_rtf", evaluation_summary.mean_rtf, 0
         )
         self.tb_logger.experiment.add_scalar(
-            "Eval/mean_fde", evaluation_summary.mean_fde, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/mean_mpjpe", evaluation_summary.mean_mpjpe, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/mean_inference_time_ms", evaluation_summary.mean_inference_time_ms, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/max_ade", evaluation_summary.max_ade, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/max_fde", evaluation_summary.max_fde, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/max_mpjpe", evaluation_summary.max_mpjpe, 0
-        )
-        self.tb_logger.experiment.add_scalar(
-            "Eval/max_inference_time_ms", evaluation_summary.max_inference_time_ms, 0
+            "Eval/max_rtf", evaluation_summary.max_rtf, 0
         )
 
     def log_metrics(self, metrics: dict, pre_key=""):

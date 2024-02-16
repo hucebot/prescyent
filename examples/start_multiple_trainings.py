@@ -38,7 +38,7 @@ VARIATIONS = {
     # "model_config.spatial_fc_only": [True, False],
     # "model_config.dct": [True, False],
     # "model_config.dropout_value": [0, 0.1, 0.25],
-    "model_config.norm_on_last_input" : [True],
+    "model_config.norm_on_last_input": [True],
     # "model_config.do_lipschitz_continuation" : [False, True],
     # ...
     # TRAINING
