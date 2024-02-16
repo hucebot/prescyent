@@ -124,7 +124,7 @@ def eval_predictors(
     )
     for t, trajectory in tqdm(enumerate(trajectories), desc="Trajectory n°"):
         predictions = []
-        for p, predictor in tqdm(enumerate(predictors), desc="Predictor n°"):
+        for p, predictor in enumerate(predictors):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
             if hasattr(predictor, "config"):
@@ -134,17 +134,26 @@ def eval_predictors(
             prediction = run_predictor(
                 predictor, trajectory.tensor, history_size, future_size, run_method
             )
-            elapsed = (timeit.default_timer() - start) * 1000.0
+            elapsed = timeit.default_timer() - start
             # we generate new evaluation results with the task metrics
             truth = trajectory.tensor[history_size:]
             if hasattr(predictor, "config"):
+                out_features = predictor.config.dataset_config.out_features
                 truth = convert_tensor_features_to(
                     truth,
                     trajectory.tensor_features,
                     predictor.config.dataset_config.out_features,
                 )
+            else:
+                out_features = trajectory.tensor_features
             evaluation_results[p].results.append(
-                EvaluationResult(trajectory.tensor, truth, prediction, elapsed)
+                EvaluationResult(
+                    trajectory.tensor,
+                    truth,
+                    prediction,
+                    elapsed / trajectory.duration,
+                    out_features,
+                )
             )
             # we plot a file per (predictor, trajectory) pair
             if do_plotting:

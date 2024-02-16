@@ -1,5 +1,5 @@
 import copy
-from typing import List, Tuple
+from typing import Dict, List
 
 import torch
 
@@ -22,7 +22,7 @@ def get_distance(
     tensor_b: torch.Tensor,
     tensor_feats_b: List[Feature],
     get_mean: bool = False,
-) -> Tuple[float]:
+) -> Dict[str, torch.Tensor]:
     """returns a feature aware distance between two tensors
 
     Args:
@@ -32,7 +32,7 @@ def get_distance(
         tensor_feats_b (List[Feature]): second tensor's features
 
     Returns:
-        Tuple[float]: a distance of each feature of the input tensors
+        Dict[str, torch.Tensor]: a distance of each feature of the input tensors
     """
     # convert into same feats with a as the priority
     if not is_tensor_is_batched(tensor_a):
@@ -57,7 +57,7 @@ def get_distance(
     # get dist depending on feat
     distances = dict()
     for feat in feats:
-        distances[feat.__class__.__name__] = cal_distance_for_feat(
+        distances[feat.name] = cal_distance_for_feat(
             tensor_a[:, :, :, feat.ids], tensor_b[:, :, :, feat.ids], feat
         )
     if get_mean:
@@ -70,7 +70,7 @@ def cal_distance_for_feat(
 ) -> torch.Tensor:
     if (
         isinstance(feat, Rotation)
-        and not isinstance(feat, RotationQuat)
+        # and not isinstance(feat, RotationQuat)
         and not isinstance(feat, RotationRotMat)
     ):  # convert rotation to rotmatrice
         tensor_a = convert_to_rotmatrix(tensor_a)

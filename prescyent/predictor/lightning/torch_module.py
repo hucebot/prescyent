@@ -56,12 +56,12 @@ class BaseTorchModule(torch.nn.Module):
             self = args[0]
             input_tensor = args[1]
             if self.norm_on_last_input:
-                seq_last = input_tensor[:, -1:, :, :]
+                seq_last = input_tensor[:, -1:, :, :].clone()
                 input_tensor = get_relative_tensor_from(
                     input_tensor, seq_last, self.in_features
                 )
             if self.used_norm:
-                input_tensor = self.norm(input_tensor)
+                input_tensor = self.norm(input_tensor.clone())
             if self.dropout_value is not None and self.dropout_value > 0:
                 input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
