@@ -22,6 +22,7 @@ from prescyent.dataset.datasets.custom_dataset import CustomDataset
 
 DATASET_LIST = [
     H36MDataset,
+    H36MArmDataset,
     TeleopIcubDataset,
 ]
 
