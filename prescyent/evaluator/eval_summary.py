@@ -27,10 +27,10 @@ class EvaluationSummary:
 
     def __str__(self) -> str:
         return (
-            f"\nAverage Prediction Error:\n\t- {self.average_prediction_error}"
-            + f"\nMax Prediction Error:\n\t- {self.max_prediction_error}"
-            + f"\nMean Real Time Factor (process time for one second):\n\t- {self.mean_rtf:.6f}"
-            + f"\nMax Real Time Factor (process time for one second):\n\t- {self.max_rtf:.6f}"
+            f"\n- **Average Prediction Error**: {self.average_prediction_error}"
+            + f"\n- **Max Prediction Error**: {self.max_prediction_error}"
+            + f"\n- **Mean Real Time Factor (process time for one second)**: {self.mean_rtf:.6f}"
+            + f"\n- **Max Real Time Factor (process time for one second)**: {self.max_rtf:.6f}"
         )
 
     @property
