@@ -65,6 +65,9 @@ class BaseTorchModule(torch.nn.Module):
             if self.dropout_value is not None and self.dropout_value > 0:
                 input_tensor = self.dropout(input_tensor)
             predictions = function(self, input_tensor, **kwargs)
+            for feat in self.out_features:
+                if feat.must_post_process:
+                    predictions[:,:,:,feat.ids] = feat.post_process(predictions[:,:,:,feat.ids])
             if self.norm_on_last_input:
                 seq_last = convert_tensor_features_to(
                     seq_last,

@@ -12,6 +12,7 @@ from prescyent.dataset.features.feature import (
 from prescyent.dataset.features.rotation_methods import (
     convert_rotation_tensor_to,
     convert_to_rotmatrix,
+    convert_to_quat,
 )
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
@@ -70,12 +71,12 @@ def cal_distance_for_feat(
 ) -> torch.Tensor:
     if (
         isinstance(feat, Rotation)
-        # and not isinstance(feat, RotationQuat)
-        and not isinstance(feat, RotationRotMat)
-    ):  # convert rotation to rotmatrice
-        tensor_a = convert_to_rotmatrix(tensor_a)
-        tensor_b = convert_to_rotmatrix(tensor_b)
-        feat = RotationRotMat(range(9))
+        and not isinstance(feat, RotationQuat)
+        # and not isinstance(feat, RotationRotMat)
+    ):  # convert rotation to quaternion
+        tensor_a = convert_to_quat(tensor_a)
+        tensor_b = convert_to_quat(tensor_b)
+        feat = RotationQuat(range(4))
     return feat.get_distance(tensor_a, tensor_b)
 
 
