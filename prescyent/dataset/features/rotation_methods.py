@@ -265,17 +265,20 @@ def convert_rotation_tensor_to(
         torch.Tensor: new tensor
     """
     if rotation_rep is None:
-        return torch.zeros(*tensor.shape[:-1], 0)
+        new_tensor = torch.zeros(*tensor.shape[:-1], 0)
     elif isinstance(rotation_rep, RotationEuler):
-        return convert_to_euler(tensor)
+        new_tensor = convert_to_euler(tensor)
     elif isinstance(rotation_rep, RotationQuat):
-        return convert_to_quat(tensor)
+        new_tensor = convert_to_quat(tensor)
     elif isinstance(rotation_rep, RotationRotMat):
-        return convert_to_rotmatrix(tensor)
+        new_tensor = convert_to_rotmatrix(tensor)
     elif isinstance(rotation_rep, RotationRep6D):
-        return convert_to_rep6d(tensor)
+        new_tensor = convert_to_rep6d(tensor)
     else:
         raise AttributeError(f"{rotation_rep} is not an handled Rotation Feature")
+    if rotation_rep.must_post_process:
+        new_tensor = rotation_rep.post_process(new_tensor)
+    return new_tensor
 
 
 def get_tensor_rotation_representation(tensor: torch.Tensor) -> Rotation:

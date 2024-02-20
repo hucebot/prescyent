@@ -42,6 +42,10 @@ class Feature(dict):
         ) == len(__value.ids)
 
     @property
+    def must_post_process(self) -> bool:
+        return False
+
+    @property
     @abstractmethod
     def num_dims(self) -> int:
         return NotImplemented

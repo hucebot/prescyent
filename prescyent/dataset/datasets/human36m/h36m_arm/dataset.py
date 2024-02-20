@@ -12,7 +12,7 @@ from prescyent.utils.dataset_manipulation import update_parent_ids
 class Dataset(H36MDataset):
     """Class for data loading et preparation before the MotionDataset sampling"""
 
-    DATASET_NAME = "H36MSArm"
+    DATASET_NAME = "H36MArm"
 
     def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
         if config is None:
