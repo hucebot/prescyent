@@ -1,4 +1,5 @@
 """script to train a model from args using auto_predictor"""
+
 import json
 from argparse import ArgumentParser
 import os
@@ -64,8 +65,7 @@ def train_from_config(
     eval_predictors(
         predictors=[predictor],
         trajectories=dataset.trajectories.test,
-        history_size=dataset.config.history_size,
-        future_size=dataset.config.future_size,
+        dataset_config=dataset.config,
         do_plotting=False,
     )
 

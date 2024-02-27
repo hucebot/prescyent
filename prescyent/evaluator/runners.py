@@ -1,4 +1,5 @@
 """module to run model and methods evaluation"""
+
 from pathlib import Path
 from typing import Callable, List, Union
 import timeit
@@ -6,6 +7,7 @@ import timeit
 import torch
 from tqdm import tqdm
 from prescyent.dataset import Trajectory
+from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
@@ -81,8 +83,7 @@ def run_predictor(
 def eval_predictors(
     predictors: List[Callable],
     trajectories: List[Trajectory],
-    history_size: int = None,
-    future_size: int = None,
+    dataset_config: MotionDatasetConfig,
     run_method: str = "step_every_timestamp",
     do_plotting: bool = True,
     saveplot_pattern: str = "%d_%s_prediction.png",
@@ -113,8 +114,10 @@ def eval_predictors(
         List[EvaluationSummary]: list of an evaluation summary for each predictor
     """
     # TODO: reject impossible values for history_size and future_size
+    future_size = dataset_config.future_size
     if future_size is None:
         future_size = trajectories[0].frequency
+    history_size = dataset_config.history_size
     if history_size is None:
         history_size = trajectories[0].frequency
     evaluation_results = [EvaluationSummary() for _ in predictors]
@@ -127,32 +130,33 @@ def eval_predictors(
         for p, predictor in enumerate(predictors):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
-            if hasattr(predictor, "config"):
-                trajectory.convert_tensor_features(
-                    predictor.config.dataset_config.in_features
-                )
+            history = convert_tensor_features_to(
+                trajectory.tensor,
+                trajectory.tensor_features,
+                dataset_config.in_features,
+            )
+            history = history[:, dataset_config.in_points]
+            history = history[:, :, dataset_config.in_dims]
             prediction = run_predictor(
-                predictor, trajectory.tensor, history_size, future_size, run_method
+                predictor, history, history_size, future_size, run_method
             )
             elapsed = timeit.default_timer() - start
+            truth = convert_tensor_features_to(
+                trajectory.tensor,
+                trajectory.tensor_features,
+                dataset_config.out_features,
+            )
+            truth = truth[history_size:]
+            truth = truth[:, dataset_config.out_points]
+            truth = truth[:, :, dataset_config.out_dims]
             # we generate new evaluation results with the task metrics
-            truth = trajectory.tensor[history_size:]
-            if hasattr(predictor, "config"):
-                out_features = predictor.config.dataset_config.out_features
-                truth = convert_tensor_features_to(
-                    truth,
-                    trajectory.tensor_features,
-                    predictor.config.dataset_config.out_features,
-                )
-            else:
-                out_features = trajectory.tensor_features
             evaluation_results[p].results.append(
                 EvaluationResult(
-                    trajectory.tensor,
+                    history,
                     truth,
                     prediction,
                     elapsed / trajectory.duration,
-                    out_features,
+                    dataset_config.out_features,
                 )
             )
             # we plot a file per (predictor, trajectory) pair
@@ -164,11 +168,6 @@ def eval_predictors(
                     trajectory, prediction, step=history_size, savefig_path=savefig_path
                 )
             predictions.append(prediction)
-        # we also plot a file per (predictor_list, trajectory) pair for a direct comparision
-        # if do_plotting:
-        #     savefig_path = str(Path(saveplot_dir_path) / (saveplot_pattern % (t, "all")))
-        #     plot_multiple_predictors(trajectory, predictors, predictions,
-        #                              step=history_size, savefig_path=savefig_path)
     for p, predictor in enumerate(predictors):
         predictor.log_evaluation_summary(evaluation_results[p])
     return evaluation_results

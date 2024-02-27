@@ -15,6 +15,10 @@ from prescyent.dataset.datasets.teleop_icub import (
     TeleopIcubDataset,
     TeleopIcubDatasetConfig,
 )
+from prescyent.dataset.datasets.synthetic_simple_trajs import (
+    SSTDataset,
+    SSTDatasetConfig,
+)
 from prescyent.dataset.trajectories import Trajectories, Trajectory
 from prescyent.dataset.config import MotionDatasetConfig as DatasetConfig
 from prescyent.dataset.datasets.custom_dataset import CustomDataset
@@ -24,6 +28,7 @@ DATASET_LIST = [
     H36MDataset,
     H36MArmDataset,
     TeleopIcubDataset,
+    SSTDataset
 ]
 
 DATASET_MAP = {p.DATASET_NAME: p for p in DATASET_LIST}
