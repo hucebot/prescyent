@@ -40,6 +40,21 @@ class MotionDataset(Dataset):
             self.config.in_features = self.trajectories.train[0].tensor_features
         if self.config.out_features is None:
             self.config.out_features = self.trajectories.train[0].tensor_features
+        # change de feats of each trajectory if they don't match in_feat and out_feat
+        if (
+            self.config.in_features == self.config.out_features
+            and self.config.in_features != self.trajectories.train[0].tensor_features
+        ) or (
+            self.config.in_features != self.config.out_features
+            and self.config.in_features != self.trajectories.train[0].tensor_features
+            and self.config.out_features != self.trajectories.train[0].tensor_features
+        ):
+            for traj in self.trajectories.train:
+                traj.convert_tensor_features(self.config.in_features)
+            for traj in self.trajectories.test:
+                traj.convert_tensor_features(self.config.in_features)
+            for traj in self.trajectories.val:
+                traj.convert_tensor_features(self.config.in_features)
         self.name = name
         self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(

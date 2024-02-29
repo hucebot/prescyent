@@ -164,8 +164,13 @@ def eval_predictors(
                 savefig_path = str(
                     Path(saveplot_dir_path) / (saveplot_pattern % (t, predictor))
                 )
+                trajectory.convert_tensor_features(dataset_config.out_features)
                 plot_trajectory_prediction(
-                    trajectory, prediction, step=history_size, savefig_path=savefig_path
+                    trajectory,
+                    truth,
+                    prediction,
+                    step=history_size,
+                    savefig_path=savefig_path,
                 )
             predictions.append(prediction)
     for p, predictor in enumerate(predictors):
