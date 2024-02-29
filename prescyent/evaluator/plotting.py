@@ -150,13 +150,13 @@ def plot_trajs(
 
 
 def plot_trajectory_prediction(
-    trajectory: Trajectory, preds, step: int, savefig_path: str
+    trajectory: Trajectory, truth, preds, step: int, savefig_path: str
 ):
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    inputs = torch.transpose(trajectory.tensor, 0, 1)
+    truth = torch.transpose(truth, 0, 1)
     preds = torch.transpose(preds, 0, 1)
 
-    pred_last_idx = max(len(preds[0]), len(inputs[0])) + step
+    pred_last_idx = max(len(preds[0]), len(truth[0])) + step
 
     time_steps = range(pred_last_idx)
     fig, axes = plt.subplots(
@@ -165,12 +165,9 @@ def plot_trajectory_prediction(
     if preds.shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(time_steps[: len(inputs[i])], inputs[i], linewidth=2)
-        # axe.plot(time_steps[-len(inputs[i]):],
-        # inputs[i][:min(len(inputs[i]),
-        # pred_last_idx)], linewidth=2)  # delayed
+        axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=2)
         axe.plot(
-            time_steps[step : step + len(preds[i])],
+            time_steps[: len(preds[i])],
             preds[i],
             linewidth=1,
             linestyle="--",
@@ -193,14 +190,7 @@ def plot_trajectory_prediction(
             axe.xaxis.set_ticks_position("none")
     legend_plot(
         axes,
-        [
-            "Truth_x",
-            "Truth_y",
-            "Truth_z",
-            "Prediction_x",
-            "Prediction_y",
-            "Prediction_z",
-        ],
+        trajectory.dim_names,
         ylabels=trajectory.point_names,
     )
     fig.set_size_inches(

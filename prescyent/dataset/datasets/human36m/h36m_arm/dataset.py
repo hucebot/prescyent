@@ -29,7 +29,7 @@ class Dataset(H36MDataset):
         """
         trajectory_list = super().pathfiles_to_trajectories(files, delimiter)
         if self.config.bimanual is True:
-            arm_joint_names = metadata.RIGHT_ARM_LABELS + metadata.LEFT_ARM_LABELS
+            arm_joint_names = metadata.LEFT_ARM_LABELS + metadata.RIGHT_ARM_LABELS
             arm_joint_ids = [
                 trajectory_list[0].point_names.index(name)
                 for name in arm_joint_names

@@ -25,8 +25,9 @@ from prescyent.utils.logger import logger, DATASET
 
 def clamp_vect_norm(vect, limit):
     norm = np.linalg.norm(vect, ord=2)
-    axis = vect/(norm + 1e-6)
-    return axis*min(norm, limit)
+    axis = vect / (norm + 1e-6)
+    return axis * min(norm, limit)
+
 
 class Dataset(MotionDataset):
     """Simple dataset with generated trajectories from a starting and ending pose"""
@@ -43,15 +44,24 @@ class Dataset(MotionDataset):
 
     def generate_trajectories(self):
         """create a list of Trajectories from config variables"""
-        train_trajectories = [self.generate_traj(i) for i in range(int(self.config.num_traj * self.config.ratio_train))]
+        train_trajectories = [
+            self.generate_traj(i)
+            for i in range(int(self.config.num_traj * self.config.ratio_train))
+        ]
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
-        test_trajectories = [self.generate_traj(i) for i in range(int(self.config.num_traj * self.config.ratio_test))]
+        test_trajectories = [
+            self.generate_traj(i)
+            for i in range(int(self.config.num_traj * self.config.ratio_test))
+        ]
         logger.getChild(DATASET).info(
             f"Generated {len(test_trajectories)} test trajectories",
         )
-        val_trajectories = [self.generate_traj(i) for i in range(int(self.config.num_traj * self.config.ratio_val))]
+        val_trajectories = [
+            self.generate_traj(i)
+            for i in range(int(self.config.num_traj * self.config.ratio_val))
+        ]
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
@@ -71,17 +81,20 @@ class Dataset(MotionDataset):
         target_pose = self.get_random_target()
         trajectory = torch.FloatTensor(starting_pose).unsqueeze(0)
         curr_pose = starting_pose
-        while not np.allclose(curr_pose, target_pose, rtol=.001):
+        while not np.allclose(curr_pose, target_pose, rtol=0.001):
             curr_pose = self.controller_goto(curr_pose, target_pose)
-            trajectory = torch.cat((trajectory, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0)
+            trajectory = torch.cat(
+                (trajectory, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
+            )
         trajectory = trajectory.unsqueeze(1)
-        trajectory = trajectory[::self.config.subsampling_step]
-        return Trajectory(trajectory,
-                          BASE_FREQUENCY/self.config.subsampling_step,
-                          FEATURES,
-                          file_path = f"synthetic_traj_{id}",
-                          title = f"synthetic_traj_{id}",
-                          )
+        trajectory = trajectory[:: self.config.subsampling_step]
+        return Trajectory(
+            trajectory,
+            BASE_FREQUENCY / self.config.subsampling_step,
+            FEATURES,
+            file_path=f"synthetic_traj_{id}",
+            title=f"synthetic_traj_{id}",
+        )
 
     def get_random_target(self) -> List[float]:
         x = random.uniform(self.config.min_x, self.config.max_x)
@@ -99,16 +112,17 @@ class Dataset(MotionDataset):
         target_mat = R.from_quat(target_quat).as_matrix()
         # Target pose in current commanded hand pose
         rel_mat = target_mat @ curr_mat.transpose()
-        rel_pos = (target_pos-curr_pos)
+        rel_pos = target_pos - curr_pos
         # Compute saturated P velocity control
-        vel_lin = clamp_vect_norm(
-            self.config.gain_lin*rel_pos,
-            self.config.clamp_lin)
+        vel_lin = clamp_vect_norm(self.config.gain_lin * rel_pos, self.config.clamp_lin)
         vel_ang = clamp_vect_norm(
-            self.config.gain_ang*R.from_matrix(rel_mat).as_rotvec(),
-            self.config.clamp_ang)
+            self.config.gain_ang * R.from_matrix(rel_mat).as_rotvec(),
+            self.config.clamp_ang,
+        )
         # Integrate velocity command into pose command
         curr_pos = curr_pos + self.config.dt * vel_lin
-        curr_mat = curr_mat@R.from_rotvec(self.config.dt*vel_ang).as_matrix()
+        curr_mat = curr_mat @ R.from_rotvec(self.config.dt * vel_ang).as_matrix()
         # Return updated pose command
-        return np.concatenate([curr_pos,  R.from_matrix(curr_mat).as_quat(canonical=True)])
+        return np.concatenate(
+            [curr_pos, R.from_matrix(curr_mat).as_quat(canonical=True)]
+        )
