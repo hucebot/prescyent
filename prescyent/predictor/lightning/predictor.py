@@ -328,8 +328,9 @@ class LightningPredictor(BasePredictor):
         """test the model"""
         if self.trainer is None:
             self._init_trainer(devices=1)
-        self.trainer.test(self.model, dataset.test_dataloader)
+        losses = self.trainer.test(self.model, dataset.test_dataloader)
         self._free_trainer()
+        return losses
 
     def save(
         self,
@@ -338,10 +339,10 @@ class LightningPredictor(BasePredictor):
         rm_log_path: bool = True,
     ):
         """save model to path"""
-        save_path = str(save_path)
         if save_path is None:
             save_path = self.log_path
         else:  # we cp the tensorflow logger content first
+            save_path = str(save_path)
             while True:
                 try:
                     shutil.copytree(
@@ -360,7 +361,7 @@ class LightningPredictor(BasePredictor):
             "Saving config at %s", (save_path / "config.json")
         )
         self._save_config(save_path / "config.json", dataset_config)
-        if rm_log_path:
+        if rm_log_path and self.log_path != str(save_path):
             shutil.rmtree(self.log_path, ignore_errors=True)
         # reload logger at new location
         self.log_root_path = save_path

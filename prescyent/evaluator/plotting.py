@@ -1,18 +1,23 @@
 """Util functions for plots"""
 
 from pathlib import Path
+from tqdm import tqdm
 from typing import Callable, List, Union
 
 import torch
 
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.cm import get_cmap
 
 from prescyent.dataset import Trajectory
+from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
 from prescyent.utils.logger import logger, EVAL
+
 
 matplotlib.use("agg")
 
@@ -309,3 +314,37 @@ def legend_plot(
             axe.set_ylabel(ylabels[0])
         bottom, top = axe.get_ylim()
         axe.set_ylim(top=round(top, 2) + 0.01, bottom=round(bottom, 2) - 0.01)
+
+
+def plot_mpjpe(predictor: Callable, dataset: MotionDataset, savefig_dir_path: str):
+    distances = list()
+    features = dataset.config.out_features
+    pbar = tqdm(dataset.test_dataloader)
+    pbar.set_description(f"Running {predictor} over test_dataloader:")
+    # Run all test once and get distance from truth per feature
+    for sample, truth in pbar:
+        feat2distances = dict()
+        pred = predictor.predict(sample, dataset.config.future_size)
+        for feat in features:
+            feat2distances[feat.name] = cal_distance_for_feat(
+                pred[..., feat.ids], truth[..., feat.ids], feat
+            ).detach()
+        distances.append(feat2distances)
+    # Plot mean MPJPE per feature
+    for feat in features:
+        batch_feat_distances = torch.cat(
+            [feat2distances[feat.name] for feat2distances in distances]
+        )
+        mpjpe = (
+            batch_feat_distances.transpose(0, 1)
+            .reshape(dataset.config.future_size, -1)
+            .mean(-1)
+        )
+        x_max = dataset.config.future_size / dataset.frequency
+        y_values = np.insert(mpjpe.numpy(), 0, 0)
+        x_values = np.linspace(0, x_max, len(y_values), endpoint=True)
+        plt.title(f"MPJE_{feat.name}")
+        plt.xlabel("time (s)")
+        plt.ylabel("Mean Per Joint Error")
+        plt.plot(x_values, y_values)
+        save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.jpg")

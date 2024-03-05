@@ -8,6 +8,7 @@ import socket
 
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
+from prescyent.evaluator.plotting import plot_mpjpe
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.evaluator.runners import eval_predictors
 
@@ -68,6 +69,7 @@ def train_from_config(
         dataset_config=dataset.config,
         do_plotting=False,
     )
+    plot_mpjpe(predictor, dataset, savefig_dir_path=predictor.log_path)
 
 
 if __name__ == "__main__":
