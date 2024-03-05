@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
-from prescyent.dataset.features import get_distance
 from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.utils.logger import logger, PREDICTOR
