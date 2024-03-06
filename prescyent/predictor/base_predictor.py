@@ -199,12 +199,12 @@ class BasePredictor:
     def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
         for feat in evaluation_summary.features:
             self.tb_logger.experiment.add_scalar(
-                f"Eval/{feat.name}average_prediction_error",
+                f"Eval/{feat.name}/average_prediction_error",
                 evaluation_summary.average_prediction_error[feat.name],
                 0,
             )
             self.tb_logger.experiment.add_scalar(
-                f"Eval/{feat.name}max_prediction_error",
+                f"Eval/{feat.name}/max_prediction_error",
                 evaluation_summary.max_prediction_error[feat.name],
                 0,
             )

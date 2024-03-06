@@ -9,6 +9,9 @@ from prescyent.dataset.features.feature import Feature
 class Coordinate(Feature):
     """parent class for coordinates, used for conversion"""
 
+    def __init__(self, ids: List | range, distance_unit="m") -> None:
+        super().__init__(ids, distance_unit)
+
     @property
     def name(self) -> str:
         return "Coordinate"
