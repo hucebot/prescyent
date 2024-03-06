@@ -316,7 +316,9 @@ def legend_plot(
         axe.set_ylim(top=round(top, 2) + 0.01, bottom=round(bottom, 2) - 0.01)
 
 
-def plot_mpjpe(predictor: Callable, dataset: MotionDataset, savefig_dir_path: str):
+def plot_mpjpe(
+    predictor: Callable, dataset: MotionDataset, savefig_dir_path: str, log_x=False
+):
     distances = list()
     features = dataset.config.out_features
     pbar = tqdm(dataset.test_dataloader)
@@ -351,5 +353,7 @@ def plot_mpjpe(predictor: Callable, dataset: MotionDataset, savefig_dir_path: st
         plt.ylabel(f"{feat.name.capitalize()} Mean Error ({distance_unit})")
         plt.grid(True)
         plt.plot(x_values, y_values)
+        if log_x:
+            plt.gca().set_xscale("log")
         plt.style.use("seaborn-v0_8-whitegrid")
         save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.pdf")

@@ -17,7 +17,7 @@ class Dataset(H36MDataset):
     def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
         if config is None:
             config = DatasetConfig()
-        super().__init__(config)
+        super().__init__(config, DatasetConfig)
 
     def pathfiles_to_trajectories(
         self,

@@ -81,6 +81,7 @@ def eval_predictors(
     predictors: List[Callable],
     trajectories: List[Trajectory],
     dataset_config: MotionDatasetConfig,
+    future_size=None,
     run_method: str = "step_every_timestamp",
     do_plotting: bool = True,
     saveplot_pattern: str = "%d_%s_prediction.png",
@@ -110,13 +111,8 @@ def eval_predictors(
     Returns:
         List[EvaluationSummary]: list of an evaluation summary for each predictor
     """
-    # TODO: reject impossible values for history_size and future_size
-    future_size = dataset_config.future_size
     if future_size is None:
-        future_size = trajectories[0].frequency
-    history_size = dataset_config.history_size
-    if history_size is None:
-        history_size = trajectories[0].frequency
+        future_size = dataset_config.future_size
     evaluation_results = [EvaluationSummary() for _ in predictors]
     logger.getChild(EVAL).info(
         f"Running evaluation for {len(predictors)} predictors"
@@ -135,7 +131,7 @@ def eval_predictors(
             history = history[:, dataset_config.in_points]
             history = history[:, :, dataset_config.in_dims]
             prediction = run_predictor(
-                predictor, history, history_size, future_size, run_method
+                predictor, history, dataset_config.history_size, future_size, run_method
             )
             elapsed = timeit.default_timer() - start
             truth = convert_tensor_features_to(
@@ -143,7 +139,7 @@ def eval_predictors(
                 trajectory.tensor_features,
                 dataset_config.out_features,
             )
-            truth = truth[history_size:]
+            truth = truth[dataset_config.history_size :]
             truth = truth[:, dataset_config.out_points]
             truth = truth[:, :, dataset_config.out_dims]
             # we generate new evaluation results with the task metrics
@@ -166,7 +162,7 @@ def eval_predictors(
                     trajectory,
                     truth,
                     prediction,
-                    step=history_size,
+                    step=dataset_config.history_size,
                     savefig_path=savefig_path,
                 )
             predictions.append(prediction)
