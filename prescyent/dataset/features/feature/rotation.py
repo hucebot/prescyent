@@ -10,6 +10,9 @@ from prescyent.dataset.features.feature import Feature
 class Rotation(Feature):
     """base class used for conversion"""
 
+    def __init__(self, ids: List | range, distance_unit="rad") -> None:
+        super().__init__(ids, distance_unit)
+
     @property
     def name(self) -> str:
         return "Rotation"

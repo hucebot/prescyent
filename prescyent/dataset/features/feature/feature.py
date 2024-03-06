@@ -10,8 +10,9 @@ class Feature(dict):
     We inherit from dict for serialization"""
 
     ids: List[int]
+    distance_unit: str
 
-    def __init__(self, ids: Union[List, range]) -> None:
+    def __init__(self, ids: Union[List, range], distance_unit=None) -> None:
         if isinstance(ids, range):
             ids = list(ids)
         if len(ids) > len(set(ids)):
@@ -22,6 +23,7 @@ class Feature(dict):
                 "lenght of provided ids mismatch expect size "
                 f"{self.num_dims} for feature {self.__class__.__name__}"
             )
+        self.distance_unit = distance_unit
         dict.__init__(self, ids=ids, name=self.__class__.__name__)
 
     def __eq__(self, __value: object) -> bool:

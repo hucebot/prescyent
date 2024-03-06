@@ -9,7 +9,7 @@ from prescyent.dataset.config import MotionDatasetConfig
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for SSTDataset configuration"""
 
-    subsampling_step: int = 1  # subsampling -> 10 Hz to 10Hz
+    subsampling_step: int = 1  # subsampling -> 50 Hz to 50Hz
     num_traj: int = 1000
     ratio_train: float = 0.8
     ratio_test: float = 0.1
@@ -23,7 +23,7 @@ class DatasetConfig(MotionDatasetConfig):
     max_z: float = 1.0
     starting_pose: List[float] = [0, 0, 0, 0, 0, 0, 1]  # CoordinateXYZ + RotationQuat
     # Controller parameters
-    dt: float = 0.1
+    dt: float = 0.02
     gain_lin: float = 1.0
     gain_ang: float = 1.0
     clamp_lin: float = 0.2

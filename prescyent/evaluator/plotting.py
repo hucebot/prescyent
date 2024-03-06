@@ -343,8 +343,13 @@ def plot_mpjpe(predictor: Callable, dataset: MotionDataset, savefig_dir_path: st
         x_max = dataset.config.future_size / dataset.frequency
         y_values = np.insert(mpjpe.numpy(), 0, 0)
         x_values = np.linspace(0, x_max, len(y_values), endpoint=True)
-        plt.title(f"MPJE_{feat.name}")
-        plt.xlabel("time (s)")
-        plt.ylabel("Mean Per Joint Error")
+        distance_unit = feat.distance_unit
+        if distance_unit == "rad":
+            y_values = y_values * 57.2957795
+            distance_unit = "degrees"
+        plt.xlabel("Time (s)")
+        plt.ylabel(f"{feat.name.capitalize()} Mean Error ({distance_unit})")
+        plt.grid(True)
         plt.plot(x_values, y_values)
-        save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.jpg")
+        plt.style.use("seaborn-v0_8-whitegrid")
+        save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.pdf")

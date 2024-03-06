@@ -8,6 +8,7 @@ from typing import Union, Dict, List
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as R
+from tqdm import tqdm
 
 from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.dataset_manipulation import (
@@ -46,21 +47,21 @@ class Dataset(MotionDataset):
         """create a list of Trajectories from config variables"""
         train_trajectories = [
             self.generate_traj(i)
-            for i in range(int(self.config.num_traj * self.config.ratio_train))
+            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_train)))
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
         test_trajectories = [
             self.generate_traj(i)
-            for i in range(int(self.config.num_traj * self.config.ratio_test))
+            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_test)))
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(test_trajectories)} test trajectories",
         )
         val_trajectories = [
             self.generate_traj(i)
-            for i in range(int(self.config.num_traj * self.config.ratio_val))
+            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_val)))
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
@@ -90,7 +91,7 @@ class Dataset(MotionDataset):
         trajectory = trajectory[:: self.config.subsampling_step]
         return Trajectory(
             trajectory,
-            BASE_FREQUENCY / self.config.subsampling_step,
+            int(1 / self.config.dt / self.config.subsampling_step),
             FEATURES,
             file_path=f"synthetic_traj_{id}",
             title=f"synthetic_traj_{id}",
