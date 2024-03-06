@@ -70,6 +70,9 @@ def train_from_config(
         do_plotting=False,
     )
     plot_mpjpe(predictor, dataset, savefig_dir_path=predictor.log_path)
+    plot_mpjpe(
+        predictor, dataset, savefig_dir_path=f"{predictor.log_path}logx", log_x=True
+    )
 
 
 if __name__ == "__main__":

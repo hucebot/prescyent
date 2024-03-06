@@ -24,8 +24,10 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "H36M"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
-        self._init_from_config(config, DatasetConfig)
+    def __init__(
+        self, config: Union[Dict, DatasetConfig] = None, config_class=DatasetConfig
+    ) -> None:
+        self._init_from_config(config, config_class)
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
