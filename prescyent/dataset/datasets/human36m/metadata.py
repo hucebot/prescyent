@@ -69,11 +69,6 @@ POINT_PARENTS = [
     27,
     30,
 ]
-FILE_LABELS = []
-for point in POINT_LABELS:
-    FILE_LABELS.append(point + "_x")
-    FILE_LABELS.append(point + "_y")
-    FILE_LABELS.append(point + "_z")
 
 
 def _get_metadata():

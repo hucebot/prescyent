@@ -19,6 +19,10 @@ from prescyent.dataset.datasets.synthetic_simple_trajs import (
     SSTDataset,
     SSTDatasetConfig,
 )
+from prescyent.dataset.datasets.andydataset import (
+    AndyDataset,
+    AndyDatasetConfig,
+)
 from prescyent.dataset.trajectories import Trajectories, Trajectory
 from prescyent.dataset.config import MotionDatasetConfig as DatasetConfig
 from prescyent.dataset.datasets.custom_dataset import CustomDataset
