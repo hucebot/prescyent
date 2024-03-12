@@ -8,6 +8,7 @@ import requests
 from torch.utils.data import Dataset, DataLoader
 
 import prescyent.dataset.features as tensor_features
+from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.dataset.trajectories.trajectories import Trajectories
@@ -49,12 +50,20 @@ class MotionDataset(Dataset):
             and self.config.in_features != self.trajectories.train[0].tensor_features
             and self.config.out_features != self.trajectories.train[0].tensor_features
         ):
-            for traj in self.trajectories.train:
-                traj.convert_tensor_features(self.config.in_features)
-            for traj in self.trajectories.test:
-                traj.convert_tensor_features(self.config.in_features)
-            for traj in self.trajectories.val:
-                traj.convert_tensor_features(self.config.in_features)
+            if features_are_convertible_to(self.config.in_features, self.config.out_features):
+                for traj in self.trajectories.train:
+                    traj.convert_tensor_features(self.config.in_features)
+                for traj in self.trajectories.test:
+                    traj.convert_tensor_features(self.config.in_features)
+                for traj in self.trajectories.val:
+                    traj.convert_tensor_features(self.config.in_features)
+            elif features_are_convertible_to(self.config.out_features, self.config.in_features):
+                for traj in self.trajectories.train:
+                    traj.convert_tensor_features(self.config.out_features)
+                for traj in self.trajectories.test:
+                    traj.convert_tensor_features(self.config.out_features)
+                for traj in self.trajectories.val:
+                    traj.convert_tensor_features(self.config.out_features)
         self.name = name
         self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(

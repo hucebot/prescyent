@@ -123,7 +123,7 @@ class BasePredictor:
             # eval step
             feat2distances = dict()
             pred = self.predict(sample, dataset.config.future_size)
-            feat2distances["loss"] = torch.nn.functional.l1_loss(pred, truth)
+            feat2distances["mse_loss"] = torch.nn.functional.mse_loss(pred, truth)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
                     pred[..., feat.ids], truth[..., feat.ids], feat
@@ -131,8 +131,8 @@ class BasePredictor:
             distances.append(feat2distances)
         # eval epoch
         losses = dict()
-        mean_loss = torch.stack([x["loss"] for x in distances]).mean().detach()
-        losses["Test/loss_epoch"] = mean_loss
+        mean_loss = torch.stack([x["mse_loss"] for x in distances]).mean().detach()
+        losses["Test/mse_loss_epoch"] = mean_loss
         for feat in features:
             batch_feat_distances = torch.cat(
                 [feat2distances[feat.name] for feat2distances in distances]
