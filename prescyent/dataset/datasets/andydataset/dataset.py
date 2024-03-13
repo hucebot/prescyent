@@ -37,8 +37,15 @@ class Dataset(MotionDataset):
                 "Dataset files not found at path %s",
                 self.config.data_path,
             )
+            self._get_from_web()
         self.trajectories = self._load_files()
         super().__init__(self.DATASET_NAME)
+
+    def _get_from_web(self) -> None:
+        raise NotImplementedError(
+            "This dataset must be downloaded manually, "
+            "please follow the instructions in the README"
+        )
 
     # load a set of trajectory, keeping them separate
     def _load_files(self) -> Trajectories:
