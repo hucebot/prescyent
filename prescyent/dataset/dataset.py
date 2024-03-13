@@ -50,14 +50,18 @@ class MotionDataset(Dataset):
             and self.config.in_features != self.trajectories.train[0].tensor_features
             and self.config.out_features != self.trajectories.train[0].tensor_features
         ):
-            if features_are_convertible_to(self.config.in_features, self.config.out_features):
+            if features_are_convertible_to(
+                self.config.in_features, self.config.out_features
+            ):
                 for traj in self.trajectories.train:
                     traj.convert_tensor_features(self.config.in_features)
                 for traj in self.trajectories.test:
                     traj.convert_tensor_features(self.config.in_features)
                 for traj in self.trajectories.val:
                     traj.convert_tensor_features(self.config.in_features)
-            elif features_are_convertible_to(self.config.out_features, self.config.in_features):
+            elif features_are_convertible_to(
+                self.config.out_features, self.config.in_features
+            ):
                 for traj in self.trajectories.train:
                     traj.convert_tensor_features(self.config.out_features)
                 for traj in self.trajectories.test:

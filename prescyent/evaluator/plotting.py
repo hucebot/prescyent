@@ -342,9 +342,9 @@ def plot_mpjpe(
             .reshape(dataset.config.future_size, -1)
             .mean(-1)
         )
+        y_values = mpjpe.numpy()
         x_max = dataset.config.future_size / dataset.frequency
-        y_values = np.insert(mpjpe.numpy(), 0, 0)
-        x_values = np.linspace(0, x_max, len(y_values), endpoint=True)
+        x_values = np.flip(np.linspace(x_max, 0, len(y_values), endpoint=False))
         distance_unit = feat.distance_unit
         if distance_unit == "rad":
             y_values = y_values * 57.2957795
