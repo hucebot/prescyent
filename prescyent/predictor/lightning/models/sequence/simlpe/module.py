@@ -41,7 +41,7 @@ class TorchModule(BaseTorchModule):
             )
         self.motion_mlp = TransMLP(self.config)
         if self.spatial_fc_only:
-            if self.out_sequence_size > self.in_sequence_size:
+            if self.out_sequence_size != self.in_sequence_size:
                 raise NotImplementedError(
                     "This model cannot output a sequence bigger than its"
                     " input without the spatial_fc_only configuration"
@@ -50,7 +50,7 @@ class TorchModule(BaseTorchModule):
                 self.config.hidden_size, self.config.out_points_dims
             )
         else:
-            if self.config.out_points_dims > self.config.in_points_dims:
+            if self.config.out_points_dims != self.config.in_points_dims:
                 raise NotImplementedError(
                     "This model cannot output feature dimensions bigger than its"
                     " input feature size with the spatial_fc_only configuration"
@@ -97,7 +97,9 @@ class TorchModule(BaseTorchModule):
             motion_feats = torch.matmul(
                 self.idct_m[:, : self.in_sequence_size, :], motion_feats
             )
-            offset = input_tensor[:, -1:].to(motion_feats.device)
+            offset = input_tensor[:, -1:, self.config.dataset_config.out_points].to(
+                motion_feats.device
+            )
             offset = convert_tensor_features_to(
                 offset, self.in_features, self.out_features
             )
