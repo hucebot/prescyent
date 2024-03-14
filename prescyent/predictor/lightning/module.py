@@ -143,10 +143,12 @@ class LightningModule(pl.LightningModule):
         sample, truth = batch
         pred = self.torch_model(sample)
         if torch.any(torch.isnan(pred)):
-            print("NAN")
+            logger.getChild(PREDICTOR).warning("NAN in pred")
+            raise ValueError("Please check your loss function")
         loss = self.criterion(pred, truth)
         if torch.any(torch.isnan(loss)):
-            print("NAN")
+            logger.getChild(PREDICTOR).warning("NAN in loss")
+            raise ValueError("Please check your loss function")
         self.log(f"{prefix}/loss", loss.detach(), prog_bar=True)
         if loss_only:
             return {"loss": loss}
