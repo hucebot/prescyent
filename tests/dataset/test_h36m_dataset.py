@@ -63,6 +63,6 @@ class InitH36MDatasetTest(CustomTestCase):
             self.assertGreater(len(dataset), 0)
             _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
-            self.assertEqual(1, dataset.config.future_size)
+            self.assertEqual(25, dataset.config.future_size)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)

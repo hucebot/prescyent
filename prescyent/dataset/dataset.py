@@ -81,8 +81,6 @@ class MotionDataset(Dataset):
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
         )
-        if self.config.learning_type == LearningTypes.SEQ2ONE:
-            self.config.future_size = 1
 
     def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]
