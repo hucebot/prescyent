@@ -2,9 +2,12 @@
 from typing import Optional
 from pydantic import BaseModel, model_validator
 
-from prescyent.utils.enums import Normalizations
-from prescyent.utils.enums import LossFunctions
-from prescyent.utils.enums import Profilers
+from prescyent.utils.enums import (
+    Normalizations,
+    LearningTypes,
+    LossFunctions,
+    Profilers,
+)
 from prescyent.dataset.config import MotionDatasetConfig
 
 
@@ -27,6 +30,9 @@ class ModuleConfig(BaseModel):
 
     @property
     def out_sequence_size(self):
+        if self.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+            # If we predict one value instead of a sequence
+            return 1
         return self.dataset_config.future_size
 
     @property

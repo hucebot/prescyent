@@ -4,8 +4,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, model_validator
 
-from prescyent.utils.enums import LearningTypes
 import prescyent.dataset.features as tensor_features
+from prescyent.utils.enums import LearningTypes
 
 
 root_dir = Path(__file__).parent.parent.parent
