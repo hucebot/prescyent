@@ -1,5 +1,5 @@
 """Feature used to represent coordinates from 1D to 3D"""
-from typing import List
+from typing import List, Union
 
 import torch
 
@@ -9,7 +9,7 @@ from prescyent.dataset.features.feature import Feature
 class Coordinate(Feature):
     """parent class for coordinates, used for conversion"""
 
-    def __init__(self, ids: List | range, distance_unit="m") -> None:
+    def __init__(self, ids: Union[List, range], distance_unit="m") -> None:
         super().__init__(ids, distance_unit)
 
     @property
