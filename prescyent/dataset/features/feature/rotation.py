@@ -1,6 +1,6 @@
 """Feature for rotations"""
 
-from typing import List
+from typing import List, Union
 
 import torch
 
@@ -10,7 +10,7 @@ from prescyent.dataset.features.feature import Feature
 class Rotation(Feature):
     """base class used for conversion"""
 
-    def __init__(self, ids: List | range, distance_unit="rad") -> None:
+    def __init__(self, ids: Union[List, range], distance_unit="rad") -> None:
         super().__init__(ids, distance_unit)
 
     @property

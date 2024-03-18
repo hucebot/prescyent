@@ -12,7 +12,7 @@ CORE_REQUIREMENTS = [
     "pytorch_lightning>=2.0, <2.1",
     "tensorboard>=2.0,<2.14",
     "torch>=2.0,<2.1",
-    "scipy>=1.11,<1.12",
+    "scipy>=1.9,<1.12",
 ]
 
 
@@ -29,9 +29,6 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
