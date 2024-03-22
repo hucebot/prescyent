@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from tqdm import tqdm
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 import torch
 
@@ -13,6 +13,9 @@ from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.cm import get_cmap
 
+
+from prescyent.dataset.features.rotation_methods import convert_to_euler
+from prescyent.dataset.features.feature import Rotation
 from prescyent.dataset import Trajectory
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
@@ -206,6 +209,49 @@ def plot_trajectory_prediction(
     fig.tight_layout()
     save_plot_and_close(savefig_path)
 
+def plot_trajs(
+    trajectories: List[Trajectory], offsets: List[int], savefig_path: str, titles: Optional[List[str]] = None
+):
+    feats = trajectories[0].tensor_features
+    num_points = trajectories[0].tensor.shape[1]
+    num_dims = sum([len(feat.ids) if not isinstance(feat, Rotation) else 3 for feat in feats])
+    assert all([traj.tensor_features == feats for traj in trajectories]) # Plotted trajs must have same feats
+    assert all([traj.tensor.shape[1] == num_points for traj in trajectories]) # Plotted trajs must have number of points
+    pred_last_idx = max(*[len(traj) for traj in trajectories]) + max(*offsets)
+    time_steps = np.linspace(0, (pred_last_idx + 1)/trajectories[0].frequency, pred_last_idx, endpoint=False)
+    fig, axes = plt.subplots(
+        num_dims * num_points, sharex=True
+    )  # we do one subplot per dim and per point
+    if num_dims * num_points == 1:
+        axes = [axes]
+    axe_id = 0
+    ylabels = []
+    for point in range(num_points):
+        for feat in feats:
+            for offset, traj in zip(offsets, trajectories):
+                if isinstance(feat, Rotation):
+                    feat_tensor = convert_to_euler(traj.tensor[:,point,feat.ids])
+                    dims_names = ["roll", "pitch", "yaw"]
+                else:
+                    feat_tensor = traj.tensor[:,point,feat.ids]
+                    dims_names = feat.dims_names
+                # (seq_len, num_dims) => (num_dims, seq_len)
+                feat_tensor = torch.transpose(feat_tensor, 0, 1)
+                for dim_id, dim_tensor in enumerate(feat_tensor):
+                    #change axe for each dim
+                    axes[axe_id+dim_id].plot(time_steps[offset:len(dim_tensor) + offset], dim_tensor, linewidth=2)
+            ylabels += [f"{traj.point_names[point]}_{dim_name}" for dim_name in dims_names]
+            axe_id += len(feat_tensor) # add dim size to used axes
+    w = min(pred_last_idx * 0.01 + 5, 2**16 / 100 - 1)   # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    h = min(len(axes) * 3 + 5, 2**16 / 100 - 1)   # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    fig.set_size_inches(
+        w, h
+    )
+    fig.suptitle(f"Trajectory and predictions on {trajectories[0].title}")
+    # fig.subplots_adjust(right=0.7)
+    # fig.tight_layout(pad=5)
+    legend_plot(axes, names=titles, xlabel='time (s)', ylabels=ylabels)
+    save_plot_and_close(savefig_path)
 
 def plot_multiple_predictors(
     trajectory: Trajectory,
@@ -278,7 +324,7 @@ def plot_multiple_future(
     save_plot_and_close(savefig_path)
 
 
-def save_plot_and_close(savefig_path, dpi=300):
+def save_plot_and_close(savefig_path, dpi=100):
     """savefig helper"""
     if savefig_path is not None:
         if not Path(savefig_path).parent.exists():
@@ -302,7 +348,9 @@ def legend_plot(
         xlabel (str, optional): label for x. x axis are shared in our plots. Defaults to "time".
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
-    legend = axes[-1].legend(names, bbox_to_anchor=(1.45, 1.1), loc="lower right")
+    legend = axes[-1].legend(
+        labels=names, loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5)
+    )
     axes[-1].set_xlabel(xlabel)
     frame = legend.get_frame()
     frame.set_facecolor("0.9")
@@ -355,5 +403,60 @@ def plot_mpjpe(
         plt.plot(x_values, y_values)
         if log_x:
             plt.gca().set_xscale("log")
-        plt.style.use("seaborn-v0_8-whitegrid")
         save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.pdf")
+
+
+def plot_mpjpes(
+    predictors: List[Callable],
+    dataset: MotionDataset,
+    savefig_dir_path: str,
+    log_x=False,
+):
+    predictors_distances = list()
+    features = dataset.config.out_features
+    for predictor in predictors:
+        distances = list()
+        pbar = tqdm(dataset.test_dataloader)
+        pbar.set_description(f"Running {predictor} over test_dataloader:")
+        # Run all test once and get distance from truth per feature
+        for sample, truth in pbar:
+            feat2distances = dict()
+            pred = predictor.predict(sample, dataset.config.future_size)
+            for feat in features:
+                feat2distances[feat.name] = cal_distance_for_feat(
+                    pred[..., feat.ids], truth[..., feat.ids], feat
+                ).detach()
+            distances.append(feat2distances)
+        predictors_distances.append(distances)
+    # Plot mean MPJPE per feature
+    for feat in features:
+        x_max = dataset.config.future_size / dataset.frequency
+        x_values = np.flip(
+            np.linspace(x_max, 0, dataset.config.future_size, endpoint=False)
+        )
+        for distances in predictors_distances:
+            batch_feat_distances = torch.cat(
+                [feat2distances[feat.name] for feat2distances in distances]
+            )
+            mpjpe = (
+                batch_feat_distances.transpose(0, 1)
+                .reshape(dataset.config.future_size, -1)
+                .mean(-1)
+            )
+            y_values = mpjpe.numpy()
+            distance_unit = feat.distance_unit
+            if distance_unit == "rad":
+                y_values = y_values * 57.2957795
+                distance_unit = "degrees"
+            plt.plot(x_values, y_values)
+
+        plt.xlabel("Time (s)")
+        plt.ylabel(f"{feat.name.capitalize()} Mean Error ({distance_unit})")
+        plt.grid(True)
+        legend = plt.legend([p.name for p in predictors], loc=4)
+        frame = legend.get_frame()
+        frame.set_facecolor("0.9")
+        frame.set_edgecolor("0.9")
+        if log_x:
+            plt.gca().set_xscale("log")
+        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
