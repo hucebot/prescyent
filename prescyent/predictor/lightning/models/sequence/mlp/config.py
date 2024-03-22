@@ -1,4 +1,5 @@
 """Config elements for MLP Pytorch Lightning module usage"""
+from typing import Optional
 from pydantic import field_validator
 
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
@@ -10,7 +11,7 @@ class Config(ModuleConfig):
 
     hidden_size: int = 64
     num_layers: int = 2
-    activation: ActivationFunctions = ActivationFunctions.RELU
+    activation: Optional[ActivationFunctions] = ActivationFunctions.RELU
 
     @field_validator("num_layers")
     @classmethod
