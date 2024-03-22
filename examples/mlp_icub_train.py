@@ -68,7 +68,7 @@ if __name__ == "__main__":
     dataset.save_config(model_dir + "/dataset.config")
 
     # Test so that we know how good we are
-    predictor.test(dataset)
+    predictor.test(dataset.test_dataloader)
     # Compare with delayed baseline
     delayed = DelayedPredictor(f"{xp_dir}")
-    delayed.test(dataset)
+    delayed.test(dataset.test_dataloader)

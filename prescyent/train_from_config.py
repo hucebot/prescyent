@@ -62,7 +62,7 @@ def train_from_config(
         os.remove(str(config_path))
 
     print("Testing predictor...")
-    predictor.test(dataset)
+    predictor.test(dataset.test_dataloader)
     eval_predictors(
         predictors=[predictor],
         trajectories=dataset.trajectories.test,

@@ -9,9 +9,14 @@ from pydantic import BaseModel
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
-from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
+from prescyent.dataset.features.feature_manipulation import (
+    cal_distance_for_feat,
+    convert_tensor_features_to,
+)
+from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 
 class BasePredictor:
@@ -20,6 +25,7 @@ class BasePredictor:
     This class initialize a tensorboard logger and, a test loop and a default run loop
     """
 
+    dataset_config: MotionDatasetConfig
     log_root_path: str
     name: str
     version: int
@@ -27,11 +33,13 @@ class BasePredictor:
 
     def __init__(
         self,
+        dataset_config: MotionDatasetConfig,
         log_root_path: str,
         name: str = None,
         version: Union[str, int, None] = None,
         no_sub_dir_log: bool = False,
     ) -> None:
+        self.dataset_config = dataset_config
         self.log_root_path = log_root_path
         if name is None:
             name = self.__class__.__name__
@@ -112,17 +120,17 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
-    def test(self, dataset) -> Dict[str, torch.Tensor]:
+    def test(self, test_dataloader: Iterable) -> Dict[str, torch.Tensor]:
         """test predictor"""
         # log in tensorboard
         distances = list()
-        features = dataset.config.out_features
-        pbar = tqdm(dataset.test_dataloader)
+        features = self.dataset_config.out_features
+        pbar = tqdm(test_dataloader)
         pbar.set_description(f"Testing {self}:")
         for sample, truth in pbar:
             # eval step
             feat2distances = dict()
-            pred = self.predict(sample, dataset.config.future_size)
+            pred = self.predict(sample, self.dataset_config.future_size)
             feat2distances["mse_loss"] = torch.nn.functional.mse_loss(pred, truth)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
@@ -141,7 +149,7 @@ class BasePredictor:
             fde = batch_feat_distances[:, -1].mean()
             mpjpe = (
                 batch_feat_distances.transpose(0, 1)
-                .reshape(dataset.config.future_size, -1)
+                .reshape(self.dataset_config.future_size, -1)
                 .mean(-1)
             )
             losses[f"Test/{feat.name}/ADE"] = ade
@@ -157,42 +165,54 @@ class BasePredictor:
 
     def run(
         self,
-        input_batch: Iterable,
+        input_tensor: torch.Tensor,
         future_size: int = None,
         history_size: int = None,
         history_step: int = 1,
+        input_tensor_features=None,
     ) -> List[torch.Tensor]:
-        """run method/model inference over the input batch
-        The run method outputs a List of prediction because it can iterate over the input_batch
+        """run method/model inference over an unbatched input sequence
+        The run method outputs a List of prediction because it can iterate over the input_tensor
         according to the history_size and history step values.
 
         Args:
-            input_batch (Iterable): Input for the predictor's model. We expect the first
-                dimension of the array to be the temporal axis: len(input_batch) == sequence_len
-            future_size (int|None, optional): If an future size is provided, the input batch will
-                be splitted sequences of len == future_size. Defaults to None.
+            input_tensor (torch.Tensor): Input for the predictor's model. Can be batched or unbatched
+            future_size (int, optional): Defines the output sequence size of the model.
+                Defaults to predictor's value from config if None.
             history_size (int, optional): If an history_size is provided, the input batch will
-                be splitted sequences of len == history_size. Defaults to None means no split.
-            history_step (int, optional): When splitting the input_batch (history_size != None)
+                be splitted sequences of len == history_size. Defaults to predictor's value from config if None.
+            history_step (int, optional): When splitting the input_tensor (history_size != None)
                 defines the step of the iteration. Defaults to 1.
         Returns:
             List[torch.Tensor]: the list of model predictions
         """
         prediction_list = []
-        input_len = len(input_batch)
-        # if we don't split the input, the history_size is the size of input
-        if history_size is None:
-            history_size = input_len
-        # default future_size would be the size of input in the general case
-        if future_size is None:
-            future_size = input_len
 
+        unbatch = False
+        if not is_tensor_is_batched(input_tensor):
+            unbatch = True
+            input_tensor = torch.unsqueeze(input_tensor, 0)
+        # Keep only model input points
+        input_tensor = input_tensor[:, :, self.dataset_config.in_points]
+        # If we know tensor feats, we make them fit expected inputs.
+        if input_tensor_features is not None:
+            input_tensor = convert_tensor_features_to(
+                input_tensor, input_tensor_features, self.dataset_config.in_features
+            )
+        # Else we assume feats are in the right format
+        input_len = input_tensor.shape[1]
+        if future_size is None:
+            future_size = self.dataset_config.future_size
+        if history_size is None:
+            history_size = self.dataset_config.history_size
         for i in tqdm(
             range(0, input_len - history_size + 1, history_step),
-            desc="Iterate over input_batch",
+            desc="Iterate over input_tensor",
         ):
-            input_sub_batch = input_batch[i : i + history_size]
+            input_sub_batch = input_tensor[:, i : i + history_size]
             prediction = self.predict(input_sub_batch, future_size)
+            if unbatch:
+                prediction = prediction.squeeze(0)
             prediction_list.append(prediction)
         return prediction_list
 

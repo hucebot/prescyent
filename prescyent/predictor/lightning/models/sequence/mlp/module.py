@@ -30,10 +30,10 @@ class TorchModule(BaseTorchModule):
         elif config.activation == ActivationFunctions.SIGMOID:
             act_fun = nn.Sigmoid
         else:
-            logger.getChild(PREDICTOR).error(
+            logger.getChild(PREDICTOR).warning(
                 "No activation function for: %s" % config.activation,
             )
-            act_fun = None
+            act_fun = nn.Identity
 
         # create the layers
         if config.num_layers == 1:
