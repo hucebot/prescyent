@@ -159,17 +159,24 @@ class Trajectory:
                 return ScipyRotation.from_quat(tensor[feat.ids].numpy())
         return None
 
-    def compare_with(self, trajectories: List[object], offsets: Optional[List[int]]=None) -> List[Dict[str, float]]:
+    def compare_with(
+        self, trajectories: List[object], offsets: Optional[List[int]] = None
+    ) -> List[Dict[str, float]]:
         if offsets is None:
             offsets = [0 for _ in trajectories]
         metrics = []
         num_points = self.tensor.shape[1]
-        assert all([traj.tensor.shape[1] == num_points for traj in trajectories]) # Plotted trajs must have number of points
+        assert all(
+            [traj.tensor.shape[1] == num_points for traj in trajectories]
+        )  # Plotted trajs must have number of points
         for traj, offset in zip(trajectories, offsets):
             truth_tensor = self.tensor[offset:]
             mean_dists = get_distance(
-                truth_tensor, self.tensor_features,
-                traj.tensor[:len(truth_tensor)], traj.tensor_features,
-                get_mean=True)
+                truth_tensor,
+                self.tensor_features,
+                traj.tensor[: len(truth_tensor)],
+                traj.tensor_features,
+                get_mean=True,
+            )
             metrics.append(mean_dists)
         return metrics

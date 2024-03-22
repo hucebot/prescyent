@@ -16,6 +16,7 @@ from prescyent.utils.dataset_manipulation import (
 )
 import prescyent.dataset.datasets.andydataset.metadata as metadata
 from prescyent.dataset.datasets.andydataset.config import DatasetConfig
+from prescyent.dataset.features import Coordinate
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.dataset import MotionDataset
@@ -143,6 +144,16 @@ class Dataset(MotionDataset):
             torch_tensor = torch_tensor[
                 ::subsampling_step
             ]  # downsample trajectory's frequency
+            if self.config.make_joints_position_relative_to is not None:
+                for feat in metadata.FEATURES:
+                    if isinstance(feat, Coordinate):
+                        torch_tensor[:, :, feat.ids] -= torch.index_select(
+                            torch_tensor,
+                            1,
+                            torch.IntTensor(
+                                [self.config.make_joints_position_relative_to]
+                            ),
+                        )[:, :, feat.ids]
             torch_tensor = torch_tensor[
                 :, used_joints
             ]  # Keep only joints_ids from config
@@ -153,7 +164,7 @@ class Dataset(MotionDataset):
                 frequency=int(metadata.BASE_FREQUENCY / subsampling_step),
                 tensor_features=metadata.FEATURES,
                 file_path=file_path,
-                title=Path(file_path).name.split()[0],
+                title=Path(file_path).name.split(".")[0],
                 point_parents=point_parents,
                 point_names=point_names,
             )

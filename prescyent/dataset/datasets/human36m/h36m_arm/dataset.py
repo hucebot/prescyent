@@ -1,11 +1,13 @@
 """Subset of h36m with arms only"""
 from typing import List, Union, Dict
 
+import torch
+
 import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
+from prescyent.dataset.features import Coordinate
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.dataset.features.feature_relative import get_relative_tensor_from
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 
@@ -92,12 +94,14 @@ def subsample_trajectories(
             if relative_joint_label in trajectory.point_names
             else None
         )
-        if relative_joint_id is not None:
-            new_trajectory.tensor = get_relative_tensor_from(
-                new_trajectory.tensor,
-                trajectory.tensor[:, relative_joint_id].unsqueeze(1),
-                trajectory.tensor_features,
-            )
+        if (
+            relative_joint_id is not None
+        ):  # Make Coordinates relative to the joint, not rotation
+            for feat in trajectory.tensor_features:
+                if isinstance(feat, Coordinate):
+                    new_trajectory.tensor[:, :, feat.ids] -= torch.index_select(
+                        new_trajectory.tensor, 1, torch.IntTensor([relative_joint_id])
+                    )[:, :, feat.ids]
         new_trajectory_list.append(new_trajectory)
     return new_trajectory_list
 
