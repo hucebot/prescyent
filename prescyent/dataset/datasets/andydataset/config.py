@@ -17,6 +17,9 @@ class DatasetConfig(MotionDatasetConfig):
     use_pt: bool = True
     subsampling_step: int = 24  # subsampling -> 240 Hz to 10Hz
     used_joints: Optional[List[int]] = None  # None == all
+    make_joints_position_relative_to: Optional[
+        int
+    ] = None  # None == Relative to world, else relative to joint with id == int
     ratio_train: float = 0.8
     ratio_test: float = 0.15
     ratio_val: float = 0.05

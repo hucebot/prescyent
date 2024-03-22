@@ -209,16 +209,31 @@ def plot_trajectory_prediction(
     fig.tight_layout()
     save_plot_and_close(savefig_path)
 
+
 def plot_trajs(
-    trajectories: List[Trajectory], offsets: List[int], savefig_path: str, titles: Optional[List[str]] = None
+    trajectories: List[Trajectory],
+    offsets: List[int],
+    savefig_path: str,
+    titles: Optional[List[str]] = None,
 ):
     feats = trajectories[0].tensor_features
     num_points = trajectories[0].tensor.shape[1]
-    num_dims = sum([len(feat.ids) if not isinstance(feat, Rotation) else 3 for feat in feats])
-    assert all([traj.tensor_features == feats for traj in trajectories]) # Plotted trajs must have same feats
-    assert all([traj.tensor.shape[1] == num_points for traj in trajectories]) # Plotted trajs must have number of points
+    num_dims = sum(
+        [len(feat.ids) if not isinstance(feat, Rotation) else 3 for feat in feats]
+    )
+    assert all(
+        [traj.tensor_features == feats for traj in trajectories]
+    )  # Plotted trajs must have same feats
+    assert all(
+        [traj.tensor.shape[1] == num_points for traj in trajectories]
+    )  # Plotted trajs must have number of points
     pred_last_idx = max(*[len(traj) for traj in trajectories]) + max(*offsets)
-    time_steps = np.linspace(0, (pred_last_idx + 1)/trajectories[0].frequency, pred_last_idx, endpoint=False)
+    time_steps = np.linspace(
+        0,
+        (pred_last_idx + 1) / trajectories[0].frequency,
+        pred_last_idx,
+        endpoint=False,
+    )
     fig, axes = plt.subplots(
         num_dims * num_points, sharex=True
     )  # we do one subplot per dim and per point
@@ -230,28 +245,37 @@ def plot_trajs(
         for feat in feats:
             for offset, traj in zip(offsets, trajectories):
                 if isinstance(feat, Rotation):
-                    feat_tensor = convert_to_euler(traj.tensor[:,point,feat.ids])
+                    feat_tensor = convert_to_euler(traj.tensor[:, point, feat.ids])
                     dims_names = ["roll", "pitch", "yaw"]
                 else:
-                    feat_tensor = traj.tensor[:,point,feat.ids]
+                    feat_tensor = traj.tensor[:, point, feat.ids]
                     dims_names = feat.dims_names
                 # (seq_len, num_dims) => (num_dims, seq_len)
                 feat_tensor = torch.transpose(feat_tensor, 0, 1)
                 for dim_id, dim_tensor in enumerate(feat_tensor):
-                    #change axe for each dim
-                    axes[axe_id+dim_id].plot(time_steps[offset:len(dim_tensor) + offset], dim_tensor, linewidth=2)
-            ylabels += [f"{traj.point_names[point]}_{dim_name}" for dim_name in dims_names]
-            axe_id += len(feat_tensor) # add dim size to used axes
-    w = min(pred_last_idx * 0.01 + 5, 2**16 / 100 - 1)   # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
-    h = min(len(axes) * 3 + 5, 2**16 / 100 - 1)   # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
-    fig.set_size_inches(
-        w, h
-    )
+                    # change axe for each dim
+                    axes[axe_id + dim_id].plot(
+                        time_steps[offset : len(dim_tensor) + offset],
+                        dim_tensor,
+                        linewidth=2,
+                    )
+            ylabels += [
+                f"{traj.point_names[point]}_{dim_name}" for dim_name in dims_names
+            ]
+            axe_id += len(feat_tensor)  # add dim size to used axes
+    w = min(
+        pred_last_idx * 0.01 + 5, 2**16 / 100 - 1
+    )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    h = min(
+        len(axes) * 3 + 5, 2**16 / 100 - 1
+    )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    fig.set_size_inches(w, h)
     fig.suptitle(f"Trajectory and predictions on {trajectories[0].title}")
     # fig.subplots_adjust(right=0.7)
     # fig.tight_layout(pad=5)
-    legend_plot(axes, names=titles, xlabel='time (s)', ylabels=ylabels)
+    legend_plot(axes, names=titles, xlabel="time (s)", ylabels=ylabels)
     save_plot_and_close(savefig_path)
+
 
 def plot_multiple_predictors(
     trajectory: Trajectory,

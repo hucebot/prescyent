@@ -30,6 +30,7 @@ class MotionDatasetConfig(BaseModel):
     # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
     in_points: Optional[List[int]] = None
     out_points: Optional[List[int]] = None
+    convert_trajectories_beforehand: bool = True  # If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders
 
     @property
     def num_out_features(self) -> int:

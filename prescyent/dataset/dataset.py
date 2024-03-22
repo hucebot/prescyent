@@ -41,18 +41,25 @@ class MotionDataset(Dataset):
             self.config.in_features = self.trajectories.train[0].tensor_features
         if self.config.out_features is None:
             self.config.out_features = self.trajectories.train[0].tensor_features
-        # change de feats of each trajectory if they don't match in_feat and out_feat
+        # change the feats of each trajectory if they don't match in_feat and out_feat
         if (
-            self.config.in_features == self.config.out_features
+            self.config.convert_trajectories_beforehand
+            and self.config.in_features == self.config.out_features
             and self.config.in_features != self.trajectories.train[0].tensor_features
         ) or (
-            self.config.in_features != self.config.out_features
+            self.config.convert_trajectories_beforehand
+            and self.config.in_features != self.config.out_features
             and self.config.in_features != self.trajectories.train[0].tensor_features
             and self.config.out_features != self.trajectories.train[0].tensor_features
         ):
             if features_are_convertible_to(
                 self.config.in_features, self.config.out_features
             ):
+                logger.getChild(DATASET).warning(
+                    "Converting trajectories features from %s to %s",
+                    self.trajectories.train[0].tensor_features,
+                    self.config.in_features,
+                )
                 for traj in self.trajectories.train:
                     traj.convert_tensor_features(self.config.in_features)
                 for traj in self.trajectories.test:
@@ -62,6 +69,11 @@ class MotionDataset(Dataset):
             elif features_are_convertible_to(
                 self.config.out_features, self.config.in_features
             ):
+                logger.getChild(DATASET).warning(
+                    "Converting trajectories features from %s to %s",
+                    self.trajectories.train[0].tensor_features,
+                    self.config.out_features,
+                )
                 for traj in self.trajectories.train:
                     traj.convert_tensor_features(self.config.out_features)
                 for traj in self.trajectories.test:
@@ -80,6 +92,11 @@ class MotionDataset(Dataset):
         self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
         logger.getChild(DATASET).info(
             "Val dataset has a size of %d", len(self.val_datasample)
+        )
+        logger.getChild(DATASET).info(
+            "Generated (x,y) pairs with shapes (%s, %s)",
+            self.train_datasample[0][0].shape,
+            self.train_datasample[0][1].shape,
         )
 
     def __getitem__(self, index) -> Trajectory:
@@ -109,10 +126,10 @@ class MotionDataset(Dataset):
             self.test_datasample,
             batch_size=self.config.batch_size,
             shuffle=False,
-            num_workers=1,
+            num_workers=self.config.num_workers,
             pin_memory=self.config.pin_memory,
             drop_last=False,
-            persistent_workers=False,
+            persistent_workers=self.config.persistent_workers,
         )
 
     @property
