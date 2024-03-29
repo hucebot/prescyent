@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.dataset.features import (
     convert_tensor_features_to,
@@ -27,7 +28,8 @@ class TorchModule(BaseTorchModule):
                 raise AttributeError(
                     "We cannot apply DCT with non matching in and out features"
                 )
-            dct_m, idct_m = get_dct_matrix(self.config.in_sequence_size)
+            dct_m, _ = get_dct_matrix(self.config.in_sequence_size)
+            _, idct_m = get_dct_matrix(self.config.out_sequence_size)
             self.register_buffer(
                 "dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0)
             )
@@ -47,15 +49,37 @@ class TorchModule(BaseTorchModule):
             self.motion_fc_out = nn.Linear(
                 self.config.in_sequence_size, self.config.out_sequence_size
             )
+            if self.config.in_points_dims != self.config.out_points_dims:
+                self.motion_fc_out = nn.Sequential(
+                    TransposeLayer(1, 2),
+                    nn.Linear(self.config.in_points_dims, self.config.out_points_dims),
+                    TransposeLayer(1, 2),
+                    self.motion_fc_out,
+                )
         else:
             self.motion_fc_out = nn.Linear(
                 self.config.in_points_dims, self.config.out_points_dims
             )
+            if self.config.in_sequence_size != self.config.out_sequence_size:
+                self.motion_fc_out = nn.Sequential(
+                    TransposeLayer(1, 2),
+                    nn.Linear(
+                        self.config.in_sequence_size, self.config.out_sequence_size
+                    ),
+                    TransposeLayer(1, 2),
+                    self.motion_fc_out,
+                )
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.xavier_uniform_(self.motion_fc_out.weight, gain=1e-8)
-        nn.init.constant_(self.motion_fc_out.bias, 0)
+        try:
+            nn.init.xavier_uniform_(self.motion_fc_out.weight, gain=1e-8)
+            nn.init.constant_(self.motion_fc_out.bias, 0)
+        except AttributeError:  # If motion_fc_out is nn.Sequential
+            for layer in self.motion_fc_out.children():
+                if isinstance(layer, nn.Linear):
+                    nn.init.xavier_uniform_(layer.weight, gain=1e-8)
+                    nn.init.constant_(layer.bias, 0)
 
     @BaseTorchModule.allow_unbatched
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
