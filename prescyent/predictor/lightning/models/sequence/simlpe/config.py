@@ -14,6 +14,8 @@ class Config(ModuleConfig):
     num_layers: int = 48
     dct: bool = True
     spatial_fc_only: bool = False
+    temporal_fc_in: bool = False
+    temporal_fc_out: bool = False
 
     @field_validator("num_layers")
     @classmethod

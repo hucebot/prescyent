@@ -9,10 +9,8 @@ class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
     url: str = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
-    data_path: str = os.path.join(
-        DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub", "datasetMultipleTasks"
-    )
-    glob_dir: str = "p*.csv"
+    data_path: str = os.path.join(DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub")
+    glob_dir: str = "datasetMultipleTasks/*/p*.csv"
     subsampling_step: int = 10  # subsampling -> 100 Hz to 10Hz
     used_joints: Optional[List[int]] = None  # None == all
     ratio_train: float = 0.8

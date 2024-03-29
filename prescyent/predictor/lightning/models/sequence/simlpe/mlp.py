@@ -49,34 +49,20 @@ class MLPblock(nn.Module):
     def __init__(self, config):
         super().__init__()
         if config.spatial_fc_only:
-            self.fc0 = SpatialFC(config.hidden_size)
+            self.fc0 = SpatialFC(config.in_points_dims)
         else:
-            self.fc0 = TemporalFC(config.hidden_size)
+            self.fc0 = TemporalFC(config.in_sequence_size)
         if config.used_norm:
             if config.used_norm == Normalizations.SPATIAL:
-                if config.spatial_fc_only:
-                    self.norm0 = CustomLayerNorm(1, config.hidden_size)
-                else:
-                    self.norm0 = CustomLayerNorm(1, config.in_points_dims)
+                self.norm0 = CustomLayerNorm(1, config.in_points_dims)
             elif config.used_norm == Normalizations.TEMPORAL:
-                if config.spatial_fc_only:
-                    self.norm0 = CustomLayerNorm(-1, config.in_sequence_size)
-                else:
-                    self.norm0 = CustomLayerNorm(-1, config.hidden_size)
+                self.norm0 = CustomLayerNorm(-1, config.in_sequence_size)
             elif config.used_norm == Normalizations.ALL:
-                if config.spatial_fc_only:
-                    self.norm0 = nn.LayerNorm(
-                        [config.hidden_size, config.in_sequence_size]
-                    )
-                else:
-                    self.norm0 = nn.LayerNorm(
-                        [config.in_points_dims, config.hidden_size]
-                    )
+                self.norm0 = nn.LayerNorm(
+                    [config.in_points_dims, config.in_sequence_size]
+                )
             elif config.used_norm == Normalizations.BATCH:
-                if config.spatial_fc_only:
-                    self.norm0 = nn.BatchNorm1d(config.hidden_size)
-                else:
-                    self.norm0 = nn.BatchNorm1d(config.in_points_dims)
+                self.norm0 = nn.BatchNorm1d(config.in_points_dims)
             else:
                 raise NotImplementedError()
         else:

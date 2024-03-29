@@ -45,7 +45,7 @@ def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
     save_plot_and_close(savefig_path)
 
 
-def plot_trajs(
+def plot_traj_tensors_with_shift(
     trajs,
     savefig_path: str,
     shifts,
@@ -216,6 +216,7 @@ def plot_trajs(
     savefig_path: str,
     titles: Optional[List[str]] = None,
 ):
+    assert len(trajectories) >= 1
     feats = trajectories[0].tensor_features
     num_points = trajectories[0].tensor.shape[1]
     num_dims = sum(
@@ -257,17 +258,18 @@ def plot_trajs(
                     axes[axe_id + dim_id].plot(
                         time_steps[offset : len(dim_tensor) + offset],
                         dim_tensor,
-                        linewidth=2,
+                        linewidth=0.5,
                     )
             ylabels += [
-                f"{traj.point_names[point]}_{dim_name}" for dim_name in dims_names
+                f"{trajectories[0].point_names[point]}_{dim_name}"
+                for dim_name in dims_names
             ]
             axe_id += len(feat_tensor)  # add dim size to used axes
     w = min(
-        pred_last_idx * 0.01 + 5, 2**16 / 100 - 1
+        pred_last_idx * 0.025 + 5, 2**16 / 100 - 1
     )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
     h = min(
-        len(axes) * 3 + 5, 2**16 / 100 - 1
+        len(axes) * 5 + 5, 2**16 / 100 - 1
     )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
     fig.set_size_inches(w, h)
     fig.suptitle(f"Trajectory and predictions on {trajectories[0].title}")

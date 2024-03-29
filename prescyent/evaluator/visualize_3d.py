@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+from pathlib import Path
 from tqdm import tqdm
 from typing import List
 
@@ -7,12 +9,13 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 
 from prescyent.dataset import Trajectory
+from prescyent.dataset.features import Rotation
 from prescyent.utils.logger import logger, EVAL
 from prescyent.utils.tensor_manipulation import trajectory_tensor_get_dim_limits
 
 POINT_COLORS = ["k", "b", "g", "r", "c"]
 POINT_SHAPES = ["o", "s", "v", "*", "D"]
-BONES_COLORS = ["m", "m", "m", "m", "m"]
+BONES_COLORS = ["#0f0f0f80", "#0f0f0f80", "#0f0f0f80", "#0f0f0f80", "#0f0f0f80"]
 
 
 def plot_rotated_axes(ax, r, name=None, offset=(0, 0, 0), scale=0.05):
@@ -33,18 +36,23 @@ def plot_rotated_axes(ax, r, name=None, offset=(0, 0, 0), scale=0.05):
 def render_3d_trajectories(
     trajs: List[Trajectory],
     offsets: List[int],
-    save_file: str = None,  # use "mp4" or "gif"
+    save_file_format: str = None,  # use "mp4" or "gif"
+    save_dir: str = "data/eval/visualizations",
     min_max_layout: bool = True,
     interactive: bool = True,
     draw_bones: bool = True,
-    draw_rotation: bool = False,
     turn_view: bool = True,
+    first_rendered_frames: int = 0,
+    max_rendered_frames: int = sys.maxsize,
 ):
     """"""
     if len(trajs) >= 6:
         raise AttributeError(
             "We cannot draw more than 5 trajectories at a time (if you want to, remove this error and add some more options to POINT_COLORS, POINT_SHAPES and BONES_COLORS)"
         )
+    if isinstance(save_dir, str) and save_file_format is not None:
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
     elevation = 20.0
     rot_colors = ("#FF6666", "#005533", "#1199EE")  # Colorblind-safe RGB
     test_frames = [traj.tensor[0].transpose(0, 1).tolist() for traj in trajs]
@@ -63,6 +71,12 @@ def render_3d_trajectories(
         ax_3d.set_aspect("auto")
     ax_3d.set_title(str(trajs[0].title))
     rotation_list = []
+    draw_rotation = all(
+        [
+            any([isinstance(feat, Rotation) for feat in traj.tensor_features])
+            for traj in trajs
+        ]
+    )
     if draw_rotation:
         rotation_scale = 0.05
         rotation_list = [
@@ -165,26 +179,39 @@ def render_3d_trajectories(
         animate,
         init_func=init,
         frames=tqdm(
-            range(100, min(len(traj) for traj in trajs) - 100, 2),
+            range(
+                first_rendered_frames,
+                min(
+                    [len(traj) for traj in trajs]
+                    + [first_rendered_frames + max_rendered_frames]
+                ),
+            ),
             "Rendering trajectory frames",
         ),
-        # frames=tqdm(range(1000, 1400, 2), "Rendering trajectory frames"),
-        # frames=tqdm(range(100), "Rendering trajectory frames"),
     )
 
-    if not save_file:
+    if not save_file_format:
         pass
-    elif save_file == "mp4":
+    elif save_file_format == "mp4":
         title = f"{trajs[0]}_animation.mp4"
-        anim.save(title, fps=trajs[0].frequency / 2, extra_args=["-vcodec", "libx264"])
-        logger.getChild(EVAL).info(f"Saved 3d rendered prediction at {title}")
-    elif save_file == "gif":
+        anim.save(
+            str(save_dir / title),
+            fps=trajs[0].frequency,
+            extra_args=["-vcodec", "libx264"],
+        )
+        logger.getChild(EVAL).info(
+            f"Saved 3d rendered prediction at {str(save_dir / title)}"
+        )
+    elif save_file_format == "gif":
         title = f"{trajs[0]}_animation.gif"
         writer = matplotlib.animation.PillowWriter(fps=trajs[0].frequency, bitrate=1800)
-        anim.save(title, writer=writer)
+        anim.save(str(save_dir / title), writer=writer)
+        logger.getChild(EVAL).info(
+            f"Saved 3d rendered prediction at {str(save_dir / title)}"
+        )
     else:
         raise AttributeError(
-            f'save_file can be "mp4", "gif" or None, not "{save_file}"'
+            f'save_file_format can be "mp4", "gif" or None, not "{save_file_format}"'
         )
     if interactive:
         try:

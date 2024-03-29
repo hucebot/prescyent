@@ -78,7 +78,7 @@ class LightningModule(pl.LightningModule):
         if not hasattr(self.torch_model, "criterion"):
             if config.loss_fn is None:
                 criterion = DEFAULT_LOSS
-                logger.getChild(PREDICTOR).warning(
+                logger.getChild(PREDICTOR).info(
                     "No loss function provided in config, using default %s instead",
                     DEFAULT_LOSS,
                 )
@@ -143,12 +143,12 @@ class LightningModule(pl.LightningModule):
         sample, truth = batch
         pred = self.torch_model(sample)
         if torch.any(torch.isnan(pred)):
-            logger.getChild(PREDICTOR).warning("NAN in pred")
-            raise ValueError("Please check your loss function")
+            logger.getChild(PREDICTOR).error("NAN in pred")
+            # raise ValueError("Please check your loss function and architecture")
         loss = self.criterion(pred, truth)
         if torch.any(torch.isnan(loss)):
-            logger.getChild(PREDICTOR).warning("NAN in loss")
-            raise ValueError("Please check your loss function")
+            logger.getChild(PREDICTOR).error("NAN in loss")
+            # raise ValueError("Please check your loss function and architecture")
         self.log(f"{prefix}/loss", loss.detach(), prog_bar=True)
         if loss_only:
             return {"loss": loss}

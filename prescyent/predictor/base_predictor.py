@@ -196,8 +196,10 @@ class BasePredictor:
         if not is_tensor_is_batched(input_tensor):
             unbatch = True
             input_tensor = torch.unsqueeze(input_tensor, 0)
-        # Keep only model input points
-        input_tensor = input_tensor[:, :, self.dataset_config.in_points]
+        # Keep only model input points if the input shape doesn't match
+        if input_tensor.shape[2] != len(self.dataset_config.in_points):
+            input_tensor = input_tensor[:, :, self.dataset_config.in_points]
+        # Else we assume the tensor was already reshaped
         # If we know tensor feats, we make them fit expected inputs.
         if input_tensor_features is not None:
             input_tensor = convert_tensor_features_to(
