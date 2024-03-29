@@ -334,11 +334,11 @@ class LightningPredictor(BasePredictor):
         # train on new dataset
         self.train(train_dataloader, train_config, val_dataloader)
 
-    def test(self, dataset: Iterable):
+    def test(self, test_dataloader: Iterable):
         """test the model"""
         if self.trainer is None:
             self._init_trainer(devices=1)
-        losses = self.trainer.test(self.model, dataset.test_dataloader)
+        losses = self.trainer.test(self.model, test_dataloader)
         self._free_trainer()
         return losses
 

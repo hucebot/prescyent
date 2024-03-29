@@ -62,10 +62,6 @@ class ConstantPredictor(BasePredictor):
         )
 
     def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
-        if self.dataset_config.in_points != self.dataset_config.out_points:
-            logger.getChild(PREDICTOR).warning(
-                "This Predictor can only output the same point as its input"
-            )
         unbatch = False
         if not is_tensor_is_batched(input_t):
             unbatch = True
@@ -74,6 +70,19 @@ class ConstantPredictor(BasePredictor):
         output = [input_t[-1].unsqueeze(0) for _ in range(future_size)]
         output_t = torch.cat(output, dim=0)
         output_t = torch.transpose(output_t, 0, 1)
+        try:
+            out_points_ids = torch.LongTensor(
+                [
+                    self.dataset_config.in_points.index(out)
+                    for out in self.dataset_config.out_points
+                ]
+            )
+            out_points_ids = out_points_ids.to(device=input_t.device)
+        except ValueError as err:
+            raise AttributeError(
+                "You cannot use this predictor if output points are not included in input!"
+            ) from err
+        output_t = torch.index_select(output_t, 2, out_points_ids)
         output_t = convert_tensor_features_to(
             output_t, self.dataset_config.in_features, self.dataset_config.out_features
         )

@@ -74,6 +74,19 @@ class DelayedPredictor(BasePredictor):
             new_inputs = torch.cat(new_inputs, dim=0)
             input_t = torch.cat((new_inputs, input_t), dim=0)
         input_t = torch.transpose(input_t[-future_size:], 0, 1)
+        try:
+            out_points_ids = torch.LongTensor(
+                [
+                    self.dataset_config.in_points.index(out)
+                    for out in self.dataset_config.out_points
+                ]
+            )
+            out_points_ids = out_points_ids.to(device=input_t.device)
+        except ValueError as err:
+            raise AttributeError(
+                "You cannot use this predictor if output points are not included in input!"
+            ) from err
+        input_t = torch.index_select(input_t, 2, out_points_ids)
         input_t = convert_tensor_features_to(
             input_t, self.dataset_config.in_features, self.dataset_config.out_features
         )

@@ -2,7 +2,7 @@
 The predictor can be trained and predict
 """
 import copy
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import torch
 from pydantic import BaseModel
@@ -13,10 +13,14 @@ from prescyent.dataset.features.feature_manipulation import (
     cal_distance_for_feat,
     convert_tensor_features_to,
 )
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset import DatasetConfig, Trajectory
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.utils.dataset_manipulation import update_parent_ids
+from prescyent.utils.tensor_manipulation import (
+    is_tensor_is_batched,
+    cat_list_with_seq_idx,
+)
 
 
 class BasePredictor:
@@ -25,7 +29,7 @@ class BasePredictor:
     This class initialize a tensorboard logger and, a test loop and a default run loop
     """
 
-    dataset_config: MotionDatasetConfig
+    dataset_config: DatasetConfig
     log_root_path: str
     name: str
     version: int
@@ -33,7 +37,7 @@ class BasePredictor:
 
     def __init__(
         self,
-        dataset_config: MotionDatasetConfig,
+        dataset_config: DatasetConfig,
         log_root_path: str,
         name: str = None,
         version: Union[str, int, None] = None,
@@ -245,3 +249,29 @@ class BasePredictor:
                     self.tb_logger.experiment.add_scalar(pre_key + key, j, i)
                 continue
             self.tb_logger.experiment.add_scalar(pre_key + key, value)
+
+    def predict_trajectory(
+        self, traj: Trajectory, future_size=None
+    ) -> Tuple[Trajectory, int]:
+        """Returns new traj with predicted tensor and offset that can be used to compare new traj and base traj"""
+        list_pred_tensor = self.run(
+            traj.tensor,
+            future_size=future_size,
+            input_tensor_features=traj.tensor_features,
+        )
+        pred_tensor = cat_list_with_seq_idx(list_pred_tensor, -1)
+        pred_traj = Trajectory(
+            tensor=pred_tensor,
+            tensor_features=self.dataset_config.out_features,
+            frequency=traj.frequency,
+            file_path=traj.file_path,
+            title=f"{traj.title}_pred_{self.name}",
+            point_parents=update_parent_ids(
+                self.dataset_config.out_points, traj.point_parents
+            ),
+            point_names=[traj.point_names[i] for i in self.dataset_config.out_points],
+        )
+        return (
+            pred_traj,
+            self.dataset_config.history_size + self.dataset_config.future_size - 1,
+        )
