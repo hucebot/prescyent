@@ -55,7 +55,7 @@ class MotionDataset(Dataset):
             if features_are_convertible_to(
                 self.config.in_features, self.config.out_features
             ):
-                logger.getChild(DATASET).warning(
+                logger.getChild(DATASET).info(
                     "Converting trajectories features from %s to %s",
                     self.trajectories.train[0].tensor_features,
                     self.config.in_features,
@@ -69,7 +69,7 @@ class MotionDataset(Dataset):
             elif features_are_convertible_to(
                 self.config.out_features, self.config.in_features
             ):
-                logger.getChild(DATASET).warning(
+                logger.getChild(DATASET).info(
                     "Converting trajectories features from %s to %s",
                     self.trajectories.train[0].tensor_features,
                     self.config.out_features,
@@ -223,7 +223,6 @@ class MotionDataset(Dataset):
 
     def _unzip(self, zip_path: str) -> None:
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(zip_path.replace(".zip", ""))
-        logger.getChild(DATASET).info(
-            "Archive unziped at %s", zip_path.replace(".zip", "")
-        )
+            zip_path = Path(zip_path)
+            zip_ref.extractall(zip_path.parent)
+        logger.getChild(DATASET).info("Archive unziped at %s", zip_path.parent)

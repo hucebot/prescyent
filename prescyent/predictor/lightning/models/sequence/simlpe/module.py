@@ -35,29 +35,21 @@ class TorchModule(BaseTorchModule):
                 "idct_m", torch.tensor(idct_m, requires_grad=False).float().unsqueeze(0)
             )
         # Configure in/out feats according to chosen FC
-        if self.config.spatial_fc_only:
-            if self.out_sequence_size != self.in_sequence_size:
-                raise NotImplementedError(
-                    "This model cannot output a sequence bigger than its"
-                    " input without the spatial_fc_only configuration"
-                )
+        if self.config.temporal_fc_in:
             self.motion_fc_in = nn.Linear(
-                self.config.in_points_dims, self.config.hidden_size
-            )
-            self.motion_fc_out = nn.Linear(
-                self.config.hidden_size, self.config.out_points_dims
+                self.config.in_sequence_size, self.config.in_sequence_size
             )
         else:
-            if self.config.out_points_dims != self.config.in_points_dims:
-                raise NotImplementedError(
-                    "This model cannot output feature dimensions bigger than its"
-                    " input feature size without the spatial_fc_only configuration"
-                )
             self.motion_fc_in = nn.Linear(
-                self.config.in_sequence_size, self.config.hidden_size
+                self.config.in_points_dims, self.config.in_points_dims
             )
+        if self.config.temporal_fc_out:
             self.motion_fc_out = nn.Linear(
-                self.config.hidden_size, self.config.out_sequence_size
+                self.config.in_sequence_size, self.config.out_sequence_size
+            )
+        else:
+            self.motion_fc_out = nn.Linear(
+                self.config.in_points_dims, self.config.out_points_dims
             )
         self.reset_parameters()
 
@@ -74,19 +66,20 @@ class TorchModule(BaseTorchModule):
             input_tensor_ = torch.matmul(
                 self.dct_m[:, :, : self.in_sequence_size], input_tensor_
             )
-        if self.config.spatial_fc_only:
-            motion_feats = self.motion_fc_in(input_tensor_)
-            motion_feats = torch.transpose(motion_feats, 1, 2)
-        else:
+        if self.config.temporal_fc_in:
             input_tensor_ = torch.transpose(input_tensor_, 1, 2)
             motion_feats = self.motion_fc_in(input_tensor_)
-        motion_pred = self.motion_mlp(motion_feats)
-        if self.config.spatial_fc_only:
-            motion_pred = torch.transpose(motion_pred, 1, 2)
-            motion_pred = self.motion_fc_out(motion_pred)
         else:
+            motion_feats = self.motion_fc_in(input_tensor_)
+            motion_feats = torch.transpose(motion_feats, 1, 2)
+        # (batch_size, num_point * num_dim, seq_len)
+        motion_pred = self.motion_mlp(motion_feats)
+        if self.config.temporal_fc_out:
             motion_pred = self.motion_fc_out(motion_pred)
             motion_pred = torch.transpose(motion_pred, 1, 2)
+        else:
+            motion_pred = torch.transpose(motion_pred, 1, 2)
+            motion_pred = self.motion_fc_out(motion_pred)
         if self.config.dct:
             motion_pred = torch.matmul(
                 self.idct_m[:, : self.in_sequence_size, :], motion_pred

@@ -30,7 +30,7 @@ class TorchModule(BaseTorchModule):
         elif config.activation == ActivationFunctions.SIGMOID:
             act_fun = nn.Sigmoid
         else:
-            logger.getChild(PREDICTOR).warning(
+            logger.getChild(PREDICTOR).info(
                 "No activation function for: %s" % config.activation,
             )
             act_fun = nn.Identity

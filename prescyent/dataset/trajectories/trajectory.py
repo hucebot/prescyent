@@ -155,7 +155,9 @@ class Trajectory:
         for feat in self.tensor_features:
             if isinstance(feat, Rotation):
                 if not isinstance(feat, RotationQuat):
-                    return ScipyRotation.from_quat(convert_to_quat(tensor[feat.ids]))
+                    return ScipyRotation.from_quat(
+                        convert_to_quat(tensor[feat.ids].unsqueeze(0))
+                    )
                 return ScipyRotation.from_quat(tensor[feat.ids].numpy())
         return None
 

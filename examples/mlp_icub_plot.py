@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from prescyent.predictor import MlpPredictor, DelayedPredictor
 from prescyent.dataset import TeleopIcubDataset
-from prescyent.evaluator.plotting import plot_trajs
+from prescyent.evaluator.plotting import plot_traj_tensors_with_shift
 from prescyent.evaluator.runners import run_predictor
 
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         ref_traj = dataset.trajectories.test[i]
         title = "/".join(ref_traj.file_path.parts[-2:])
         dims = ref_traj.point_names
-        plot_trajs(
+        plot_traj_tensors_with_shift(
             [ref_traj.tensor, all_preds[i], ref_traj.tensor],
             f"data/plots/pred_{i}.pdf",
             # we shift the predictions of the history_size (data we need to predict)
