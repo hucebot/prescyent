@@ -30,6 +30,8 @@ class BaseTorchModule(torch.nn.Module):
         self.num_out_dims = config.dataset_config.num_out_dims
         self.in_features = config.dataset_config.in_features
         self.out_features = config.dataset_config.out_features
+        self.in_points = config.dataset_config.in_points
+        self.out_points = config.dataset_config.out_points
         if self.norm_on_last_input and (
             not features_are_convertible_to(self.in_features, self.out_features)
         ):
@@ -76,6 +78,17 @@ class BaseTorchModule(torch.nn.Module):
                     self.in_features,
                     self.out_features,
                 )
+                try:
+                    out_points_ids = torch.LongTensor(
+                        [self.in_points.index(out) for out in self.out_points]
+                    )
+                    out_points_ids = out_points_ids.to(device=input_tensor.device)
+                except ValueError as err:
+                    raise AttributeError(
+                        "You cannot use norm_on_last_input if output points are not included in input!"
+                    ) from err
+                seq_last = torch.index_select(seq_last, 2, out_points_ids)
+                # seq_last.to(device=input_tensor.device, dtype=input_tensor.dtype)
                 predictions = get_absolute_tensor_from(
                     predictions, seq_last, self.out_features
                 )
