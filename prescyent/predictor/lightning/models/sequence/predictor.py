@@ -43,7 +43,7 @@ class SequencePredictor(LightningPredictor):
                     self.model.torch_model.in_sequence_size,
                 )
                 input_t = input_t[-self.model.torch_model.in_sequence_size :]
-            if future_size != self.model.torch_model.out_sequence_size and (
+            if future_size > self.model.torch_model.out_sequence_size and (
                 self.dataset_config.in_features != self.dataset_config.out_features
                 or self.dataset_config.in_points != self.dataset_config.out_points
             ):
