@@ -23,6 +23,7 @@ from pytorch_lightning.callbacks import (
     DeviceStatsMonitor,
     EarlyStopping,
 )
+from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.module import LightningModule
@@ -168,14 +169,25 @@ class LightningPredictor(BasePredictor):
             os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
             kwargs["deterministic"] = True
         torch.set_float32_matmul_precision("high")
-        self.trainer = pl.Trainer(
-            default_root_dir=self.log_path,
-            logger=self.tb_logger,
-            max_epochs=self.training_config.epoch,
-            callbacks=callbacks,
-            profiler=profiler,
-            **kwargs,
-        )
+        try:
+            self.trainer = pl.Trainer(
+                default_root_dir=self.log_path,
+                logger=self.tb_logger,
+                max_epochs=self.training_config.epoch,
+                callbacks=callbacks,
+                profiler=profiler,
+                **kwargs,
+            )
+        except MisconfigurationException as err:
+            kwargs["accelerator"] = "auto"
+            self.trainer = pl.Trainer(
+                default_root_dir=self.log_path,
+                logger=self.tb_logger,
+                max_epochs=self.training_config.epoch,
+                callbacks=callbacks,
+                profiler=profiler,
+                **kwargs,
+            )
         logger.getChild(PREDICTOR).info(
             "Predictor logger initialised at %s", self.log_path
         )

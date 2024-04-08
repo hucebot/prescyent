@@ -81,6 +81,18 @@ class MotionDataset(Dataset):
                 for traj in self.trajectories.val:
                     traj.convert_tensor_features(self.config.out_features)
         self.name = name
+        self.generate_samples()
+
+    def __getitem__(self, index) -> Trajectory:
+        return self.trajectories[index]
+
+    def __len__(self) -> int:
+        return len(self.trajectories)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def generate_samples(self):
         self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
         logger.getChild(DATASET).info(
             "Train dataset has a size of %d", len(self.train_datasample)
@@ -98,15 +110,6 @@ class MotionDataset(Dataset):
             self.train_datasample[0][0].shape,
             self.train_datasample[0][1].shape,
         )
-
-    def __getitem__(self, index) -> Trajectory:
-        return self.trajectories[index]
-
-    def __len__(self) -> int:
-        return len(self.trajectories)
-
-    def __str__(self) -> str:
-        return self.name
 
     @property
     def train_dataloader(self) -> DataLoader:
