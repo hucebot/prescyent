@@ -69,7 +69,7 @@ if __name__ == "__main__":
         dims = ref_traj.point_names
         plot_traj_tensors_with_shift(
             [ref_traj.tensor, all_preds[i], ref_traj.tensor],
-            f"data/plots/pred_{i}.pdf",
+            f"examples/data/plots/pred_{i}.pdf",
             # we shift the predictions of the history_size (data we need to predict)
             # and of future_size (because given 1 s of data, we predict 1 second from now)
             shifts=[0, history_size + future_size - 1, future_size],

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 package_name = "prescyent"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 CORE_REQUIREMENTS = [
@@ -10,9 +10,10 @@ CORE_REQUIREMENTS = [
     "numpy>=1.17.3,<1.25.0",
     "pydantic>=2.0,<2.5",
     "pytorch_lightning>=2.0, <2.1",
-    "tensorboard>=2.0,<2.14",
-    "torch>=2.0,<2.1",
     "scipy>=1.9,<1.12",
+    "tensorboard>=2.0,<2.14",
+    "torch>=2.0,<2.2",
+    "tqdm>=4.66",
 ]
 
 
