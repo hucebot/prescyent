@@ -16,7 +16,6 @@ if __name__ == "__main__":
     subsampling_step: int = 10  # subsampling -> 100 Hz to 10Hz
     history_size = 10  # 1 second
     future_size = 10  # 1 second
-    dimensions = None  # None equals ALL dimensions !
     # for TeleopIcub dimension = [0, 1, 2] is [waist, right_hand, left_hand]
     features = CoordinateXYZ(range(3))
     batch_size = 256
@@ -27,6 +26,8 @@ if __name__ == "__main__":
         batch_size=batch_size,
         in_features=features,
         out_features=features,
+        in_points=None,  # None = All points
+        out_points=None,  # None = All points
     )
     dataset = TeleopIcubDataset(dataset_config)
     print("OK")
@@ -35,10 +36,10 @@ if __name__ == "__main__":
     print("Initializing predictor...", end=" ")
     config = MlpConfig(
         dataset_config=dataset_config,
-        hidden_size=256,
+        hidden_size=128,
         num_layers=4,
         norm_on_last_input=True,
-        used_norm=Normalizations.BATCH,
+        used_norm=Normalizations.ALL,
         loss_fn=LossFunctions.MTRDLOSS,
     )
     sample, truth = dataset.val_datasample[0]
@@ -47,9 +48,9 @@ if __name__ == "__main__":
 
     # Train
     training_config = TrainingConfig(
-        epoch=100,
+        epoch=200,
         devices="auto",
-        accelerator="cpu",
+        accelerator="auto",
         lr=0.0001,
         early_stopping_patience=10,
     )
@@ -57,7 +58,7 @@ if __name__ == "__main__":
 
     # Save the predictor
     xp_dir = (
-        f"data/models/{dataset.DATASET_NAME}"
+        f"examples/data//models/{dataset.DATASET_NAME}"
         f"/h{history_size}_f{future_size}"
         f"_{dataset.frequency}hz"
     )
@@ -70,5 +71,5 @@ if __name__ == "__main__":
     # Test so that we know how good we are
     predictor.test(dataset.test_dataloader)
     # Compare with delayed baseline
-    delayed = DelayedPredictor(f"{xp_dir}")
+    delayed = DelayedPredictor(dataset_config=dataset_config, log_path=f"{xp_dir}")
     delayed.test(dataset.test_dataloader)

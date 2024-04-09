@@ -63,6 +63,20 @@ data/datasets (or any custom directory that you specify in the DatasetConfig obj
 |   |-- S11
 ```
 
+For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [here](https://zenodo.org/records/3254403/files/xens_mnvx.zip?download=1) and prepare your data following this directory structure:  
+```bash
+data/datasets (or any custom directory that you specify in the DatasetConfig object)
+|-- AndyData-lab-onePerson
+|   |-- xsens_mnvx
+|   |   |-- Participant_541
+|   |   |-- Participant_909
+|   |   |-- Participant_2193
+|   |   |-- ...
+|   |   |-- Participant_9875
+```
+.mvnx files will be parsed and we will extract only orientation and position at each frame for all joints.  
+When reading .mvnx file, we save the resulting tensor as a .pt file, so it can be loaded instead of the whole .mvnx files later if the flag "use_pt" is True in the dataset config, saving a huge amount of time when loading the dataset.  
+
 ## Predictors
 The trajectory prediction methods are organized as Predictor classes  
 For example, the LinearPredictor class is the implementation of a simple Linear layer as a baseline for the task of Trajectory prediction  
@@ -101,3 +115,19 @@ python -m unittest -v
 # Extend the lib with a custom dataset or predictor
 Predictors inherit from the BasePredictor class, which define interfaces and core methods to keep consistency between each new implementation.  
 Each Predictor defines its PredictorConfig with arguments that will be passed on to the core class, again with a BaseConfig with common attributes that needs to be defined.  
+
+# References
+siMLPe  
+Guo, W., Du, Y., Shen, X., Lepetit, V., Alameda-Pineda, X., & Moreno-Noguer, F. (2022, July 4). Back to MLP: a simple baseline for human motion prediction. arXiv.org. https://arxiv.org/abs/2207.01567  
+
+AndyDataset  
+Maurice P., Malaisé A., Amiot C., Paris N., Richard G.J., Rochel O., Ivaldi S. « Human Movement and Ergonomics: an Industry-Oriented Dataset for Collaborative Robotics ». The International Journal of Robotics Reserach, Volume 38, Issue 14, Pages 1529-1537.  
+
+TeleopIcub Dataset  
+Penco, L., Mouret, J., & Ivaldi, S. (2021, July 2). Prescient teleoperation of humanoid robots. arXiv.org. https://arxiv.org/abs/2107.01281  
+
+H36M Dataset  
+Human3.6M: Large scale datasets and predictive methods for 3D human sensing in natural environments. (n.d.). IEEE Journals & Magazine | IEEE Xplore. https://ieeexplore.ieee.org/document/6682899  
+
+On the Continuity of Rotation Representations in Neural Networks  
+Zhou, Y., Barnes, C., Lu, J., Yang, J., & Li, H. (2018, December 17). On the Continuity of Rotation Representations in Neural Networks. arXiv.org. https://arxiv.org/abs/1812.07035  
