@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
 
+from prescyent.utils.dataset_manipulation import update_parent_ids
 from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import (
@@ -92,12 +93,24 @@ class Trajectory:
         return self.tensor.shape[2]
 
     def convert_tensor_features(self, new_tensor_feats: List[Feature]):
+        """convert trajectory's tensor to new requested features if possible,
+            else raises an AttributeError
+            self.tensor and self.tensor_features are updated.
+        Args:
+            new_tensor_feats (List[Feature]): new list of Feature
+        """
         self.tensor = convert_tensor_features_to(
             self.tensor, self.tensor_features, new_tensor_feats
         )
         self.tensor_features = new_tensor_feats
 
     def augment_frequency(self, augmentation_ratio: int) -> None:
+        """Augment the tensor's frequency using a ratio and linear interpolation
+            new self.tensor will have shape (B, S*ratio, P, D)
+            and, self.frequency is also updated this way
+        Args:
+            augmentation_ratio (int): ratio used for interpolation
+        """
         self.frequency = self.frequency * augmentation_ratio
         self.tensor = interpolate_trajectory_tensor_with_ratio(
             self.tensor, augmentation_ratio
@@ -109,6 +122,16 @@ class Trajectory:
         output_format: str = "csv",
         write_header: bool = True,
     ) -> None:
+        """Outputs the trajectory tensors as a csv/tsv with a line per frame and one column per feature.
+
+        Args:
+            output_path (str, optional): filename used to create file. Defaults to None.
+            output_format (str, optional): "cvs" or "tsv". Defaults to "csv".
+            write_header (bool, optional): If true headers are included using trajectory's metadata. Defaults to True.
+
+        Raises:
+            NotImplementedError: if format isn't known
+        """
         SUPPORTED_FORMATS = ["tsv", "csv"]
         if output_path is None:
             output_path = Path("data") / "dump" / f"{str(self)}.{output_format}"
@@ -133,6 +156,11 @@ class Trajectory:
             )
 
     def _get_header(self) -> List[str]:
+        """returns list of headers for csv dump
+
+        Returns:
+            List[str]: list of columns names if data is dumped
+        """
         return [
             f"{self.point_names[p]}_{self.dim_names[d]}"
             for p in range(self.num_points)
@@ -141,16 +169,35 @@ class Trajectory:
 
     @property
     def dim_names(self) -> List[str]:
+        """returns names for the last tensor dim, based self.features
+
+        Returns:
+            List[str]: List of names
+        """
         feature_dim_names = {}
         for feature in self.tensor_features:
             for i, feat_name in enumerate(feature.dims_names):
                 feature_dim_names[feature.ids[i]] = feat_name
         return list(dict(sorted(feature_dim_names.items())).values())
 
-    def _get_data(self) -> List[List[str]]:
+    def _get_data(self) -> List[List[float]]:
+        """tensor formater used for data dumps
+
+        Returns:
+            List[List[float]]: tensor infos as a list, with shape (seq, point * dim)
+        """
         return self.tensor.flatten(1, 2).tolist()
 
     def get_scipy_rotation(self, seq_id: int, point_id: int):
+        """Return scipy rotation for a given frame and point, if a rotation feat exists in self
+
+        Args:
+            seq_id (int): frame id in sequence
+            point_id (int): point id
+
+        Returns:
+            scipy.spatial.transform.Rotation: Corresponding scipy rotation
+        """
         tensor = self.tensor[seq_id, point_id].clone()
         for feat in self.tensor_features:
             if isinstance(feat, Rotation):
@@ -164,6 +211,15 @@ class Trajectory:
     def compare_with(
         self, trajectories: List[object], offsets: Optional[List[int]] = None
     ) -> List[Dict[str, float]]:
+        """Return mean feature distance between self and each traj in Trajectories
+
+        Args:
+            trajectories (List[object]): List of Trajectory to compare self with
+            offsets (Optional[List[int]], optional): id of the frame to start comparition from in self. If None then no offset, first frame is 0.
+
+        Returns:
+            List[Dict[str, float]]: List of the mean distances for each feat in the form {Feature.name: Tensor}
+        """
         if offsets is None:
             offsets = [0 for _ in trajectories]
         metrics = []
@@ -182,3 +238,25 @@ class Trajectory:
             )
             metrics.append(mean_dists)
         return metrics
+
+    def create_subtraj(self, points: List[int], features: List[Feature]):
+        """Create a subset of this trajectory with given new list of points and features
+
+        Args:
+            points (List[int]): ids of the points to keep
+            features (List[Feature]): features to keep
+
+        Returns:
+            Trajectory: A new subtrajectory of self
+        """
+        subtraj = Trajectory(
+            tensor=self.tensor[:, points],
+            tensor_features=self.tensor_features,
+            frequency=self.frequency,
+            file_path=self.file_path,
+            title=self.title,
+            point_parents=update_parent_ids(points, self.point_parents),
+            point_names=[self.point_names[i] for i in points],
+        )
+        subtraj.convert_tensor_features(features)
+        return subtraj
