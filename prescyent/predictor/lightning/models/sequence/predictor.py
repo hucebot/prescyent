@@ -65,6 +65,6 @@ class SequencePredictor(LightningPredictor):
                     else:
                         input_t = torch.cat((input_t, prediction))[-history_size:]
             if is_tensor_is_batched(input_t):
-                return torch.cat(list_outputs, dim=0)[:, :future_size]
+                return torch.cat(list_outputs, dim=1)[:, :future_size]
             else:
                 return torch.cat(list_outputs, dim=0)[:future_size]
