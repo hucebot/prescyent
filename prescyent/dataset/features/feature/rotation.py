@@ -37,6 +37,10 @@ class RotationQuat(Rotation):
     """quaternion x, y, z, w representation"""
 
     @property
+    def eps(self) -> float:
+        return 1e-6
+
+    @property
     def must_post_process(self) -> bool:
         return True
 
@@ -58,7 +62,7 @@ class RotationQuat(Rotation):
         inner_product = torch.sum(tensor_a * tensor_b, dim=-1)
         inner_product = 2 * torch.square(inner_product) - 1
         # clamp before arcos
-        inner_product = torch.clamp(inner_product, min=-1, max=1)
+        inner_product = torch.clamp(inner_product, min=-1 + self.eps, max=1 - self.eps)
         radian_distance = torch.arccos(inner_product)
         return radian_distance
 
@@ -118,6 +122,10 @@ class RotationRotMat(Rotation):
     """rotation matrix"""
 
     @property
+    def eps(self) -> float:
+        return 1e-6
+
+    @property
     def num_dims(self) -> int:
         return 9
 
@@ -139,7 +147,7 @@ class RotationRotMat(Rotation):
         all_traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
         all_traces = (all_traces - 1) / 2
         # Clip the trace to ensure it is within the valid range for arcos
-        all_traces = torch.clamp(all_traces, -1.0, 1.0)
+        all_traces = torch.clamp(all_traces, -1.0 + self.eps, 1.0 - self.eps)
         # Compute the loss
         radian_distance = torch.arccos(all_traces)
         return radian_distance
