@@ -20,6 +20,7 @@ class BaseTorchModule(torch.nn.Module):
     def __init__(self, config) -> None:
         super().__init__()
         self.norm_on_last_input = config.norm_on_last_input
+        self.deriv_output = config.deriv_output
         self.used_norm = config.used_norm
         self.dropout_value = config.dropout_value
         self.in_sequence_size = config.in_sequence_size
@@ -32,7 +33,7 @@ class BaseTorchModule(torch.nn.Module):
         self.out_features = config.dataset_config.out_features
         self.in_points = config.dataset_config.in_points
         self.out_points = config.dataset_config.out_points
-        if self.norm_on_last_input and (
+        if (self.norm_on_last_input or self.deriv_output) and (
             not features_are_convertible_to(self.in_features, self.out_features)
         ):
             raise AttributeError(
@@ -57,11 +58,12 @@ class BaseTorchModule(torch.nn.Module):
         def normalize(*args, **kwargs):
             self = args[0]
             input_tensor = args[1]
-            if self.norm_on_last_input:
+            if self.norm_on_last_input or self.deriv_output:
                 seq_last = input_tensor[:, -1:, :, :].clone()
-                input_tensor = get_relative_tensor_from(
-                    input_tensor, seq_last, self.in_features
-                )
+                if self.norm_on_last_input:
+                    input_tensor = get_relative_tensor_from(
+                        input_tensor, seq_last, self.in_features
+                    )
             if self.used_norm:
                 input_tensor = self.norm(input_tensor.clone())
             if self.dropout_value is not None and self.dropout_value > 0:
@@ -72,7 +74,7 @@ class BaseTorchModule(torch.nn.Module):
                     predictions[:, :, :, feat.ids] = feat.post_process(
                         predictions[:, :, :, feat.ids]
                     )
-            if self.norm_on_last_input:
+            if self.norm_on_last_input or self.deriv_output:
                 seq_last = convert_tensor_features_to(
                     seq_last,
                     self.in_features,

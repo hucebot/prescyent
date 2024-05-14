@@ -1,21 +1,22 @@
 """Config elements for Linear Pytorch Lightning module usage"""
+
+from typing import Optional
 from pydantic import BaseModel, field_validator
 
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
-
-
-DEFAULT_HIDDEN = 64
+from prescyent.utils.enums import Normalizations
 
 
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
-    hidden_size: int = DEFAULT_HIDDEN
+    hidden_size: int = 64
     num_layers: int = 48
     dct: bool = True
     spatial_fc_only: bool = False
     temporal_fc_in: bool = False
     temporal_fc_out: bool = False
+    simple_blocks_norm: Optional[Normalizations] = Normalizations.SPATIAL
 
     @field_validator("num_layers")
     @classmethod

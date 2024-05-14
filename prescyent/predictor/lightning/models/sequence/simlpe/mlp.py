@@ -52,16 +52,16 @@ class MLPblock(nn.Module):
             self.fc0 = SpatialFC(config.in_points_dims)
         else:
             self.fc0 = TemporalFC(config.in_sequence_size)
-        if config.used_norm:
-            if config.used_norm == Normalizations.SPATIAL:
+        if config.simple_blocks_norm:
+            if config.simple_blocks_norm == Normalizations.SPATIAL:
                 self.norm0 = CustomLayerNorm(1, config.in_points_dims)
-            elif config.used_norm == Normalizations.TEMPORAL:
+            elif config.simple_blocks_norm == Normalizations.TEMPORAL:
                 self.norm0 = CustomLayerNorm(-1, config.in_sequence_size)
-            elif config.used_norm == Normalizations.ALL:
+            elif config.simple_blocks_norm == Normalizations.ALL:
                 self.norm0 = nn.LayerNorm(
                     [config.in_points_dims, config.in_sequence_size]
                 )
-            elif config.used_norm == Normalizations.BATCH:
+            elif config.simple_blocks_norm == Normalizations.BATCH:
                 self.norm0 = nn.BatchNorm1d(config.in_points_dims)
             else:
                 raise NotImplementedError()

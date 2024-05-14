@@ -18,7 +18,8 @@ class ModuleConfig(BaseModel):
     version: Optional[int] = None
     save_path: str = "data/models"
     dropout_value: Optional[float] = None
-    norm_on_last_input: bool = False
+    norm_on_last_input: Optional[bool] = False
+    deriv_output: Optional[bool] = False
     used_norm: Optional[Normalizations] = None
     loss_fn: Optional[LossFunctions] = None
     do_lipschitz_continuation: bool = False
