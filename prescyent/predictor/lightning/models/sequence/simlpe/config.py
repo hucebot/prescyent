@@ -10,7 +10,6 @@ from prescyent.utils.enums import Normalizations
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
-    hidden_size: int = 64
     num_layers: int = 48
     dct: bool = True
     spatial_fc_only: bool = False

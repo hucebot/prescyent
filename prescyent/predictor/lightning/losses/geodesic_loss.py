@@ -3,7 +3,9 @@ import torch
 
 
 class GeodesicLoss(torch.nn.modules.loss._Loss):
-    def __init__(self, size_average=None, reduce=None, reduction: str = "mean", eps: float = 1e-6) -> None:
+    def __init__(
+        self, size_average=None, reduce=None, reduction: str = "mean", eps: float = 1e-7
+    ) -> None:
         super(GeodesicLoss, self).__init__(size_average, reduce, reduction)
         self.eps = eps
         self.reduction = reduction

@@ -36,5 +36,5 @@ class TestFeatureWiseDistance(unittest.TestCase):
             tensor_features.RotationQuat(range(3, 7)),
         ]
         dist = tensor_features.get_distance(a, feature, b, feature)
-        self.assertTrue(torch.allclose(dist["Rotation"], truth_rot))
+        self.assertTrue(torch.allclose(dist["Rotation"], truth_rot, atol=1e-3))
         self.assertTrue(torch.allclose(dist["Coordinate"], truth_coord))

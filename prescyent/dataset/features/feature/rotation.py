@@ -38,7 +38,7 @@ class RotationQuat(Rotation):
 
     @property
     def eps(self) -> float:
-        return 1e-6
+        return 1e-7
 
     @property
     def must_post_process(self) -> bool:
@@ -123,7 +123,7 @@ class RotationRotMat(Rotation):
 
     @property
     def eps(self) -> float:
-        return 1e-6
+        return 1e-7
 
     @property
     def num_dims(self) -> int:
