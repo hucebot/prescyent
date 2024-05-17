@@ -239,16 +239,20 @@ class Trajectory:
             metrics.append(mean_dists)
         return metrics
 
-    def create_subtraj(self, points: List[int], features: List[Feature]):
+    def create_subtraj(self, points: List[int] = None, features: List[Feature] = None):
         """Create a subset of this trajectory with given new list of points and features
 
         Args:
-            points (List[int]): ids of the points to keep
-            features (List[Feature]): features to keep
+            points (List[int]): ids of the points to keep. If None, the values will be same as self.
+            features (List[Feature]): features to keep. If None, the values will be same as self.
 
         Returns:
             Trajectory: A new subtrajectory of self
         """
+        if points is None:
+            points = list(range(self.point_names))
+        if features is None:
+            features = self.tensor_features
         subtraj = Trajectory(
             tensor=self.tensor[:, points],
             tensor_features=self.tensor_features,

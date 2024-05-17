@@ -19,6 +19,10 @@ from prescyent.dataset.datasets.synthetic_simple_trajs import (
     SSTDataset,
     SSTDatasetConfig,
 )
+from prescyent.dataset.datasets.synthetic_circle_clusters import (
+    SCCDataset,
+    SCCDatasetConfig,
+)
 from prescyent.dataset.datasets.andydataset import (
     AndyDataset,
     AndyDatasetConfig,
