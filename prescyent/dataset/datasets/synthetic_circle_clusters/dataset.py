@@ -58,7 +58,7 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
-        return Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        self.trajectories = Trajectories(train_trajectories, test_trajectories, val_trajectories)
 
     def generate_traj(self, traj_id: int) -> Trajectory:
         """Generate a circular 2D trajectory using the parameters from the config

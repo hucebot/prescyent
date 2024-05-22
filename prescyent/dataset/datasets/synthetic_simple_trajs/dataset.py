@@ -69,7 +69,7 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
-        return Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        self.trajectories = Trajectories(train_trajectories, test_trajectories, val_trajectories)
 
     def generate_traj(self, id: int) -> Trajectory:
         """generate smooth linear traj from a starting point and random target point
