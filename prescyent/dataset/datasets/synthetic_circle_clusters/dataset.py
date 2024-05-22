@@ -11,9 +11,9 @@ from matplotlib import pyplot as plt
 from scipy.interpolate import splrep, BSpline
 from tqdm import tqdm
 
+from . import metadata
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.datasets.synthetic_circle_clusters.config import DatasetConfig
-from prescyent.dataset.datasets.synthetic_circle_clusters.metadata import *
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
@@ -58,7 +58,9 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
-        self.trajectories = Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        self.trajectories = Trajectories(
+            train_trajectories, test_trajectories, val_trajectories
+        )
 
     def generate_traj(self, traj_id: int) -> Trajectory:
         """Generate a circular 2D trajectory using the parameters from the config
@@ -100,10 +102,12 @@ class Dataset(MotionDataset):
         trajectory = trajectory[:: self.config.subsampling_step]
         return Trajectory(
             trajectory,
-            int(DEFAULT_FREQ / self.config.subsampling_step),
-            FEATURES,
+            int(metadata.DEFAULT_FREQ / self.config.subsampling_step),
+            metadata.FEATURES,
             file_path=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
             title=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
+            point_names=metadata.POINT_LABELS,
+            point_parents=metadata.POINT_PARENTS,
         )
 
     def plot_trajs(self, list_trajs: List[Trajectory], title="SCC Trajectories"):

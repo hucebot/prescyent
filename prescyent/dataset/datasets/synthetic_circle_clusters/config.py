@@ -11,6 +11,8 @@ from .metadata import FEATURES, POINT_LABELS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for SCCDataset configuration"""
 
+    history_size: int = 10
+    future_size: int = 10
     subsampling_step: int = 1  # subsampling -> 10 Hz to 10Hz
     ratio_train: float = (
         0.7  # ratios used to sample the dataset into train, test and val groups

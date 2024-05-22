@@ -9,6 +9,8 @@ from .metadata import FEATURES, POINT_LABELS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for SSTDataset configuration"""
 
+    history_size: int = 50
+    future_size: int = 50
     subsampling_step: int = 1  # subsampling -> 50 Hz to 50Hz
     num_traj: int = 1000
     ratio_train: float = 0.8

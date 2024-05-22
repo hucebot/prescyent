@@ -10,14 +10,8 @@ import torch
 from scipy.spatial.transform import Rotation as R
 from tqdm import tqdm
 
-from prescyent.utils.logger import logger, DATASET
-from prescyent.utils.dataset_manipulation import (
-    split_array_with_ratios,
-    update_parent_ids,
-)
-from prescyent.dataset.datasets.synthetic_simple_trajs.config import DatasetConfig
-from prescyent.dataset.datasets.synthetic_simple_trajs.metadata import *
-from prescyent.dataset.features import CoordinateXYZ, RotationQuat
+from . import metadata
+from .config import DatasetConfig
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.dataset import MotionDataset
@@ -69,7 +63,9 @@ class Dataset(MotionDataset):
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
-        self.trajectories = Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        self.trajectories = Trajectories(
+            train_trajectories, test_trajectories, val_trajectories
+        )
 
     def generate_traj(self, id: int) -> Trajectory:
         """generate smooth linear traj from a starting point and random target point
@@ -95,9 +91,11 @@ class Dataset(MotionDataset):
         return Trajectory(
             trajectory,
             int(1 / self.config.dt / self.config.subsampling_step),
-            FEATURES,
+            metadata.FEATURES,
             file_path=f"synthetic_traj_{id}",
             title=f"synthetic_traj_{id}",
+            point_parents=metadata.POINT_PARENTS,
+            point_names=metadata.POINT_LABELS,
         )
 
     def get_random_target(self) -> List[float]:
