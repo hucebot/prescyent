@@ -25,11 +25,11 @@ class MotionDatasetConfig(BaseModel):
     # x, y pairs related variables for motion data samples:
     history_size: int  # number of timesteps as input
     future_size: int  # number of predicted timesteps
-    in_features: Optional[List[tensor_features.Feature]] = None
-    out_features: Optional[List[tensor_features.Feature]] = None
+    in_features: Optional[List[tensor_features.Feature]]
+    out_features: Optional[List[tensor_features.Feature]]
     # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
-    in_points: Optional[List[int]] = None
-    out_points: Optional[List[int]] = None
+    in_points: Optional[List[int]]
+    out_points: Optional[List[int]]
     convert_trajectories_beforehand: bool = True  # If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders
 
     @property

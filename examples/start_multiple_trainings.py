@@ -26,7 +26,7 @@ VARIATIONS = {
     "model_config.hidden_size": [64],
     "model_config.num_layers": [4],
     "model_config.loss_fn": [
-        LossFunctions.MPJPELOSS,
+        LossFunctions.MSELOSS,
     ],
     "model_config.used_norm": [
         Normalizations.ALL,

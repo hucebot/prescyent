@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     # Test Baseline first
     constant = ConstantPredictor(dataset.config, str(exp_path))
-    constant.test(dataset.test_dataloader)
+    constant.test(dataset)
     plot_mpjpe(constant, dataset, savefig_dir_path=f"{constant.log_path}/")
 
     # Start a new training per config file

@@ -26,8 +26,6 @@ if __name__ == "__main__":
         batch_size=batch_size,
         in_features=features,
         out_features=features,
-        in_points=None,  # None = All points
-        out_points=None,  # None = All points
     )
     dataset = TeleopIcubDataset(dataset_config)
     print("OK")
@@ -42,7 +40,6 @@ if __name__ == "__main__":
         used_norm=Normalizations.ALL,
         loss_fn=LossFunctions.MTRDLOSS,
     )
-    sample, truth = dataset.val_datasample[0]
     predictor = MlpPredictor(config=config)
     print("OK")
 
@@ -54,7 +51,7 @@ if __name__ == "__main__":
         lr=0.0001,
         early_stopping_patience=10,
     )
-    predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
+    predictor.train(dataset, training_config)
 
     # Save the predictor
     xp_dir = (
@@ -69,7 +66,7 @@ if __name__ == "__main__":
     dataset.save_config(model_dir + "/dataset.config")
 
     # Test so that we know how good we are
-    predictor.test(dataset.test_dataloader)
+    predictor.test(dataset)
     # Compare with delayed baseline
     delayed = DelayedPredictor(dataset_config=dataset_config, log_path=f"{xp_dir}")
-    delayed.test(dataset.test_dataloader)
+    delayed.test(dataset)

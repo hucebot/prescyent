@@ -5,7 +5,8 @@ from typing import Dict, List, Union, Type
 
 import json
 import requests
-from torch.utils.data import Dataset, DataLoader
+from pytorch_lightning import LightningDataModule
+from torch.utils.data import DataLoader
 
 import prescyent.dataset.features as tensor_features
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
@@ -13,11 +14,10 @@ from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, DATASET
 
 
-class MotionDataset(Dataset):
+class MotionDataset(LightningDataModule):
     """Base classe for all motion datasets"""
 
     config: MotionDatasetConfig
@@ -28,27 +28,75 @@ class MotionDataset(Dataset):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, load_data_at_init: bool = False) -> None:
+        super().__init__()
+        self.name = name
+        if load_data_at_init:
+            self.prepare_data()
+            self.setup()
+
+    def __getitem__(self, index) -> Trajectory:
+        return self.trajectories[index]
+
+    def __len__(self) -> int:
+        return len(self.trajectories)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def prepare_data(self):
+        """Method to generates the dataset.trajectories"""
+        raise NotImplementedError("This method must be implemented in the child class")
+
+    def setup(self, stage: str = None):
+        if self.config.convert_trajectories_beforehand:
+            self.convert_trajectories_from_config()
+        self.generate_samples(stage)
+
+    def generate_samples(self, stage: str = None):
         logger.getChild(DATASET).debug(
             "Tensor pairs will be generated for a %s learning type",
             self.config.learning_type,
         )
-        if self.config.in_points is None:
-            self.config.in_points = list(range(self.trajectories.train[0].shape[1]))
-        if self.config.out_points is None:
-            self.config.out_points = list(range(self.trajectories.train[0].shape[1]))
-        if self.config.in_features is None:
-            self.config.in_features = self.trajectories.train[0].tensor_features
-        if self.config.out_features is None:
-            self.config.out_features = self.trajectories.train[0].tensor_features
-        # change the feats of each trajectory if they don't match in_feat and out_feat
+        if stage is None or stage == "fit":
+            self.train_datasample = MotionDataSamples(
+                self.trajectories.train, self.config
+            )
+            logger.getChild(DATASET).info(
+                "Train dataset has a size of %d", len(self.train_datasample)
+            )
+            self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
+            logger.getChild(DATASET).info(
+                "Val dataset has a size of %d", len(self.val_datasample)
+            )
+            logger.getChild(DATASET).info(
+                "Generated (x,y) pairs with shapes (%s, %s)",
+                self.train_datasample[0][0].shape,
+                self.train_datasample[0][1].shape,
+            )
+        if stage is None or stage == "test" or stage == "predict":
+            # We will predict on the test dataset also
+            self.test_datasample = MotionDataSamples(
+                self.trajectories.test, self.config
+            )
+            logger.getChild(DATASET).info(
+                "Test dataset has a size of %d", len(self.test_datasample)
+            )
+            logger.getChild(DATASET).info(
+                "Generated (x,y) pairs with shapes (%s, %s)",
+                self.test_datasample[0][0].shape,
+                self.test_datasample[0][1].shape,
+            )
+
+    def convert_trajectories_from_config(self):
+        """Convert trajectories features to match required in and out features
+        Here it is performed at setup instead of at runtime in the dataloader
+        """
         if (
-            self.config.convert_trajectories_beforehand
-            and self.config.in_features == self.config.out_features
+            self.config.in_features == self.config.out_features
             and self.config.in_features != self.trajectories.train[0].tensor_features
         ) or (
-            self.config.convert_trajectories_beforehand
-            and self.config.in_features != self.config.out_features
+            self.config.in_features != self.config.out_features
             and self.config.in_features != self.trajectories.train[0].tensor_features
             and self.config.out_features != self.trajectories.train[0].tensor_features
         ):
@@ -80,72 +128,79 @@ class MotionDataset(Dataset):
                     traj.convert_tensor_features(self.config.out_features)
                 for traj in self.trajectories.val:
                     traj.convert_tensor_features(self.config.out_features)
-        self.name = name
-        self.generate_samples()
 
-    def __getitem__(self, index) -> Trajectory:
-        return self.trajectories[index]
-
-    def __len__(self) -> int:
-        return len(self.trajectories)
-
-    def __str__(self) -> str:
-        return self.name
-
-    def generate_samples(self):
-        self.train_datasample = MotionDataSamples(self.trajectories.train, self.config)
-        logger.getChild(DATASET).info(
-            "Train dataset has a size of %d", len(self.train_datasample)
-        )
-        self.test_datasample = MotionDataSamples(self.trajectories.test, self.config)
-        logger.getChild(DATASET).info(
-            "Test dataset has a size of %d", len(self.test_datasample)
-        )
-        self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
-        logger.getChild(DATASET).info(
-            "Val dataset has a size of %d", len(self.val_datasample)
-        )
-        logger.getChild(DATASET).info(
-            "Generated (x,y) pairs with shapes (%s, %s)",
-            self.train_datasample[0][0].shape,
-            self.train_datasample[0][1].shape,
-        )
-
-    @property
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.train_datasample,
-            batch_size=self.config.batch_size,
-            shuffle=True,
-            num_workers=self.config.num_workers,
-            pin_memory=self.config.pin_memory,
-            drop_last=self.config.drop_last,
-            persistent_workers=self.config.persistent_workers,
-        )
+        try:
+            return DataLoader(
+                self.train_datasample,
+                batch_size=self.config.batch_size,
+                shuffle=True,
+                num_workers=self.config.num_workers,
+                pin_memory=self.config.pin_memory,
+                drop_last=self.config.drop_last,
+                persistent_workers=self.config.persistent_workers,
+            )
+        except AttributeError:
+            logger.getChild(DATASET).error(
+                "Pairs were not created for this datamodule. "
+                + "Please make sure that you are using this dm through Lightning, "
+                + "or call .prepare_data() and .setup() manually."
+            )
 
-    @property
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.test_datasample,
-            batch_size=self.config.batch_size,
-            shuffle=False,
-            num_workers=self.config.num_workers,
-            pin_memory=self.config.pin_memory,
-            drop_last=False,
-            persistent_workers=self.config.persistent_workers,
-        )
+        try:
+            return DataLoader(
+                self.test_datasample,
+                batch_size=self.config.batch_size,
+                shuffle=False,
+                num_workers=self.config.num_workers,
+                pin_memory=self.config.pin_memory,
+                drop_last=False,
+                persistent_workers=self.config.persistent_workers,
+            )
+        except AttributeError:
+            logger.getChild(DATASET).error(
+                "Pairs were not created for this datamodule. "
+                + "Please make sure that you are using this dm through Lightning, "
+                + "or call .prepare_data() and .setup() manually."
+            )
 
-    @property
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.val_datasample,
-            batch_size=self.config.batch_size,
-            shuffle=False,
-            num_workers=self.config.num_workers,
-            pin_memory=self.config.pin_memory,
-            drop_last=False,
-            persistent_workers=self.config.persistent_workers,
-        )
+        try:
+            return DataLoader(
+                self.val_datasample,
+                batch_size=self.config.batch_size,
+                shuffle=False,
+                num_workers=self.config.num_workers,
+                pin_memory=self.config.pin_memory,
+                drop_last=False,
+                persistent_workers=self.config.persistent_workers,
+            )
+        except AttributeError:
+            logger.getChild(DATASET).error(
+                "Pairs were not created for this datamodule. "
+                + "Please make sure that you are using this dm through Lightning, "
+                + "or call .prepare_data() and .setup() manually."
+            )
+
+    # We will predict on the test dataset also
+    def predict_dataloader(self) -> DataLoader:
+        try:
+            return DataLoader(
+                self.test_datasample,
+                batch_size=self.config.batch_size,
+                shuffle=False,
+                num_workers=self.config.num_workers,
+                pin_memory=self.config.pin_memory,
+                drop_last=False,
+                persistent_workers=self.config.persistent_workers,
+            )
+        except AttributeError:
+            logger.getChild(DATASET).error(
+                "Pairs were not created for this datamodule. "
+                + "Please make sure that you are using this dm through Lightning, "
+                + "or call .prepare_data() and .setup() manually."
+            )
 
     @property
     def frequency(self) -> int:
@@ -192,10 +247,6 @@ class MotionDataset(Dataset):
             # serialize features manually
             with open(config, encoding="utf-8") as conf_file:
                 data = json.load(conf_file)
-            # if data.get("in_features", None):
-            #     data["in_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in data["in_features"]]
-            # if data.get("out_features", None):
-            #     data["out_features"] = [getattr(tensor_features, feature["name"])(feature["ids"]) for feature in data["out_features"]]
             return self.config_class(**data)
         return config
 

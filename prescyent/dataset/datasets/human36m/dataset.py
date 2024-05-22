@@ -14,7 +14,6 @@ from prescyent.utils.dataset_manipulation import (
     rotmat2xyz_torch,
     update_parent_ids,
 )
-from prescyent.dataset.features import CoordinateXYZ, RotationRotMat
 import prescyent.dataset.datasets.human36m.metadata as metadata
 from prescyent.dataset.datasets.human36m.config import DatasetConfig
 
@@ -25,9 +24,16 @@ class Dataset(MotionDataset):
     DATASET_NAME = "H36M"
 
     def __init__(
-        self, config: Union[Dict, DatasetConfig] = None, config_class=DatasetConfig
+        self,
+        config: Union[Dict, DatasetConfig] = None,
+        config_class=DatasetConfig,
+        load_data_at_init: bool = False,
     ) -> None:
         self._init_from_config(config, config_class)
+        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+
+    def prepare_data(self):
+        """get trajectories from files or web"""
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
@@ -35,7 +41,6 @@ class Dataset(MotionDataset):
             )
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
     def _load_files(self) -> Trajectories:
@@ -76,18 +81,15 @@ class Dataset(MotionDataset):
         )
 
     def pathfiles_to_trajectories(
-        self,
-        files: List,
-        delimiter: str = ",",
+        self, files: List, delimiter: str = ",", used_joints=None
     ) -> List[Trajectory]:
         """util method to turn a list of pathfiles to a list of their data
         :rtype: List[Trajectory]
         """
-        used_joints = self.config.used_joints
+        if used_joints is None:
+            used_joints = self.config.used_joints
         subsampling_step = self.config.subsampling_step
         trajectory_arrray = list()
-        if used_joints is None:
-            used_joints = list(range(len(metadata.POINT_LABELS)))
         for file_path in files:
             with file_path.open() as file:
                 expmap = file.readlines()
@@ -136,10 +138,7 @@ class Dataset(MotionDataset):
             trajectory = Trajectory(
                 tensor=position_traj_tensor,
                 frequency=freq,
-                tensor_features=[
-                    CoordinateXYZ(list(range(3))),
-                    RotationRotMat(list(range(3, 12))),
-                ],
+                tensor_features=metadata.FEATURES,
                 file_path=file_path,
                 title=title,
                 point_parents=update_parent_ids(used_joints, metadata.POINT_PARENTS),

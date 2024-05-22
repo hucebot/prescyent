@@ -1,8 +1,9 @@
 """simple predictor to use as a baseline"""
 
-from typing import Dict, Iterable, Optional
+from typing import Dict, Optional
 
 import torch
+from pytorch_lightning import LightningDataModule
 
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.features import convert_tensor_features_to
@@ -32,9 +33,8 @@ class DelayedPredictor(BasePredictor):
 
     def train(
         self,
-        train_dataloader: Iterable,
+        datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
-        val_dataloader: Optional[Iterable] = None,
     ):
         """train predictor"""
         logger.getChild(PREDICTOR).warning(
@@ -44,9 +44,8 @@ class DelayedPredictor(BasePredictor):
 
     def finetune(
         self,
-        train_dataloader: Iterable,
+        datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
-        val_dataloader: Optional[Iterable] = None,
     ):
         """finetune predictor"""
         logger.getChild(PREDICTOR).warning(

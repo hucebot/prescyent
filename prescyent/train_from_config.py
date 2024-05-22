@@ -49,7 +49,7 @@ def train_from_config(
 
     # Launch training
     print("Training starts...")
-    predictor.train(dataset.train_dataloader, training_config, dataset.val_dataloader)
+    predictor.train(dataset, training_config)
 
     # Save the predictor, and configs
     model_dir = Path(
@@ -62,7 +62,7 @@ def train_from_config(
         os.remove(str(config_path))
 
     print("Testing predictor...")
-    predictor.test(dataset.test_dataloader)
+    predictor.test(dataset)
     eval_predictors(
         predictors=[predictor],
         trajectories=dataset.trajectories.test,

@@ -6,6 +6,7 @@ import torch
 import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
+from prescyent.dataset.datasets.human36m.metadata import POINT_LABELS
 from prescyent.dataset.features import Coordinate
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.dataset_manipulation import update_parent_ids
@@ -16,10 +17,16 @@ class Dataset(H36MDataset):
 
     DATASET_NAME = "H36MArm"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
+    def __init__(
+        self, config: Union[Dict, DatasetConfig] = None, load_data_at_init: bool = False
+    ) -> None:
         if config is None:
             config = DatasetConfig()
-        super().__init__(config, DatasetConfig)
+        super().__init__(
+            config=config,
+            config_class=DatasetConfig,
+            load_data_at_init=load_data_at_init,
+        )
 
     def pathfiles_to_trajectories(
         self,
@@ -29,7 +36,9 @@ class Dataset(H36MDataset):
         """util method to turn a list of pathfiles to a list of their data
         :rtype: List[Trajectory]
         """
-        trajectory_list = super().pathfiles_to_trajectories(files, delimiter)
+        trajectory_list = super().pathfiles_to_trajectories(
+            files, delimiter, used_joints=list(range(len(POINT_LABELS)))
+        )
         if self.config.bimanual is True:
             arm_joint_names = metadata.LEFT_ARM_LABELS + metadata.RIGHT_ARM_LABELS
             arm_joint_ids = [

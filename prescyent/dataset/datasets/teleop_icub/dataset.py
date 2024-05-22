@@ -29,8 +29,16 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None) -> None:
+    def __init__(
+        self,
+        config: Union[Dict, DatasetConfig, str, Path] = None,
+        load_data_at_init: bool = False,
+    ) -> None:
         self._init_from_config(config, DatasetConfig)
+        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+
+    def prepare_data(self):
+        """get trajectories from files or web"""
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
@@ -38,7 +46,6 @@ class Dataset(MotionDataset):
             )
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__(self.DATASET_NAME)
 
     # load a set of trajectory, keeping them separate
     def _load_files(self) -> Trajectories:
@@ -120,8 +127,6 @@ class Dataset(MotionDataset):
             seq_len = tensor.shape[0]
             tensor = tensor.reshape(seq_len, 3, 3)
             # keep only asked joints
-            if used_joints is None:
-                used_joints = list(range(len(POINT_LABELS)))
             tensor = tensor[:, used_joints]
             freq = (
                 BASE_FREQUENCY // subsampling_step

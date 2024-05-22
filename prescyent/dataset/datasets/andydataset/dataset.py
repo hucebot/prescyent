@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Union, Dict
 import xml.etree.ElementTree as ET
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -31,8 +30,16 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "AndyDataset"
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None) -> None:
+    def __init__(
+        self,
+        config: Union[Dict, DatasetConfig, str, Path] = None,
+        load_data_at_init: bool = False,
+    ) -> None:
         self._init_from_config(config, DatasetConfig)
+        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+
+    def prepare_data(self):
+        """get trajectories from files or web"""
         if not Path(self.config.data_path).exists():
             logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
@@ -40,7 +47,6 @@ class Dataset(MotionDataset):
             )
             self._get_from_web()
         self.trajectories = self._load_files()
-        super().__init__(self.DATASET_NAME)
 
     def _get_from_web(self) -> None:
         raise NotImplementedError(
@@ -101,8 +107,6 @@ class Dataset(MotionDataset):
         """
         subsampling_step = self.config.subsampling_step
         used_joints = self.config.used_joints
-        if used_joints is None:
-            used_joints = list(range(len(metadata.SEGMENT_LABELS)))
         trajectory_arrray = list()
         for file_path in tqdm(files):
             # If we don't have pt or don't want to use them, we parse the whole xml

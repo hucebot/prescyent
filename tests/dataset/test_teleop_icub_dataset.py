@@ -11,18 +11,20 @@ from prescyent.utils.enums import LearningTypes
 
 class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_load_default(self):
-        dataset = TeleopIcubDataset()
+        dataset = TeleopIcubDataset(load_data_at_init=True)
         self.assertGreater(len(dataset), 0)
 
     def test_load_seq2seq(self):
         dataset = TeleopIcubDataset(
-            TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2SEQ)
+            TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2SEQ),
+            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
 
     def test_load_autoreg(self):
         dataset = TeleopIcubDataset(
-            TeleopIcubDatasetConfig(learning_type=LearningTypes.AUTOREG)
+            TeleopIcubDatasetConfig(learning_type=LearningTypes.AUTOREG),
+            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, truth = dataset.test_datasample[0]
@@ -33,7 +35,8 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_load_seq2one(self):
         dataset = TeleopIcubDataset(
-            TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2ONE)
+            TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2ONE),
+            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         _, truth = dataset.test_datasample[0]
@@ -44,7 +47,8 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         dataset = TeleopIcubDataset(
             TeleopIcubDatasetConfig(
                 out_features=[CoordinateXY([0, 1])],
-            )
+            ),
+            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, truth = dataset.test_datasample[0]
@@ -59,15 +63,16 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_impossible_configs(self):
         config = TeleopIcubDatasetConfig(future_size=200)
-        self.assertRaises(ValueError, TeleopIcubDataset, config)
+        dm = TeleopIcubDataset(config=config)
+        self.assertRaises(ValueError, TeleopIcubDataset, config, True)
         config = TeleopIcubDatasetConfig(future_size=100, history_size=100)
-        self.assertRaises(ValueError, TeleopIcubDataset, config)
+        self.assertRaises(ValueError, TeleopIcubDataset, config, True)
         config = TeleopIcubDatasetConfig(history_size=100)
-        TeleopIcubDataset(config)  # this is ok
+        TeleopIcubDataset(config, True)  # this is ok
 
     def test_load_from_path(self):
-        dataset = TeleopIcubDataset()
+        dataset = TeleopIcubDataset(load_data_at_init=True)
         dataset.save_config("tmp/test.json")
         config = dataset._load_config("tmp/test.json")
-        TeleopIcubDataset("tmp/test.json")
+        TeleopIcubDataset("tmp/test.json", load_data_at_init=True)
         shutil.rmtree("tmp", ignore_errors=True)

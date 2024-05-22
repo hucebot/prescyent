@@ -1,5 +1,10 @@
 import numpy as np
+from prescyent.dataset.features import CoordinateXYZ, RotationRotMat
 
+FEATURES = [
+    CoordinateXYZ(list(range(3))),
+    RotationRotMat(list(range(3, 12))),
+]
 BASE_FREQUENCY = 50
 POINT_LABELS = [
     "hips_0",

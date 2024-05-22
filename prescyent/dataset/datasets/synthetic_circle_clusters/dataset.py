@@ -24,15 +24,18 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "SCC"
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None) -> None:
+    def __init__(
+        self,
+        config: Union[Dict, DatasetConfig, str, Path] = None,
+        load_data_at_init: bool = False,
+    ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
         )
         self._init_from_config(config, DatasetConfig)
-        self.trajectories = self.generate_trajectories()
-        super().__init__(self.DATASET_NAME)
+        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
 
-    def generate_trajectories(self):
+    def prepare_data(self):
         """create a list of Trajectories from config variables"""
         train_trajectories = [
             self.generate_traj(i)

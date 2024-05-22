@@ -5,10 +5,9 @@ import sys
 import torch
 from tqdm import tqdm
 
-from prescyent.predictor import MlpPredictor, DelayedPredictor
+from prescyent.predictor import MlpPredictor
 from prescyent.dataset import TeleopIcubDataset
 from prescyent.evaluator.plotting import plot_traj_tensors_with_shift
-from prescyent.evaluator.runners import run_predictor
 
 
 if __name__ == "__main__":
@@ -28,7 +27,7 @@ if __name__ == "__main__":
     print("Path:", path)
     # we load with the same config as for the training
     print("Loading the dataset...")
-    dataset = TeleopIcubDataset(path + "/dataset.config")
+    dataset = TeleopIcubDataset(path + "/dataset.config", load_data_at_init=True)
     history_size = dataset.config.history_size
     future_size = dataset.config.future_size
     print("Dataset OK")

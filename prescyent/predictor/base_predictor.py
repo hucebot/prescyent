@@ -6,6 +6,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 
 import torch
 from pydantic import BaseModel
+from pytorch_lightning import LightningDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
@@ -92,9 +93,8 @@ class BasePredictor:
 
     def train(
         self,
-        train_dataloader: Iterable,
+        datamodule: LightningDataModule,
         train_config: BaseModel = None,
-        val_dataloader: Iterable = None,
     ):
         """train predictor"""
         raise NotImplementedError(
@@ -103,9 +103,8 @@ class BasePredictor:
 
     def finetune(
         self,
-        train_dataloader: Iterable,
+        datamodule: LightningDataModule,
         train_config: BaseModel = None,
-        val_dataloader: Iterable = None,
     ):
         """finetune predictor"""
         raise NotImplementedError(
@@ -124,12 +123,12 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
-    def test(self, test_dataloader: Iterable) -> Dict[str, torch.Tensor]:
+    def test(self, datamodule: LightningDataModule) -> Dict[str, torch.Tensor]:
         """test predictor"""
         # log in tensorboard
         distances = list()
         features = self.dataset_config.out_features
-        pbar = tqdm(test_dataloader)
+        pbar = tqdm(datamodule.test_dataloader())
         pbar.set_description(f"Testing {self}:")
         for sample, truth in pbar:
             # eval step

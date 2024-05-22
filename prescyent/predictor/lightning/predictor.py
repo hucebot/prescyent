@@ -4,7 +4,6 @@ import inspect
 import json
 import os
 import shutil
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Dict, Type, Union
 
@@ -178,7 +177,7 @@ class LightningPredictor(BasePredictor):
                 profiler=profiler,
                 **kwargs,
             )
-        except MisconfigurationException as err:
+        except MisconfigurationException:
             kwargs["accelerator"] = "auto"
             self.trainer = pl.Trainer(
                 default_root_dir=self.log_path,
@@ -254,9 +253,8 @@ class LightningPredictor(BasePredictor):
 
     def train(
         self,
-        train_dataloader: Iterable,
+        datamodule: pl.LightningDataModule,
         train_config: TrainingConfig = None,
-        val_dataloader: Iterable = None,
     ):
         """train the model"""
         if not train_config:
@@ -267,7 +265,7 @@ class LightningPredictor(BasePredictor):
         if train_config.use_auto_lr:
             # Run learning rate finder
             tuner = Tuner(self.trainer)
-            lr_finder = tuner.lr_find(self.model, train_dataloader)
+            lr_finder = tuner.lr_find(self.model, datamodule=datamodule)
             fig = lr_finder.plot(suggest=True)  # Plot
             self.tb_logger.experiment.add_figure("lr_finder", fig)
             self.model.hparams.lr = lr_finder.suggestion()
@@ -289,8 +287,7 @@ class LightningPredictor(BasePredictor):
 
         self.trainer.fit(
             model=self.model,
-            train_dataloaders=train_dataloader,
-            val_dataloaders=val_dataloader,
+            datamodule=datamodule,
         )
         # Always save after training
         self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
@@ -298,15 +295,14 @@ class LightningPredictor(BasePredictor):
 
     def finetune(
         self,
-        train_dataloader: Iterable,
+        datamodule: pl.LightningDataModule,
         train_config: TrainingConfig = None,
-        val_dataloader: Iterable = None,
     ):
         """finetune the model"""
         self.version = None
         self.name = self.name + "_finetuned"
         self._init_logger()
-        input_t, truth_t = next(iter(train_dataloader))
+        input_t, truth_t = next(iter(datamodule.train_dataloader()))
         input_shape = input_t.shape
         output_shape = truth_t.shape
         try:
@@ -344,13 +340,13 @@ class LightningPredictor(BasePredictor):
         self.dataset_config.out_points = list(range(truth_t.shape[2]))
         self.dataset_config.out_dims = list(range(truth_t.shape[3]))
         # train on new dataset
-        self.train(train_dataloader, train_config, val_dataloader)
+        self.train(train_config=train_config, datamodule=datamodule)
 
-    def test(self, test_dataloader: Iterable):
+    def test(self, datamodule: pl.LightningDataModule):
         """test the model"""
         if self.trainer is None:
             self._init_trainer(devices=1)
-        losses = self.trainer.test(self.model, test_dataloader)
+        losses = self.trainer.test(self.model, datamodule=datamodule)
         self._free_trainer()
         return losses
 

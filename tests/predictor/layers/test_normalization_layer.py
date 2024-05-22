@@ -27,23 +27,15 @@ class MotionLayerNormTests(CustomTestCase):
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,
+                out_features=in_features,
                 in_points=in_points,
+                out_points=in_points,
             ),
             used_norm=Normalizations.ALL,
         )
         normalization_layer = MotionLayerNorm(config)
         output_t = normalization_layer(input_t)
         self.assertEqual(input_t.shape, output_t.shape)
-        config = ModuleConfig(
-            dataset_config=MotionDatasetConfig(
-                future_size=out_sequence_size,
-                history_size=in_sequence_size,
-                in_points=in_points,
-            ),
-            used_norm=Normalizations.ALL,
-        )
-        with self.assertRaises(AttributeError) as _:
-            normalization_layer = MotionLayerNorm(config)
 
     def test_spatial_norm(self):
         """test spatial norm init and forward"""
@@ -62,7 +54,9 @@ class MotionLayerNormTests(CustomTestCase):
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,
+                out_features=in_features,
                 in_points=in_points,
+                out_points=in_points,
             ),
             used_norm=Normalizations.SPATIAL,
         )
@@ -85,8 +79,11 @@ class MotionLayerNormTests(CustomTestCase):
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
                 in_features=in_features,
+                out_features=in_features,
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
+                in_points=in_points,
+                out_points=in_points,
             ),
             used_norm=Normalizations.TEMPORAL,
         )
@@ -118,7 +115,9 @@ class MotionLayerNormTests(CustomTestCase):
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,
+                out_features=in_features,
                 in_points=in_points,
+                out_points=in_points,
             ),
             used_norm=Normalizations.BATCH,
         )

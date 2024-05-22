@@ -395,7 +395,7 @@ def plot_mpjpe(
 ):
     distances = list()
     features = dataset.config.out_features
-    pbar = tqdm(dataset.test_dataloader)
+    pbar = tqdm(dataset.test_dataloader())
     pbar.set_description(f"Running {predictor} over test_dataloader:")
     # Run all test once and get distance from truth per feature
     for sample, truth in pbar:
@@ -442,7 +442,7 @@ def plot_mpjpes(
     features = dataset.config.out_features
     for predictor in predictors:
         distances = list()
-        pbar = tqdm(dataset.test_dataloader)
+        pbar = tqdm(dataset.test_dataloader())
         pbar.set_description(f"Running {predictor} over test_dataloader:")
         # Run all test once and get distance from truth per feature
         for sample, truth in pbar:

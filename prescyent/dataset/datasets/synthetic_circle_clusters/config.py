@@ -4,6 +4,8 @@ from typing import List
 from pydantic import model_validator
 
 from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.features import Feature
+from .metadata import FEATURES, POINT_LABELS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -24,6 +26,10 @@ class DatasetConfig(MotionDatasetConfig):
     imperfection_range: float = 0.2  # perturbation over the circle main points
     num_imperfection_points: int = 10  # number of perturbation points
     num_points: float = 200  # number of points in the circle total
+    in_features: List[Feature] = FEATURES
+    out_features: List[Feature] = FEATURES
+    in_points: List[int] = list(range(len(POINT_LABELS)))
+    out_points: List[int] = list(range(len(POINT_LABELS)))
 
     @property
     def num_clusters(self) -> int:

@@ -16,7 +16,7 @@ NO_DATA_WARNING = "Data for AndyDataset are not installed or found, please refer
 class InitAndyDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = AndyDataset()
+            dataset = AndyDataset(load_data_at_init=True)
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
@@ -24,7 +24,8 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_seq2seq(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(learning_type=LearningTypes.SEQ2SEQ)
+                AndyDatasetConfig(learning_type=LearningTypes.SEQ2SEQ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
@@ -33,7 +34,8 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_autoreg(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(learning_type=LearningTypes.AUTOREG)
+                AndyDatasetConfig(learning_type=LearningTypes.AUTOREG),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
@@ -47,7 +49,8 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_seq2one(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(learning_type=LearningTypes.SEQ2ONE)
+                AndyDatasetConfig(learning_type=LearningTypes.SEQ2ONE),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, truth = dataset.test_datasample[0]
@@ -62,7 +65,8 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(
                     in_features=[RotationRotMat(range(9))],
                     out_features=[CoordinateX([0])],
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
@@ -79,10 +83,10 @@ class InitAndyDatasetTest(CustomTestCase):
 
     def test_load_from_path(self):
         try:
-            dataset = AndyDataset()
+            dataset = AndyDataset(load_data_at_init=True)
             dataset.save_config("tmp/test.json")
             config = dataset._load_config("tmp/test.json")
-            AndyDataset("tmp/test.json")
+            AndyDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)

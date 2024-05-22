@@ -1,9 +1,9 @@
 """Config elements for SST dataset usage"""
 from typing import List
 
-import torch
-
 from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.features import Feature
+from .metadata import FEATURES, POINT_LABELS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -28,3 +28,7 @@ class DatasetConfig(MotionDatasetConfig):
     gain_ang: float = 1.0
     clamp_lin: float = 0.2
     clamp_ang: float = 0.5
+    in_features: List[Feature] = FEATURES
+    out_features: List[Feature] = FEATURES
+    in_points: List[int] = list(range(len(POINT_LABELS)))
+    out_points: List[int] = list(range(len(POINT_LABELS)))

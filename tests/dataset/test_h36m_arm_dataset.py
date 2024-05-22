@@ -22,7 +22,7 @@ NO_DATA_WARNING = "H36MArm dataset is not installed, please refer to the README 
 class InitH36MArmDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = H36MArmDataset()
+            dataset = H36MArmDataset(load_data_at_init=True)
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
@@ -34,7 +34,8 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     subjects_train=["S1"],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
@@ -47,7 +48,8 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     subjects_train=["S1"],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, truth = dataset.test_datasample[0]
@@ -63,7 +65,8 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     subjects_train=["S1"],
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
@@ -90,7 +93,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         CoordinateXYZ(list(range(6, 9))),
                         RotationRep6D(list(range(6))),
                     ],
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, truth = dataset.test_datasample[0]
@@ -113,7 +117,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         RotationRep6D([3, 4, 5, 6, 7, 8]),
                     ],
                     out_features=[CoordinateXYZ(range(3))],
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
@@ -131,7 +136,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                     actions=["directions"],
                     in_features=[CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
                     out_features=[CoordinateXY(range(2)), RotationEuler(range(2, 5))],
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
@@ -152,7 +158,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         RotationRep6D([3, 4, 5, 6, 7, 8]),
                     ],
                     out_features=[CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
-                )
+                ),
+                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, truth = dataset.test_datasample[0]
