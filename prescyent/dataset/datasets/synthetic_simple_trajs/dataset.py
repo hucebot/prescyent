@@ -18,6 +18,9 @@ from prescyent.dataset.dataset import MotionDataset
 from prescyent.utils.logger import logger, DATASET
 
 
+SEQ = "zyx"
+
+
 def clamp_vect_norm(vect, limit):
     norm = np.linalg.norm(vect, ord=2)
     axis = vect / (norm + 1e-6)
@@ -32,7 +35,7 @@ class Dataset(MotionDataset):
     def __init__(
         self,
         config: Union[Dict, DatasetConfig, str, Path] = None,
-        load_data_at_init: bool = False,
+        load_data_at_init: bool = True,
     ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
@@ -67,12 +70,12 @@ class Dataset(MotionDataset):
             train_trajectories, test_trajectories, val_trajectories
         )
 
-    def generate_traj(self, id: int) -> Trajectory:
+    def generate_traj(self, traj_id: int) -> Trajectory:
         """generate smooth linear traj from a starting point and random target point
          all variables are taken from dataset config
 
         Args:
-            id (int): id used for trajectory name
+            traj_id (int): traj_id used for trajectory name
 
         Returns:
             Trajectory: new smooth simple traj between two pose
@@ -92,8 +95,8 @@ class Dataset(MotionDataset):
             trajectory,
             int(1 / self.config.dt / self.config.subsampling_step),
             metadata.FEATURES,
-            file_path=f"synthetic_traj_{id}",
-            title=f"synthetic_traj_{id}",
+            file_path=f"synthetic_traj_{traj_id}",
+            title=f"synthetic_traj_{traj_id}",
             point_parents=metadata.POINT_PARENTS,
             point_names=metadata.POINT_LABELS,
         )
@@ -102,16 +105,16 @@ class Dataset(MotionDataset):
         x = random.uniform(self.config.min_x, self.config.max_x)
         y = random.uniform(self.config.min_y, self.config.max_y)
         z = random.uniform(self.config.min_z, self.config.max_z)
-        random_quat = list(R.random().as_quat(canonical=True))  # x, y, z, w
-        return np.array([x, y, z] + random_quat)
+        random_euler = list(R.random().as_euler(SEQ))  # zyx
+        return np.array([x, y, z] + random_euler)
 
     # Code from Quentin, used to loop over next pos to reach target
     def controller_goto(self, curr_pose, target_pose):
         # Compute rotation matrix from quaternions
-        curr_pos, curr_quat = np.array(curr_pose[:3]), np.array(curr_pose[3:])
-        target_pos, target_quat = np.array(target_pose[:3]), np.array(target_pose[3:])
-        curr_mat = R.from_quat(curr_quat).as_matrix()
-        target_mat = R.from_quat(target_quat).as_matrix()
+        curr_pos, curr_euler = np.array(curr_pose[:3]), np.array(curr_pose[3:])
+        target_pos, target_euler = np.array(target_pose[:3]), np.array(target_pose[3:])
+        curr_mat = R.from_euler(SEQ, curr_euler).as_matrix()
+        target_mat = R.from_euler(SEQ, target_euler).as_matrix()
         # Target pose in current commanded hand pose
         rel_mat = target_mat @ curr_mat.transpose()
         rel_pos = target_pos - curr_pos
@@ -126,5 +129,5 @@ class Dataset(MotionDataset):
         curr_mat = curr_mat @ R.from_rotvec(self.config.dt * vel_ang).as_matrix()
         # Return updated pose command
         return np.concatenate(
-            [curr_pos, R.from_matrix(curr_mat).as_quat(canonical=True)]
+            [curr_pos, R.from_matrix(curr_mat).as_euler(SEQ)]
         )

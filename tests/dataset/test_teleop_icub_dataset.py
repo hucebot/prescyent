@@ -63,7 +63,6 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_impossible_configs(self):
         config = TeleopIcubDatasetConfig(future_size=200)
-        dm = TeleopIcubDataset(config=config)
         self.assertRaises(ValueError, TeleopIcubDataset, config, True)
         config = TeleopIcubDatasetConfig(future_size=100, history_size=100)
         self.assertRaises(ValueError, TeleopIcubDataset, config, True)

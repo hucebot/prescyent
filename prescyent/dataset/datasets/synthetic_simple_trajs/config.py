@@ -23,7 +23,7 @@ class DatasetConfig(MotionDatasetConfig):
     max_y: float = 1.0
     min_z: float = -1.0
     max_z: float = 1.0
-    starting_pose: List[float] = [0, 0, 0, 0, 0, 0, 1]  # CoordinateXYZ + RotationQuat
+    starting_pose: List[float] = [0, 0, 0, 0, 0, 0]  # CoordinateXYZ + RotationEuler
     # Controller parameters
     dt: float = 0.02
     gain_lin: float = 1.0

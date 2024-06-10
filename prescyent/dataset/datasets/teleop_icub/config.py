@@ -13,6 +13,7 @@ class DatasetConfig(MotionDatasetConfig):
     url: str = "https://zenodo.org/record/5913573/files/AndyData-lab-prescientTeleopICub.zip?download=1"
     data_path: str = os.path.join(DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub")
     glob_dir: str = "datasetMultipleTasks/*/p*.csv"
+    shuffle_data_files: bool = True
     subsampling_step: int = 10  # subsampling -> 100 Hz to 10Hz
     used_joints: List[int] = list(range(len(POINT_LABELS)))  # All joints as default
     ratio_train: float = 0.8

@@ -33,7 +33,7 @@ class Dataset(MotionDataset):
     def __init__(
         self,
         config: Union[Dict, DatasetConfig, str, Path] = None,
-        load_data_at_init: bool = False,
+        load_data_at_init: bool = True,
     ) -> None:
         self._init_from_config(config, DatasetConfig)
         super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
@@ -79,7 +79,7 @@ class Dataset(MotionDataset):
             self.config.ratio_train,
             self.config.ratio_test,
             self.config.ratio_val,
-            shuffle=self.config.shuffle,
+            shuffle=self.config.shuffle_data_files,
         )
         train = self.pathfiles_to_trajectories(train_files)
         logger.getChild(DATASET).info(

@@ -1,4 +1,5 @@
 """Common config elements for motion datasets usage"""
+import random
 from pathlib import Path
 from typing import List, Optional
 
@@ -17,7 +18,9 @@ class MotionDatasetConfig(BaseModel):
 
     batch_size: int = 128
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
-    shuffle: bool = True
+    shuffle_train: bool = True
+    shuffle_test: bool = False
+    shuffle_val: bool = False
     num_workers: int = 0
     drop_last: bool = True
     persistent_workers: bool = False
@@ -31,6 +34,9 @@ class MotionDatasetConfig(BaseModel):
     in_points: Optional[List[int]]
     out_points: Optional[List[int]]
     convert_trajectories_beforehand: bool = True  # If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders
+    loop_over_traj: bool = False  # make the trajectory loop over itself where generating training pairs
+    reverse_pair_ratio: float = 0  # Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1
+    seed: int = None  # A seed for all random operations in the dataset class
 
     @property
     def num_out_features(self) -> int:
@@ -105,6 +111,14 @@ class MotionDatasetConfig(BaseModel):
                     for feature in self["in_features"]
                 ]
         return self
+
+
+    @model_validator(mode="after")
+    def generate_random_seed_if_none(self):
+        if self.seed is None:
+            self.seed = random.randint(1, 10**9)
+        return self
+
 
     class Config:
         arbitrary_types_allowed = True

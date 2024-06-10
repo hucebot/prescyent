@@ -214,7 +214,8 @@ def plot_trajs(
     trajectories: List[Trajectory],
     offsets: List[int],
     savefig_path: str,
-    titles: Optional[List[str]] = None,
+    title: Optional[str] = None,
+    legend_labels: Optional[List[str]] = None,
 ):
     assert len(trajectories) >= 1
     feats = trajectories[0].tensor_features
@@ -228,7 +229,7 @@ def plot_trajs(
     assert all(
         [traj.tensor.shape[1] == num_points for traj in trajectories]
     )  # Plotted trajs must have number of points
-    pred_last_idx = max(*[len(traj) for traj in trajectories]) + max(*offsets)
+    pred_last_idx = max([len(traj) for traj in trajectories]) + max(offsets)
     time_steps = np.linspace(
         0,
         (pred_last_idx + 1) / trajectories[0].frequency,
@@ -272,10 +273,12 @@ def plot_trajs(
         len(axes) * 5 + 5, 2**16 / 100 - 1
     )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
     fig.set_size_inches(w, h)
-    fig.suptitle(f"Trajectory and predictions on {trajectories[0].title}")
+    if title is None:
+        title = f"Trajectory and predictions on {trajectories[0].title}"
+    fig.suptitle(title)
     # fig.subplots_adjust(right=0.7)
     # fig.tight_layout(pad=5)
-    legend_plot(axes, names=titles, xlabel="time (s)", ylabels=ylabels)
+    legend_plot(axes, names=legend_labels, xlabel="time (s)", ylabels=ylabels)
     save_plot_and_close(savefig_path)
 
 
@@ -374,13 +377,14 @@ def legend_plot(
         xlabel (str, optional): label for x. x axis are shared in our plots. Defaults to "time".
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
-    legend = axes[-1].legend(
-        labels=names, loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5)
-    )
+    if names is not None:
+        legend = axes[-1].legend(
+            labels=names, loc="best"
+        )
+        frame = legend.get_frame()
+        frame.set_facecolor("0.9")
+        frame.set_edgecolor("0.9")
     axes[-1].set_xlabel(xlabel)
-    frame = legend.get_frame()
-    frame.set_facecolor("0.9")
-    frame.set_edgecolor("0.9")
     for i, axe in enumerate(axes):
         if isinstance(ylabels, list) and len(ylabels) >= len(axes):
             axe.set_ylabel(ylabels[i])

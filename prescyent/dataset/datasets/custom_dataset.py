@@ -12,7 +12,7 @@ class CustomDataset(MotionDataset):
         config,
         trajectories: Trajectories,
         name: str = "CustomDataset",
-        load_data_at_init: bool = False,
+        load_data_at_init: bool = True,
     ) -> None:
         self._init_from_config(config, MotionDatasetConfig)
         self.trajectories = trajectories

@@ -174,7 +174,7 @@ class BasePredictor:
         history_step: int = 1,
         input_tensor_features=None,
     ) -> List[torch.Tensor]:
-        """run method/model inference over an unbatched input sequence
+        """run method/model inference over an unbatched or batched input sequence
         The run method outputs a List of prediction because it can iterate over the input_tensor
         according to the history_size and history step values.
 
@@ -210,11 +210,15 @@ class BasePredictor:
             future_size = self.dataset_config.future_size
         if history_size is None:
             history_size = self.dataset_config.history_size
+        max_iter = input_len - history_size + 1 if not self.dataset_config.loop_over_traj else input_len
         for i in tqdm(
-            range(0, input_len - history_size + 1, history_step),
+            range(0, max_iter, history_step),
             desc="Iterate over input_tensor",
         ):
-            input_sub_batch = input_tensor[:, i : i + history_size]
+            if i + history_size > input_len and self.dataset_config.loop_over_traj:
+                input_sub_batch = torch.cat((input_tensor[:, i:], input_tensor[:, :history_size-input_tensor[:, i:].shape[1]]), 1)
+            else:
+                input_sub_batch = input_tensor[:, i : i + history_size]
             prediction = self.predict(input_sub_batch, future_size)
             if unbatch:
                 prediction = prediction.squeeze(0)

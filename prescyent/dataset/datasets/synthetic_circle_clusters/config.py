@@ -1,9 +1,7 @@
 """Config elements for SCC dataset usage"""
 from typing import List
 
-from pydantic import model_validator
-
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import MotionDatasetConfig, model_validator
 from prescyent.dataset.features import Feature
 from .metadata import FEATURES, POINT_LABELS
 
@@ -20,14 +18,14 @@ class DatasetConfig(MotionDatasetConfig):
     ratio_test: float = 0.15
     ratio_val: float = 0.15
     # circle parameters
-    num_trajs: List[int] = [200, 200]  # Number of trajectory generated per cluster
-    starting_xs: List[float] = [0, 5]  # x coordinate for each cluster
+    num_trajs: List[int] = [25, 25]  # Number of trajectory generated per cluster
+    starting_xs: List[float] = [0, 4]  # x coordinate for each cluster
     starting_ys: List[float] = [0, 0]  # y coordinate for each cluster
-    radius: List[float] = [2, 2]  # radius for each cluster
+    radius: List[float] = [1, 1]  # radius for each cluster
     radius_eps: float = 0.01  # variation for radius
-    imperfection_range: float = 0.2  # perturbation over the circle main points
-    num_imperfection_points: int = 10  # number of perturbation points
-    num_points: float = 200  # number of points in the circle total
+    perturbation_range: float = 0.1  # perturbation over the shape's main points
+    num_perturbation_points: int = 10  # number of perturbation points
+    num_points: int = 100  # number of points in the final shape after smoothing
     in_features: List[Feature] = FEATURES
     out_features: List[Feature] = FEATURES
     in_points: List[int] = list(range(len(POINT_LABELS)))
