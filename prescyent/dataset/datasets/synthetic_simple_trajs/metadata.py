@@ -1,5 +1,5 @@
-from prescyent.dataset.features.feature import CoordinateXYZ, RotationQuat
+from prescyent.dataset.features.feature import CoordinateXYZ, RotationEuler
 
-FEATURES = [CoordinateXYZ(range(3)), RotationQuat(range(3, 7))]
+FEATURES = [CoordinateXYZ(range(3)), RotationEuler(range(3, 6))]
 POINT_LABELS = ["end_effector"]
 POINT_PARENTS = [-1]

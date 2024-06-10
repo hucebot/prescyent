@@ -16,6 +16,7 @@ class DatasetConfig(MotionDatasetConfig):
     )
     glob_dir: str = "Participant_*.mvnx"
     pt_glob_dir: str = "Participant_*.pt"
+    shuffle_data_files: bool = True
     use_pt: bool = True
     subsampling_step: int = 24  # subsampling -> 240 Hz to 10Hz
     used_joints: List[int] = list(range(len(SEGMENT_LABELS)))  # None == all

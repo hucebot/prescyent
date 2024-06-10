@@ -36,6 +36,8 @@ def train_from_config(
     model_config = config_dict.get("model_config", {})
     training_config = config_dict.get("training_config", {})
     dataset_config = config_dict.get("dataset_config", {})
+    if not dataset_config:
+        dataset_config = model_config.get("dataset_config", {})
     print(f"Using model config: {model_config}")
     print(f"Using training config: {training_config}")
     print(f"Using dataset config: {dataset_config}")

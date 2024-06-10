@@ -12,3 +12,4 @@ class LossFunctions(str, Enum):
     KLDIVLOSS = "kldivloss"
     MFRDLOSS = "mfdloss"
     MTRDLOSS = "mtdloss"
+    MTRDVLOSS = "mtrdvloss"

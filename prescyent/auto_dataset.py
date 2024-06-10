@@ -10,7 +10,7 @@ from prescyent.dataset import DATASET_MAP
 class AutoDataset:
     @classmethod
     def build_from_config(
-        cls, config: Union[str, Path, dict, MotionDatasetConfig]
+        cls, config: Union[str, Path, dict, MotionDatasetConfig], load_data_at_init: bool = True
     ) -> MotionDataset:
         if isinstance(config, (str, Path)):
             config = cls._get_config_from_path(Path(config))
@@ -25,7 +25,7 @@ class AutoDataset:
             )
             raise AttributeError(dataset_class_name)
         logger.getChild(DATASET).info("Building new %s", dataset_class.__name__)
-        return dataset_class(config=config)
+        return dataset_class(config=config, load_data_at_init=load_data_at_init)
 
     @classmethod
     def _get_config_from_path(cls, config_path: Path):

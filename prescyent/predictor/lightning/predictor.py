@@ -21,6 +21,7 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     DeviceStatsMonitor,
     EarlyStopping,
+    ModelCheckpoint
 )
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
@@ -161,6 +162,13 @@ class LightningPredictor(BasePredictor):
                 mode=self.training_config.early_stopping_mode,
             )
             callbacks.append(early_stopping)
+            self.checkpoint_callback = ModelCheckpoint(
+                save_top_k=self.training_config.early_stopping_patience,
+                monitor=self.training_config.early_stopping_value,
+                mode=self.training_config.early_stopping_mode,
+                )
+            callbacks.append(self.checkpoint_callback)
+            kwargs["enable_checkpointing"] = True,
         if self.training_config.seed is not None:
             pl.seed_everything(self.training_config.seed, workers=True)
         if self.training_config.use_deterministic_algorithms:
@@ -289,6 +297,9 @@ class LightningPredictor(BasePredictor):
             model=self.model,
             datamodule=datamodule,
         )
+        # Retreive best checkpoint if one exists
+        if hasattr(self, "checkpoint_callback"):
+            self.model = self._load_from_path(self.checkpoint_callback.best_model_path)
         # Always save after training
         self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
         self._free_trainer()

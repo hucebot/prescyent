@@ -28,7 +28,7 @@ class MotionDataset(LightningDataModule):
     test_datasample: MotionDataSamples
     val_datasample: MotionDataSamples
 
-    def __init__(self, name: str, load_data_at_init: bool = False) -> None:
+    def __init__(self, name: str, load_data_at_init: bool = True) -> None:
         super().__init__()
         self.name = name
         if load_data_at_init:
@@ -134,7 +134,7 @@ class MotionDataset(LightningDataModule):
             return DataLoader(
                 self.train_datasample,
                 batch_size=self.config.batch_size,
-                shuffle=True,
+                shuffle=self.config.shuffle_train,
                 num_workers=self.config.num_workers,
                 pin_memory=self.config.pin_memory,
                 drop_last=self.config.drop_last,
@@ -152,7 +152,7 @@ class MotionDataset(LightningDataModule):
             return DataLoader(
                 self.test_datasample,
                 batch_size=self.config.batch_size,
-                shuffle=False,
+                shuffle=self.config.shuffle_test,
                 num_workers=self.config.num_workers,
                 pin_memory=self.config.pin_memory,
                 drop_last=False,
@@ -170,7 +170,7 @@ class MotionDataset(LightningDataModule):
             return DataLoader(
                 self.val_datasample,
                 batch_size=self.config.batch_size,
-                shuffle=False,
+                shuffle=self.config.shuffle_val,
                 num_workers=self.config.num_workers,
                 pin_memory=self.config.pin_memory,
                 drop_last=False,
@@ -189,7 +189,7 @@ class MotionDataset(LightningDataModule):
             return DataLoader(
                 self.test_datasample,
                 batch_size=self.config.batch_size,
-                shuffle=False,
+                shuffle=self.config.shuffle_test,
                 num_workers=self.config.num_workers,
                 pin_memory=self.config.pin_memory,
                 drop_last=False,

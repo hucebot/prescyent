@@ -1,7 +1,6 @@
 """Class and methods for the SCC Dataset, generating smooth circling trajectories
 https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 """
-import random
 from pathlib import Path
 from typing import Union, Dict, List
 
@@ -27,7 +26,7 @@ class Dataset(MotionDataset):
     def __init__(
         self,
         config: Union[Dict, DatasetConfig, str, Path] = None,
-        load_data_at_init: bool = False,
+        load_data_at_init: bool = True,
     ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
@@ -37,32 +36,38 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
-        train_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_train)))
-        ]
+        np.random.seed(self.config.seed)
+        train_trajectories = []
+        test_trajectories = []
+        val_trajectories = []
+        traj_id = 0
+        for c in range(self.config.num_clusters):
+            cluster_counter = 0
+            for cluster_counter in range(self.config.num_trajs[c]):
+                if cluster_counter < int(self.config.num_trajs[c] * self.config.ratio_train):
+                    train_trajectories.append(self.generate_traj(traj_id, c))
+                    traj_id+=1
+                elif cluster_counter < int(self.config.num_trajs[c] * (self.config.ratio_train + self.config.ratio_test)):
+                    test_trajectories.append(self.generate_traj(traj_id, c))
+                    traj_id+=1
+                else:
+                    val_trajectories.append(self.generate_traj(traj_id, c))
+                    traj_id+=1
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
-        test_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_test)))
-        ]
         logger.getChild(DATASET).info(
             f"Generated {len(test_trajectories)} test trajectories",
         )
-        val_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_val)))
-        ]
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
         )
         self.trajectories = Trajectories(
             train_trajectories, test_trajectories, val_trajectories
         )
+        np.random.seed()
 
-    def generate_traj(self, traj_id: int) -> Trajectory:
+    def generate_traj(self, traj_id: int, cluster_id: int) -> Trajectory:
         """Generate a circular 2D trajectory using the parameters from the config
 
         Args:
@@ -71,17 +76,16 @@ class Dataset(MotionDataset):
         Returns:
             Trajectory: new circular trajectory
         """
-        cluster_id = random.randint(0, self.config.num_clusters - 1)
         starting_x = self.config.starting_xs[cluster_id]
         starting_y = self.config.starting_ys[cluster_id]
         radius = self.config.radius[cluster_id]
         # generate noisy circle with few point and high variation
         angles, noise_x, noise_y = generate_noisy_circle(
-            radius=random.uniform(
+            radius=np.random.uniform(
                 radius - self.config.radius_eps, radius + self.config.radius_eps
             ),
-            num_points=self.config.num_imperfection_points,
-            imperfection_range=self.config.imperfection_range,
+            num_points=self.config.num_perturbation_points,
+            perturbation_range=self.config.perturbation_range,
         )
         # smoothing the noisy circle using scipy as in:
         # https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
@@ -110,27 +114,39 @@ class Dataset(MotionDataset):
             point_parents=metadata.POINT_PARENTS,
         )
 
-    def plot_trajs(self, list_trajs: List[Trajectory], title="SCC Trajectories"):
+    def plot_trajs(self, list_trajs: List[Trajectory], title="SCC Trajectories", save_path=None, legend_labels: List[str] = None):
+        from prescyent.evaluator.plotting import save_plot_and_close
         plt.figure()
+        fig, ax = plt.subplots()
         for traj in list_trajs:
-            plt.plot(traj.tensor[:, :, 0].numpy(), traj.tensor[:, :, 1].numpy())
-        plt.axis("equal")
-        plt.title(title)
-        plt.show()
+            ax.plot(traj.tensor[:, :, 0].numpy(), traj.tensor[:, :, 1].numpy())
+        if legend_labels:
+            pos = ax.get_position()
+            ax.legend(labels=legend_labels, loc='center right', bbox_to_anchor=(1.25, 0.5))
+            ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
+        ax.axis("equal")
+        ax.set_title(title)
+        if save_path is not None:
+            save_plot_and_close(savefig_path=save_path)
+        else:
+            plt.show()
 
-    def plot_traj(self, traj: Trajectory):
+    def plot_traj(self, traj: Trajectory, save_path=None):
+        from prescyent.evaluator.plotting import save_plot_and_close
         plt.figure()
         plt.plot(traj.tensor[:, :, 0].numpy(), traj.tensor[:, :, 1].numpy())
         plt.axis("equal")
         plt.title(traj.title)
-        plt.show()
+        if save_path is not None:
+            save_plot_and_close(savefig_path=save_path)
+        else:
+            plt.show()
 
-
-def generate_noisy_circle(radius, num_points, imperfection_range):
+def generate_noisy_circle(radius, num_points, perturbation_range):
     angles = np.linspace(0, 2 * np.pi, num_points)
     # Adding imperfections to the radius
     perturbations = np.random.uniform(
-        -imperfection_range, imperfection_range, num_points
+        -perturbation_range, perturbation_range, num_points
     )
     perturbed_radius = (radius + perturbations).astype("float32")
     # Generating x and y values
