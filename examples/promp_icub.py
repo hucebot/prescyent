@@ -60,28 +60,29 @@ if __name__ == "__main__":
     std_list = []
     for traj in tqdm(dataset.trajectories.test):
         result = torch.zeros_like(traj.tensor)
-        std_list =  torch.zeros_like(traj.tensor)
+        std =  torch.zeros_like(traj.tensor)
         for t in tqdm(range(0, traj.tensor.size(0)),colour='blue'):
             p, sigma = predictor.predict_by_conditioning(traj.tensor[0:t, :, :], future_size)
             result[t,:,:] = p
-            std_list[t,:,:] = sigma
+            std[t,:,:] = sigma
         result_list += [result]
-        std_list += std_list
+        std_list += [std]
     print("OK")   
 
-
     print("Plotting...", end='')
-    for i,(pred,gt) in tqdm(enumerate(zip(result_list, dataset.trajectories.test))):
+    for i,(pred, std, gt) in tqdm(enumerate(zip(result_list, std_list, dataset.trajectories.test))):
         for p in range(pred.size(1)):
             for n in range(pred.size(2)):
                 fig, ax = plt.subplots()
-                ax.plot(np.arange(0, pred.size(0)) + future_size, pred[:, p, n], label="prediction")
-                ax.plot(np.arange(0, gt.tensor.size(0)), gt.tensor[:, p, n], label="ground truth")
-                mean = predictor.promps[p][n].mean()
-                std = predictor.promps[p][n].std()
-                x = np.arange(0, mean.size(0))
-                ax.fill_between(x, mean -std, mean+std, color="grey", alpha=0.25)
-                ax.plot(x,mean, label="mean", color='grey',lw=3)
+                x_pred = np.arange(0, pred.size(0)) + future_size
+                ax.fill_between(x_pred, pred[:, p, n]-std[:,p,n], pred[:, p, n]+std[:,p,n], color='red', alpha=0.25)
+                ax.plot(x_pred, pred[:, p, n], label="prediction", color='red')
+                ax.plot(np.arange(0, gt.tensor.size(0)), gt.tensor[:, p, n], label="ground truth",color='green')
+                mean_promp = predictor.promps[p][n].mean()
+                std_promp = predictor.promps[p][n].std()
+                x = np.arange(0, mean_promp.size(0))
+                ax.fill_between(x, mean_promp -std_promp, mean_promp+std_promp, color="grey", alpha=0.25)
+                ax.plot(x,mean_promp, label="mean", color='grey',lw=3)
                 ax.legend()
                 fig.savefig(f"pred_{i}_{p}_{n}.pdf")
     print("OK")
