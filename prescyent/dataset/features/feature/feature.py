@@ -6,8 +6,10 @@ import torch
 
 
 class Feature(dict):
-    """Base class with equivalence methods and checks on constructor
-    We inherit from dict for serialization"""
+    """
+    Base class with equivalence methods and checks on constructor.
+    We inherit from dict for serialization
+    """
 
     ids: List[int]
     distance_unit: str

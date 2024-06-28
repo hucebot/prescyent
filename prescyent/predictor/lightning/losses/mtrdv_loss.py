@@ -15,12 +15,16 @@ class MeanTotalRigidDistanceAndVelocityLoss(MeanTotalRigidDistanceLoss):
         reduction: str = "mean",
     ) -> None:
         super(MeanTotalRigidDistanceAndVelocityLoss, self).__init__(
-             config, size_average, reduce, reduction
+            config, size_average, reduce, reduction
         )
 
     def forward(self, input_tensor: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         dloss = super().forward(input_tensor, target)
-        target_vel = get_relative_tensor_from(target[:, 1:], target[:, :-1], self.out_features)
-        input_vel = get_relative_tensor_from(input_tensor[:, 1:], input_tensor[:, :-1], self.out_features)
+        target_vel = get_relative_tensor_from(
+            target[:, 1:], target[:, :-1], self.out_features
+        )
+        input_vel = get_relative_tensor_from(
+            input_tensor[:, 1:], input_tensor[:, :-1], self.out_features
+        )
         vloss = super().forward(input_vel, target_vel)
         return dloss + vloss

@@ -36,7 +36,9 @@ class MotionDataSamples:
     def _map_to_flatten_trajs(self):
         _map = []
         if self.config.learning_type in [LearningTypes.SEQ2SEQ, LearningTypes.SEQ2ONE]:
-            invalid_frames_per_traj = self.config.history_size + self.config.future_size -1
+            invalid_frames_per_traj = (
+                self.config.history_size + self.config.future_size - 1
+            )
         if self.config.learning_type == LearningTypes.AUTOREG:
             invalid_frames_per_traj = self.config.history_size
         if self.config.loop_over_traj:
@@ -48,28 +50,36 @@ class MotionDataSamples:
                     f" dataset. Trajectory of size {len(trajectory)} can't be split "
                     f"in samples of sizes {invalid_frames_per_traj}"
                 )
-            _map += [
-                (t, i) for i in range(len(trajectory) - invalid_frames_per_traj)
-            ]
+            _map += [(t, i) for i in range(len(trajectory) - invalid_frames_per_traj)]
         return _map
 
-    def _get_seq_with_size(self, index:int, size:int):
+    def _get_seq_with_size(self, index: int, size: int):
         traj_id, tensor_id = self.sample_ids[index]
         trajectory = self.trajectories[traj_id]
         if tensor_id + size > len(trajectory.tensor) and self.config.loop_over_traj:
-            seq = torch.cat((trajectory.tensor[tensor_id:], trajectory.tensor[:size-len(trajectory.tensor[tensor_id:])]), 0)
+            seq = torch.cat(
+                (
+                    trajectory.tensor[tensor_id:],
+                    trajectory.tensor[: size - len(trajectory.tensor[tensor_id:])],
+                ),
+                0,
+            )
         else:
             seq = trajectory.tensor[tensor_id : tensor_id + size]
-        if self.config.reverse_pair_ratio and np.random.uniform(0, 1) <= self.config.reverse_pair_ratio:
+        if (
+            self.config.reverse_pair_ratio
+            and np.random.uniform(0, 1) <= self.config.reverse_pair_ratio
+        ):
             seq = torch.flip(seq, (0,))
         return seq
 
     def _get_item_seq2seq(self, index: int):
-        seq = self._get_seq_with_size(index, self.config.history_size + self.config.future_size)
-        sample = seq[:self.config.history_size]
-        truth = seq[self.config.history_size:]
+        seq = self._get_seq_with_size(
+            index, self.config.history_size + self.config.future_size
+        )
+        sample = seq[: self.config.history_size]
+        truth = seq[self.config.history_size :]
         return sample, truth
-
 
     def _get_item_autoreg(self, index: int):
         seq = self._get_seq_with_size(index, self.config.history_size + 1)
@@ -78,8 +88,10 @@ class MotionDataSamples:
         return sample, truth
 
     def _get_item_seq2one(self, index: int):
-        seq = self._get_seq_with_size(index, self.config.history_size + self.config.future_size)
-        sample = seq[:self.config.history_size]
+        seq = self._get_seq_with_size(
+            index, self.config.history_size + self.config.future_size
+        )
+        sample = seq[: self.config.history_size]
         truth = torch.unsqueeze(seq[-1], 0)
         return sample, truth
 

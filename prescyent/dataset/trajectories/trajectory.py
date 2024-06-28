@@ -23,7 +23,7 @@ from prescyent.dataset.features.rotation_methods import convert_to_quat
 class Trajectory:
     """
     An trajectory represents a full dataset sample, that we can retrieve with its file name
-    An trajectory tracks n dimensions in time, represented in a tensor of shape (seq_len, n_dim)
+    An trajectory tracks n features of m points over time, represented in a tensor of shape (frames, points, features)
     """
 
     tensor: torch.Tensor
@@ -56,7 +56,7 @@ class Trajectory:
         if not point_names:
             point_names = [
                 f"point_{i}" for i in range(tensor.shape[1])
-            ]  # default is -1 foreach point
+            ]  # default is "point_{i}" foreach point
         self.point_names = point_names
         if tensor_features is None:
             tensor_features = [Any(list(range(tensor.shape[-1])))]

@@ -5,8 +5,8 @@
             "batch_size": 256,
             "convert_trajectories_beforehand": true,
             "drop_last": true,
-            "future_size": 64,
-            "history_size": 64,
+            "future_size": 10,
+            "history_size": 10,
             "in_features": [
                 {
                     "ids": [
@@ -23,6 +23,8 @@
                 2
             ],
             "learning_type": "sequence_2_sequence",
+            "loop_over_traj": false,
+            "name": "TeleopIcub",
             "num_workers": 0,
             "out_features": [
                 {
@@ -41,36 +43,40 @@
             ],
             "persistent_workers": false,
             "pin_memory": true,
-            "shuffle": true
+            "reverse_pair_ratio": 0,
+            "seed": 25520660,
+            "shuffle_test": false,
+            "shuffle_train": true,
+            "shuffle_val": false
         },
         "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
-        "hidden_size": 128,
-        "loss_fn": "mtdloss",
+        "hidden_size": 64,
+        "loss_fn": "mfdloss",
         "name": "MlpPredictor",
         "norm_on_last_input": true,
-        "num_layers": 4,
+        "num_layers": 3,
         "save_path": "data/models",
         "used_norm": "all",
         "used_profiler": null,
-        "version": 4
+        "version": 19
     },
     "training_config": {
         "accelerator": "auto",
         "accumulate_grad_batches": 1,
         "devices": "auto",
         "early_stopping_mode": "min",
-        "early_stopping_patience": 20,
+        "early_stopping_patience": 10,
         "early_stopping_value": "Val/loss",
-        "epoch": 500,
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
         "lr": 0.0001,
+        "max_epochs": 500,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 457600620,
+        "seed": 96420604,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

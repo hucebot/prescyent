@@ -44,15 +44,20 @@ class Dataset(MotionDataset):
         for c in range(self.config.num_clusters):
             cluster_counter = 0
             for cluster_counter in range(self.config.num_trajs[c]):
-                if cluster_counter < int(self.config.num_trajs[c] * self.config.ratio_train):
+                if cluster_counter < int(
+                    self.config.num_trajs[c] * self.config.ratio_train
+                ):
                     train_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id+=1
-                elif cluster_counter < int(self.config.num_trajs[c] * (self.config.ratio_train + self.config.ratio_test)):
+                    traj_id += 1
+                elif cluster_counter < int(
+                    self.config.num_trajs[c]
+                    * (self.config.ratio_train + self.config.ratio_test)
+                ):
                     test_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id+=1
+                    traj_id += 1
                 else:
                     val_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id+=1
+                    traj_id += 1
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
@@ -114,15 +119,24 @@ class Dataset(MotionDataset):
             point_parents=metadata.POINT_PARENTS,
         )
 
-    def plot_trajs(self, list_trajs: List[Trajectory], title="SCC Trajectories", save_path=None, legend_labels: List[str] = None):
+    def plot_trajs(
+        self,
+        list_trajs: List[Trajectory],
+        title="SCC Trajectories",
+        save_path=None,
+        legend_labels: List[str] = None,
+    ):
         from prescyent.evaluator.plotting import save_plot_and_close
+
         plt.figure()
         fig, ax = plt.subplots()
         for traj in list_trajs:
             ax.plot(traj.tensor[:, :, 0].numpy(), traj.tensor[:, :, 1].numpy())
         if legend_labels:
             pos = ax.get_position()
-            ax.legend(labels=legend_labels, loc='center right', bbox_to_anchor=(1.25, 0.5))
+            ax.legend(
+                labels=legend_labels, loc="center right", bbox_to_anchor=(1.25, 0.5)
+            )
             ax.set_position([pos.x0, pos.y0, pos.width * 0.9, pos.height])
         ax.axis("equal")
         ax.set_title(title)
@@ -133,6 +147,7 @@ class Dataset(MotionDataset):
 
     def plot_traj(self, traj: Trajectory, save_path=None):
         from prescyent.evaluator.plotting import save_plot_and_close
+
         plt.figure()
         plt.plot(traj.tensor[:, :, 0].numpy(), traj.tensor[:, :, 1].numpy())
         plt.axis("equal")
@@ -141,6 +156,7 @@ class Dataset(MotionDataset):
             save_plot_and_close(savefig_path=save_path)
         else:
             plt.show()
+
 
 def generate_noisy_circle(radius, num_points, perturbation_range):
     angles = np.linspace(0, 2 * np.pi, num_points)

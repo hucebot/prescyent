@@ -3,9 +3,10 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 import prescyent.dataset.features as tensor_features
+from prescyent.base_config import BaseConfig
 from prescyent.utils.enums import LearningTypes
 
 
@@ -13,30 +14,59 @@ root_dir = Path(__file__).parent.parent.parent
 DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
 
 
-class MotionDatasetConfig(BaseModel):
+class MotionDatasetConfig(BaseConfig):
     """Pydantic Basemodel for MotionDatasets configuration"""
 
+    name: Optional[str] = None
+    """Name of your dataset. WARNING, If you override default value, AutoDataset won't be able to load your dataset"""
+    seed: int = None
+    """A seed for all random operations in the dataset class"""
+
+    # Dataloader values
     batch_size: int = 128
-    learning_type: LearningTypes = LearningTypes.SEQ2SEQ
+    """Size of the batch of all dataloaders"""
     shuffle_train: bool = True
+    """If True, shuffles the train dataloader"""
     shuffle_test: bool = False
+    """If True, shuffles the test dataloader"""
     shuffle_val: bool = False
+    """If True, shuffles the val dataloader"""
     num_workers: int = 0
+    """See https://pytorch.org/docs/stable/data.html#single-and-multi-process-data-loading"""
     drop_last: bool = True
+    """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     persistent_workers: bool = False
+    """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     pin_memory: bool = True
+    """See https://pytorch.org/docs/stable/data.html#memory-pinning"""
+
     # x, y pairs related variables for motion data samples:
-    history_size: int  # number of timesteps as input
-    future_size: int  # number of predicted timesteps
+    learning_type: LearningTypes = LearningTypes.SEQ2SEQ
+    """Method used to generate MotionDataSamples"""
+    history_size: int
+    """Number of timesteps as input"""
+    future_size: int
+    """Number of timesteps predicted as output"""
     in_features: Optional[List[tensor_features.Feature]]
+    """List of features used as input, if None, use default from the dataset"""
     out_features: Optional[List[tensor_features.Feature]]
-    # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
+    """List of features used as output, if None, use default from the dataset"""
     in_points: Optional[List[int]]
+    """Ids of the points used as input.
+    Do not mistake with the "used joint".
+    Use joints are used on Trajectory level while in_points and out_points
+    are relative to previous used joint changes, and are used only for MotionSamples pair."""
     out_points: Optional[List[int]]
-    convert_trajectories_beforehand: bool = True  # If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders
-    loop_over_traj: bool = False  # make the trajectory loop over itself where generating training pairs
-    reverse_pair_ratio: float = 0  # Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1
-    seed: int = None  # A seed for all random operations in the dataset class
+    """Ids of the points used as output.
+    Do not mistake with the "used joint".
+    Use joints are used on Trajectory level while in_points and out_points
+    are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    convert_trajectories_beforehand: bool = True
+    """If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders"""
+    loop_over_traj: bool = False
+    """Make the trajectory loop over itself where generating training pairs"""
+    reverse_pair_ratio: float = 0
+    """Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1"""
 
     @property
     def num_out_features(self) -> int:
@@ -112,13 +142,8 @@ class MotionDatasetConfig(BaseModel):
                 ]
         return self
 
-
     @model_validator(mode="after")
     def generate_random_seed_if_none(self):
         if self.seed is None:
             self.seed = random.randint(1, 10**9)
         return self
-
-
-    class Config:
-        arbitrary_types_allowed = True

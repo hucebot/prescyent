@@ -32,6 +32,13 @@ from prescyent.dataset.config import MotionDatasetConfig as DatasetConfig
 from prescyent.dataset.datasets.custom_dataset import CustomDataset
 
 
-DATASET_LIST = [AndyDataset, H36MDataset, H36MArmDataset, SCCDataset, SSTDataset, TeleopIcubDataset]
+DATASET_LIST = [
+    AndyDataset,
+    H36MDataset,
+    H36MArmDataset,
+    SCCDataset,
+    SSTDataset,
+    TeleopIcubDataset,
+]
 
 DATASET_MAP = {p.DATASET_NAME: p for p in DATASET_LIST}

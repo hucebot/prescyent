@@ -175,7 +175,9 @@ class SinglePromp:
 
         # self.mean_w = mean_w
         # self.std_w = std_w
-        return SinglePromp(self.num_bf, self.ridge_factor, mean_w, std_w, self.data.clone())
+        return SinglePromp(
+            self.num_bf, self.ridge_factor, mean_w, std_w, self.data.clone()
+        )
 
     def mean(self):
         return self.psi.T @ self.mean_w

@@ -8,7 +8,9 @@ class Config(ModuleConfig):
     """Pydantic Basemodel for SARLSTM configuration"""
 
     hidden_size: int = 128
+    """Hidden size of the LSTMCells"""
     num_layers: int = 2
+    """Number of LSTMCell"""
 
     @field_validator("num_layers")
     @classmethod

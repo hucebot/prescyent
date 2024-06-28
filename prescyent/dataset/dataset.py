@@ -8,7 +8,7 @@ import requests
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
-import prescyent.dataset.features as tensor_features
+from prescyent.dataset.features import Feature
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
@@ -31,6 +31,8 @@ class MotionDataset(LightningDataModule):
     def __init__(self, name: str, load_data_at_init: bool = True) -> None:
         super().__init__()
         self.name = name
+        if self.config.name is None:
+            self.config.name = self.name
         if load_data_at_init:
             self.prepare_data()
             self.setup()
@@ -215,7 +217,7 @@ class MotionDataset(LightningDataModule):
         return self.trajectories.train[0].shape[2]
 
     @property
-    def tensor_features(self) -> List[tensor_features.Feature]:
+    def tensor_features(self) -> List[Feature]:
         return self.trajectories.train[0].tensor_features
 
     @property
@@ -258,7 +260,6 @@ class MotionDataset(LightningDataModule):
             save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.getChild(DATASET).info("Saving config to %s", save_path)
         config_dict = self.config.model_dump(exclude_defaults=True)
-        config_dict["name"] = self.name
         with save_path.open("w", encoding="utf-8") as conf_file:
             logger.getChild(DATASET).debug(config_dict)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)

@@ -10,7 +10,9 @@ from prescyent.dataset.features.feature_manipulation import cal_distance_for_fea
 from prescyent.predictor.lightning.configs.module_config import LossFunctions
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalRigidDistanceLoss
-from prescyent.predictor.lightning.losses.mtrdv_loss import MeanTotalRigidDistanceAndVelocityLoss
+from prescyent.predictor.lightning.losses.mtrdv_loss import (
+    MeanTotalRigidDistanceAndVelocityLoss,
+)
 from prescyent.predictor.lightning.losses.mfrd_loss import MeanFinalRigidDistanceLoss
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.logger import logger, PREDICTOR

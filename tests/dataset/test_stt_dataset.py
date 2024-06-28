@@ -4,7 +4,7 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import SSTDataset, SSTDatasetConfig
-from prescyent.dataset.features import RotationEuler
+from prescyent.dataset.features import RotationQuat
 from prescyent.utils.enums import LearningTypes
 
 
@@ -46,20 +46,20 @@ class InitSSTDatasetTest(CustomTestCase):
         dataset = SSTDataset(
             SSTDatasetConfig(
                 num_traj=10,
-                out_features=[RotationEuler([0, 1, 2])],
+                out_features=[RotationQuat([0, 1, 2, 3])],
             ),
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, truth = dataset.test_datasample[0]
-        self.assertEqual(sample.shape[-1], 7)
-        self.assertEqual(truth.shape[-1], 3)
+        self.assertEqual(sample.shape[-1], 6)
+        self.assertEqual(truth.shape[-1], 4)
         sample, truth = dataset.train_datasample[0]
-        self.assertEqual(sample.shape[-1], 7)
-        self.assertEqual(truth.shape[-1], 3)
+        self.assertEqual(sample.shape[-1], 6)
+        self.assertEqual(truth.shape[-1], 4)
         sample, truth = dataset.val_datasample[0]
-        self.assertEqual(sample.shape[-1], 7)
-        self.assertEqual(truth.shape[-1], 3)
+        self.assertEqual(sample.shape[-1], 6)
+        self.assertEqual(truth.shape[-1], 4)
 
     def test_load_from_path(self):
         dataset = SSTDataset(SSTDatasetConfig(num_traj=10), load_data_at_init=True)

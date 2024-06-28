@@ -22,9 +22,6 @@ from prescyent.dataset.features.feature_manipulation import cal_distance_for_fea
 from prescyent.utils.logger import logger, EVAL
 
 
-matplotlib.use("agg")
-
-
 def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
     plt.clf()  # clear just in case
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
@@ -277,7 +274,7 @@ def plot_trajs(
         title = f"Trajectory and predictions on {trajectories[0].title}"
     fig.suptitle(title)
     # fig.subplots_adjust(right=0.7)
-    # fig.tight_layout(pad=5)
+    fig.tight_layout(pad=10)
     legend_plot(axes, names=legend_labels, xlabel="time (s)", ylabels=ylabels)
     save_plot_and_close(savefig_path)
 
@@ -378,9 +375,7 @@ def legend_plot(
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
     if names is not None:
-        legend = axes[-1].legend(
-            labels=names, loc="best"
-        )
+        legend = axes[-1].legend(labels=names, loc="best")
         frame = legend.get_frame()
         frame.set_facecolor("0.9")
         frame.set_edgecolor("0.9")
@@ -433,7 +428,7 @@ def plot_mpjpe(
         plt.plot(x_values, y_values)
         if log_x:
             plt.gca().set_xscale("log")
-        save_plot_and_close(f"{savefig_dir_path}MPJE_{feat.name}.pdf")
+        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
 
 
 def plot_mpjpes(

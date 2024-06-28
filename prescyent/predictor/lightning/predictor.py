@@ -21,7 +21,7 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     DeviceStatsMonitor,
     EarlyStopping,
-    ModelCheckpoint
+    ModelCheckpoint,
 )
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
@@ -88,6 +88,8 @@ class LightningPredictor(BasePredictor):
             self.training_config = None
         if not hasattr(self, "trainer"):
             self.trainer = None
+        if self.config.name is None:
+            self.config.name = self.name
 
     def _build_from_config(self, config: Union[Dict, ModuleConfig]):
         # -- We check that the input config is valid through pydantic model
@@ -98,8 +100,10 @@ class LightningPredictor(BasePredictor):
         return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
-        supported_extentions = [".ckpt"]  # prefered order
+        supported_extentions = [".ckpt"]
         model_path = Path(path)
+        if model_path.name == "config.json":
+            model_path = model_path.parent
         if not model_path.exists():
             raise FileNotFoundError(f"No file or directory at {model_path}")
 
@@ -166,9 +170,9 @@ class LightningPredictor(BasePredictor):
                 save_top_k=self.training_config.early_stopping_patience,
                 monitor=self.training_config.early_stopping_value,
                 mode=self.training_config.early_stopping_mode,
-                )
+            )
             callbacks.append(self.checkpoint_callback)
-            kwargs["enable_checkpointing"] = True,
+            kwargs["enable_checkpointing"] = (True,)
         if self.training_config.seed is not None:
             pl.seed_everything(self.training_config.seed, workers=True)
         if self.training_config.use_deterministic_algorithms:
@@ -180,7 +184,6 @@ class LightningPredictor(BasePredictor):
             self.trainer = pl.Trainer(
                 default_root_dir=self.log_path,
                 logger=self.tb_logger,
-                max_epochs=self.training_config.epoch,
                 callbacks=callbacks,
                 profiler=profiler,
                 **kwargs,
@@ -190,7 +193,6 @@ class LightningPredictor(BasePredictor):
             self.trainer = pl.Trainer(
                 default_root_dir=self.log_path,
                 logger=self.tb_logger,
-                max_epochs=self.training_config.epoch,
                 callbacks=callbacks,
                 profiler=profiler,
                 **kwargs,

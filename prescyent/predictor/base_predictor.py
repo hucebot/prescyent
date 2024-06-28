@@ -210,13 +210,23 @@ class BasePredictor:
             future_size = self.dataset_config.future_size
         if history_size is None:
             history_size = self.dataset_config.history_size
-        max_iter = input_len - history_size + 1 if not self.dataset_config.loop_over_traj else input_len
+        max_iter = (
+            input_len - history_size + 1
+            if not self.dataset_config.loop_over_traj
+            else input_len
+        )
         for i in tqdm(
             range(0, max_iter, history_step),
             desc="Iterate over input_tensor",
         ):
             if i + history_size > input_len and self.dataset_config.loop_over_traj:
-                input_sub_batch = torch.cat((input_tensor[:, i:], input_tensor[:, :history_size-input_tensor[:, i:].shape[1]]), 1)
+                input_sub_batch = torch.cat(
+                    (
+                        input_tensor[:, i:],
+                        input_tensor[:, : history_size - input_tensor[:, i:].shape[1]],
+                    ),
+                    1,
+                )
             else:
                 input_sub_batch = input_tensor[:, i : i + history_size]
             prediction = self.predict(input_sub_batch, future_size)

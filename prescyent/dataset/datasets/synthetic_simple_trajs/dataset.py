@@ -128,6 +128,4 @@ class Dataset(MotionDataset):
         curr_pos = curr_pos + self.config.dt * vel_lin
         curr_mat = curr_mat @ R.from_rotvec(self.config.dt * vel_ang).as_matrix()
         # Return updated pose command
-        return np.concatenate(
-            [curr_pos, R.from_matrix(curr_mat).as_euler(SEQ)]
-        )
+        return np.concatenate([curr_pos, R.from_matrix(curr_mat).as_euler(SEQ)])

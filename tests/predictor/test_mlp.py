@@ -61,6 +61,6 @@ class MlpInitTests(CustomTestCase):
         model_path = "tests/mocking/mlp_model"
         config = MlpConfig(
             dataset_config=dataset_config,
-            model_path=model_path,
+            save_path=model_path,
         )
         MlpPredictor(config=config)
