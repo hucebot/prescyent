@@ -2,7 +2,7 @@
 The predictor can be trained and predict
 """
 import copy
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from pydantic import BaseModel
@@ -30,15 +30,23 @@ class BasePredictor:
     This class initialize a tensorboard logger and, a test loop and a default run loop
     """
 
-    dataset_config: DatasetConfig
+    dataset_config: Optional[DatasetConfig]
+    """Configuration of the dataset, it is used to shape input and outputs
+    If not provided, we cannot perform a fair evaluation of the predictor
+    so the test method will raise an error
+    """
     log_root_path: str
+    """root path where the predictor should log"""
     name: str
+    """name of the predictor"""
     version: int
+    """version number to describe a given instance of the model"""
     tb_logger: TensorBoardLogger
+    """Instance of a TensorBoardLogger create .event files for tests"""
 
     def __init__(
         self,
-        dataset_config: DatasetConfig,
+        dataset_config: Optional[DatasetConfig],
         log_root_path: str,
         name: str = None,
         version: Union[str, int, None] = None,
@@ -126,6 +134,10 @@ class BasePredictor:
     def test(self, datamodule: LightningDataModule) -> Dict[str, torch.Tensor]:
         """test predictor"""
         # log in tensorboard
+        if self.dataset_config is None:
+            raise NotImplementedError(
+                "We cannot perform a fair evaluation of this predictor without the dataset_config"
+            )
         distances = list()
         features = self.dataset_config.out_features
         pbar = tqdm(datamodule.test_dataloader())

@@ -2,12 +2,20 @@ import json
 from pathlib import Path
 from typing import Tuple, Union
 
-from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.constant_predictor import ConstantPredictor
+from prescyent.predictor.delayed_predictor import DelayedPredictor
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.errors import PredictorNotFound, PredictorUnprocessable
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.predictor import PREDICTOR_MAP
+
+
+def get_predictor_from_path(predictor_path: str):
+    if predictor_path == "" or predictor_path == "ConstantPredictor":
+        return ConstantPredictor(None)
+    if predictor_path == "DelayedPredictor":
+        return DelayedPredictor(None)
+    return AutoPredictor.load_from_config(predictor_path)
 
 
 def get_predictor_infos(config):
