@@ -21,14 +21,29 @@ class MotionDataset(LightningDataModule):
     """Base classe for all motion datasets"""
 
     config: MotionDatasetConfig
+    """The config of the dataset"""
     config_class: Type[MotionDatasetConfig]
+    """Class of the dataset config instance"""
     name: str
+    """Name of the dataset, inherited from child class"""
     trajectories: Trajectories
+    """Trajectories instance storing the trajectories per subset train, test and val"""
     train_datasample: MotionDataSamples
+    """Generated pairs for train"""
     test_datasample: MotionDataSamples
+    """Generated pairs for test"""
     val_datasample: MotionDataSamples
+    """Generated pairs for val"""
 
     def __init__(self, name: str, load_data_at_init: bool = True) -> None:
+        """
+        Args:
+            name (str): Name of the dataset, inherited from child class.
+            load_data_at_init (bool, optional):
+                If True, we'll call the prepare_data (load trajectories from files)
+                and setup (create MotionDataSamples) methods at init.
+                Defaults to True.
+        """
         super().__init__()
         self.name = name
         if self.config.name is None:
@@ -51,6 +66,7 @@ class MotionDataset(LightningDataModule):
         raise NotImplementedError("This method must be implemented in the child class")
 
     def setup(self, stage: str = None):
+        self.update_trajectories_frequency(self.config.frequency)
         if self.config.convert_trajectories_beforehand:
             self.convert_trajectories_from_config()
         self.generate_samples(stage)
@@ -131,7 +147,17 @@ class MotionDataset(LightningDataModule):
                 for traj in self.trajectories.val:
                     traj.convert_tensor_features(self.config.out_features)
 
+    def update_trajectories_frequency(self, target_frequency):
+        """Update all trajectories frequency"""
+        for traj in self.trajectories.train:
+            traj.update_frequency(target_frequency)
+        for traj in self.trajectories.test:
+            traj.update_frequency(target_frequency)
+        for traj in self.trajectories.val:
+            traj.update_frequency(target_frequency)
+
     def train_dataloader(self) -> DataLoader:
+        """the train torch dataloader with the MotionDataSamples"""
         try:
             return DataLoader(
                 self.train_datasample,
@@ -150,6 +176,7 @@ class MotionDataset(LightningDataModule):
             )
 
     def test_dataloader(self) -> DataLoader:
+        """the test torch dataloader with the MotionDataSamples"""
         try:
             return DataLoader(
                 self.test_datasample,
@@ -168,6 +195,7 @@ class MotionDataset(LightningDataModule):
             )
 
     def val_dataloader(self) -> DataLoader:
+        """the val torch dataloader with the MotionDataSamples"""
         try:
             return DataLoader(
                 self.val_datasample,
@@ -187,6 +215,7 @@ class MotionDataset(LightningDataModule):
 
     # We will predict on the test dataset also
     def predict_dataloader(self) -> DataLoader:
+        """the predict torch dataloader with the MotionDataSamples"""
         try:
             return DataLoader(
                 self.test_datasample,

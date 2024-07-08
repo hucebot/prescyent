@@ -13,7 +13,7 @@ from prescyent.utils.dataset_manipulation import (
     update_parent_ids,
 )
 from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
-from prescyent.dataset.datasets.teleop_icub.metadata import *
+from prescyent.dataset.datasets.teleop_icub import metadata
 from prescyent.dataset.features import CoordinateXYZ
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
@@ -101,7 +101,6 @@ class Dataset(MotionDataset):
         :return: the data of the dataset, grouped per file
         :rtype: list
         """
-        subsampling_step = self.config.subsampling_step
         used_joints = self.config.used_joints
         if start is None:
             start = 0
@@ -113,7 +112,7 @@ class Dataset(MotionDataset):
             file_sequence = np.loadtxt(file, delimiter=delimiter)
             if end is None:
                 end = len(file_sequence)
-            file_sequence = file_sequence[start:end:subsampling_step]
+            file_sequence = file_sequence[start:end]
             # add waist x and waist y
             tensor = torch.FloatTensor(
                 np.array(
@@ -128,21 +127,18 @@ class Dataset(MotionDataset):
             tensor = tensor.reshape(seq_len, 3, 3)
             # keep only asked joints
             tensor = tensor[:, used_joints]
-            freq = (
-                BASE_FREQUENCY // subsampling_step
-                if subsampling_step
-                else BASE_FREQUENCY
-            )
             title = f"{Path(file).parts[-3]}_{Path(file).parts[-2]}_{Path(file).stem}"
             trajectory_arrray.append(
                 Trajectory(
                     tensor=tensor,
                     tensor_features=[CoordinateXYZ(range(3))],
-                    frequency=freq,
+                    frequency=metadata.BASE_FREQUENCY,
                     file_path=file,
                     title=title,
-                    point_parents=update_parent_ids(used_joints, POINT_PARENTS),
-                    point_names=[POINT_LABELS[i] for i in used_joints],
+                    point_parents=update_parent_ids(
+                        used_joints, metadata.POINT_PARENTS
+                    ),
+                    point_names=[metadata.POINT_LABELS[i] for i in used_joints],
                 )
             )
         return trajectory_arrray

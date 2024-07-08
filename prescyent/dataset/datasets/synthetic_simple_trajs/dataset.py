@@ -90,10 +90,9 @@ class Dataset(MotionDataset):
                 (trajectory, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
             )
         trajectory = trajectory.unsqueeze(1)
-        trajectory = trajectory[:: self.config.subsampling_step]
         return Trajectory(
             trajectory,
-            int(1 / self.config.dt / self.config.subsampling_step),
+            int(1 / self.config.dt),
             metadata.FEATURES,
             file_path=f"synthetic_traj_{traj_id}",
             title=f"synthetic_traj_{traj_id}",

@@ -1,5 +1,6 @@
 """Util functions for plots"""
 
+from math import pi as math_pi
 from pathlib import Path
 from tqdm import tqdm
 from typing import Callable, List, Optional, Union
@@ -420,7 +421,7 @@ def plot_mpjpe(
         x_values = np.flip(np.linspace(x_max, 0, len(y_values), endpoint=False))
         distance_unit = feat.distance_unit
         if distance_unit == "rad":
-            y_values = y_values * 57.2957795
+            y_values = y_values * 180 / math_pi
             distance_unit = "degrees"
         plt.xlabel("Time (s)")
         plt.ylabel(f"{feat.name.capitalize()} Mean Error ({distance_unit})")
@@ -471,7 +472,7 @@ def plot_mpjpes(
             y_values = mpjpe.numpy()
             distance_unit = feat.distance_unit
             if distance_unit == "rad":
-                y_values = y_values * 57.2957795
+                y_values = y_values * 180 / math_pi
                 distance_unit = "degrees"
             plt.plot(x_values, y_values)
 

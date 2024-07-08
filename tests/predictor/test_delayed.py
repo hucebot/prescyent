@@ -18,6 +18,7 @@ class DelayedPredictorTests(CustomTestCase):
         points = list(range(7))
         dataset_config = DatasetConfig(
             batch_size=20,
+            frequency=10,
             history_size=10,
             future_size=10,
             in_features=features,
@@ -43,6 +44,7 @@ class DelayedPredictorTests(CustomTestCase):
         points = list(range(9))
         dataset_config = DatasetConfig(
             batch_size=64,
+            frequency=10,
             history_size=10,
             future_size=10,
             in_features=features,

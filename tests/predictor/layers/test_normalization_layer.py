@@ -24,6 +24,7 @@ class MotionLayerNormTests(CustomTestCase):
         )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
+                frequency=in_sequence_size,
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,
@@ -51,6 +52,7 @@ class MotionLayerNormTests(CustomTestCase):
         )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
+                frequency=in_sequence_size,
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,
@@ -80,6 +82,7 @@ class MotionLayerNormTests(CustomTestCase):
             dataset_config=MotionDatasetConfig(
                 in_features=in_features,
                 out_features=in_features,
+                frequency=in_sequence_size,
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_points=in_points,
@@ -112,6 +115,7 @@ class MotionLayerNormTests(CustomTestCase):
         )
         config = ModuleConfig(
             dataset_config=MotionDatasetConfig(
+                frequency=in_sequence_size,
                 future_size=out_sequence_size,
                 history_size=in_sequence_size,
                 in_features=in_features,

@@ -1,6 +1,6 @@
 """Data pair of sample and truth for motion data in ML"""
 import copy
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -15,6 +15,11 @@ class MotionDataSamples:
     """Class storing x,y pairs for ML trainings on motion data"""
 
     trajectories: List[Trajectory]
+    """List of the trajectories that are sampled"""
+    config: MotionDatasetConfig
+    """The dataset configuration used to create the MotionDataSamples"""
+    sample_ids: List[Tuple[int, int]]
+    """The list of ids used to iterate over the trajectories"""
 
     def __init__(
         self, trajectories: List[Trajectory], config: MotionDatasetConfig

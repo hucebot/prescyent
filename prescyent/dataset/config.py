@@ -43,6 +43,9 @@ class MotionDatasetConfig(BaseConfig):
     # x, y pairs related variables for motion data samples:
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
     """Method used to generate MotionDataSamples"""
+    frequency: int
+    """The frequency in Hz of the dataset,
+    If different from original data we'll use linear upsampling or downsampling of the data"""
     history_size: int
     """Number of timesteps as input"""
     future_size: int

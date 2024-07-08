@@ -9,9 +9,6 @@ from .metadata import FEATURES, POINT_LABELS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for SSTDataset configuration"""
 
-    subsampling_step: int = 1
-    """Ratio used to downsample the frames of the trajectories
-    Default is subsampling -> 50 Hz to 50Hz"""
     num_traj: int = 1000
     """Number of trajectories to generate"""
     ratio_train: float = 0.8
@@ -48,6 +45,7 @@ class DatasetConfig(MotionDatasetConfig):
     clamp_ang: float = 0.5
     """max value for the angular speed"""
     # Override default values with the dataset's
+    frequency: int = 50
     history_size: int = 50
     future_size: int = 50
     in_features: List[Feature] = FEATURES

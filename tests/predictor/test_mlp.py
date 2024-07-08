@@ -7,6 +7,7 @@ from tests.custom_test_case import CustomTestCase
 
 
 dataset_config = DatasetConfig(
+    frequency=10,
     history_size=10,
     future_size=10,
     in_points=[0],

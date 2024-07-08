@@ -88,7 +88,6 @@ class Dataset(MotionDataset):
         """
         if used_joints is None:
             used_joints = self.config.used_joints
-        subsampling_step = self.config.subsampling_step
         trajectory_arrray = list()
         for file_path in files:
             with file_path.open() as file:
@@ -112,10 +111,8 @@ class Dataset(MotionDataset):
             xyz_info, world_rotmatrices = rotmat2xyz_torch(
                 rotmatrices.clone().detach(), metadata._get_metadata
             )
-            xyz_info = (
-                xyz_info[::subsampling_step, used_joints, :] / 1000
-            )  # mm to meter conversion
-            rotmatrices = world_rotmatrices[::subsampling_step, used_joints, :]
+            xyz_info = xyz_info[:, used_joints, :] / 1000  # mm to meter conversion
+            rotmatrices = world_rotmatrices[:, used_joints, :]
             S, P = xyz_info.shape[0], xyz_info.shape[1]
             # as we permuted x and y in "fkl_torch", we permute x and y axis in rotmatrices
             permute_x_y = torch.FloatTensor(
@@ -129,15 +126,10 @@ class Dataset(MotionDataset):
                 permute_x_y @ rotmatrices.reshape(-1, 3, 3) @ permute_x_y.T
             ).reshape(S, P, 9)
             position_traj_tensor = torch.cat((xyz_info, rotmatrices), dim=-1)
-            freq = (
-                metadata.BASE_FREQUENCY // subsampling_step
-                if subsampling_step
-                else metadata.BASE_FREQUENCY
-            )
             title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
             trajectory = Trajectory(
                 tensor=position_traj_tensor,
-                frequency=freq,
+                frequency=metadata.BASE_FREQUENCY,
                 tensor_features=metadata.FEATURES,
                 file_path=file_path,
                 title=title,

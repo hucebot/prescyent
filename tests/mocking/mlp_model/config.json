@@ -5,6 +5,7 @@
             "batch_size": 256,
             "convert_trajectories_beforehand": true,
             "drop_last": true,
+            "frequency": 10,
             "future_size": 10,
             "history_size": 10,
             "in_features": [
@@ -44,7 +45,7 @@
             "persistent_workers": false,
             "pin_memory": true,
             "reverse_pair_ratio": 0,
-            "seed": 25520660,
+            "seed": 222532629,
             "shuffle_test": false,
             "shuffle_train": true,
             "shuffle_val": false
@@ -60,7 +61,7 @@
         "save_path": "data/models",
         "used_norm": "all",
         "used_profiler": null,
-        "version": 19
+        "version": 20
     },
     "training_config": {
         "accelerator": "auto",
@@ -76,7 +77,7 @@
         "max_epochs": 500,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 96420604,
+        "seed": 613111258,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

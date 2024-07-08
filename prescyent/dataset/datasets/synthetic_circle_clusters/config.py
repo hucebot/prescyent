@@ -9,9 +9,6 @@ from .metadata import FEATURES, POINT_LABELS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for SCCDataset configuration"""
 
-    subsampling_step: int = 1
-    """Ratio used to downsample the frames of the trajectories
-    Default is subsampling -> 10 Hz to 10Hz"""
     ratio_train: float = 0.7
     """ratio of trajectories placed in Trajectories.train"""
     ratio_test: float = 0.15
@@ -36,6 +33,7 @@ class DatasetConfig(MotionDatasetConfig):
     num_points: int = 100
     """number of points in the final shape after smoothing"""
     # Override default values with the dataset's
+    frequency: int = 10
     history_size: int = 10
     future_size: int = 10
     in_features: List[Feature] = FEATURES

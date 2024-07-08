@@ -14,9 +14,6 @@ class DatasetConfig(MotionDatasetConfig):
     """Url used to download the dataset"""
     data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
     """Directory where the data files is"""
-    subsampling_step: int = 2
-    """Ratio used to downsample the frames of the trajectories
-    Default is subsampling -> 50 Hz to 25Hz"""
     used_joints: List[int] = [
         2,
         3,
@@ -66,6 +63,10 @@ class DatasetConfig(MotionDatasetConfig):
     """Subject from which's trajectories are placed in Trajectories.test"""
     subjects_val: List[str] = ["S11"]
     """Subject from which's trajectories are placed in Trajectories.val"""
+    frequency: int = 25
+    """The frequency in Hz of the dataset
+    If different from original data we'll use linear upsampling or downsampling of the data
+    Default is downsampling 50 Hz to 25Hz"""
     history_size: int = 25
     """number of timesteps as input, default to 1sec at 25Hz"""
     future_size: int = 25

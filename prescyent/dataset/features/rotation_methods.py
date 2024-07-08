@@ -134,7 +134,9 @@ def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
     q = torch.zeros(rotmatrix.shape[0], 4).float().to(rotmatrix.device)
     q[:, -1] = torch.cos(theta / 2)
     q[:, :-1] = torch.mul(r0, torch.sin(theta / 2).unsqueeze(1).repeat(1, 3))
-
+    # Ensure we have the quaternion with a positive w
+    indices = torch.nonzero(q[:, -1] < 0)
+    q[indices] = -q[indices]
     return q
 
 

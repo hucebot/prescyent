@@ -105,7 +105,6 @@ class Dataset(MotionDataset):
         :return: the data of the dataset, grouped per file
         :rtype: list
         """
-        subsampling_step = self.config.subsampling_step
         used_joints = self.config.used_joints
         trajectory_arrray = list()
         for file_path in tqdm(files):
@@ -138,6 +137,9 @@ class Dataset(MotionDataset):
                     ).reshape(23, 4)
                     # (w, x, y, z) => (x, y, z, w)
                     orientation = orientation[:, [1, 2, 3, 0]]
+                    # We ensure we have the quaternion with a positive w
+                    indices = torch.nonzero(orientation[:, -1] < 0)
+                    orientation[indices] = -orientation[indices]
                     frame_tensor = torch.cat((position, orientation), dim=-1)
                     frame_list.append(frame_tensor.tolist())
                 torch_tensor = torch.FloatTensor(frame_list)
@@ -145,9 +147,6 @@ class Dataset(MotionDataset):
             # Else we load directly the saved torch representation of the base trajectory
             else:
                 torch_tensor = torch.load(file_path)
-            torch_tensor = torch_tensor[
-                ::subsampling_step
-            ]  # downsample trajectory's frequency
             if self.config.make_joints_position_relative_to is not None:
                 for feat in metadata.FEATURES:
                     if isinstance(feat, Coordinate):
@@ -165,7 +164,7 @@ class Dataset(MotionDataset):
             point_names = [metadata.SEGMENT_LABELS[i] for i in used_joints]
             traj = Trajectory(
                 torch_tensor,
-                frequency=int(metadata.BASE_FREQUENCY / subsampling_step),
+                frequency=int(metadata.BASE_FREQUENCY),
                 tensor_features=metadata.FEATURES,
                 file_path=file_path,
                 title=Path(file_path).name.split(".")[0],

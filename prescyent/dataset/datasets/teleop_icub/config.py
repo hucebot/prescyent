@@ -18,9 +18,6 @@ class DatasetConfig(MotionDatasetConfig):
     """Pattern used to find the list of files using a rglob method"""
     shuffle_data_files: bool = True
     """If True the list of files is shuffled"""
-    subsampling_step: int = 10
-    """Ratio used to downsample the frames of the trajectories
-    Default is subsampling -> 100 Hz to 10Hz"""
     used_joints: List[int] = list(range(len(POINT_LABELS)))
     """Ids of the joints loaded. Default is all joints"""
     ratio_train: float = 0.8
@@ -30,6 +27,10 @@ class DatasetConfig(MotionDatasetConfig):
     ratio_val: float = 0.05
     """ratio of trajectories placed in Trajectories.val"""
     # Override default values with the dataset's
+    frequency: int = 10
+    """The frequency in Hz of the dataset
+    If different from original data we'll use linear upsampling or downsampling of the data
+    Default is downsampling 100Hz to 10Hz"""
     history_size: int = 10
     """number of timesteps as input, default to 1s at 10Hz"""
     future_size: int = 10

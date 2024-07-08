@@ -108,10 +108,9 @@ class Dataset(MotionDataset):
             (circle_x.unsqueeze(1).unsqueeze(1), circle_y.unsqueeze(1).unsqueeze(1)),
             dim=-1,
         )
-        trajectory = trajectory[:: self.config.subsampling_step]
         return Trajectory(
             trajectory,
-            int(metadata.DEFAULT_FREQ / self.config.subsampling_step),
+            metadata.DEFAULT_FREQ,
             metadata.FEATURES,
             file_path=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
             title=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
@@ -164,7 +163,7 @@ def generate_noisy_circle(radius, num_points, perturbation_range):
     perturbations = np.random.uniform(
         -perturbation_range, perturbation_range, num_points
     )
-    perturbed_radius = (radius + perturbations).astype("float32")
+    perturbed_radius = (radius + radius * perturbations).astype("float32")
     # Generating x and y values
     perturbed_circle_x = perturbed_radius * np.cos(angles)
     perturbed_circle_y = perturbed_radius * np.sin(angles)

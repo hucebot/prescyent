@@ -217,6 +217,6 @@ def render_3d_trajectories(
         try:
             matplotlib.use("TkAgg")
         except AttributeError:
-            print("can't use TkAgg backend for matplotlib")
+            logger.getChild(EVAL).warning("can't use TkAgg backend for matplotlib")
             matplotlib.use("agg")
         plt.show()

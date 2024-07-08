@@ -7,7 +7,11 @@ from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
 
 from prescyent.utils.dataset_manipulation import update_parent_ids
-from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
+from prescyent.utils.interpolate import (
+    downsample_trajectory_tensor,
+    interpolate_trajectory_tensor_with_ratio,
+    upsample_trajectory_tensor,
+)
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import (
     Feature,
@@ -27,12 +31,19 @@ class Trajectory:
     """
 
     tensor: torch.Tensor
+    """The tensor with the data"""
     frequency: int
+    """Frequency of the trajectory in Hz"""
     tensor_features: List[Feature]
+    """Description of the features of the tensor with corresponding ids"""
     file_path: str
+    """Path to the file from which the trajectory is created"""
     title: str
+    """Name given to the trajectory to describe it (especially in plots)"""
     point_parents: List[int]
+    """List with the ids of the parent of each points, used to draw bones. -1 if no parent."""
     point_names: List[str]
+    """List of a label to give to each point"""
 
     def __init__(
         self,
@@ -44,6 +55,16 @@ class Trajectory:
         point_parents: List[int] = None,
         point_names: List[str] = None,
     ) -> None:
+        """
+        Args:
+            tensor (torch.Tensor): The tensor with the data
+            frequency (int): Frequency of the trajectory in Hz
+            tensor_features (List[Feature], optional): Description of the features of the tensor with corresponding ids. Defaults to None.
+            file_path (str, optional): Path to the file from which the trajectory is created. Defaults to "trajectory_file_path".
+            title (str, optional): Name given to the trajectory to describe it (especially in plots. Defaults to "trajectory_name".
+            point_parents (List[int], optional): List with the ids of the parent of each points, used to draw bones. -1 if no parent. Defaults to None.
+            point_names (List[str], optional): List of a label to give to each point. Defaults to None.
+        """
         self.tensor = tensor
         self.frequency = frequency
         self.file_path = file_path
@@ -75,6 +96,7 @@ class Trajectory:
 
     @property
     def shape(self) -> torch.Size:
+        """Tensor shape"""
         return self.tensor.shape
 
     @property
@@ -104,17 +126,19 @@ class Trajectory:
         )
         self.tensor_features = new_tensor_feats
 
-    def augment_frequency(self, augmentation_ratio: int) -> None:
-        """Augment the tensor's frequency using a ratio and linear interpolation
-            new self.tensor will have shape (B, S*ratio, P, D)
-            and, self.frequency is also updated this way
-        Args:
-            augmentation_ratio (int): ratio used for interpolation
-        """
-        self.frequency = self.frequency * augmentation_ratio
-        self.tensor = interpolate_trajectory_tensor_with_ratio(
-            self.tensor, augmentation_ratio
-        )
+    def update_frequency(self, target_freq: int) -> None:
+        if target_freq == self.frequency:
+            return
+        if target_freq < self.frequency:
+            self.tensor = downsample_trajectory_tensor(
+                self.tensor, self.frequency, target_freq
+            )
+        else:
+            self.tensor = upsample_trajectory_tensor(
+                self.tensor, self.tensor_features, self.frequency, target_freq
+            )
+        self.frequency = target_freq
+
 
     def dump(
         self,
