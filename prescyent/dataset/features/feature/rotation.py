@@ -46,7 +46,11 @@ class RotationQuat(Rotation):
 
     def post_process(self, quaternion_t: torch.Tensor) -> torch.Tensor:
         """normalise a quaternion as postprocessing"""
-        return quaternion_t / quaternion_t.norm(dim=-1, keepdim=True)
+        quat_normed = quaternion_t / quaternion_t.norm(dim=-1, keepdim=True)
+        # Ensure we have the quaternion with a positive w to avoid double cover
+        indices = torch.nonzero(quat_normed[..., -1] < 0, as_tuple=True)
+        quat_normed[indices] = -quat_normed[indices]
+        return quat_normed
 
     @property
     def num_dims(self) -> int:
@@ -132,6 +136,28 @@ class RotationRotMat(Rotation):
     @property
     def dims_names(self) -> List[str]:
         return ["x1", "x2", "x3", "y1", "y2", "y3", "z1", "z2", "z3"]
+
+    @property
+    def must_post_process(self) -> bool:
+        return True
+
+    def post_process(self, rotmat_t: torch.Tensor) -> torch.Tensor:
+        """Use SVD to postprocess rotation matrices
+
+        Args:
+            rotmat_t (torch.Tensor): matrix tensor with shape like [..., 9]
+
+        Returns:
+            torch.Tensor: postprocessed rotation matrix tensor with shape like [..., 9].
+        """
+        rotmat_t = rotmat_t.reshape(*rotmat_t.shape[:-1], 3, 3)
+        u, _, v = torch.svd(rotmat_t)
+        v = torch.transpose(v, -2, -1)
+        det = torch.det(torch.matmul(u, v))
+        det = det.view(*rotmat_t.shape[:-2], 1, 1)
+        v = torch.cat((v[..., :2, :], v[..., -1:, :] * det), -2)
+        r = torch.matmul(u, v)
+        return r.reshape(*rotmat_t.shape[:-2], 9)
 
     def get_distance(
         self, tensor_a: torch.Tensor, tensor_b: torch.Tensor

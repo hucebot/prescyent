@@ -137,8 +137,8 @@ class Dataset(MotionDataset):
                     ).reshape(23, 4)
                     # (w, x, y, z) => (x, y, z, w)
                     orientation = orientation[:, [1, 2, 3, 0]]
-                    # We ensure we have the quaternion with a positive w
-                    indices = torch.nonzero(orientation[:, -1] < 0)
+                    # Ensure we have the quaternion with a positive w to avoid double cover
+                    indices = torch.nonzero(orientation[:, -1] < 0, as_tuple=True)
                     orientation[indices] = -orientation[indices]
                     frame_tensor = torch.cat((position, orientation), dim=-1)
                     frame_list.append(frame_tensor.tolist())

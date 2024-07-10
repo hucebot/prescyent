@@ -113,31 +113,35 @@ def quat_to_rotmatrix(quat: torch.Tensor) -> torch.Tensor:
 
 
 def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
+    """Converts a rotation matrix to quaternion
+    torch implementation with logic from https://github.com/scipy/scipy/blob/7cb3d751756907238996502b92709dc45e1c6596/scipy/spatial/transform/rotation.py#L480
+
+    Args:
+        rotmatrix (torch.Tensor): Rotmatrix with shape (N, 3, 3)
+
+    Returns:
+        torch.Tensor: Quaternion with shape (N, 4)
     """
-    Converts a rotation matrix to quaternion
-    :param rotmatrix: N * 3 * 3
-    :return: N * 4  with
-    """
-    rotdiff = rotmatrix - rotmatrix.transpose(1, 2)
-    r = torch.zeros_like(rotdiff[:, 0])
-    r[:, 0] = -rotdiff[:, 1, 2]
-    r[:, 1] = rotdiff[:, 0, 2]
-    r[:, 2] = -rotdiff[:, 0, 1]
-    r_norm = torch.norm(r, dim=1)
-    sintheta = r_norm / 2
-    r0 = torch.div(r, r_norm.unsqueeze(1).repeat(1, 3) + 0.00000001)
-    t1 = rotmatrix[:, 0, 0]
-    t2 = rotmatrix[:, 1, 1]
-    t3 = rotmatrix[:, 2, 2]
-    costheta = (t1 + t2 + t3 - 1) / 2
-    theta = torch.atan2(sintheta, costheta)
-    q = torch.zeros(rotmatrix.shape[0], 4).float().to(rotmatrix.device)
-    q[:, -1] = torch.cos(theta / 2)
-    q[:, :-1] = torch.mul(r0, torch.sin(theta / 2).unsqueeze(1).repeat(1, 3))
-    # Ensure we have the quaternion with a positive w
-    indices = torch.nonzero(q[:, -1] < 0)
-    q[indices] = -q[indices]
-    return q
+    decision_matrix = torch.zeros((rotmatrix.shape[0], 4))
+    decision_matrix[:, :3] = rotmatrix.diagonal(dim1=1, dim2=2)
+    decision_matrix[:, -1] = decision_matrix[:, :3].sum(dim=1)
+    indices = decision_matrix.argmax(dim=1)
+    # init empty quat
+    quat = torch.zeros((rotmatrix.shape[0], 4))
+    indice = torch.nonzero(indices != 3)
+    i = indices[indice]
+    j = (i + 1) % 3
+    k = (j + 1) % 3
+    quat[indice, i] = 1 - decision_matrix[indice, -1] + 2 * rotmatrix[indice, i, i]
+    quat[indice, j] = rotmatrix[indice, j, i] + rotmatrix[indice, i, j]
+    quat[indice, k] = rotmatrix[indice, k, i] + rotmatrix[indice, i, k]
+    quat[indice, 3] = rotmatrix[indice, k, j] - rotmatrix[indice, j, k]
+    indice = torch.nonzero(indices == 3)
+    quat[indice, 0] = rotmatrix[indice, 2, 1] - rotmatrix[indice, 1, 2]
+    quat[indice, 1] = rotmatrix[indice, 0, 2] - rotmatrix[indice, 2, 0]
+    quat[indice, 2] = rotmatrix[indice, 1, 0] - rotmatrix[indice, 0, 1]
+    quat[indice, 3] = 1 + decision_matrix[indice, -1]
+    return quat
 
 
 def normalize_with_torch(t_tensor):

@@ -135,7 +135,7 @@ def slerp(q1, q2, t):
     reverse_indexes = dot < 0
     q2[reverse_indexes] = -q2[reverse_indexes]
     dot[reverse_indexes] = -dot[reverse_indexes]
-    # SImilarity treshold
+    # Similarity treshold
     DOT_THRESHOLD = 0.9995
     treshold_indices = dot > DOT_THRESHOLD
     dot = torch.clamp(dot, -1.0, 1.0)
@@ -151,7 +151,7 @@ def slerp(q1, q2, t):
         q2[treshold_indices] - q1[treshold_indices]
     )
     result = result / torch.norm(result)
-    # We always get back to the version of the quaternion with a positive w
+    # We always get back to the version of the quaternion with a positive w to avoid double cover
     reverse_indices = result[..., -1] < 0
     result[reverse_indices] = -result[reverse_indices]
     return result

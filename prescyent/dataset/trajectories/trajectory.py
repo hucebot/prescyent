@@ -139,7 +139,6 @@ class Trajectory:
             )
         self.frequency = target_freq
 
-
     def dump(
         self,
         output_path: str = None,
