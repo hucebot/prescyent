@@ -40,6 +40,9 @@ class ModuleConfig(BaseConfig):
     See https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html"""
     used_norm: Optional[Normalizations] = None
     """Apply given Normalization as the first layer of the model"""
+    norm_rotation: bool = False
+    """If false, no normalization will be applied to the rotation feature in the normalization layer
+    If true we appleu the norm from "used_norm" on the rotation as any other feature"""
     norm_on_last_input: Optional[bool] = False
     """If True, we'll make the whole input that is fed to the model relative to its last frame,
     It also makes the model's output relative to this frame"""

@@ -10,6 +10,7 @@ class MotionLayerNorm(torch.nn.Module):
     def __init__(self, config: ModuleConfig):
         super(MotionLayerNorm, self).__init__()
         self.used_norm = config.used_norm
+        self.norm_rotation = config.norm_rotation
         self.in_sequence_size = config.in_sequence_size
         self.in_features = config.dataset_config.in_features
         self.num_in_points = config.dataset_config.num_in_points
@@ -20,7 +21,9 @@ class MotionLayerNorm(torch.nn.Module):
                 " if in_features aren't in config.dataset_config.in_features"
             )
         for feat in self.in_features:
-            if self.used_norm is None or isinstance(feat, Rotation):
+            if self.used_norm is None or (
+                isinstance(feat, Rotation) and not self.norm_rotation
+            ):
                 self.norm_layers.append(torch.nn.Identity())
             elif self.used_norm == Normalizations.SPATIAL:
                 self.norm_layers.append(

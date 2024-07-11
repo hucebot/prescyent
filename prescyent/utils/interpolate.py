@@ -78,11 +78,6 @@ def upsample_trajectory_tensor(
         torch.Tensor: Upsampled tensor
     """
     assert len(input_tensor.shape) == 3  # works with unbatched tensors
-    for feat in tensor_features:
-        if isinstance(feat, Rotation) and not isinstance(feat, RotationQuat):
-            raise AttributeError(
-                "We cannot upsample a trajectory with a Rotation that is not a Quaternion, please convert your tensor and features first"
-            )
     seq_len, num_points, num_dims = input_tensor.shape
     new_len = int(seq_len / frequency * target_freq)
     new_indices = torch.linspace(0, seq_len - 1, new_len)

@@ -429,6 +429,7 @@ def plot_mpjpe(
         plt.plot(x_values, y_values)
         if log_x:
             plt.gca().set_xscale("log")
+        logger.getChild(EVAL).info(f"MPJPE: {y_values}")
         save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
 
 

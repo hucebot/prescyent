@@ -122,12 +122,12 @@ def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Quaternion with shape (N, 4)
     """
-    decision_matrix = torch.zeros((rotmatrix.shape[0], 4))
+    decision_matrix = torch.zeros((rotmatrix.shape[0], 4), device=rotmatrix.device)
     decision_matrix[:, :3] = rotmatrix.diagonal(dim1=1, dim2=2)
     decision_matrix[:, -1] = decision_matrix[:, :3].sum(dim=1)
     indices = decision_matrix.argmax(dim=1)
     # init empty quat
-    quat = torch.zeros((rotmatrix.shape[0], 4))
+    quat = torch.zeros((rotmatrix.shape[0], 4), device=rotmatrix.device)
     indice = torch.nonzero(indices != 3)
     i = indices[indice]
     j = (i + 1) % 3
@@ -141,7 +141,15 @@ def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
     quat[indice, 1] = rotmatrix[indice, 0, 2] - rotmatrix[indice, 2, 0]
     quat[indice, 2] = rotmatrix[indice, 1, 0] - rotmatrix[indice, 0, 1]
     quat[indice, 3] = 1 + decision_matrix[indice, -1]
-    return quat
+    return normalize_quaternion(quat)
+
+
+def normalize_quaternion(quat_t: torch.Tensor) -> torch.Tensor:
+    quat_normed = quat_t / quat_t.norm(dim=-1, keepdim=True)
+    # Ensure we have the quaternion with a positive w to avoid double cover
+    indices = torch.nonzero(quat_normed[..., -1] < 0, as_tuple=True)
+    quat_normed[indices] = -quat_normed[indices]
+    return quat_normed
 
 
 def normalize_with_torch(t_tensor):
