@@ -72,11 +72,11 @@ def cal_distance_for_feat(
     if (
         isinstance(feat, Rotation)
         and not isinstance(feat, RotationQuat)
-        # and not isinstance(feat, RotationRotMat)
-    ):  # convert rotation to quaternion
-        tensor_a = convert_to_quat(tensor_a)
-        tensor_b = convert_to_quat(tensor_b)
-        feat = RotationQuat(range(4))
+        and not isinstance(feat, RotationRotMat)
+    ):  # convert rotation to rotmatrix
+        tensor_a = convert_to_rotmatrix(tensor_a)
+        tensor_b = convert_to_rotmatrix(tensor_b)
+        feat = RotationRotMat(range(9))
     return feat.get_distance(tensor_a, tensor_b)
 
 

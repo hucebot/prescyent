@@ -162,7 +162,7 @@ def render_3d_trajectories(
                                 line_plot[:, 2]
                             )
         if not interactive and turn_view:
-            ax_3d.view_init(elev=elevation, azim=i % 360)
+            ax_3d.view_init(elev=elevation, azim=int(i * 10 / trajs[0].frequency) % 360)
         ax_3d.legend(
             handles=[point_list[traj_id][0] for traj_id, _ in enumerate(trajs)],
             labels=[traj.title for traj in trajs],

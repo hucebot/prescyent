@@ -95,8 +95,8 @@ def upsample_trajectory_tensor(
                 q1 = input_tensor[left_index, :, feat.ids]
                 q2 = input_tensor[right_index, :, feat.ids]
                 if not isinstance(feat, RotationQuat):
-                    q1 = convert_rotation_tensor_to(q1, RotationQuat)
-                    q2 = convert_rotation_tensor_to(q2, RotationQuat)
+                    q1 = convert_rotation_tensor_to(q1, RotationQuat(range(4)))
+                    q2 = convert_rotation_tensor_to(q2, RotationQuat(range(4)))
                 qx = slerp(q1, q2, alpha)
                 if not isinstance(feat, RotationQuat):
                     qx = convert_rotation_tensor_to(qx, feat)

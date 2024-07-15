@@ -461,7 +461,7 @@ def plot_mpjpes(
         x_values = np.flip(
             np.linspace(x_max, 0, dataset.config.future_size, endpoint=False)
         )
-        for distances in predictors_distances:
+        for d, distances in enumerate(predictors_distances):
             batch_feat_distances = torch.cat(
                 [feat2distances[feat.name] for feat2distances in distances]
             )
@@ -476,6 +476,7 @@ def plot_mpjpes(
                 y_values = y_values * 180 / math_pi
                 distance_unit = "degrees"
             plt.plot(x_values, y_values)
+            logger.getChild(EVAL).info(f"MPJPE for {predictors[d]}: {y_values}")
 
         plt.xlabel("Time (s)")
         plt.ylabel(f"{feat.name.capitalize()} Mean Error ({distance_unit})")

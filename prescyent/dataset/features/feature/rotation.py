@@ -165,8 +165,6 @@ class RotationRotMat(Rotation):
         # assert rotmatrices are valid
         rotmatrix_a = torch.reshape(tensor_a, [*tensor_a.shape[:-1], 3, 3])
         rotmatrix_b = torch.reshape(tensor_b, [*tensor_b.shape[:-1], 3, 3])
-        # test_a = is_rotation_matrix(rotmatrix_a)
-        # test_b = is_rotation_matrix(rotmatrix_b)
         # Get the transition matrix between A and B
         R_diffs = rotmatrix_a @ rotmatrix_b.transpose(-1, -2)
         # Get the angle of the rotation from the matrix

@@ -115,6 +115,7 @@ def quat_to_rotmatrix(quat: torch.Tensor) -> torch.Tensor:
 def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
     """Converts a rotation matrix to quaternion
     torch implementation with logic from https://github.com/scipy/scipy/blob/7cb3d751756907238996502b92709dc45e1c6596/scipy/spatial/transform/rotation.py#L480
+    WARNING: You cannot use this method in backpropagation as it uses inplace operations
 
     Args:
         rotmatrix (torch.Tensor): Rotmatrix with shape (N, 3, 3)
@@ -122,9 +123,9 @@ def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Quaternion with shape (N, 4)
     """
-    decision_matrix = torch.zeros((rotmatrix.shape[0], 4), device=rotmatrix.device)
-    decision_matrix[:, :3] = rotmatrix.diagonal(dim1=1, dim2=2)
-    decision_matrix[:, -1] = decision_matrix[:, :3].sum(dim=1)
+    diag_elements = rotmatrix.diagonal(dim1=1, dim2=2)
+    sum_diag = diag_elements.sum(dim=1, keepdim=True)
+    decision_matrix = torch.cat([diag_elements, sum_diag], dim=1)
     indices = decision_matrix.argmax(dim=1)
     # init empty quat
     quat = torch.zeros((rotmatrix.shape[0], 4), device=rotmatrix.device)
@@ -328,7 +329,7 @@ def get_relative_rotation_from(
 
     Args:
         input_tensor (torch.Tensor): the input tensor to update (B, S, P, D)
-        basis_tensor (torch.Tensor): the new basis tensor (B, 1, P, D)
+        basis_tensor (torch.Tensor): the new basis tensor (B, [1:S], P, D)
 
     Returns:
         torch.Tensor: tensor relative to new basis
@@ -345,7 +346,7 @@ def get_relative_rotation_from(
     basis_tensor = basis_tensor.reshape(*basis_tensor.shape[:-1], 3, 3).expand(
         input_tensor.shape
     )
-    input_tensor[:, :, :] = torch.matmul(input_tensor[:, :, :], basis_tensor[:, :, :])
+    input_tensor = torch.matmul(input_tensor, basis_tensor)
     input_tensor = input_tensor.transpose(3, 4)
     input_tensor = input_tensor.reshape(*input_tensor.shape[:-2], 9)
     if not isinstance(rotation_rep, RotationRotMat):

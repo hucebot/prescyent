@@ -90,9 +90,9 @@ class TestInterpolation(unittest.TestCase):
             ]
         )
         traj = Trajectory(in_tensor, frequency=5)
-        traj.augment_frequency(1)
+        traj.update_frequency(5)
         self.assertTrue(torch.equal(in_tensor, traj.tensor))
-        traj.augment_frequency(5)
+        traj.update_frequency(25)
         out_truth = torch.FloatTensor(
             [
                 [[1.0000, 2.0000, 3.0000], [5.0000, 4.0000, 3.0000]],
@@ -118,5 +118,5 @@ class TestInterpolation(unittest.TestCase):
                 [[5.0000, 6.0000, 7.0000], [1.0000, 0.0000, -1.0000]],
             ]
         )
-        self.assertTrue(torch.equal(out_truth, traj.tensor))
         self.assertEqual(traj.frequency, 25)
+        self.assertTrue(torch.equal(out_truth, traj.tensor))
