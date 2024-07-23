@@ -1,7 +1,10 @@
 from pydantic import ValidationError
-from prescyent.predictor import MlpPredictor, MlpConfig
+
 from prescyent.dataset import DatasetConfig
 from prescyent.dataset.features import Any
+from prescyent.predictor import MlpPredictor, MlpConfig
+from prescyent.predictor.lightning.predictor import MODEL_CHECKPOINT_NAME
+
 
 from tests.custom_test_case import CustomTestCase
 
@@ -48,7 +51,7 @@ class MlpInitTests(CustomTestCase):
     # -- INIT FROM STATE
     def test_init_with_pathname(self):
         MlpPredictor(model_path="tests/mocking/mlp_model")
-        MlpPredictor(model_path="tests/mocking/mlp_model/trainer_checkpoint.ckpt")
+        MlpPredictor(model_path=f"tests/mocking/mlp_model/{MODEL_CHECKPOINT_NAME}")
         with self.assertRaises(NotImplementedError) as context:
             MlpPredictor(model_path="tests/mocking/mlp_model/bad_model.bin")
         self.assertTrue(

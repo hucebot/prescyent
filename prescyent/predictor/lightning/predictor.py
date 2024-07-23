@@ -36,6 +36,9 @@ from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 from prescyent.predictor.lightning.layers.reshaping_layer import ReshapingLayer
 
 
+MODEL_CHECKPOINT_NAME = "model_checkpoint.ckpt"
+
+
 class LightningPredictor(BasePredictor):
     """Predictor to run any lightning module
     This class should not be called as is
@@ -120,7 +123,7 @@ class LightningPredictor(BasePredictor):
                     f" was found in directory {model_path}"
                 )
             model_path = found_model
-
+        logger.getChild(PREDICTOR).info(f"Loading model from {model_path}")
         if model_path.suffix == ".ckpt":
             try:
                 return LightningModule.load_from_checkpoint(
@@ -218,7 +221,7 @@ class LightningPredictor(BasePredictor):
             callbacks.append(DeviceStatsMonitor())
         return callbacks, profiler
 
-    def _free_trainer(self):
+    def free_trainer(self):
         del self.trainer
         self.trainer = None
         torch.cuda.empty_cache()
@@ -299,12 +302,20 @@ class LightningPredictor(BasePredictor):
             model=self.model,
             datamodule=datamodule,
         )
+        # Save model checkpoint
         # Retreive best checkpoint if one exists
         if hasattr(self, "checkpoint_callback"):
+            logger.getChild(PREDICTOR).info(
+                f"Reloading best model from checkpoints {self.checkpoint_callback.best_model_path}"
+            )
             self.model = self._load_from_path(self.checkpoint_callback.best_model_path)
-        # Always save after training
-        self.trainer.save_checkpoint(Path(self.log_path) / "trainer_checkpoint.ckpt")
-        self._free_trainer()
+            shutil.copy(
+                self.checkpoint_callback.best_model_path,
+                Path(self.log_path) / MODEL_CHECKPOINT_NAME,
+            )
+        else:
+            self.trainer.save_checkpoint(Path(self.log_path) / MODEL_CHECKPOINT_NAME)
+        self.free_trainer()
 
     def finetune(
         self,
@@ -360,7 +371,7 @@ class LightningPredictor(BasePredictor):
         if self.trainer is None:
             self._init_trainer(devices=1)
         losses = self.trainer.test(self.model, datamodule=datamodule)
-        self._free_trainer()
+        self.free_trainer()
         return losses
 
     def save(
@@ -384,6 +395,9 @@ class LightningPredictor(BasePredictor):
                     break
                 except FileExistsError:
                     save_path += "_"
+                except FileNotFoundError:
+                    # Nothing to copy
+                    break
         if isinstance(save_path, str):
             save_path = Path(save_path)
         # save model & config
@@ -392,7 +406,7 @@ class LightningPredictor(BasePredictor):
             "Saving config at %s", (save_path / "config.json")
         )
         self._save_config(save_path / "config.json", dataset_config)
-        if rm_log_path and self.log_path != str(save_path):
+        if rm_log_path and Path(self.log_path).resolve() != save_path.resolve():
             shutil.rmtree(self.log_path, ignore_errors=True)
         # reload logger at new location
         self.log_root_path = save_path

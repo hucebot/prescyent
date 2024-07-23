@@ -229,7 +229,7 @@ class BasePredictor:
         )
         for i in tqdm(
             range(0, max_iter, history_step),
-            desc="Iterate over input_tensor",
+            desc=f"{self} iterating over input_tensor",
         ):
             if i + history_size > input_len and self.dataset_config.loop_over_traj:
                 input_sub_batch = torch.cat(

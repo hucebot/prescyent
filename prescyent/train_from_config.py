@@ -49,29 +49,31 @@ def train_from_config(
     predictor = AutoPredictor.build_from_config(model_config)
     training_config = TrainingConfig(**training_config)
 
+    model_dir = Path(
+        f"{exp_path}/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
+    )
+    predictor.save(model_dir)
+    dataset.save_config(model_dir / "dataset_config.json")
+
     # Launch training
     print("Training starts...")
     predictor.train(dataset, training_config)
 
-    # Save the predictor, and configs
-    model_dir = Path(
-        f"{exp_path}/{predictor.name}/version_{predictor.version}_{socket.gethostname()}"
-    )
     print("Model directory:", model_dir)
-    predictor.save(model_dir)
-    dataset.save_config(model_dir / "dataset_config.json")
+    predictor.save()
     if rm_config:
         os.remove(str(config_path))
 
     print("Testing predictor...")
     predictor.test(dataset)
+    predictor.free_trainer()
+    plot_mpjpe(predictor, dataset, savefig_dir_path=predictor.log_path)
     eval_predictors(
         predictors=[predictor],
         trajectories=dataset.trajectories.test,
         dataset_config=dataset.config,
         do_plotting=False,
     )
-    plot_mpjpe(predictor, dataset, savefig_dir_path=predictor.log_path)
 
 
 if __name__ == "__main__":

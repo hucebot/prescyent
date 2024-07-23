@@ -273,7 +273,7 @@ class Trajectory:
             Trajectory: A new subtrajectory of self
         """
         if points is None:
-            points = list(range(self.point_names))
+            points = list(range(len(self.point_names)))
         if features is None:
             features = self.tensor_features
         subtraj = Trajectory(

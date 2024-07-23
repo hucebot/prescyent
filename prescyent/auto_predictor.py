@@ -4,6 +4,7 @@ from typing import Tuple, Union
 
 from prescyent.predictor.constant_predictor import ConstantPredictor
 from prescyent.predictor.delayed_predictor import DelayedPredictor
+from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.errors import PredictorNotFound, PredictorUnprocessable
 from prescyent.utils.logger import logger, PREDICTOR
@@ -65,7 +66,9 @@ class AutoPredictor:
         return predictor_class(model_path=config_path, config=config)
 
     @classmethod
-    def build_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
+    def build_from_config(
+        cls, config: Union[str, Path, dict, ModuleConfig]
+    ) -> BasePredictor:
         config, _ = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         logger.getChild(PREDICTOR).info(

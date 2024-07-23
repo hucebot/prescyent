@@ -9,7 +9,7 @@ class CustomDataset(MotionDataset):
 
     def __init__(
         self,
-        config,
+        config: MotionDatasetConfig,
         trajectories: Trajectories,
         name: str = "CustomDataset",
         load_data_at_init: bool = True,

@@ -214,13 +214,17 @@ def plot_trajs(
     savefig_path: str,
     title: Optional[str] = None,
     legend_labels: Optional[List[str]] = None,
+    rot_to_euler: bool = True,
 ):
     assert len(trajectories) >= 1
     feats = trajectories[0].tensor_features
     num_points = trajectories[0].tensor.shape[1]
-    num_dims = sum(
-        [len(feat.ids) if not isinstance(feat, Rotation) else 3 for feat in feats]
-    )
+    if rot_to_euler:
+        num_dims = sum(
+            [len(feat.ids) if not isinstance(feat, Rotation) else 3 for feat in feats]
+        )
+    else:
+        num_dims = sum([len(feat.ids) for feat in feats])
     assert all(
         [traj.tensor_features == feats for traj in trajectories]
     )  # Plotted trajs must have same feats
@@ -244,7 +248,7 @@ def plot_trajs(
     for point in range(num_points):
         for feat in feats:
             for offset, traj in zip(offsets, trajectories):
-                if isinstance(feat, Rotation):
+                if isinstance(feat, Rotation) and rot_to_euler:
                     feat_tensor = convert_to_euler(traj.tensor[:, point, feat.ids])
                     dims_names = ["roll", "pitch", "yaw"]
                 else:
