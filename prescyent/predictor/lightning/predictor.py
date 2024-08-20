@@ -96,6 +96,7 @@ class LightningPredictor(BasePredictor):
         return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
+        # TODO: load scaler here
         supported_extentions = [".ckpt"]
         model_path = Path(path)
         if model_path.name == "config.json":
@@ -291,7 +292,8 @@ class LightningPredictor(BasePredictor):
             },
             hp_metrics,
         )
-
+        # pass scaler to module before training
+        self.model.scaler = self.scaler
         self.trainer.fit(
             model=self.model,
             datamodule=datamodule,
@@ -364,6 +366,8 @@ class LightningPredictor(BasePredictor):
         """test the model"""
         if self.trainer is None:
             self._init_trainer(devices=1)
+        # pass scaler to module before training
+        self.model.scaler = self.scaler
         losses = self.trainer.test(self.model, datamodule=datamodule)
         self.free_trainer()
         return losses
@@ -374,6 +378,7 @@ class LightningPredictor(BasePredictor):
         dataset_config: Union[dict, BaseModel, None] = None,
         rm_log_path: bool = True,
     ):
+        # TODO: save scaler here
         """save model to path"""
         if save_path is None:
             save_path = self.log_path

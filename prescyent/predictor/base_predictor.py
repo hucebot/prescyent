@@ -145,7 +145,7 @@ class BasePredictor:
                 torch.cat(
                     [traj.tensor for traj in datamodule.trajectories.train], dim=0
                 ),
-                batch_size=1,
+                batch_size=datamodule.config.batch_size,
             ),
             dataset_features=datamodule.tensor_features,
         )
@@ -362,13 +362,13 @@ class BasePredictor:
             if not self.scaler:
                 return function(self, input_t, *args, **kwargs)
             input_t = self.scaler.scale(
-                input_t,
+                input_t.clone(),
                 self.config.dataset_config.in_points,
                 self.config.dataset_config.in_features,
             )
             output_t = function(self, input_t, *args, **kwargs)
             output_t = self.scaler.unscale(
-                output_t,
+                output_t.clone(),
                 self.config.dataset_config.out_points,
                 self.config.dataset_config.out_features,
             )

@@ -145,6 +145,8 @@ class LightningModule(pl.LightningModule):
     def get_metrics(self, batch, prefix: str = "", loss_only=False):
         """get loss and accuracy metrics from batch"""
         sample, truth = batch
+        sample = self.scaler.scale(sample)
+        truth = self.scaler.scale(truth)
         pred = self.torch_model(sample)
         if torch.any(torch.isnan(pred)):
             logger.getChild(PREDICTOR).error("NAN in pred")
