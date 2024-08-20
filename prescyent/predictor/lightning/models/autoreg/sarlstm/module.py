@@ -7,11 +7,12 @@ https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.dataset.features import (
     convert_tensor_features_to,
     features_are_convertible_to,
 )
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class TorchModule(BaseTorchModule):
@@ -38,7 +39,7 @@ class TorchModule(BaseTorchModule):
         self.linear = nn.Linear(self.hidden_size, self.num_out_features)
         self.convert_output = sorted(self.in_features) != sorted(self.out_features)
 
-    @BaseTorchModule.allow_unbatched
+    @self_auto_batch
     @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         if (

@@ -7,12 +7,13 @@ import numpy as np
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
-from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.dataset.features import (
     convert_tensor_features_to,
     features_are_convertible_to,
 )
+from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.tensor_manipulation import self_auto_batch
 from .mlp import TransMLP
 
 
@@ -76,7 +77,7 @@ class TorchModule(BaseTorchModule):
                     nn.init.xavier_uniform_(layer.weight, gain=1e-8)
                     nn.init.constant_(layer.bias, 0)
 
-    @BaseTorchModule.allow_unbatched
+    @self_auto_batch
     @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         batch_size = input_tensor.shape[0]

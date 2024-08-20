@@ -61,24 +61,17 @@ class LightningPredictor(BasePredictor):
                 else str(Path(model_path).parent)
             )
             self._load_config(Path(log_root_path) / "config.json", config_data=config)
-            name, version = self.name, self.version
             self.model = self._load_from_path(model_path)
             super().__init__(
-                self.config.dataset_config,
-                log_root_path=log_root_path,
-                name=name,
-                version=version,
+                self.config,
                 no_sub_dir_log=True,
             )
         elif config is not None:
+            if config.name is None:  # Default name if none in config
+                config.name = name
             self.model = self._build_from_config(config)
-            version = self.config.version
-            log_root_path = self.config.save_path
             super().__init__(
-                self.config.dataset_config,
-                log_root_path=log_root_path,
-                name=name,
-                version=version,
+                self.config,
             )
         else:
             # In later versions we can imagine a pretrained or config free version of the model
@@ -270,6 +263,7 @@ class LightningPredictor(BasePredictor):
         train_config: TrainingConfig = None,
     ):
         """train the model"""
+        super().train(datamodule=datamodule, train_config=train_config)
         if not train_config:
             train_config = TrainingConfig()
         self._init_training_config(train_config)
@@ -285,7 +279,7 @@ class LightningPredictor(BasePredictor):
             self.training_config.lr = lr_finder.suggestion()
         # Add hyperparams to Tensorboard and init HP Metrics
         hp_metrics = {}
-        for feat in self.dataset_config.out_features:
+        for feat in self.config.dataset_config.out_features:
             hp_metrics[f"hp/{feat.name}/ADE"] = -1
             hp_metrics[f"hp/{feat.name}/FDE"] = -1
             hp_metrics[f"hp/{feat.name}/MPJPE"] = -1
@@ -338,16 +332,16 @@ class LightningPredictor(BasePredictor):
                 (
                     input_shape[0],
                     self.config.in_sequence_size,
-                    len(self.dataset_config.in_points),
-                    len(self.dataset_config.in_dims),
+                    len(self.config.dataset_config.in_points),
+                    len(self.config.dataset_config.in_dims),
                 )
             )
             model_output_shape = torch.Size(
                 (
                     input_shape[0],
                     self.config.out_sequence_size,
-                    len(self.dataset_config.out_points),
-                    len(self.dataset_config.out_dims),
+                    len(self.config.dataset_config.out_points),
+                    len(self.config.dataset_config.out_dims),
                 )
             )
             # we update first and last layer with new feature_size
@@ -359,10 +353,10 @@ class LightningPredictor(BasePredictor):
         # we update model config with new input output infos
         self.config.in_sequence_size = input_t.shape[1]
         self.config.out_sequence_size = truth_t.shape[1]
-        self.dataset_config.in_points = list(range(input_t.shape[2]))
-        self.dataset_config.in_dims = list(range(input_t.shape[3]))
-        self.dataset_config.out_points = list(range(truth_t.shape[2]))
-        self.dataset_config.out_dims = list(range(truth_t.shape[3]))
+        self.config.dataset_config.in_points = list(range(input_t.shape[2]))
+        self.config.dataset_config.in_dims = list(range(input_t.shape[3]))
+        self.config.dataset_config.out_points = list(range(truth_t.shape[2]))
+        self.config.dataset_config.out_dims = list(range(truth_t.shape[3]))
         # train on new dataset
         self.train(train_config=train_config, datamodule=datamodule)
 
@@ -412,6 +406,7 @@ class LightningPredictor(BasePredictor):
         self.log_root_path = save_path
         super()._init_logger(no_sub_dir_log=True)
 
+    @BasePredictor.use_scaler
     def predict(self, input_t: torch.Tensor, future_size: int):
         with torch.no_grad():
             self.model.eval()

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from prescyent.utils.enums.normalizations import Normalizations
+from prescyent.utils.enums.trajectory_dimensions import TrajectoryDimensions
 
 
 class CustomLayerNorm(nn.Module):
@@ -53,18 +53,20 @@ class MLPBlock(nn.Module):
         else:
             self.fc0 = TemporalFC(config.in_sequence_size)
         if config.mpl_blocks_norm:
-            if config.mpl_blocks_norm == Normalizations.SPATIAL:
+            if config.mpl_blocks_norm == TrajectoryDimensions.SPATIAL:
                 self.norm0 = CustomLayerNorm(1, config.in_points_dims)
-            elif config.mpl_blocks_norm == Normalizations.TEMPORAL:
+            elif config.mpl_blocks_norm == TrajectoryDimensions.TEMPORAL:
                 self.norm0 = CustomLayerNorm(-1, config.in_sequence_size)
-            elif config.mpl_blocks_norm == Normalizations.ALL:
+            elif config.mpl_blocks_norm == TrajectoryDimensions.ALL:
                 self.norm0 = nn.LayerNorm(
                     [config.in_points_dims, config.in_sequence_size]
                 )
-            elif config.mpl_blocks_norm == Normalizations.BATCH:
+            elif config.mpl_blocks_norm == TrajectoryDimensions.BATCH:
                 self.norm0 = nn.BatchNorm1d(config.in_points_dims)
             else:
-                raise NotImplementedError()
+                raise NotImplementedError(
+                    f"{config.mpl_blocks_norm} is not a valid SiMLPe norm"
+                )
         else:
             self.norm0 = nn.Identity()
 

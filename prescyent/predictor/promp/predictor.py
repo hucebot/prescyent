@@ -20,13 +20,9 @@ class PrompPredictor(BasePredictor):
     def __init__(
         self,
         config: PrompConfig,
-        name: str = None,
-        version: Union[str, int, None] = None,
         no_sub_dir_log: bool = False,
     ) -> None:
-        super().__init__(
-            config.dataset_config, config.save_path, name, version, no_sub_dir_log
-        )
+        super().__init__(config, no_sub_dir_log)
         self.config = config
         self.promps = []
         self.length = -1

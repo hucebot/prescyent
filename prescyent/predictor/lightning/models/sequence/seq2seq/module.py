@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class TorchModule(BaseTorchModule):
@@ -42,7 +43,7 @@ class TorchModule(BaseTorchModule):
             # We predict the next input sequence alongside what we want as output
             self.in_decoder_linear = nn.Linear(self.hidden_size, self.num_in_features)
 
-    @BaseTorchModule.allow_unbatched
+    @self_auto_batch
     @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # (batch_size, seq_len, num_point, num_dim) => (seq_len, batch_size, num_point * num_dim)

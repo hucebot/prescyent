@@ -8,6 +8,7 @@ from torch import nn
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.enums import ActivationFunctions
 from prescyent.utils.logger import logger, PREDICTOR
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class TorchModule(BaseTorchModule):
@@ -47,7 +48,7 @@ class TorchModule(BaseTorchModule):
             layers += [nn.Linear(config.hidden_size, self.mlps_out_size)]
             self.layers = nn.Sequential(*layers)
 
-    @BaseTorchModule.allow_unbatched
+    @self_auto_batch
     @BaseTorchModule.normalize_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # simple single feature prediction of the next item in sequence
