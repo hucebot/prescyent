@@ -1,5 +1,5 @@
 """Config elements for Scaling usage"""
-from typing import Literal
+from typing import Literal, Optional
 
 from prescyent.base_config import BaseConfig
 from prescyent.utils.enums import Scalers, TrajectoryDimensions
@@ -10,11 +10,11 @@ class ScalerConfig(BaseConfig):
 
     scale_rotations: bool = False
     do_feature_wise_scaling: bool = False
-    scaler: Scalers = Scalers.STANDARDIZATION
+    scaler: Optional[Scalers] = Scalers.STANDARDIZATION
     scaling_axis: Literal[
         TrajectoryDimensions.FEATURE,
         TrajectoryDimensions.POINT,
         TrajectoryDimensions.SPATIAL,
         TrajectoryDimensions.TEMPORAL,
+        None,
     ] = TrajectoryDimensions.SPATIAL
-    # TODO: feature wise scaler, and checks

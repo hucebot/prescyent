@@ -27,10 +27,7 @@ class DelayedPredictorTests(CustomTestCase):
             out_points=points,
         )
         predictor = DelayedPredictor(
-            PredictorConfig(
-                dataset_config=dataset_config,
-                save_path="tmp"
-                )
+            PredictorConfig(dataset_config=dataset_config, save_path="tmp")
         )
         input_tensor = torch.rand(20, 10, 7, 6)
         output = predictor.predict(input_tensor, len(input_tensor[0]))
@@ -58,10 +55,7 @@ class DelayedPredictorTests(CustomTestCase):
             out_points=points,
         )
         predictor = DelayedPredictor(
-            PredictorConfig(
-                dataset_config=dataset_config,
-                save_path="tmp"
-                )
+            PredictorConfig(dataset_config=dataset_config, save_path="tmp")
         )
         trajs = Trajectories(
             [(Trajectory(torch.rand(500, 9, 7), 10, features)) for i in range(1)],

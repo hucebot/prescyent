@@ -31,6 +31,7 @@ from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.predictor.lightning.callbacks.progress_bar import LightningProgressBar
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
+from prescyent.scaler.scaler import Scaler
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 from prescyent.predictor.lightning.layers.reshaping_layer import ReshapingLayer
@@ -62,14 +63,21 @@ class LightningPredictor(BasePredictor):
             )
             self._load_config(Path(log_root_path) / "config.json", config_data=config)
             self.model = self._load_from_path(model_path)
+            if self.config.scaler_config:
+                try:
+                    self.scaler = Scaler.load(Path(log_root_path) / "scaler.pkl")
+                except FileNotFoundError:
+                    logger.getChild(PREDICTOR).warning(
+                        f"Could not retreive scaler at path {Path(log_root_path) / 'scaler.pkl'}"
+                    )
             super().__init__(
                 self.config,
                 no_sub_dir_log=True,
             )
         elif config is not None:
-            if config.name is None:  # Default name if none in config
-                config.name = name
             self.model = self._build_from_config(config)
+            if self.config.name is None:  # Default name if none in self.config
+                self.config.name = name
             super().__init__(
                 self.config,
             )
@@ -270,6 +278,7 @@ class LightningPredictor(BasePredictor):
         self._init_training_config(train_config)
         self._init_trainer()
         self._init_module_optimizer()
+        self.model.scaler = self.scaler
         if train_config.use_auto_lr:
             # Run learning rate finder
             tuner = Tuner(self.trainer)
@@ -293,7 +302,6 @@ class LightningPredictor(BasePredictor):
             hp_metrics,
         )
         # pass scaler to module before training
-        self.model.scaler = self.scaler
         self.trainer.fit(
             model=self.model,
             datamodule=datamodule,
@@ -378,7 +386,6 @@ class LightningPredictor(BasePredictor):
         dataset_config: Union[dict, BaseModel, None] = None,
         rm_log_path: bool = True,
     ):
-        # TODO: save scaler here
         """save model to path"""
         if save_path is None:
             save_path = self.log_path
@@ -410,6 +417,9 @@ class LightningPredictor(BasePredictor):
         # reload logger at new location
         self.log_root_path = save_path
         super()._init_logger(no_sub_dir_log=True)
+        # save scaler instance if any
+        if self.scaler is not None:
+            self.scaler.save(save_path / "scaler.pkl")
 
     @BasePredictor.use_scaler
     def predict(self, input_t: torch.Tensor, future_size: int):

@@ -69,6 +69,7 @@ class LightningModule(pl.LightningModule):
     def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
         logger.getChild(PREDICTOR).info("Initialization of the Lightning Module...")
         super().__init__()
+        self.config = config
         self.lr = 0.999
         self.torch_model = torch_model_class(config)
         self.val_output = []
@@ -142,19 +143,33 @@ class LightningModule(pl.LightningModule):
             return [optimizer], [{"scheduler": lr_scheduler, "interval": "step"}]
         return [optimizer]
 
-    def get_metrics(self, batch, prefix: str = "", loss_only=False):
-        """get loss and accuracy metrics from batch"""
+    def predict(self, batch):
+        """get prediction from batch and model"""
         sample, truth = batch
-        sample = self.scaler.scale(sample)
-        truth = self.scaler.scale(truth)
+        if self.scaler:
+            sample = self.scaler.scale(
+                sample,
+                self.config.dataset_config.in_points,
+                self.config.dataset_config.in_features,
+            )
         pred = self.torch_model(sample)
+        if self.scaler:
+            pred = self.scaler.unscale(
+                pred,
+                self.config.dataset_config.out_points,
+                self.config.dataset_config.out_features,
+            )
         if torch.any(torch.isnan(pred)):
             logger.getChild(PREDICTOR).error("NAN in pred")
-            # raise ValueError("Please check your loss function and architecture")
+            raise ValueError("Please check your loss function and architecture")
+        return pred, truth
+
+    def compute_metrics(self, pred, truth, prefix: str = "", loss_only=False):
+        """get loss and accuracy metrics pred and truth"""
         loss = self.criterion(pred, truth)
         if torch.any(torch.isnan(loss)):
             logger.getChild(PREDICTOR).error("NAN in loss")
-            # raise ValueError("Please check your loss function and architecture")
+            raise ValueError("Please check your loss function and architecture")
         self.log(f"{prefix}/loss", loss.detach(), prog_bar=True)
         if loss_only:
             return {"loss": loss}
@@ -227,7 +242,8 @@ class LightningModule(pl.LightningModule):
     def training_step(self, *args, **kwargs):
         """run every training step"""
         batch = args[0]
-        res = self.get_metrics(batch, "Train", loss_only=True)
+        pred, truth = self.predict(batch)
+        res = self.compute_metrics(pred, truth, "Train", loss_only=True)
         self.train_output.append(res)
         return res
 
@@ -235,7 +251,8 @@ class LightningModule(pl.LightningModule):
         """run every test step"""
         with torch.no_grad():
             batch = args[0]
-            res = self.get_metrics(batch, "Test")
+            pred, truth = self.predict(batch)
+            res = self.compute_metrics(pred, truth, "Test")
             self.test_output.append(res)
             return res
 
@@ -243,7 +260,8 @@ class LightningModule(pl.LightningModule):
         """run every validation step"""
         with torch.no_grad():
             batch = args[0]
-            res = self.get_metrics(batch, "Val")
+            pred, truth = self.predict(batch)
+            res = self.compute_metrics(pred, truth, "Val")
             self.val_output.append(res)
             return res
 

@@ -63,7 +63,10 @@ class BasePredictor:
         self.name = self.config.name
         self.version = self.config.version
         self._init_logger(no_sub_dir_log)
-        self._init_scaler()
+        if (
+            not hasattr(self, "scaler") or self.scaler is None
+        ):  # If scaler wasn't _init by child
+            self._init_scaler()
         logger.getChild(PREDICTOR).info(self.describe())
 
     def describe(self):
@@ -133,6 +136,7 @@ class BasePredictor:
         if self.scaler:
             logger.getChild(PREDICTOR).info("Training Scaler")
             self.train_scaler(datamodule)
+            logger.getChild(PREDICTOR).info("Scaler Trained")
 
     def train_scaler(self, datamodule: LightningDataModule):
         """_summary_
@@ -140,13 +144,12 @@ class BasePredictor:
         Args:
             datamodule (_type_): _description_
         """
+        # cat all dataset's frames
+        dataset_tensor = torch.cat(
+            [traj.tensor for traj in datamodule.trajectories.train], dim=0
+        )
         self.scaler.train(
-            DataLoader(
-                torch.cat(
-                    [traj.tensor for traj in datamodule.trajectories.train], dim=0
-                ),
-                batch_size=datamodule.config.batch_size,
-            ),
+            DataLoader(dataset_tensor, batch_size=datamodule.config.batch_size),
             dataset_features=datamodule.tensor_features,
         )
 

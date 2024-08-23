@@ -11,26 +11,32 @@ from prescyent.utils.enums import TrajectoryDimensions
 class Standardizer:
     mean: torch.Tensor
     std: torch.Tensor
-    dim: Optional[List[int]]
+    dim: List[int]
     eps: float
 
-    def __init__(self, scaling_axis: Optional[TrajectoryDimensions], eps=1e-8) -> None:
+    def __init__(self, scaling_axis: TrajectoryDimensions, eps=1e-8) -> None:
         self.dim = list(
             set(json.loads(scaling_axis.value) + [0, 1])
-        )  # Always scale on batch and time_frames
+        )  # + [0, 1] because we scale features, so we at least compute over batch and time_frames
         self.eps = eps
 
     def train(
         self, dataset_dataloader: DataLoader, feat_ids: Optional[List[int]] = None
     ):
+        """Train the standardizer based on a dataloader over the whole dataset and the dataset's features
+
+        Args:
+            dataset_dataloader (DataLoader): Dataloader over the whole training dataset
+            feat_ids (Optional[List[int]], optional): List of the dataset features. Defaults to None.
+        """
         n_samples = 0
         total_sum = 0
         total_sum_sq = 0
         for batch in dataset_dataloader:
             data = batch.unsqueeze(0)
-            sample_size = math.prod([data.size(dim) for dim in self.dim])
             if feat_ids:
                 data = data[..., feat_ids]
+            sample_size = math.prod([data.size(dim) for dim in self.dim])
             n_samples += sample_size
             total_sum += data.sum(dim=self.dim)
             total_sum_sq += (data**2).sum(dim=self.dim)
@@ -45,6 +51,18 @@ class Standardizer:
         point_ids: List[int] = None,
         feat_ids: List[int] = None,
     ) -> torch.Tensor:
+        """Standardizes input tensor
+
+        Args:
+            sample_tensor (torch.Tensor): input tensor
+            point_ids (List[int], optional): list of point ids to standardize on.
+                If None, standardize over whole given points. Defaults to None.
+            feat_ids (List[int], optional): list of feature ids to standardize on.
+                If None, standardize over whole given features. Defaults to None.
+
+        Returns:
+            torch.Tensor: Standardized input tensor
+        """
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
         if (
@@ -77,6 +95,18 @@ class Standardizer:
         point_ids: List[int] = None,
         feat_ids: List[int] = None,
     ) -> torch.Tensor:
+        """Unstandardizes input tensor
+
+        Args:
+            sample_tensor (torch.Tensor): input tensor
+            point_ids (List[int], optional): list of point ids to Unstandardize on.
+                If None, Unstandardize over whole given points. Defaults to None.
+            feat_ids (List[int], optional): list of feature ids to Unstandardize on.
+                If None, Unstandardize over whole given features. Defaults to None.
+
+        Returns:
+            torch.Tensor: Unstandardized input tensor
+        """
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
         if (
