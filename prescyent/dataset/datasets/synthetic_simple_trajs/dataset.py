@@ -47,21 +47,33 @@ class Dataset(MotionDataset):
         np.random.seed(self.config.seed)
         train_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_train)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_train)),
+                desc="Generating train_trajectories",
+                colour="blue"
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
         test_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_test)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_test)),
+                desc="Generating test_trajectories",
+                colour="blue"
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(test_trajectories)} test trajectories",
         )
         val_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_val)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_val)),
+                desc="Generating val_trajectories",
+                colour="blue"
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",

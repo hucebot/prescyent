@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     print("Initializing dataset...", end=" ")
-    subsampling_step: int = 10  # subsampling -> 100 Hz to 10Hz
+    frequency: int = 10  # subsampling -> 100 Hz to 10Hz
     history_size = 10  # 1 second
     future_size = 10  # 1 second
     # for TeleopIcub dimension = [0, 1, 2] is [waist, right_hand, left_hand]
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     dataset_config = TeleopIcubDatasetConfig(
         history_size=history_size,  # not used
         future_size=future_size,  # not used
-        subsampling_step=subsampling_step,
+        frequency=frequency,
         batch_size=batch_size,  # not used
         in_features=features,
         out_features=features,

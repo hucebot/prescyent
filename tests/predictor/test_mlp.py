@@ -46,19 +46,14 @@ class MlpInitTests(CustomTestCase):
             MlpConfig(feature_size=1)
 
     def test_missing_config_error(self):
-        self.assertRaises(NotImplementedError, MlpPredictor)
+        self.assertRaises(TypeError, MlpPredictor)
 
     # -- INIT FROM STATE
     def test_init_with_pathname(self):
-        MlpPredictor(model_path="tests/mocking/mlp_model")
-        MlpPredictor(model_path=f"tests/mocking/mlp_model/{MODEL_CHECKPOINT_NAME}")
-        with self.assertRaises(NotImplementedError) as context:
-            MlpPredictor(model_path="tests/mocking/mlp_model/bad_model.bin")
-        self.assertTrue(
-            "Given file extention .bin is not supported" in str(context.exception)
-        )
+        MlpPredictor.load_pretrained("tests/mocking/mlp_model")
+        MlpPredictor.load_pretrained(f"tests/mocking/mlp_model/{MODEL_CHECKPOINT_NAME}")
         with self.assertRaises(FileNotFoundError) as context:
-            MlpPredictor(model_path="tests/mocking/mlp_model/non_existing.bin")
+            MlpPredictor.load_pretrained("tests/mocking/non_existing/")
         self.assertTrue("No file or directory" in str(context.exception))
 
     def test_init_with_config_containing_path(self):

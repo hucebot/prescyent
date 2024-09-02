@@ -1,4 +1,8 @@
 import unittest
+import os
+
+
+os.environ.setdefault("TQDM_DISABLE", "1")
 
 
 class CustomTestCase(unittest.TestCase):

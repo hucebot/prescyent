@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from scipy.interpolate import splrep, BSpline
-from tqdm import tqdm
 
 from . import metadata
 from prescyent.dataset.dataset import MotionDataset

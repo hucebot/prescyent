@@ -44,6 +44,8 @@ class Trajectory:
     """List with the ids of the parent of each points, used to draw bones. -1 if no parent."""
     point_names: List[str]
     """List of a label to give to each point"""
+    context: Dict[str, torch.Tensor]
+    """Additional tensors with"""
 
     def __init__(
         self,

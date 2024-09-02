@@ -132,5 +132,5 @@ class ScalerStandardizationTest(CustomTestCase):
         training_config = TrainingConfig(max_epochs=1)
         mlp.train(self.dataset, training_config)
         mlp.save("tmp/tmp2")
-        mlp_2 = MlpPredictor(model_path="tmp/tmp2")
+        mlp_2 = MlpPredictor.load_pretrained("tmp/tmp2")
         self.verify_standardization(mlp_2.scaler)
