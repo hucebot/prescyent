@@ -118,7 +118,7 @@ Each Predictor defines its PredictorConfig with arguments that will be passed on
 
 # References
 siMLPe  
-Guo, W., Du, Y., Shen, X., Lepetit, V., Alameda-Pineda, X., & Moreno-Noguer, F. (2022, July 4). Back to MLP: a simple baseline for human motion prediction. arXiv.org. https://arxiv.org/abs/2207.01567  
+Wen Guo, Yuming Du, Xi Shen, Vincent Lepetit, Xavier Alameda-Pineda, et al.. Back to MLP: A Simple Baseline for Human Motion Prediction. WACV 2023 - IEEE Winter Conference on Applications of Computer Vision, Jan 2023, Waikoloa, United States. pp.1-11. ⟨hal-03906936⟩​  
 
 AndyDataset  
 Maurice P., Malaisé A., Amiot C., Paris N., Richard G.J., Rochel O., Ivaldi S. « Human Movement and Ergonomics: an Industry-Oriented Dataset for Collaborative Robotics ». The International Journal of Robotics Reserach, Volume 38, Issue 14, Pages 1529-1537.  

@@ -1,7 +1,6 @@
 """Use this script to train variations of your models"""
 
 import argparse
-import copy
 import glob
 import itertools
 import json
@@ -9,51 +8,43 @@ import os
 from pathlib import Path
 
 from prescyent.train_from_config import train_from_config
-from prescyent.auto_dataset import AutoDataset
-from prescyent.utils.enums import LearningTypes, Normalizations
+from prescyent.utils.enums import LearningTypes, TrajectoryDimensions
 from prescyent.utils.enums.loss_functions import LossFunctions
+from prescyent.utils.enums.scalers import Scalers
 
 
 VARIATIONS = {
     "training_config.number_of_repetition": range(1),
+    # SCALER
+    "scaler_config.do_feature_wise_scaling": [True],
+    "scaler_config.scale_rotations": [False],
+    "scaler_config.scaler": [Scalers.STANDARDIZATION],
+    "scaler_config.scaling_axis": [
+        TrajectoryDimensions.FEATURE,
+    ],
     # MODEL
     "model_config.name": [
         "MlpPredictor",
-        # "Seq2SeqPredictor",
-        # "siMLPe",
-        # "SARLSTMPredictor",
+        "Seq2SeqPredictor",
+        "siMLPe",
+        "SARLSTMPredictor",
     ],
-    "model_config.hidden_size": [64],
-    "model_config.num_layers": [4],
     "model_config.loss_fn": [
         LossFunctions.MSELOSS,
     ],
-    "model_config.used_norm": [
-        Normalizations.ALL,
-        # Normalizations.SPATIAL,
-        # Normalizations.TEMPORAL,
-        # Normalizations.BATCH,
-        # None
-    ],
-    # "model_config.spatial_fc_only": [True, False],
-    # "model_config.dct": [True, False],
-    # "model_config.dropout_value": [0, 0.1, 0.25],
-    "model_config.norm_on_last_input": [True],
-    # "model_config.do_lipschitz_continuation" : [False, True],
+    "model_config.deriv_on_last_frame": [True],
     # ...
     # TRAINING
-    "training_config.epoch": [5],
-    "training_config.devices": [1],
+    "training_config.max_epochs": [2],
+    "training_config.devices": ["auto"],
     # "training_config.accelerator": ["cpu"],
-    "training_config.early_stopping_patience": [5],
+    "training_config.early_stopping_patience": [1],
     "training_config.use_auto_lr": [True],
     # DATASET
     "dataset_config.history_size": [10],
     "dataset_config.future_size": [10],
     "dataset_config.name": ["TeleopIcub"],
     "dataset_config.batch_size": [256],
-    "dataset_config.num_workers": [4],
-    "dataset_config.persistent_workers": [True],
 }
 
 AUTO_REGRESSIVE_MODELS = ["SARLSTMPredictor"]
@@ -102,19 +93,23 @@ if __name__ == "__main__":
                 "model_config": dict(),
                 "dataset_config": dict(),
                 "training_config": dict(),
+                "scaler_config": dict(),
             }
+            del config_data["training_config.number_of_repetition"]
             for key, value in config_data.items():
                 key1, key2 = key.split(".")
                 config_dict[key1][key2] = value
             config_paths.append(config_base_dir / f"exp_config_{config_number}.json")
             config_dict["model_config"]["version"] = config_number
+            config_dict["model_config"]["scaler_config"] = config_dict["scaler_config"]
+            del config_dict["scaler_config"]
             if config_dict["model_config"]["name"] in AUTO_REGRESSIVE_MODELS:
                 config_dict["dataset_config"]["learning_type"] = LearningTypes.AUTOREG
             with open(config_paths[-1], "w", encoding="utf-8") as config_file:
                 json.dump(config_dict, config_file, indent=4)
 
     # Start a new training per config file
-    exp_path = "data/models/H36M/10Hz_1s/"
+    exp_path = "data/models/TeleopIcub/10Hz_1s_1s/"
     for i, config_path in enumerate(config_paths):
         print(f"Training {i} starting...")
         train_from_config(config_path, rm_config=True, exp_path=exp_path)

@@ -118,7 +118,9 @@ def eval_predictors(
         f"Running evaluation for {len(predictors)} predictors"
         f" on {len(trajectories)} trajectories",
     )
-    for t, trajectory in tqdm(enumerate(trajectories), desc="Trajectory n°"):
+    for t, trajectory in tqdm(
+        enumerate(trajectories), desc="Trajectory n°", colour="green"
+    ):
         predictions = []
         for p, predictor in enumerate(predictors):
             # prediction is made with chosen method and timed

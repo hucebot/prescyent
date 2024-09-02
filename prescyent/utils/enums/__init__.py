@@ -1,5 +1,6 @@
 from .activation_functions import ActivationFunctions
 from .learning_types import LearningTypes
 from .loss_functions import LossFunctions
-from .normalizations import Normalizations
 from .profilers import Profilers
+from .scalers import Scalers
+from .trajectory_dimensions import TrajectoryDimensions

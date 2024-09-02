@@ -8,7 +8,7 @@ from prescyent.dataset import (
     Trajectory,
 )
 from prescyent.dataset.features import Any
-from prescyent.predictor import DelayedPredictor
+from prescyent.predictor import DelayedPredictor, PredictorConfig
 from tests.custom_test_case import CustomTestCase
 
 
@@ -26,7 +26,9 @@ class DelayedPredictorTests(CustomTestCase):
             in_points=points,
             out_points=points,
         )
-        predictor = DelayedPredictor(dataset_config, "tmp")
+        predictor = DelayedPredictor(
+            PredictorConfig(dataset_config=dataset_config, save_path="tmp")
+        )
         input_tensor = torch.rand(20, 10, 7, 6)
         output = predictor.predict(input_tensor, len(input_tensor[0]))
         self.assertTrue(torch.equal(input_tensor, output))
@@ -52,7 +54,9 @@ class DelayedPredictorTests(CustomTestCase):
             in_points=points,
             out_points=points,
         )
-        predictor = DelayedPredictor(dataset_config, "tmp")
+        predictor = DelayedPredictor(
+            PredictorConfig(dataset_config=dataset_config, save_path="tmp")
+        )
         trajs = Trajectories(
             [(Trajectory(torch.rand(500, 9, 7), 10, features)) for i in range(1)],
             [(Trajectory(torch.rand(500, 9, 7), 10, features)) for i in range(10)],

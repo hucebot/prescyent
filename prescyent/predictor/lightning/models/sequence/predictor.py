@@ -2,6 +2,7 @@
 import torch
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
+from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
@@ -11,6 +12,7 @@ class SequencePredictor(LightningPredictor):
     We reimplement here the predict function to pass a future_size arg to the model
     """
 
+    @BasePredictor.use_scaler
     def predict(
         self,
         input_t: torch.Tensor,
@@ -44,8 +46,10 @@ class SequencePredictor(LightningPredictor):
                 )
                 input_t = input_t[-self.model.torch_model.in_sequence_size :]
             if future_size > self.model.torch_model.out_sequence_size and (
-                self.dataset_config.in_features != self.dataset_config.out_features
-                or self.dataset_config.in_points != self.dataset_config.out_points
+                self.config.dataset_config.in_features
+                != self.config.dataset_config.out_features
+                or self.config.dataset_config.in_points
+                != self.config.dataset_config.out_points
             ):
                 raise AttributeError(
                     f"We cannot predict a futur_size bigger than "

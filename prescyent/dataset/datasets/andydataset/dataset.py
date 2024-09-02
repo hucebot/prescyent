@@ -107,7 +107,7 @@ class Dataset(MotionDataset):
         """
         used_joints = self.config.used_joints
         trajectory_arrray = list()
-        for file_path in tqdm(files):
+        for file_path in tqdm(files, desc="Iterate over dataset files", colour="blue"):
             # If we don't have pt or don't want to use them, we parse the whole xml
             if not self.config.use_pt:
                 tree = ET.parse(file_path)

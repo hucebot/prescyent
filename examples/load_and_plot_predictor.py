@@ -1,3 +1,6 @@
+# Script to run evaluation over a predictor loaded from a path.
+# Evaluation is performed on the test set of the dataset used to train the predictor
+# We load everything from the predictor's config path.
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -5,39 +8,43 @@ from tqdm import tqdm
 
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
-from prescyent.evaluator.plotting import plot_trajs
+from prescyent.evaluator.plotting import plot_trajs, plot_mpjpe
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("model_path", help="data/models/teleopicub/all/MlpPredictor/version_0")
+    parser.add_argument(
+        "model_path", help="data/models/teleopicub/all/MlpPredictor/version_0"
+    )
     args = parser.parse_args()
-
     path = Path(args.model_path)
+    if not path.is_dir():
+        path = path.parent
     print("Path:", path)
     # we load with the same config as for the training
     print("Loading the dataset...")
     dataset = AutoDataset.build_from_config(path)
-    history_size = dataset.config.history_size
-    future_size = dataset.config.future_size
     print("Dataset OK")
 
     # load a pretrained model
     print("Loading the predictor...")
-    predictor = AutoPredictor.load_from_config(path)
+    predictor = AutoPredictor.load_pretrained(path)
+    predictor.describe()
     print("Predictor OK")
 
     # predict the trajectories
     print(
         f"Computing predictions for all the test trajectories for {predictor.name}..."
     )
+    history_size = dataset.config.history_size
+    future_size = dataset.config.future_size
 
-    ### Uncomment here if you want to mannualy iterate over your trajectory instead for some reason
+    ### Uncomment this section if you want to mannualy iterate over your trajectory instead for some reason
     # all_preds = []
-    # import torch
-    # with torch.no_grad():
+    # import
+    # with .no_grad():
     #     for traj in tqdm(dataset.trajectories.test):  # for each test trajectory
-    #         pred = torch.zeros(
+    #         pred = .zeros(
     #             (traj.shape[0] - history_size, traj.shape[1], traj.shape[2])
     #         )
     #         for i in range(0, traj.shape[0] - history_size):  # for each time-step
@@ -48,17 +55,35 @@ if __name__ == "__main__":
     #             pred[i] = p[-1]
     #         all_preds += [pred]
     # print("Predictions OK")
+    ### Here you get the list of the predicted tensor !
 
-    # plot predicted trajectories
     print("Plotting...")
-    for traj in tqdm(dataset.trajectories.test):  # for each test trajectories
-        prediction, offset = predictor.predict_trajectory(traj, future_size=future_size)
-        ref_traj = traj.create_subtraj(dataset.config.out_points, dataset.config.out_features)
-        title = f"{predictor}_over_{ref_traj.title}"
+    # plot MPJPE evaluation metric for this predictor
+    plot_mpjpe(predictor, dataset, savefig_dir_path=path / "test_plots")
+    # plot predicted trajectories
+    for test_traj in tqdm(
+        dataset.trajectories.test,
+        desc="Iterate over test trajectrories",
+        colour="green",
+    ):  # for each test trajectories
+        # we create a new predicted trajectory from a given predictor
+        predicted_traj, offset = predictor.predict_trajectory(
+            test_traj, future_size=future_size
+        )
+        # subsample the truth trajectory if needed for fair comparision
+        truth_traj = test_traj.create_subtraj(
+            dataset.config.out_points, dataset.config.out_features
+        )
+        title = f"{predictor}_over_{truth_traj.title}"
+        # plot prediction along truth and delayed truth
         plot_trajs(
-            [ref_traj, prediction, ref_traj],
+            [truth_traj, predicted_traj, truth_traj],
             offsets=[0, offset, future_size],
             title=title,
-            savefig_path=f"{title}.pdf",
-            legend_labels=["Truth", predictor, "delayed (1s)"],
+            savefig_path=path / f"test_plots/{title}.pdf",
+            legend_labels=[
+                "Truth",
+                predictor,
+                f"Delayed ({future_size/truth_traj.frequency}s)",
+            ],
         )

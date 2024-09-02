@@ -1,7 +1,6 @@
 """Class and methods for the SST Dataset
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
-import random
 from pathlib import Path
 from typing import Union, Dict, List
 
@@ -45,23 +44,36 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
+        np.random.seed(self.config.seed)
         train_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_train)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_train)),
+                desc="Generating train_trajectories",
+                colour="blue",
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(train_trajectories)} train trajectories",
         )
         test_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_test)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_test)),
+                desc="Generating test_trajectories",
+                colour="blue",
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(test_trajectories)} test trajectories",
         )
         val_trajectories = [
             self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_val)))
+            for i in tqdm(
+                range(int(self.config.num_traj * self.config.ratio_val)),
+                desc="Generating val_trajectories",
+                colour="blue",
+            )
         ]
         logger.getChild(DATASET).info(
             f"Generated {len(val_trajectories)} val trajectories",
@@ -101,9 +113,9 @@ class Dataset(MotionDataset):
         )
 
     def get_random_target(self) -> List[float]:
-        x = random.uniform(self.config.min_x, self.config.max_x)
-        y = random.uniform(self.config.min_y, self.config.max_y)
-        z = random.uniform(self.config.min_z, self.config.max_z)
+        x = np.random.uniform(self.config.min_x, self.config.max_x)
+        y = np.random.uniform(self.config.min_y, self.config.max_y)
+        z = np.random.uniform(self.config.min_z, self.config.max_z)
         random_euler = list(R.random().as_euler(SEQ))  # zyx
         return np.array([x, y, z] + random_euler)
 

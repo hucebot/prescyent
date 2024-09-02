@@ -16,7 +16,7 @@ def get_predictor_from_path(predictor_path: str):
         return ConstantPredictor(None)
     if predictor_path == "DelayedPredictor":
         return DelayedPredictor(None)
-    return AutoPredictor.load_from_config(predictor_path)
+    return AutoPredictor.load_pretrained(predictor_path)
 
 
 def get_predictor_infos(config):
@@ -52,7 +52,7 @@ class AutoPredictor:
         return predictor_class.config_class(**config.get("model_config", {}))
 
     @classmethod
-    def load_from_config(cls, config: Union[str, Path, dict, ModuleConfig]):
+    def load_pretrained(cls, config: Union[str, Path, dict, ModuleConfig]):
         config, config_path = cls.preprocess_config_attribute(config)
         predictor_class = get_predictor_infos(config)
         if config_path is None:
@@ -63,7 +63,7 @@ class AutoPredictor:
             predictor_class.PREDICTOR_NAME,
             config_path,
         )
-        return predictor_class(model_path=config_path, config=config)
+        return predictor_class.load_pretrained(model_dir=config_path)
 
     @classmethod
     def build_from_config(
