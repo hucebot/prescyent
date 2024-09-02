@@ -49,7 +49,7 @@ class TorchModule(BaseTorchModule):
             self.layers = nn.Sequential(*layers)
 
     @self_auto_batch
-    @BaseTorchModule.normalize_tensor
+    @BaseTorchModule.deriv_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # simple single feature prediction of the next item in sequence
         batch_size = input_tensor.shape[0]

@@ -25,8 +25,9 @@ class ModuleConfig(PredictorConfig):
     """Value for the torch Dropout layer as one of the first steps of the forward method of the torch module,
     Default to None results is no Dropout layer
     See https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html"""
-    norm_on_last_input: Optional[bool] = False
+    deriv_on_last_frame: Optional[bool] = False
     """If True, we'll make the whole input that is fed to the model relative to its last frame,
     It also makes the model's output relative to this frame"""
     deriv_output: Optional[bool] = False
     """If True, the model's output is relative to the last frame of the input"""
+

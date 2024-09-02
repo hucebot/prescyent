@@ -53,40 +53,17 @@ class LightningPredictor(BasePredictor):
     trainer: pl.Trainer
     tb_logger: TensorBoardLogger
 
-    def __init__(self, model_path=None, config=None, name=None) -> None:
-        # -- Init Model and root path
-        if model_path is not None:
-            log_root_path = (
-                model_path
-                if Path(model_path).is_dir()
-                else str(Path(model_path).parent)
-            )
-            self._load_config(Path(log_root_path) / "config.json", config_data=config)
-            self.model = self._load_from_path(model_path)
-            if self.config.scaler_config:
-                try:
-                    self.scaler = Scaler.load(Path(log_root_path) / "scaler.pkl")
-                except FileNotFoundError:
-                    logger.getChild(PREDICTOR).warning(
-                        f"Could not retreive scaler at path {Path(log_root_path) / 'scaler.pkl'}"
-                    )
-            super().__init__(
-                self.config,
-                no_sub_dir_log=True,
-            )
-        elif config is not None:
+    def __init__(self, config, name=None, skip_build: bool = False) -> None:
+        self.config = config
+        if not skip_build:
+            if config is None:
+                raise AttributeError("We cannot build a new predictor without a config")
             self.model = self._build_from_config(config)
-            if self.config.name is None:  # Default name if none in self.config
-                self.config.name = name
-            super().__init__(
-                self.config,
-            )
-        else:
-            # In later versions we can imagine a pretrained or config free version of the model
-            raise NotImplementedError(
-                "No default implementation for now, "
-                "please provide a config or a path to init predictor"
-            )
+        if self.config.name is None:  # Default name if none in self.config
+            self.config.name = name
+        super().__init__(
+            self.config,
+        )
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None
@@ -94,6 +71,34 @@ class LightningPredictor(BasePredictor):
             self.trainer = None
         if self.config.name is None:
             self.config.name = self.name
+
+    @classmethod
+    def load_pretrained(cls, model_dir: Union[Path, str]) -> object:
+        if isinstance(model_dir, str):
+            model_dir = Path(model_dir)
+        # ensure we have the folder and not the file
+        model_dir = model_dir if model_dir.is_dir() else model_dir.parent
+        config = cls._load_config(model_dir / "config.json")
+        predictor = cls(config, skip_build=True)
+        predictor.model = predictor._load_from_path(model_dir)
+        # Load scaler if any
+        if config.scaler_config:
+            try:
+                predictor.scaler = Scaler.load(Path(model_dir) / "scaler.pkl")
+            except FileNotFoundError:
+                logger.getChild(PREDICTOR).warning(
+                    f"Could not retreive scaler at path {Path(model_dir) / 'scaler.pkl'}"
+                )
+        return predictor
+
+    @classmethod
+    def _load_config(cls, config_path: Path):
+        if not config_path.exists():
+            raise FileNotFoundError(f"No file or directory at {config_path}")
+        with config_path.open(encoding="utf-8") as conf_file:
+            config_data = json.load(conf_file)
+        config = cls.config_class(**config_data.get("model_config", {}))
+        return config
 
     def _build_from_config(self, config: Union[Dict, ModuleConfig]):
         # -- We check that the input config is valid through pydantic model
@@ -104,7 +109,6 @@ class LightningPredictor(BasePredictor):
         return LightningModule(self.module_class, config)
 
     def _load_from_path(self, path: str):
-        # TODO: load scaler here
         supported_extentions = [".ckpt"]
         model_path = Path(path)
         if model_path.name == "config.json":
@@ -229,14 +233,8 @@ class LightningPredictor(BasePredictor):
         torch.cuda.empty_cache()
         gc.collect()
 
-    def _save_config(
-        self, save_path: Path, dataset_config: Union[dict, BaseModel, None] = None
-    ):
+    def _save_config(self, save_path: Path):
         res = dict()
-        if dataset_config:
-            if isinstance(dataset_config, BaseModel):
-                dataset_config = dataset_config.model_dump(exclude_defaults=False)
-            res["dataset_config"] = dataset_config
         if self.training_config is not None:
             res["training_config"] = self.training_config.model_dump(
                 exclude_defaults=False
@@ -247,21 +245,6 @@ class LightningPredictor(BasePredictor):
         res["model_config"]["version"] = self.version
         with (save_path).open("w", encoding="utf-8") as conf_file:
             json.dump(res, conf_file, indent=4, sort_keys=True)
-
-    def _load_config(self, config_path: Union[Path, str], config_data=None):
-        if not config_data:
-            config_path = Path(config_path)
-            if not config_path.exists():
-                raise FileNotFoundError(f"No file or directory at {config_path}")
-            with config_path.open(encoding="utf-8") as conf_file:
-                config_data = json.load(conf_file)
-        self.training_config = TrainingConfig(**config_data.get("training_config", {}))
-        if self.training_config.accelerator == "cuda" and not torch.cuda.is_available():
-            self.training_config.accelerator = "auto"
-        self.config = self.config_class(**config_data.get("model_config", {}))
-        self.name = config_data.get("model_config", {}).get("name", None)
-        self.version = config_data.get("model_config", {}).get("version", None)
-        logger.getChild(PREDICTOR).info("Config loaded from %s", config_path)
 
     def _init_module_optimizer(self):
         self.model.training_config = self.training_config
@@ -383,7 +366,6 @@ class LightningPredictor(BasePredictor):
     def save(
         self,
         save_path: Union[str, Path, None] = None,
-        dataset_config: Union[dict, BaseModel, None] = None,
         rm_log_path: bool = True,
     ):
         """save model to path"""
@@ -411,7 +393,7 @@ class LightningPredictor(BasePredictor):
         logger.getChild(PREDICTOR).info(
             "Saving config at %s", (save_path / "config.json")
         )
-        self._save_config(save_path / "config.json", dataset_config)
+        self._save_config(save_path / "config.json")
         if rm_log_path and Path(self.log_path).resolve() != save_path.resolve():
             shutil.rmtree(self.log_path, ignore_errors=True)
         # reload logger at new location

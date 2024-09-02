@@ -184,7 +184,11 @@ class BasePredictor:
             )
         distances = list()
         features = self.config.dataset_config.out_features
-        pbar = tqdm(datamodule.test_dataloader(), desc="Iterate over test_dataloader", colour="orange")
+        pbar = tqdm(
+            datamodule.test_dataloader(),
+            desc="Iterate over test_dataloader",
+            colour="orange",
+        )
         pbar.set_description(f"Testing {self}:")
         for sample, truth in pbar:
             # eval step
@@ -276,7 +280,7 @@ class BasePredictor:
         for i in tqdm(
             range(0, max_iter, history_step),
             desc=f"{self} iterating over input_tensor",
-            colour="orange"
+            colour="yellow",
         ):
             if (
                 i + history_size > input_len

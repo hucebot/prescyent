@@ -50,7 +50,7 @@ class Dataset(MotionDataset):
             for i in tqdm(
                 range(int(self.config.num_traj * self.config.ratio_train)),
                 desc="Generating train_trajectories",
-                colour="blue"
+                colour="blue",
             )
         ]
         logger.getChild(DATASET).info(
@@ -61,7 +61,7 @@ class Dataset(MotionDataset):
             for i in tqdm(
                 range(int(self.config.num_traj * self.config.ratio_test)),
                 desc="Generating test_trajectories",
-                colour="blue"
+                colour="blue",
             )
         ]
         logger.getChild(DATASET).info(
@@ -72,7 +72,7 @@ class Dataset(MotionDataset):
             for i in tqdm(
                 range(int(self.config.num_traj * self.config.ratio_val)),
                 desc="Generating val_trajectories",
-                colour="blue"
+                colour="blue",
             )
         ]
         logger.getChild(DATASET).info(

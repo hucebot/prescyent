@@ -34,7 +34,6 @@ def get_predictor_infos(config):
 
 
 class AutoPredictor:
-
     @classmethod
     def preprocess_config_attribute(cls, config) -> Tuple[dict, str]:
         if isinstance(config, (str, Path)):

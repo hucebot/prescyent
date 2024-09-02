@@ -18,7 +18,7 @@ class BaseTorchModule(torch.nn.Module):
 
     def __init__(self, config) -> None:
         super().__init__()
-        self.norm_on_last_input = config.norm_on_last_input
+        self.deriv_on_last_frame = config.deriv_on_last_frame
         self.deriv_output = config.deriv_output
         self.dropout_value = config.dropout_value
         self.in_sequence_size = config.in_sequence_size
@@ -31,11 +31,11 @@ class BaseTorchModule(torch.nn.Module):
         self.out_features = config.dataset_config.out_features
         self.in_points = config.dataset_config.in_points
         self.out_points = config.dataset_config.out_points
-        if (self.norm_on_last_input or self.deriv_output) and (
+        if (self.deriv_on_last_frame or self.deriv_output) and (
             not features_are_convertible_to(self.in_features, self.out_features)
         ):
             raise AttributeError(
-                "Cannot use 'norm_on_last_input' with non equivalent"
+                "Cannot use 'deriv_on_last_frame' with non equivalent"
                 f"in_features {self.in_features} and "
                 f"out_features {self.out_features}"
             )
@@ -47,14 +47,14 @@ class BaseTorchModule(torch.nn.Module):
         raise NotImplementedError("This method must be overriden")
 
     @staticmethod
-    def normalize_tensor(function):
+    def deriv_tensor(function):
         """decorator for normalization of the input tensor before forward method"""
 
         @functools.wraps(function)
-        def normalize(self, input_tensor, *args, **kwargs):
-            if self.norm_on_last_input or self.deriv_output:
+        def deriv_from_last_frame(self, input_tensor, *args, **kwargs):
+            if self.deriv_on_last_frame or self.deriv_output:
                 seq_last = input_tensor[:, -1:, :, :].clone()
-                if self.norm_on_last_input:
+                if self.deriv_on_last_frame:
                     input_tensor = get_relative_tensor_from(
                         input_tensor, seq_last, self.in_features
                     )
@@ -66,7 +66,7 @@ class BaseTorchModule(torch.nn.Module):
                     predictions[:, :, :, feat.ids] = feat.post_process(
                         predictions[:, :, :, feat.ids]
                     )
-            if self.norm_on_last_input or self.deriv_output:
+            if self.deriv_on_last_frame or self.deriv_output:
                 seq_last = convert_tensor_features_to(
                     seq_last,
                     self.in_features,
@@ -79,7 +79,7 @@ class BaseTorchModule(torch.nn.Module):
                     out_points_ids = out_points_ids.to(device=input_tensor.device)
                 except ValueError as err:
                     raise AttributeError(
-                        "You cannot use norm_on_last_input if output points are not included in input!"
+                        "You cannot deriv from input tensor's last frame if output points are not included in input"
                     ) from err
                 seq_last = torch.index_select(seq_last, 2, out_points_ids)
                 # seq_last.to(device=input_tensor.device, dtype=input_tensor.dtype)
@@ -88,4 +88,4 @@ class BaseTorchModule(torch.nn.Module):
                 )
             return predictions
 
-        return normalize
+        return deriv_from_last_frame

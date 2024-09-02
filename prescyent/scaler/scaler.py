@@ -25,8 +25,7 @@ norm_map = {
     None: None,
 }
 
-# TODO: norm_on_last_frame
-# TODO: dct
+# TODO: dct scaler ? or dct + scaling
 
 
 class Scaler:

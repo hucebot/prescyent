@@ -44,7 +44,7 @@ class TorchModule(BaseTorchModule):
             self.in_decoder_linear = nn.Linear(self.hidden_size, self.num_in_features)
 
     @self_auto_batch
-    @BaseTorchModule.normalize_tensor
+    @BaseTorchModule.deriv_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         # (batch_size, seq_len, num_point, num_dim) => (seq_len, batch_size, num_point * num_dim)
         batch_size = input_tensor.shape[0]

@@ -187,7 +187,7 @@ def render_3d_trajectories(
                 ),
             ),
             "Rendering trajectory frames",
-            colour="red"
+            colour="red",
         ),
     )
 

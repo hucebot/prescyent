@@ -44,7 +44,7 @@ if __name__ == "__main__":
         scaler_config=scaler_config,
         hidden_size=128,
         num_layers=4,
-        norm_on_last_input=True,
+        deriv_on_last_frame=True,
         loss_fn=LossFunctions.MTRDLOSS,
     )
     predictor = MlpPredictor(config=config)

@@ -40,7 +40,7 @@ class TorchModule(BaseTorchModule):
         self.convert_output = sorted(self.in_features) != sorted(self.out_features)
 
     @self_auto_batch
-    @BaseTorchModule.normalize_tensor
+    @BaseTorchModule.deriv_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
         if (
             self.convert_output

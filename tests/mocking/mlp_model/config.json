@@ -6,8 +6,8 @@
             "convert_trajectories_beforehand": true,
             "drop_last": true,
             "frequency": 10,
-            "future_size": 25,
-            "history_size": 25,
+            "future_size": 10,
+            "history_size": 10,
             "in_features": [
                 {
                     "ids": [
@@ -45,28 +45,28 @@
             "persistent_workers": false,
             "pin_memory": true,
             "reverse_pair_ratio": 0,
-            "seed": 979905452,
+            "seed": 858636172,
             "shuffle_test": false,
             "shuffle_train": true,
             "shuffle_val": false
         },
+        "deriv_on_last_frame": true,
         "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
         "hidden_size": 128,
-        "loss_fn": "mtrdvloss",
+        "loss_fn": "mtdloss",
         "name": "MlpPredictor",
-        "norm_on_last_input": false,
-        "num_layers": 8,
+        "num_layers": 4,
         "save_path": "data/models",
         "scaler_config": {
             "do_feature_wise_scaling": false,
             "scale_rotations": false,
-            "scaler": "standardization",
+            "scaler": "normalization",
             "scaling_axis": "[1]"
         },
         "used_profiler": null,
-        "version": 0
+        "version": 3
     },
     "training_config": {
         "accelerator": "auto",
@@ -78,11 +78,11 @@
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
-        "lr": 0.0005,
-        "max_epochs": 300,
+        "lr": 0.0001,
+        "max_epochs": 200,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 346446957,
+        "seed": 489325146,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

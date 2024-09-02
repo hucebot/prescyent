@@ -78,7 +78,7 @@ class TorchModule(BaseTorchModule):
                     nn.init.constant_(layer.bias, 0)
 
     @self_auto_batch
-    @BaseTorchModule.normalize_tensor
+    @BaseTorchModule.deriv_tensor
     def forward(self, input_tensor: torch.Tensor, future_size: int = None):
         batch_size = input_tensor.shape[0]
         # (batch_size, seq_len, num_point, num_dim) => (batch_size, seq_len, num_point * num_dim)

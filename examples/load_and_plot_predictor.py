@@ -64,7 +64,7 @@ if __name__ == "__main__":
     for test_traj in tqdm(
         dataset.trajectories.test,
         desc="Iterate over test trajectrories",
-        colour='green'
+        colour="green",
     ):  # for each test trajectories
         # we create a new predicted trajectory from a given predictor
         predicted_traj, offset = predictor.predict_trajectory(
