@@ -1,7 +1,7 @@
 import torch
 from typing import List
 
-from prescyent.dataset.features.feature import Feature, Rotation, Any, Coordinate
+from prescyent.dataset.features import Features, Rotation, Any, Coordinate
 from prescyent.dataset.features.rotation_methods import (
     get_relative_rotation_from,
     get_absolute_rotation_from,
@@ -12,7 +12,7 @@ from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 def get_relative_tensor_from(
     input_tensor: torch.Tensor,
     basis_tensor: torch.Tensor,
-    tensor_features: List[Feature],
+    tensor_features: Features,
 ) -> torch.Tensor:
     """return a new tensor relative to basis tensor
 
@@ -50,7 +50,7 @@ def get_relative_tensor_from(
 def get_absolute_tensor_from(
     input_tensor: torch.Tensor,
     basis_tensor: torch.Tensor,
-    tensor_features: List[Feature],
+    tensor_features: Features,
 ) -> torch.Tensor:
     """return a new tensor absolute to world based on basis tensor
 

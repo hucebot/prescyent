@@ -15,17 +15,17 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         future_size: 10
         glob_dir: datasetMultipleTasks/*/p*.csv
         history_size: 10
-        in_features:
-        - &id002 !!python/object/new:prescyent.dataset.features.feature.coordinate.CoordinateXYZ
-          dictitems:
-            ids: &id001
-            - 0
-            - 1
-            - 2
-            name: CoordinateXYZ
-          state:
-            distance_unit: m
-            ids: *id001
+        in_features: !!python/object/new:prescyent.dataset.features.features.Features
+          listitems:
+          - &id001 !!python/object/new:prescyent.dataset.features.feature.coordinate.CoordinateXYZ
+            dictitems:
+              distance_unit: m
+              feature_class: CoordinateXYZ
+              ids:
+              - 0
+              - 1
+              - 2
+              name: Coordinate_0
         in_points:
         - 0
         - 1
@@ -35,10 +35,10 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         loop_over_traj: false
         name: TeleopIcub
         num_workers: 0
-        out_features:
-        - *id002
+        out_features: !!python/object/new:prescyent.dataset.features.features.Features
+          listitems:
+          - *id001
         out_points:
-        - 0
         - 1
         - 2
         persistent_workers: false
@@ -47,7 +47,7 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         ratio_train: 0.8
         ratio_val: 0.05
         reverse_pair_ratio: 0
-        seed: 858636172
+        seed: 835886657
         shuffle_data_files: true
         shuffle_test: false
         shuffle_train: true
@@ -66,6 +66,7 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         in_features: null
         name: null
         out_features: null
+        out_points: null
         seed: null
       __pydantic_private__: null
     deriv_on_last_frame: true
@@ -80,10 +81,10 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
     save_path: data/models
     scaler_config: !!python/object:prescyent.scaler.config.ScalerConfig
       __dict__:
-        do_feature_wise_scaling: false
+        do_feature_wise_scaling: true
         scale_rotations: false
         scaler: !!python/object/apply:prescyent.utils.enums.scalers.Scalers
-        - normalization
+        - standardization
         scaling_axis: !!python/object/apply:prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
         - '[1]'
       __pydantic_extra__: null
@@ -111,11 +112,13 @@ dataset_config:
   future_size: 10
   history_size: 10
   in_features:
-  - ids:
+  - distance_unit: m
+    feature_class: CoordinateXYZ
+    ids:
     - 0
     - 1
     - 2
-    name: CoordinateXYZ
+    name: Coordinate_0
   in_points:
   - 0
   - 1
@@ -126,19 +129,20 @@ dataset_config:
   name: TeleopIcub
   num_workers: 0
   out_features:
-  - ids:
+  - distance_unit: m
+    feature_class: CoordinateXYZ
+    ids:
     - 0
     - 1
     - 2
-    name: CoordinateXYZ
+    name: Coordinate_0
   out_points:
-  - 0
   - 1
   - 2
   persistent_workers: false
   pin_memory: true
   reverse_pair_ratio: 0
-  seed: 858636172
+  seed: 835886657
   shuffle_test: false
   shuffle_train: true
   shuffle_val: false
@@ -148,7 +152,7 @@ devices: auto
 do_lipschitz_continuation: false
 dropout_value: null
 early_stopping_mode: min
-early_stopping_patience: 10
+early_stopping_patience: 15
 early_stopping_value: Val/loss
 gradient_clip_algorithm: null
 gradient_clip_val: null
@@ -156,20 +160,20 @@ hidden_size: 128
 log_every_n_steps: 1
 loss_fn: MTRDLOSS
 lr: 0.0001
-max_epochs: 200
+max_epochs: 300
 max_lr: 0.01
 max_steps: -1
 name: MlpPredictor
 num_layers: 4
 save_path: data/models
 scaler_config:
-  do_feature_wise_scaling: false
+  do_feature_wise_scaling: true
   scale_rotations: false
   scaler: !!python/object/apply:prescyent.utils.enums.scalers.Scalers
-  - normalization
+  - standardization
   scaling_axis: !!python/object/apply:prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
   - '[1]'
-seed: 489325146
+seed: 303844695
 torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.mlp.module.TorchModule ''
 use_auto_lr: false
 use_deterministic_algorithms: true

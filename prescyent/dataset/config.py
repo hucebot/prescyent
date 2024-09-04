@@ -50,9 +50,9 @@ class MotionDatasetConfig(BaseConfig):
     """Number of timesteps as input"""
     future_size: int
     """Number of timesteps predicted as output"""
-    in_features: Optional[List[tensor_features.Feature]]
+    in_features: Optional[tensor_features.Features]
     """List of features used as input, if None, use default from the dataset"""
-    out_features: Optional[List[tensor_features.Feature]]
+    out_features: Optional[tensor_features.Features]
     """List of features used as output, if None, use default from the dataset"""
     in_points: Optional[List[int]]
     """Ids of the points used as input.
@@ -129,20 +129,42 @@ class MotionDatasetConfig(BaseConfig):
     def unserialize_features(self):
         if self.get("out_features", None):
             if isinstance(self["out_features"], tensor_features.Feature):
-                self["out_features"] = [self["out_features"]]
+                self["out_features"] = tensor_features.Features(
+                    [self["out_features"]], index_name=False
+                )
             if not isinstance(self["out_features"][0], tensor_features.Feature):
-                self["out_features"] = [
-                    getattr(tensor_features, feature["name"])(feature["ids"])
-                    for feature in self["out_features"]
-                ]
+                self["out_features"] = tensor_features.Features(
+                    [
+                        getattr(tensor_features, feature["feature_class"])(
+                            feature["ids"], name=feature["name"]
+                        )
+                        for feature in self["out_features"]
+                    ],
+                    index_name=False,
+                )
+            if isinstance(self["out_features"], list):
+                self["out_features"] = tensor_features.Features(
+                    self["out_features"], index_name=False
+                )
         if self.get("in_features", None):
             if isinstance(self["in_features"], tensor_features.Feature):
-                self["in_features"] = [self["in_features"]]
+                self["in_features"] = tensor_features.Features(
+                    [self["in_features"]], index_name=False
+                )
             if not isinstance(self["in_features"][0], tensor_features.Feature):
-                self["in_features"] = [
-                    getattr(tensor_features, feature["name"])(feature["ids"])
-                    for feature in self["in_features"]
-                ]
+                self["in_features"] = tensor_features.Features(
+                    [
+                        getattr(tensor_features, feature["feature_class"])(
+                            feature["ids"], name=feature["name"]
+                        )
+                        for feature in self["in_features"]
+                    ],
+                    index_name=False,
+                )
+            if isinstance(self["in_features"], list):
+                self["in_features"] = tensor_features.Features(
+                    self["in_features"], index_name=False
+                )
         return self
 
     @model_validator(mode="after")

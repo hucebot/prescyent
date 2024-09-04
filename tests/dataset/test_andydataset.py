@@ -6,7 +6,7 @@ import torch
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import AndyDataset, AndyDatasetConfig
-from prescyent.dataset.features import CoordinateX, RotationRotMat
+from prescyent.dataset.features import CoordinateX, Features, RotationRotMat
 from prescyent.utils.enums import LearningTypes
 
 
@@ -63,8 +63,8 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
-                    in_features=[RotationRotMat(range(9))],
-                    out_features=[CoordinateX([0])],
+                    in_features=Features([RotationRotMat(range(9))]),
+                    out_features=Features([CoordinateX([0])]),
                 ),
                 load_data_at_init=True,
             )

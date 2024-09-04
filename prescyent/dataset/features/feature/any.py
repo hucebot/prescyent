@@ -7,9 +7,9 @@ from prescyent.dataset.features.feature import Feature
 
 
 class Any(Feature):
-    @property
-    def name(self) -> str:
-        return "Any"
+    def __init__(self, ids: List | range, distance_unit=None, name="Any") -> None:
+        self.name = name
+        super().__init__(ids, distance_unit)
 
     @property
     def num_dims(self) -> int:

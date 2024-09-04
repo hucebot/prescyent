@@ -15,6 +15,7 @@ from prescyent.utils.interpolate import (
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import (
     Feature,
+    Features,
     Any,
     convert_tensor_features_to,
     get_distance,
@@ -34,7 +35,7 @@ class Trajectory:
     """The tensor with the data"""
     frequency: int
     """Frequency of the trajectory in Hz"""
-    tensor_features: List[Feature]
+    tensor_features: Features
     """Description of the features of the tensor with corresponding ids"""
     file_path: str
     """Path to the file from which the trajectory is created"""
@@ -51,7 +52,7 @@ class Trajectory:
         self,
         tensor: torch.Tensor,
         frequency: int,
-        tensor_features: List[Feature] = None,
+        tensor_features: Features = None,
         file_path: str = "trajectory_file_path",
         title: str = "trajectory_name",
         point_parents: List[int] = None,
@@ -61,7 +62,7 @@ class Trajectory:
         Args:
             tensor (torch.Tensor): The tensor with the data
             frequency (int): Frequency of the trajectory in Hz
-            tensor_features (List[Feature], optional): Description of the features of the tensor with corresponding ids. Defaults to None.
+            tensor_features (Features, optional): Description of the features of the tensor with corresponding ids. Defaults to None.
             file_path (str, optional): Path to the file from which the trajectory is created. Defaults to "trajectory_file_path".
             title (str, optional): Name given to the trajectory to describe it (especially in plots. Defaults to "trajectory_name".
             point_parents (List[int], optional): List with the ids of the parent of each points, used to draw bones. -1 if no parent. Defaults to None.
@@ -116,12 +117,12 @@ class Trajectory:
         """number of dimensions of each point in the trajectory"""
         return self.tensor.shape[2]
 
-    def convert_tensor_features(self, new_tensor_feats: List[Feature]):
+    def convert_tensor_features(self, new_tensor_feats: Features):
         """convert trajectory's tensor to new requested features if possible,
             else raises an AttributeError
             self.tensor and self.tensor_features are updated.
         Args:
-            new_tensor_feats (List[Feature]): new list of Feature
+            new_tensor_feats (Features): new list of Feature
         """
         self.tensor = convert_tensor_features_to(
             self.tensor, self.tensor_features, new_tensor_feats
@@ -264,12 +265,12 @@ class Trajectory:
             metrics.append(mean_dists)
         return metrics
 
-    def create_subtraj(self, points: List[int] = None, features: List[Feature] = None):
+    def create_subtraj(self, points: List[int] = None, features: Features = None):
         """Create a subset of this trajectory with given new list of points and features
 
         Args:
             points (List[int]): ids of the points to keep. If None, the values will be same as self.
-            features (List[Feature]): features to keep. If None, the values will be same as self.
+            features (Features): features to keep. If None, the values will be same as self.
 
         Returns:
             Trajectory: A new subtrajectory of self

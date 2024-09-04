@@ -1,6 +1,6 @@
-from prescyent.dataset.features import CoordinateXYZ
+from prescyent.dataset.features import CoordinateXYZ, Features
 
 BASE_FREQUENCY = 100
 POINT_LABELS = ["waist", "right_hand", "left_hand"]
 POINT_PARENTS = [-1, 0, 0]
-FEATURES = [CoordinateXYZ(range(3))]
+DEFAULT_FEATURES = Features([CoordinateXYZ(range(3))])

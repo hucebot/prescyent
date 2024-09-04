@@ -9,12 +9,14 @@ from prescyent.dataset.features.feature import Feature
 class Coordinate(Feature):
     """parent class for coordinates, used for conversion"""
 
-    def __init__(self, ids: Union[List, range], distance_unit="m") -> None:
+    def __init__(
+        self,
+        ids: Union[List, range],
+        distance_unit: str = "m",
+        name: str = "Coordinate",
+    ) -> None:
+        self.name = name
         super().__init__(ids, distance_unit)
-
-    @property
-    def name(self) -> str:
-        return "Coordinate"
 
     def _is_convertible(self, __value: object) -> bool:
         return isinstance(__value, Coordinate) and len(self.ids) > len(__value.ids)

@@ -107,25 +107,19 @@ class Standardizer:
         Returns:
             torch.Tensor: Unstandardized input tensor
         """
+        std = self.std.detach().clone()
+        mean = self.mean.detach().clone()
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
-        if (
-            point_ids and 2 not in self.dim and feat_ids and 3 not in self.dim
-        ):  # If we unscale a subset of the dataset points, and it is not averaged over
-            res = (
-                sample_tensor * self.std[point_ids, feat_ids]
-                + self.mean[point_ids, feat_ids]
-            )
-        elif (
-            point_ids and 2 not in self.dim
-        ):  # If we unscale a subset of the dataset points, and it is not averaged over
-            res = sample_tensor * self.std[point_ids] + self.mean[point_ids]
-        elif (
-            feat_ids and 3 not in self.dim
-        ):  # If we unscale a subset of the dataset feats, and it is not averaged over
-            res = sample_tensor * self.std[..., feat_ids] + self.mean[..., feat_ids]
-        else:
-            res = sample_tensor * self.std + self.mean
+        if point_ids and 2 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            std = std[point_ids]
+            mean = mean[point_ids]
+        if feat_ids and 3 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            std = std[..., feat_ids]
+            mean = mean[..., feat_ids]
+        res = sample_tensor * std + mean
         if self.dim == [0, 1, 3]:
             res = res.transpose(2, 3)
         return res

@@ -4,7 +4,7 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import SSTDataset, SSTDatasetConfig
-from prescyent.dataset.features import RotationQuat
+from prescyent.dataset.features import Features, RotationQuat
 from prescyent.utils.enums import LearningTypes
 
 
@@ -46,7 +46,7 @@ class InitSSTDatasetTest(CustomTestCase):
         dataset = SSTDataset(
             SSTDatasetConfig(
                 num_traj=10,
-                out_features=[RotationQuat([0, 1, 2, 3])],
+                out_features=Features([RotationQuat([0, 1, 2, 3])]),
             ),
             load_data_at_init=True,
         )

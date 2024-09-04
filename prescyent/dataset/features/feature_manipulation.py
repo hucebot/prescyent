@@ -3,8 +3,9 @@ from typing import Dict, List
 
 import torch
 
-from prescyent.dataset.features.feature import (
+from prescyent.dataset.features import (
     Feature,
+    Features,
     Rotation,
     RotationRotMat,
     RotationQuat,
@@ -19,18 +20,18 @@ from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
 def get_distance(
     tensor_a: torch.Tensor,
-    tensor_feats_a: List[Feature],
+    tensor_feats_a: Features,
     tensor_b: torch.Tensor,
-    tensor_feats_b: List[Feature],
+    tensor_feats_b: Features,
     get_mean: bool = False,
 ) -> Dict[str, torch.Tensor]:
     """returns a feature aware distance between two tensors
 
     Args:
         tensor_a (torch.Tensor): first tensor
-        tensor_feats_a (List[Feature]): first tensor's features
+        tensor_feats_a (Features): first tensor's features
         tensor_b (torch.Tensor): second tensor
-        tensor_feats_b (List[Feature]): second tensor's features
+        tensor_feats_b (Features): second tensor's features
 
     Returns:
         Dict[str, torch.Tensor]: a distance of each feature of the input tensors
@@ -81,14 +82,14 @@ def cal_distance_for_feat(
 
 
 def convert_tensor_features_to(
-    tensor: torch.Tensor, tensor_feats: List[Feature], new_tensor_feats: List[Feature]
+    tensor: torch.Tensor, tensor_feats: Features, new_tensor_feats: Features
 ) -> torch.Tensor:
     """convert a tensor with given features to new tensor according to given features
 
     Args:
         tensor (torch.Tensor): tensor
-        tensor_feats (List[Feature]): actual features of the tensor
-        new_tensor_feats (List[Feature]): expected features of the returned tensor
+        tensor_feats (Features): actual features of the tensor
+        new_tensor_feats (Features): expected features of the returned tensor
 
     Raises:
         AttributeError: Can be raised if the conversion is not possible
@@ -109,15 +110,24 @@ def convert_tensor_features_to(
     for feat in new_tf:
         equals = [i for i, _feat in enumerate(tf) if feat == _feat]
         if equals:
-            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, tf.pop(equals[0]).ids]
+            curr_feat = tf.pop(equals[0])
+            # Keep feat name after conversion
+            feat.name = curr_feat
+            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, curr_feat.ids]
             continue
         alike = [i for i, _feat in enumerate(tf) if feat._is_alike(_feat)]
         if alike:
-            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, tf.pop(alike[0]).ids]
+            curr_feat = tf.pop(alike[0])
+            # Keep feat name after conversion
+            feat.name = curr_feat
+            new_tensor[:, :, :, feat.ids] = tensor[:, :, :, curr_feat.ids]
             continue
         convertible = [i for i, _feat in enumerate(tf) if _feat._is_convertible(feat)]
         if convertible:
-            old_tensor = tensor[:, :, :, tf.pop(convertible[0]).ids]
+            curr_feat = tf.pop(convertible[0])
+            # Keep feat name after conversion
+            feat.name = curr_feat
+            old_tensor = tensor[:, :, :, curr_feat.ids]
             if isinstance(feat, Rotation):
                 old_tensor = convert_rotation_tensor_to(old_tensor, feat)
             new_tensor[:, :, :, feat.ids] = old_tensor[:, :, :, : len(feat.ids)]
@@ -128,9 +138,7 @@ def convert_tensor_features_to(
     return new_tensor
 
 
-def features_are_convertible_to(
-    features_a: List[Feature], features_b: List[Feature]
-) -> bool:
+def features_are_convertible_to(features_a: Features, features_b: Features) -> bool:
     feats_a = copy.deepcopy(features_a)
     for feat in features_b:
         equals = [i for i, _feat in enumerate(feats_a) if feat == _feat]

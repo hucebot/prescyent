@@ -67,15 +67,14 @@ class BasePredictor:
             not hasattr(self, "scaler") or self.scaler is None
         ):  # If scaler wasn't _init by child
             self._init_scaler()
-        logger.getChild(PREDICTOR).info(self.describe())
 
     def describe(self):
-        _str = f"""Predictor {self} is initialized with the following parameters:
+        _str = f"""\n{2*"    "}Predictor {self} is initialized with the following parameters:
             - Log path: {self.log_path}\n"""
         if self.scaler:
             _str += f"""{3*"    "}- Scaler:
                 {self.scaler.describe()}\n"""
-        return _str
+        logger.getChild(PREDICTOR).info(_str)
 
     def _init_scaler(self):
         """create instance of prescyent.Scaler"""
@@ -187,7 +186,7 @@ class BasePredictor:
         pbar = tqdm(
             datamodule.test_dataloader(),
             desc="Iterate over test_dataloader",
-            colour="orange",
+            colour="yellow",
         )
         pbar.set_description(f"Testing {self}:")
         for sample, truth in pbar:
@@ -319,6 +318,7 @@ class BasePredictor:
         self.tb_logger.experiment.add_scalar(
             "Eval/max_rtf", evaluation_summary.max_rtf, 0
         )
+        self.tb_logger.save()
 
     def log_metrics(self, metrics: dict, pre_key=""):
         for key, value in metrics.items():

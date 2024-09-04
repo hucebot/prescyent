@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import torch
 
-from prescyent.dataset.features import Feature
+from prescyent.dataset.features import Features
 from prescyent.dataset.features.feature_manipulation import get_distance
 
 
@@ -11,21 +11,18 @@ class EvaluationResult:
     average_prediction_error: Dict[str, float]
     max_prediction_error: Dict[str, float]
     rtf: float
-    sample: torch.Tensor
     truth: torch.Tensor
     pred: torch.Tensor
-    features: List[Feature]
+    features: Features
 
     def __init__(
         self,
-        sample: torch.Tensor,
         truth: torch.Tensor,
         pred: torch.Tensor,
         rtf: float,
-        features: List[Feature],
+        features: Features,
     ) -> None:
         self.rtf = rtf
-        self.sample = sample
         self.truth = truth
         self.pred = pred
         self.features = features

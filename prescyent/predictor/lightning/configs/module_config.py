@@ -30,4 +30,3 @@ class ModuleConfig(PredictorConfig):
     It also makes the model's output relative to this frame"""
     deriv_output: Optional[bool] = False
     """If True, the model's output is relative to the last frame of the input"""
-

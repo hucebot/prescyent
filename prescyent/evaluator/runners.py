@@ -125,30 +125,26 @@ def eval_predictors(
         for p, predictor in enumerate(predictors):
             # prediction is made with chosen method and timed
             start = timeit.default_timer()
-            history = convert_tensor_features_to(
-                trajectory.tensor,
-                trajectory.tensor_features,
-                dataset_config.in_features,
+            in_traj = trajectory.create_subtraj(
+                dataset_config.in_points, dataset_config.in_features
             )
-            history = history[:, dataset_config.in_points]
-            history = history[:, :, dataset_config.in_dims]
             prediction = run_predictor(
-                predictor, history, dataset_config.history_size, future_size, run_method
+                predictor,
+                in_traj.tensor,
+                dataset_config.history_size,
+                future_size,
+                run_method,
             )
             elapsed = timeit.default_timer() - start
-            truth = convert_tensor_features_to(
-                trajectory.tensor,
-                trajectory.tensor_features,
-                dataset_config.out_features,
+            truth_traj = trajectory.create_subtraj(
+                dataset_config.out_points, dataset_config.out_features
             )
-            truth = truth[dataset_config.history_size :]
-            truth = truth[:, dataset_config.out_points]
-            truth = truth[:, :, dataset_config.out_dims]
             # we generate new evaluation results with the task metrics
             evaluation_results[p].results.append(
                 EvaluationResult(
-                    history,
-                    truth,
+                    truth_traj.tensor[
+                        dataset_config.history_size + dataset_config.future_size - 1 :
+                    ],
                     prediction,
                     elapsed / trajectory.duration,
                     dataset_config.out_features,
@@ -161,10 +157,12 @@ def eval_predictors(
                 )
                 trajectory.convert_tensor_features(dataset_config.out_features)
                 plot_trajectory_prediction(
-                    trajectory,
-                    truth,
+                    truth_traj,
+                    truth_traj.tensor[
+                        dataset_config.history_size + dataset_config.future_size - 1 :
+                    ],
                     prediction,
-                    step=dataset_config.history_size,
+                    overprediction=dataset_config.future_size,
                     savefig_path=savefig_path,
                 )
             predictions.append(prediction)

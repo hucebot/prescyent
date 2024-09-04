@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from prescyent.dataset import SSTDataset, SSTDatasetConfig
-from prescyent.dataset.features import CoordinateXY
+from prescyent.dataset.features import CoordinateXY, Features, RotationEuler
 from prescyent.dataset.features.feature.rotation import Rotation
 from prescyent.predictor import (
     DelayedPredictor,
@@ -24,7 +24,10 @@ class ScalerNormalizationTest(CustomTestCase):
     @classmethod
     def setUpClass(cls):
         """setup dataset for the scaling tests"""
-        dataset_config = SSTDatasetConfig(num_traj=10, dt=0.05, seed=5)
+        feats = Features([CoordinateXY(range(2)), RotationEuler(range(2, 5))])
+        dataset_config = SSTDatasetConfig(
+            num_traj=10, dt=0.05, seed=5, out_features=feats
+        )
         cls.dataset = SSTDataset(dataset_config)
 
     @classmethod
@@ -71,6 +74,7 @@ class ScalerNormalizationTest(CustomTestCase):
             TrajectoryDimensions.POINT,
             TrajectoryDimensions.FEATURE,
         ]:
+            print(dim)
             scaler_config = ScalerConfig(
                 scaler=Scalers.NORMALIZATION,
                 do_feature_wise_scaling=True,

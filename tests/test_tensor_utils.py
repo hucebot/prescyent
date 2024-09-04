@@ -73,12 +73,11 @@ class TestFeatureConversion(unittest.TestCase):
         self.assertTrue(torch.equal(test, truth))
         with self.assertRaises(AttributeError) as context:
             test = tensor_features.convert_tensor_features_to(
-                tensor, [tensor_features.Any(range(3))], [tensor_features.Any(range(4))]
+                tensor,
+                tensor_features.Features([tensor_features.Any(range(3))]),
+                tensor_features.Features([tensor_features.Any(range(4))]),
             )
-        self.assertTrue(
-            "Cannot convert feature any of [{'ids': [0, 1, 2], 'name': 'Any'}] to match {'ids': [0, 1, 2, 3], 'name': 'Any'}"
-            in str(context.exception)
-        )
+        self.assertTrue("Cannot convert feature" in str(context.exception))
 
     def test_rotations(self):
         tensor = torch.Tensor([[[0, 0, 0, 0.7071, 0, 0, 0.7071]]])

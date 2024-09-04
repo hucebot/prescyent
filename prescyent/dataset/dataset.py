@@ -8,7 +8,7 @@ import requests
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
-from prescyent.dataset.features import Feature
+from prescyent.dataset.features import Features
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
@@ -246,7 +246,7 @@ class MotionDataset(LightningDataModule):
         return self.trajectories.train[0].shape[2]
 
     @property
-    def tensor_features(self) -> List[Feature]:
+    def tensor_features(self) -> Features:
         return self.trajectories.train[0].tensor_features
 
     @property

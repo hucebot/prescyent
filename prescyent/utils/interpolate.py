@@ -3,7 +3,7 @@ from typing import Iterable, List
 import numpy as np
 import torch
 
-from prescyent.dataset.features import Feature, Rotation, RotationQuat
+from prescyent.dataset.features import Features, Rotation, RotationQuat
 from prescyent.dataset.features.rotation_methods import convert_rotation_tensor_to
 
 
@@ -62,7 +62,7 @@ def downsample_trajectory_tensor(input_tensor, frequency, target_freq) -> torch.
 
 def upsample_trajectory_tensor(
     input_tensor: torch.Tensor,
-    tensor_features: List[Feature],
+    tensor_features: Features,
     frequency: int,
     target_freq: int,
 ) -> torch.Tensor:

@@ -8,11 +8,12 @@ import torch
 class Feature(dict):
     """
     Base class with equivalence methods and checks on constructor.
-    We inherit from dict for serialization
+    We inherit from dict for serialization, all attributes are setters and getters to dict values
     """
 
     ids: List[int]
     distance_unit: str
+    name: str
 
     def __init__(self, ids: Union[List, range], distance_unit=None) -> None:
         if isinstance(ids, range):
@@ -26,7 +27,31 @@ class Feature(dict):
                 f"{self.num_dims} for feature {self.__class__.__name__}"
             )
         self.distance_unit = distance_unit
-        dict.__init__(self, ids=ids, name=self.__class__.__name__)
+        self["feature_class"] = self.__class__.__name__
+
+    @property
+    def name(self):
+        return self["name"]
+
+    @name.setter
+    def name(self, value):
+        self["name"] = value
+
+    @property
+    def ids(self):
+        return self["ids"]
+
+    @ids.setter
+    def ids(self, value):
+        self["ids"] = value
+
+    @property
+    def distance_unit(self):
+        return self["distance_unit"]
+
+    @distance_unit.setter
+    def distance_unit(self, value):
+        self["distance_unit"] = value
 
     def __eq__(self, __value: object) -> bool:
         return (

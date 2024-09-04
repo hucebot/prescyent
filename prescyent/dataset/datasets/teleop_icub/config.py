@@ -3,8 +3,8 @@ import os
 from typing import List
 
 from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
-from prescyent.dataset.features import Feature
-from .metadata import FEATURES, POINT_LABELS
+from prescyent.dataset.features import Features
+from .metadata import DEFAULT_FEATURES, POINT_LABELS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -35,7 +35,7 @@ class DatasetConfig(MotionDatasetConfig):
     """number of timesteps as input, default to 1s at 10Hz"""
     future_size: int = 10
     """number of predicted timesteps, default to 1s at 10Hz"""
-    in_features: List[Feature] = FEATURES
-    out_features: List[Feature] = FEATURES
+    in_features: Features = DEFAULT_FEATURES
+    out_features: Features = DEFAULT_FEATURES
     in_points: List[int] = list(range(len(used_joints)))
     out_points: List[int] = list(range(len(used_joints)))

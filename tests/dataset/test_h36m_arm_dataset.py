@@ -8,6 +8,7 @@ from prescyent.dataset.features import (
     CoordinateXYZ,
     CoordinateXY,
     CoordinateX,
+    Features,
     RotationRep6D,
     RotationQuat,
     RotationEuler,
@@ -85,14 +86,18 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(list(range(3))),
-                        RotationRep6D(list(range(3, 9))),
-                    ],
-                    out_features=[
-                        CoordinateXYZ(list(range(6, 9))),
-                        RotationRep6D(list(range(6))),
-                    ],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(list(range(3))),
+                            RotationRep6D(list(range(3, 9))),
+                        ]
+                    ),
+                    out_features=Features(
+                        [
+                            CoordinateXYZ(list(range(6, 9))),
+                            RotationRep6D(list(range(6))),
+                        ]
+                    ),
                 ),
                 load_data_at_init=True,
             )
@@ -112,11 +117,13 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(range(3)),
-                        RotationRep6D([3, 4, 5, 6, 7, 8]),
-                    ],
-                    out_features=[CoordinateXYZ(range(3))],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(range(3)),
+                            RotationRep6D([3, 4, 5, 6, 7, 8]),
+                        ]
+                    ),
+                    out_features=Features([CoordinateXYZ(range(3))]),
                 ),
                 load_data_at_init=True,
             )
@@ -134,8 +141,12 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
-                    out_features=[CoordinateXY(range(2)), RotationEuler(range(2, 5))],
+                    in_features=Features(
+                        [CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))]
+                    ),
+                    out_features=Features(
+                        [CoordinateXY(range(2)), RotationEuler(range(2, 5))]
+                    ),
                 ),
                 load_data_at_init=True,
             )
@@ -153,11 +164,15 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(range(3)),
-                        RotationRep6D([3, 4, 5, 6, 7, 8]),
-                    ],
-                    out_features=[CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(range(3)),
+                            RotationRep6D(range(3, 9)),
+                        ]
+                    ),
+                    out_features=Features(
+                        [CoordinateX(range(1)), RotationQuat(range(1, 5))]
+                    ),
                 ),
                 load_data_at_init=True,
             )

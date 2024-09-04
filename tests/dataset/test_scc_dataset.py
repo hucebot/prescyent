@@ -4,7 +4,7 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import SCCDataset, SCCDatasetConfig
-from prescyent.dataset.features import CoordinateX
+from prescyent.dataset.features import CoordinateX, Features
 from prescyent.utils.enums import LearningTypes
 
 
@@ -45,7 +45,7 @@ class InitSCCDatasetTest(CustomTestCase):
     def test_coordinates_1d(self):
         dataset = SCCDataset(
             SCCDatasetConfig(
-                out_features=[CoordinateX([0])],
+                out_features=Features([CoordinateX([0])]),
             ),
             load_data_at_init=True,
         )

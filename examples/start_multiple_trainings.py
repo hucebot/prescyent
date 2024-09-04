@@ -12,6 +12,7 @@ from prescyent.utils.enums import LearningTypes, TrajectoryDimensions
 from prescyent.utils.enums.loss_functions import LossFunctions
 from prescyent.utils.enums.scalers import Scalers
 
+DEFAULT_CONFIG_DIR = Path("data") / "configs"
 
 VARIATIONS = {
     "training_config.number_of_repetition": range(1),
@@ -27,20 +28,23 @@ VARIATIONS = {
         "MlpPredictor",
         "Seq2SeqPredictor",
         "siMLPe",
-        "SARLSTMPredictor",
+        "SARLSTMPredictor",  # Warning ! Canno't be used in all conditions
     ],
     "model_config.loss_fn": [
-        LossFunctions.MSELOSS,
+        LossFunctions.MTRDLOSS,
     ],
-    "model_config.deriv_on_last_frame": [True],
+    "model_config.deriv_on_last_frame": [
+        True
+    ],  # Warning ! Canno't be used in all conditions
     # ...
     # TRAINING
-    "training_config.max_epochs": [2],
+    "training_config.max_epochs": [200],
     "training_config.devices": ["auto"],
     # "training_config.accelerator": ["cpu"],
-    "training_config.early_stopping_patience": [1],
+    "training_config.early_stopping_patience": [15],
     "training_config.use_auto_lr": [True],
     # DATASET
+    "dataset_config.frequency": [10],
     "dataset_config.history_size": [10],
     "dataset_config.future_size": [10],
     "dataset_config.name": ["TeleopIcub"],
@@ -64,7 +68,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # retreive config variations with glob
+    # retreive directory with config variations from parsed args
     if args.config_dir:
         config_paths = sorted(
             [Path(p) for p in glob.glob(os.path.join(args.config_dir, "*.json"))]
@@ -74,7 +78,7 @@ if __name__ == "__main__":
             print("Please provide a folder with compatible config files")
             exit(1)
         config_dict = json.load(open(config_paths[0], encoding="utf-8"))
-    # generate config variations and write them
+    # generate config variations and write them on disk at default dir
     else:
         config_paths = []
         combinations = list(itertools.product(*list(VARIATIONS.values())))
@@ -82,9 +86,11 @@ if __name__ == "__main__":
             {list(VARIATIONS.keys())[i]: value for i, value in enumerate(combination)}
             for combination in combinations
         ]
-        print(f"Generated {len(combinations)} different training configs")
+        print(
+            f"######################\nGenerated {len(combinations)} different training configs"
+        )
 
-        config_base_dir = Path("data") / "configs"
+        config_base_dir = DEFAULT_CONFIG_DIR
         if not config_base_dir.exists():
             config_base_dir.mkdir(parents=True)
         print(f"Writing config files in {config_base_dir}")
@@ -109,13 +115,19 @@ if __name__ == "__main__":
                 json.dump(config_dict, config_file, indent=4)
 
     # Start a new training per config file
-    exp_path = "data/models/TeleopIcub/10Hz_1s_1s/"
+    exp_path = (
+        Path(__file__).parent.resolve()
+        / "data"
+        / "models"
+        / "TeleopIcub"
+        / "10Hz_1s_1s"
+    )
     for i, config_path in enumerate(config_paths):
         print(f"Training {i} starting...")
         train_from_config(config_path, rm_config=True, exp_path=exp_path)
         print(f"Training {i} ended.")
 
-    # I removed any notion of multithreading for now as we often
+    # There is no notion of multithreading inside the script as we
     # want lightning trainer to use multiple devices for one training
     # and it added unnecessary confusing behavior
     # For parrallel training, you can call this script multiple times with different config_dir
