@@ -13,14 +13,15 @@ from pytorch_lightning import LightningDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
+from prescyent.dataset import Trajectory
+from prescyent.dataset.features import Features
 from prescyent.dataset.features.feature_manipulation import (
     cal_distance_for_feat,
     convert_tensor_features_to,
 )
-from prescyent.dataset import Trajectory
 from prescyent.evaluator.eval_summary import EvaluationSummary
-from prescyent.scaler.scaler import Scaler
 from prescyent.predictor.config import PredictorConfig
+from prescyent.scaler.scaler import Scaler
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.dataset_manipulation import update_parent_ids
 from prescyent.utils.tensor_manipulation import (
@@ -228,10 +229,10 @@ class BasePredictor:
     def run(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
-        history_size: int = None,
+        future_size: Optional[int] = None,
+        history_size: Optional[int] = None,
         history_step: int = 1,
-        input_tensor_features=None,
+        input_tensor_features: Optional[Features] = None,
     ) -> List[torch.Tensor]:
         """run method/model inference over an unbatched or batched input sequence
         The run method outputs a List of prediction because it can iterate over the input_tensor
@@ -341,9 +342,18 @@ class BasePredictor:
             input_tensor_features=traj.tensor_features,
         )
         pred_tensor = cat_list_with_seq_idx(list_pred_tensor, -1)
+        offset = (
+            self.config.dataset_config.history_size
+            + self.config.dataset_config.future_size
+            - 1
+        )
+        delayed_context = {
+            c_name: c_tensor[offset:] for c_name, c_tensor in traj.context.items()
+        }
         pred_traj = Trajectory(
             tensor=pred_tensor,
             tensor_features=self.config.dataset_config.out_features,
+            context=delayed_context,
             frequency=traj.frequency,
             file_path=traj.file_path,
             title=f"{traj.title}_pred_{self.name}",
@@ -354,12 +364,7 @@ class BasePredictor:
                 traj.point_names[i] for i in self.config.dataset_config.out_points
             ],
         )
-        return (
-            pred_traj,
-            self.config.dataset_config.history_size
-            + self.config.dataset_config.future_size
-            - 1,
-        )
+        return (pred_traj, offset)
 
     @staticmethod
     def use_scaler(function):
