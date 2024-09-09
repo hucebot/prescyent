@@ -27,10 +27,10 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, truth = dataset.test_datasample[0]
+        sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(len(sample), len(truth))
         np.testing.assert_allclose(
-            sample[1:], truth[:-1], err_msg="thruth and sample differ"
+            sample[1:], truth[:-1], err_msg="truth and sample differ"
         )
 
     def test_load_seq2one(self):
@@ -39,7 +39,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        _, truth = dataset.test_datasample[0]
+        _, _, truth = dataset.test_datasample[0]
         self.assertEqual(1, len(truth))
         self.assertEqual(10, dataset.config.future_size)
 
@@ -51,13 +51,13 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, truth = dataset.test_datasample[0]
+        sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(sample.shape[-1], 3)
         self.assertEqual(truth.shape[-1], 2)
-        sample, truth = dataset.train_datasample[0]
+        sample, context, truth = dataset.train_datasample[0]
         self.assertEqual(sample.shape[-1], 3)
         self.assertEqual(truth.shape[-1], 2)
-        sample, truth = dataset.val_datasample[0]
+        sample, context, truth = dataset.val_datasample[0]
         self.assertEqual(sample.shape[-1], 3)
         self.assertEqual(truth.shape[-1], 2)
 

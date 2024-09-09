@@ -145,14 +145,14 @@ class LightningModule(pl.LightningModule):
 
     def predict(self, batch):
         """get prediction from batch and model"""
-        sample, truth = batch
+        sample, context, truth = batch
         if self.scaler:
             sample = self.scaler.scale(
                 sample,
                 self.config.dataset_config.in_points,
                 self.config.dataset_config.in_features,
             )
-        pred = self.torch_model(sample)
+        pred = self.torch_model(sample, context=context)
         if self.scaler:
             pred = self.scaler.unscale(
                 pred,

@@ -4,6 +4,7 @@ for benchmark, example and tests of autoregressive method
 inspired by pytorch Time Sequence prediction:
 https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
+from typing import Dict, Optional
 import torch
 from torch import nn
 
@@ -45,7 +46,12 @@ class TorchModule(BaseTorchModule):
 
     @self_auto_batch
     @BaseTorchModule.deriv_tensor
-    def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int = 1,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         if (
             self.convert_output
             and future_size > 1

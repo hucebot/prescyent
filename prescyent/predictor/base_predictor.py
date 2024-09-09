@@ -163,7 +163,12 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
-    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
+    def predict(
+        self,
+        input_t: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ) -> torch.Tensor:
         """run the model / algorithm for one input"""
         raise NotImplementedError(
             "This method must be overriden by the inherited predictor"
@@ -190,10 +195,10 @@ class BasePredictor:
             colour="yellow",
         )
         pbar.set_description(f"Testing {self}:")
-        for sample, truth in pbar:
+        for sample, context, truth in pbar:
             # eval step
             feat2distances = dict()
-            pred = self.predict(sample, self.config.dataset_config.future_size)
+            pred = self.predict(sample, self.config.dataset_config.future_size, context)
             feat2distances["mse_loss"] = torch.nn.functional.mse_loss(pred, truth)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
@@ -233,6 +238,7 @@ class BasePredictor:
         history_size: Optional[int] = None,
         history_step: int = 1,
         input_tensor_features: Optional[Features] = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
     ) -> List[torch.Tensor]:
         """run method/model inference over an unbatched or batched input sequence
         The run method outputs a List of prediction because it can iterate over the input_tensor
@@ -295,7 +301,9 @@ class BasePredictor:
                 )
             else:
                 input_sub_batch = input_tensor[:, i : i + history_size]
-            prediction = self.predict(input_sub_batch, future_size)
+            prediction = self.predict(
+                input_sub_batch, future_size=future_size, context=context
+            )
             if unbatch:
                 prediction = prediction.squeeze(0)
             prediction_list.append(prediction)
@@ -347,9 +355,11 @@ class BasePredictor:
             + self.config.dataset_config.future_size
             - 1
         )
-        delayed_context = {
-            c_name: c_tensor[offset:] for c_name, c_tensor in traj.context.items()
-        }
+        delayed_context = None
+        if traj.context:
+            delayed_context = {
+                c_name: c_tensor[offset:] for c_name, c_tensor in traj.context.items()
+            }
         pred_traj = Trajectory(
             tensor=pred_tensor,
             tensor_features=self.config.dataset_config.out_features,

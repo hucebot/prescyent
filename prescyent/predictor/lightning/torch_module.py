@@ -1,6 +1,7 @@
 from abc import abstractmethod
 import copy
 import functools
+from typing import Dict, Optional
 import torch
 
 from prescyent.dataset.features import (
@@ -43,12 +44,18 @@ class BaseTorchModule(torch.nn.Module):
             self.dropout = torch.nn.Dropout(self.dropout_value)
 
     @abstractmethod
-    def forward(self, input_tensor: torch.Tensor, future_size: int) -> torch.Tensor:
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ) -> torch.Tensor:
         raise NotImplementedError("This method must be overriden")
 
     @staticmethod
     def deriv_tensor(function):
-        """decorator for normalization of the input tensor before forward method"""
+        """decorator to deriv input and/or output tensor before at forward method of the torch module.
+        input/output tensor are derivated from the input tensor's last frame"""
 
         @functools.wraps(function)
         def deriv_from_last_frame(self, input_tensor, *args, **kwargs):

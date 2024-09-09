@@ -274,9 +274,9 @@ def plot_mpjpe(
     pbar = tqdm(dataset.test_dataloader(), colour="green")
     pbar.set_description(f"Running {predictor} over test_dataloader:")
     # Run all test once and get distance from truth per feature
-    for sample, truth in pbar:
+    for sample, context, truth in pbar:
         feat2distances = dict()
-        pred = predictor.predict(sample, dataset.config.future_size)
+        pred = predictor.predict(sample, dataset.config.future_size, context)
         for feat in features:
             feat2distances[feat.name] = cal_distance_for_feat(
                 pred[..., feat.ids], truth[..., feat.ids], feat
@@ -322,9 +322,9 @@ def plot_mpjpes(
         pbar = tqdm(dataset.test_dataloader(), colour="green")
         pbar.set_description(f"Running {predictor} over test_dataloader:")
         # Run all test once and get distance from truth per feature
-        for sample, truth in pbar:
+        for sample, context, truth in pbar:
             feat2distances = dict()
-            pred = predictor.predict(sample, dataset.config.future_size)
+            pred = predictor.predict(sample, dataset.config.future_size, context)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
                     pred[..., feat.ids], truth[..., feat.ids], feat

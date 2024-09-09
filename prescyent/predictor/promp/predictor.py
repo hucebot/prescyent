@@ -1,5 +1,5 @@
 # for a more complete implementation : https://pypi.org/project/mp-pytorch/
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from tqdm import tqdm
 
 import torch
@@ -51,7 +51,12 @@ class PrompPredictor(BasePredictor):
             for k, pi in enumerate(p):
                 pi.plot(str(i) + "_" + str(k) + "_")
 
-    def predict(self, input_t: torch.Tensor, future_size: int):
+    def predict(
+        self,
+        input_t: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         raise NotImplementedError(
             "This method should not be used with PompPredictor, use predict_by_conditioning instead"
         )

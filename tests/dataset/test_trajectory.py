@@ -17,6 +17,17 @@ class InitTrajectoryTest(CustomTestCase):
         self.assertEqual(traj.tensor_features, Features([Any(range(3))]))
         self.assertEqual(traj.point_parents, [-1, -1])
         self.assertEqual(traj.point_names, ["point_0", "point_1"])
+        self.assertEqual(traj.context_len, 0)
+        self.assertEqual(traj.context_dims, 0)
+
+    def test_init__with_context(self):
+        traj = Trajectory(
+            tensor=torch.rand(100, 2, 3),
+            frequency=10,
+            context={"label": torch.rand(100, 1), "image": torch.rand(100, 128)},
+        )
+        self.assertEqual(traj.context_len, 2)
+        self.assertEqual(traj.context_dims, 129)
 
     def test_init_bad_args(self):
         with self.assertRaises(AssertionError):

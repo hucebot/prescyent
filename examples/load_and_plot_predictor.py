@@ -49,7 +49,10 @@ if __name__ == "__main__":
     #         )
     #         for i in range(0, traj.shape[0] - history_size):  # for each time-step
     #             # --- this is the prediction
-    #             p = predictor.predict(traj[i : i + history_size, :, :], future_size)
+    #             context = None
+    #             if traj.context:
+    #                 context = {c_name: c_tensor[i : i + history_size] for c_name, c_tensor in traj.context.items()}
+    #             p = predictor.predict(traj[i : i + history_size, :, :], future_size, context)
     #             # ---
     #             # We keep last frame of the predicted sequence (so {history_size + future_size} seconds from first input)
     #             pred[i] = p[-1]

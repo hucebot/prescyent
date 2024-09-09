@@ -2,6 +2,7 @@
 simple MLP implementation
 [This is a basic multi-layer perceptron, with configurable hidden layers and activation function]
 """
+from typing import Dict, Optional
 
 import numpy as np
 import torch
@@ -79,7 +80,12 @@ class TorchModule(BaseTorchModule):
 
     @self_auto_batch
     @BaseTorchModule.deriv_tensor
-    def forward(self, input_tensor: torch.Tensor, future_size: int = None):
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         batch_size = input_tensor.shape[0]
         # (batch_size, seq_len, num_point, num_dim) => (batch_size, seq_len, num_point * num_dim)
         input_tensor_ = input_tensor.reshape(batch_size, self.in_sequence_size, -1)

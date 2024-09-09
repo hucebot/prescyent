@@ -144,6 +144,20 @@ class Trajectory:
         """number of dimensions of each point in the trajectory"""
         return self.tensor.shape[2]
 
+    @property
+    def context_len(self) -> int:
+        """number of elements in the context"""
+        if not self.context:
+            return 0
+        return len(self.context)
+
+    @property
+    def context_dims(self) -> int:
+        """sum of the dimensions of each element in context"""
+        if not self.context:
+            return 0
+        return sum([c_tensor.shape[-1] for c_tensor in self.context.values()])
+
     def convert_tensor_features(self, new_tensor_feats: Features):
         """convert trajectory's tensor to new requested features if possible,
             else raises an AttributeError

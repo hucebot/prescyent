@@ -1,4 +1,6 @@
 """class for sequence based lightning models"""
+from typing import Dict, Optional
+
 import torch
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
@@ -17,6 +19,7 @@ class SequencePredictor(LightningPredictor):
         self,
         input_t: torch.Tensor,
         future_size: int = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
     ):
         with torch.no_grad():
             self.model.eval()
@@ -59,7 +62,9 @@ class SequencePredictor(LightningPredictor):
                     f"{self.model.torch_model.in_sequence_size}"
                 )
             for i in range(0, future_size, self.model.torch_model.out_sequence_size):
-                prediction = self.model.torch_model(input_t)
+                prediction = self.model.torch_model(
+                    input_t, future_size=future_size, context=context
+                )
                 list_outputs.append(prediction)
                 if i + self.model.torch_model.out_sequence_size < future_size:
                     if is_tensor_is_batched(input_t):

@@ -53,7 +53,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
+            _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
         except NotImplementedError:
@@ -70,7 +70,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -102,8 +102,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
-            sample, _ = dataset.test_datasample[dataset.config.history_size]
+            _, _, truth = dataset.test_datasample[0]
+            sample, _, _ = dataset.test_datasample[dataset.config.history_size]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 9)
@@ -128,7 +128,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 3)
@@ -151,7 +151,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 12)
             self.assertEqual(truth.shape[-1], 5)
@@ -177,7 +177,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 5)
