@@ -64,6 +64,8 @@ class MotionDatasetConfig(BaseConfig):
     Do not mistake with the "used joint".
     Use joints are used on Trajectory level while in_points and out_points
     are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    context_keys: Optional[List[str]] = None
+    """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
     convert_trajectories_beforehand: bool = True
     """If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders"""
     loop_over_traj: bool = False

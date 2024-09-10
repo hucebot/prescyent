@@ -1,8 +1,10 @@
 {
     "model_config": {
         "activation": "relu",
+        "context_size": null,
         "dataset_config": {
             "batch_size": 256,
+            "context_keys": null,
             "convert_trajectories_beforehand": true,
             "drop_last": true,
             "frequency": 10,
@@ -48,7 +50,7 @@
             "persistent_workers": false,
             "pin_memory": true,
             "reverse_pair_ratio": 0,
-            "seed": 835886657,
+            "seed": 195481014,
             "shuffle_test": false,
             "shuffle_train": true,
             "shuffle_val": false
@@ -69,7 +71,7 @@
             "scaling_axis": "[1]"
         },
         "used_profiler": null,
-        "version": 23
+        "version": 29
     },
     "training_config": {
         "accelerator": "auto",
@@ -85,7 +87,7 @@
         "max_epochs": 300,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 303844695,
+        "seed": 954447727,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

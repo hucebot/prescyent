@@ -48,18 +48,23 @@ class SequencePredictor(LightningPredictor):
                     self.model.torch_model.in_sequence_size,
                 )
                 input_t = input_t[-self.model.torch_model.in_sequence_size :]
+                context = {
+                    c_key: c_tensor[-self.model.torch_model.in_sequence_size :]
+                    for c_key, c_tensor in context
+                }
             if future_size > self.model.torch_model.out_sequence_size and (
                 self.config.dataset_config.in_features
                 != self.config.dataset_config.out_features
                 or self.config.dataset_config.in_points
                 != self.config.dataset_config.out_points
+                or context
             ):
                 raise AttributeError(
                     f"We cannot predict a futur_size bigger than "
-                    f"{self.model.torch_model.out_sequence_size} with different "
-                    "in_features and out_features or "
-                    "in_points and out_points "
-                    f"{self.model.torch_model.in_sequence_size}"
+                    f"{self.model.torch_model.out_sequence_size} if we cannot recurse"
+                    " on the model's output or with a context! "
+                    " Please check your inputs and outputs'"
+                    " in_features and out_features or in_points and out_points"
                 )
             for i in range(0, future_size, self.model.torch_model.out_sequence_size):
                 prediction = self.model.torch_model(

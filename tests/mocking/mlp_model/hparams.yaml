@@ -5,9 +5,11 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
   __dict__:
     activation: !!python/object/apply:prescyent.utils.enums.activation_functions.ActivationFunctions
     - relu
+    context_size: null
     dataset_config: !!python/object:prescyent.dataset.datasets.teleop_icub.config.DatasetConfig
       __dict__:
         batch_size: 256
+        context_keys: null
         convert_trajectories_beforehand: true
         data_path: /home/abiver/ros2_ws/src/ros2_prescyent/prescyent/data/datasets/AndyData-lab-prescientTeleopICub
         drop_last: true
@@ -47,7 +49,7 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         ratio_train: 0.8
         ratio_val: 0.05
         reverse_pair_ratio: 0
-        seed: 835886657
+        seed: 195481014
         shuffle_data_files: true
         shuffle_test: false
         shuffle_train: true
@@ -104,8 +106,10 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
     num_layers: null
     scaler_config: null
   __pydantic_private__: null
+context_size: null
 dataset_config:
   batch_size: 256
+  context_keys: null
   convert_trajectories_beforehand: true
   drop_last: true
   frequency: 10
@@ -142,7 +146,7 @@ dataset_config:
   persistent_workers: false
   pin_memory: true
   reverse_pair_ratio: 0
-  seed: 835886657
+  seed: 195481014
   shuffle_test: false
   shuffle_train: true
   shuffle_val: false
@@ -173,7 +177,7 @@ scaler_config:
   - standardization
   scaling_axis: !!python/object/apply:prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
   - '[1]'
-seed: 303844695
+seed: 954447727
 torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.mlp.module.TorchModule ''
 use_auto_lr: false
 use_deterministic_algorithms: true

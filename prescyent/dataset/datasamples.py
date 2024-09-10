@@ -71,7 +71,7 @@ class MotionDataSamples:
                 ),
                 0,
             )
-            if trajectory.context:
+            if trajectory.context and self.config.context_keys:
                 context = {
                     c_name: torch.cat(
                         (
@@ -81,13 +81,15 @@ class MotionDataSamples:
                         0,
                     )[:history_size]
                     for c_name, c_tensor in trajectory.context.items()
+                    if c_name in self.config.context_keys
                 }
         else:
             seq = trajectory.tensor[tensor_id : tensor_id + size]
-            if trajectory.context:
+            if trajectory.context and self.config.context_keys:
                 context = {
                     c_name: c_tensor[tensor_id : tensor_id + history_size]
                     for c_name, c_tensor in trajectory.context.items()
+                    if c_name in self.config.context_keys
                 }
         if (
             self.config.reverse_pair_ratio

@@ -315,7 +315,9 @@ class Trajectory:
             metrics.append(mean_dists)
         return metrics
 
-    def create_subtraj(self, points: List[int] = None, features: Features = None):
+    def create_subtraj(
+        self, points: List[int] = None, features: Features = None, context_keys=None
+    ):
         """Create a subset of this trajectory with given new list of points and features
 
         Args:
@@ -329,11 +331,16 @@ class Trajectory:
             points = list(range(len(self.point_names)))
         if features is None:
             features = self.tensor_features
+        context = None
+        if context_keys is None and self.context is not None:
+            context = {
+                c_key: self.context[c_key] for c_key in list(self.context.keys())
+            }
         subtraj = Trajectory(
             tensor=self.tensor[:, points],
             tensor_features=self.tensor_features,
             frequency=self.frequency,
-            context=self.context,
+            context=context,
             file_path=self.file_path,
             title=self.title,
             point_parents=update_parent_ids(points, self.point_parents),

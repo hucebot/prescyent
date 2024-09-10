@@ -24,7 +24,7 @@ def collate_context_fn(list_of_tensors):
     context_batch = None
     if list_of_tensors[0][1] is not None:
         context_batch = {
-            c_name: torch.stack([context[1][c_name] for context in list_of_tensors[0]])
+            c_name: torch.stack([context[1][c_name] for context in list_of_tensors])
             for c_name in list_of_tensors[0][1].keys()
         }
     return sample_batch, context_batch, truth_batch
@@ -269,6 +269,22 @@ class MotionDataset(LightningDataModule):
     @property
     def feature_size(self) -> int:
         return self.num_dims * self.num_points
+
+    @property
+    def context_sizes(self) -> Dict[str, int]:
+        return {
+            c_key: c_tensor.shape[-1]
+            for c_key, c_tensor in self.trajectories.train[0].context.items()
+        }
+
+    @property
+    def context_size_sum(self) -> int:
+        return sum(
+            [
+                c_tensor.shape[-1]
+                for c_tensor in self.trajectories.train[0].context.values()
+            ]
+        )
 
     def _init_from_config(
         self,

@@ -66,14 +66,20 @@ if __name__ == "__main__":
     # plot predicted trajectories
     for test_traj in tqdm(
         dataset.trajectories.test,
-        desc="Iterate over test trajectrories",
+        desc="Iterate over test trajectories",
         colour="green",
     ):  # for each test trajectories
+        # We prepare our trajectory for input if a transformation is needed
+        input_traj = test_traj.create_subtraj(
+            dataset.config.in_points,
+            dataset.config.in_features,
+            dataset.config.context_keys,
+        )
         # we create a new predicted trajectory from a given predictor
         predicted_traj, offset = predictor.predict_trajectory(
-            test_traj, future_size=future_size
+            input_traj, future_size=future_size
         )
-        # subsample the truth trajectory if needed for fair comparision
+        # subsample the truth trajectory if needed to compare with prediction
         truth_traj = test_traj.create_subtraj(
             dataset.config.out_points, dataset.config.out_features
         )
