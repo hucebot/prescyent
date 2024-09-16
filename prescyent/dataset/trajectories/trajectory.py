@@ -55,7 +55,7 @@ class Trajectory:
     def __init__(
         self,
         tensor: torch.Tensor,
-        frequency: int,
+        frequency: float,
         tensor_features: Features = None,
         context: Dict[str, torch.Tensor] = None,
         file_path: Optional[str] = None,
@@ -66,7 +66,7 @@ class Trajectory:
         """
         Args:
             tensor (torch.Tensor): The tensor with the data
-            frequency (int): Frequency of the trajectory in Hz
+            frequency (float): Frequency of the trajectory in Hz
             tensor_features (Features, optional): Description of the features of the tensor with corresponding ids. Defaults to None.
             context (Dict[str, torch.Tensor], optional): Additionnal data about the trajectory.
                     Allows some flexibility over the inputs and the way it will be passed to predictors
@@ -81,10 +81,7 @@ class Trajectory:
         if context:
             # All context tensors must have the same frequency as the base tensor and a shape like (num_frames, feat_dim). For context, we consider we have one dict entry per "point"
             assert all(
-                [
-                    len(c_tensor.shape) == 2 and c_tensor.shape[0] == tensor.shape[0]
-                    for c_tensor in context.values()
-                ]
+                [c_tensor.shape[0] == tensor.shape[0] for c_tensor in context.values()]
             )
         self.frequency = frequency
         self.file_path = file_path

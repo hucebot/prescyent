@@ -40,7 +40,9 @@ def interpolate_trajectory_tensor_with_ratio(
     return output_tensor
 
 
-def downsample_trajectory_tensor(input_tensor, frequency, target_freq) -> torch.Tensor:
+def downsample_trajectory_tensor(
+    input_tensor: torch.Tensor, frequency: int, target_freq: int
+) -> torch.Tensor:
     """
     Downsamples the input tensor from frequency to target_freq.
 

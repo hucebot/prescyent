@@ -1,4 +1,5 @@
 """Standard class for motion datasets"""
+import math
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Union, Type
@@ -273,7 +274,7 @@ class MotionDataset(LightningDataModule):
     @property
     def context_sizes(self) -> Dict[str, int]:
         return {
-            c_key: c_tensor.shape[-1]
+            c_key: c_tensor.shape[1:]
             for c_key, c_tensor in self.trajectories.train[0].context.items()
         }
 
@@ -281,7 +282,7 @@ class MotionDataset(LightningDataModule):
     def context_size_sum(self) -> int:
         return sum(
             [
-                c_tensor.shape[-1]
+                math.prod(c_tensor.shape[1:])
                 for c_tensor in self.trajectories.train[0].context.values()
             ]
         )
