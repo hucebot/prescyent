@@ -2,8 +2,8 @@
 from typing import List
 
 from prescyent.dataset.config import MotionDatasetConfig, model_validator
-from prescyent.dataset.features import Feature
-from .metadata import FEATURES, POINT_LABELS
+from prescyent.dataset.features import Features
+from .metadata import DEFAULT_FEATURES, POINT_LABELS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -36,8 +36,8 @@ class DatasetConfig(MotionDatasetConfig):
     frequency: int = 10
     history_size: int = 10
     future_size: int = 10
-    in_features: List[Feature] = FEATURES
-    out_features: List[Feature] = FEATURES
+    in_features: Features = DEFAULT_FEATURES
+    out_features: Features = DEFAULT_FEATURES
     in_points: List[int] = list(range(len(POINT_LABELS)))
     out_points: List[int] = list(range(len(POINT_LABELS)))
 

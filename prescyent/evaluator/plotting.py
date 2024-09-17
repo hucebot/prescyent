@@ -23,158 +23,30 @@ from prescyent.dataset.features.feature_manipulation import cal_distance_for_fea
 from prescyent.utils.logger import logger, EVAL
 
 
-def plot_truth_and_pred(sample, truth, pred, savefig_path=None):
-    plt.clf()  # clear just in case
+def plot_trajectory_prediction(
+    trajectory: Trajectory, truth, pred, overprediction: int, savefig_path: str
+):
+    """Kinda naive plotting that can become messy if there is a lot of features or points
+    Truth and pred's frame must already be aligned,
+    and the amount of frames predicted that aren't in truth must appear in overprediction
+    """
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    sample = torch.transpose(sample, 0, 1)
     truth = torch.transpose(truth, 0, 1)
     pred = torch.transpose(pred, 0, 1)
-    time_steps = range(len(sample[0]) + len(pred[0]))
-    fig, axes = plt.subplots(
-        pred.shape[0], sharex=True
-    )  # we do one subplot per feature
-    for i, axe in enumerate(axes):
-        axe.plot(time_steps[: len(sample[i])], sample[i], linewidth=2)
-        axe.plot(time_steps[len(sample[i]) :], truth[i], linewidth=2)
-        axe.plot(time_steps[len(sample[i]) :], pred[i], linewidth=2, linestyle="--")
-    legend_plot(axes, ["Sample", "Truth", "Prediction"])
-    fig.set_size_inches(10.5, 10.5)
-    fig.suptitle("Motion prediction")
-    save_plot_and_close(savefig_path)
 
-
-def plot_traj_tensors_with_shift(
-    trajs,
-    savefig_path: str,
-    shifts,
-    group_labels: List[str] = None,
-    traj_labels: List[str] = None,
-    dim_labels: List[str] = None,
-    title="",
-):
-    assert len(trajs) > 0
-    if group_labels is None:
-        group_labels = []
-    if traj_labels is None:
-        traj_labels = []
-    if dim_labels is None:
-        dim_labels = []
-
-    # arguments
-    if not isinstance(trajs, list):
-        trajs = [trajs]
-    if not isinstance(shifts, list):
-        shifts = [shifts]
-    if len(shifts) == 0:
-        shifts = [0] * len(trajs)
-    if len(traj_labels) == 0:
-        traj_labels = [""] * len(trajs)
-    if len(group_labels) == 0:
-        group_labels = [""] * trajs[0].shape[1]
-    if len(dim_labels) == 0:
-        dim_labels = [""] * trajs[0].shape[2]
-    assert len(traj_labels) == len(trajs)
-    assert len(shifts) == len(trajs)
-    assert len(group_labels) == trajs[0].shape[1]
-    assert len(dim_labels) == trajs[0].shape[2]
-
-    # prepare a subplot for each "group"
-    fig, axes = plt.subplots(trajs[0].shape[1], sharex=True)
-    if trajs[0].shape[1] == 1:
-        axes = [axes]
-    fig.set_size_inches(6, trajs[0].shape[1] * 1.5)
-
-    # setup colors
-    colors = get_cmap("Accent").colors
-
-    for i, ax in enumerate(axes):  # for each group
-        for j, traj in enumerate(trajs):  # for each traj
-            ax.set_ylabel(group_labels[i])
-            time_steps = range(shifts[j], traj.shape[0] + shifts[j])
-            for k in range(traj.shape[2]):
-                marker = k % len(Line2D.filled_markers)
-                color = colors[j % len(colors)]
-                ls = "--" if j != 0 else "-"
-                ax.plot(
-                    time_steps,
-                    traj[:, i, k],
-                    linewidth=1,
-                    marker=Line2D.filled_markers[marker],
-                    markevery=0.1,
-                    markersize=2,
-                    color=color,
-                    ls=ls,
-                )
-
-    # tune the look
-    for ax in axes:
-        ax.minorticks_on()
-        ax.grid(color="lightgrey", linestyle="-", lw=0.6)
-        ax.grid(which="minor", color="lightgrey", linestyle="--", lw=0.3)
-        ax.set_axisbelow(True)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_visible(False)
-        for spine in ax.spines.values():
-            spine.set_position(("outward", 5))
-        ax.get_xaxis().tick_bottom()
-        ax.get_yaxis().tick_left()
-        ax.tick_params(axis="x", direction="out")
-        ax.tick_params(axis="y", length=0)
-        ax.tick_params(which="minor", axis="y", length=0)
-        ax.spines["bottom"].set_linewidth(2)
-        if i != len(axes) - 1:
-            ax.spines["bottom"].set_visible(False)
-            ax.xaxis.set_ticks_position("none")
-
-    # title
-    fig.suptitle(title)
-
-    # legend
-    fig.subplots_adjust(right=0.7)
-    leg = []
-    for j in range(len(trajs)):
-        color = colors[j % len(colors)]
-        leg += [Line2D([0], [0], color=color, label=traj_labels[j])]
-    for k in range(trajs[0].shape[2]):
-        marker = k % len(Line2D.filled_markers)
-        leg += [
-            Line2D(
-                [0],
-                [0],
-                marker=Line2D.filled_markers[marker],
-                color="black",
-                lw=1,
-                label=dim_labels[k],
-            )
-        ]
-    axes[0].legend(handles=leg, bbox_to_anchor=(1.5, 1.1), loc="upper right")
-
-    fig.tight_layout()
-    # save the figure
-    save_plot_and_close(savefig_path)
-
-
-def plot_trajectory_prediction(
-    trajectory: Trajectory, truth, preds, step: int, savefig_path: str
-):
-    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    truth = torch.transpose(truth, 0, 1)
-    preds = torch.transpose(preds, 0, 1)
-
-    pred_last_idx = max(len(preds[0]), len(truth[0])) + step
+    pred_last_idx = max(len(pred[0]), len(truth[0])) + overprediction
 
     time_steps = range(pred_last_idx)
     fig, axes = plt.subplots(
-        preds.shape[0], sharex=True
+        pred.shape[0], sharex=True
     )  # we do one subplot per feature
-    if preds.shape[0] == 1:
+    if pred.shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
         axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=2)
         axe.plot(
-            time_steps[: len(preds[i])],
-            preds[i],
+            time_steps[: len(pred[i])],
+            pred[i],
             linewidth=1,
             linestyle="--",
         )
@@ -402,9 +274,9 @@ def plot_mpjpe(
     pbar = tqdm(dataset.test_dataloader(), colour="green")
     pbar.set_description(f"Running {predictor} over test_dataloader:")
     # Run all test once and get distance from truth per feature
-    for sample, truth in pbar:
+    for sample, context, truth in pbar:
         feat2distances = dict()
-        pred = predictor.predict(sample, dataset.config.future_size)
+        pred = predictor.predict(sample, dataset.config.future_size, context)
         for feat in features:
             feat2distances[feat.name] = cal_distance_for_feat(
                 pred[..., feat.ids], truth[..., feat.ids], feat
@@ -450,9 +322,9 @@ def plot_mpjpes(
         pbar = tqdm(dataset.test_dataloader(), colour="green")
         pbar.set_description(f"Running {predictor} over test_dataloader:")
         # Run all test once and get distance from truth per feature
-        for sample, truth in pbar:
+        for sample, context, truth in pbar:
             feat2distances = dict()
-            pred = predictor.predict(sample, dataset.config.future_size)
+            pred = predictor.predict(sample, dataset.config.future_size, context)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
                     pred[..., feat.ids], truth[..., feat.ids], feat

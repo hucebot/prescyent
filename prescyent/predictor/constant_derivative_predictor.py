@@ -1,5 +1,5 @@
 """simple predictor to use as a baseline"""
-from typing import Optional
+from typing import Dict, Optional
 
 import torch
 
@@ -26,7 +26,9 @@ class ConstantDerivativePredictor(ConstantPredictor):
             )
         super().__init__(config)
 
-    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
+    def predict(
+        self, input_t: torch.Tensor, future_size: int, *args, **kwargs
+    ) -> torch.Tensor:
         unbatch = False
         if not is_tensor_is_batched(input_t):
             unbatch = True

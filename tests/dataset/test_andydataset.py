@@ -6,7 +6,7 @@ import torch
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import AndyDataset, AndyDatasetConfig
-from prescyent.dataset.features import CoordinateX, RotationRotMat
+from prescyent.dataset.features import CoordinateX, Features, RotationRotMat
 from prescyent.utils.enums import LearningTypes
 
 
@@ -38,7 +38,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -53,7 +53,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
+            _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(10, dataset.config.future_size)
         except NotImplementedError:
@@ -63,19 +63,19 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
-                    in_features=[RotationRotMat(range(9))],
-                    out_features=[CoordinateX([0])],
+                    in_features=Features([RotationRotMat(range(9))]),
+                    out_features=Features([CoordinateX([0])]),
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
-            sample, truth = dataset.train_datasample[0]
+            sample, context, truth = dataset.train_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
-            sample, truth = dataset.val_datasample[0]
+            sample, context, truth = dataset.val_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
         except NotImplementedError:

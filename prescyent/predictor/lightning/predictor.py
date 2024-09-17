@@ -5,7 +5,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, Type, Union
+from typing import Dict, Optional, Type, Union
 
 import pytorch_lightning as pl
 import torch
@@ -313,12 +313,12 @@ class LightningPredictor(BasePredictor):
         self.version = None
         self.name = self.name + "_finetuned"
         self._init_logger()
-        input_t, truth_t = next(iter(datamodule.train_dataloader()))
+        input_t, context_t, truth_t = next(iter(datamodule.train_dataloader()))
         input_shape = input_t.shape
         output_shape = truth_t.shape
         try:
             # try inference
-            self.predict(input_t, len(input_t[0]))
+            self.predict(input_t, future_size=len(input_t[0]), context=context_t)
         except RuntimeError:
             # adapt model
             model_input_shape = torch.Size(
@@ -404,10 +404,17 @@ class LightningPredictor(BasePredictor):
             self.scaler.save(save_path / "scaler.pkl")
 
     @BasePredictor.use_scaler
-    def predict(self, input_t: torch.Tensor, future_size: int):
+    def predict(
+        self,
+        input_t: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         with torch.no_grad():
             self.model.eval()
-            output = self.model.torch_model(input_t, future_size=future_size)
+            output = self.model.torch_model(
+                input_t, future_size=future_size, context=context
+            )
             if is_tensor_is_batched(output):
                 return output[:, -future_size:]
             return output[-future_size:]

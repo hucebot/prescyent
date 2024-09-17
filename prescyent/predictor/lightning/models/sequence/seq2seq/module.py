@@ -3,6 +3,7 @@ simple Seq2Seq implementation
 [short description]
 [link to the paper]
 """
+from typing import Dict, Optional
 import torch
 from torch import nn
 
@@ -45,7 +46,12 @@ class TorchModule(BaseTorchModule):
 
     @self_auto_batch
     @BaseTorchModule.deriv_tensor
-    def forward(self, input_tensor: torch.Tensor, future_size: int = None):
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         # (batch_size, seq_len, num_point, num_dim) => (seq_len, batch_size, num_point * num_dim)
         batch_size = input_tensor.shape[0]
         input_tensor = input_tensor.reshape(batch_size, self.in_sequence_size, -1)

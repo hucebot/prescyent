@@ -3,8 +3,8 @@ import os
 from typing import List, Optional
 
 from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
-from prescyent.dataset.features import Feature
-from .metadata import FEATURES, SEGMENT_LABELS
+from prescyent.dataset.features import Features
+from .metadata import DEFAULT_FEATURES, SEGMENT_LABELS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -43,7 +43,7 @@ class DatasetConfig(MotionDatasetConfig):
     """The frequency in Hz of the dataset
     If different from original data we'll use linear upsampling or downsampling of the data
     Default is downsampling 240 Hz to 10Hz"""
-    in_features: List[Feature] = FEATURES
-    out_features: List[Feature] = FEATURES
+    in_features: Features = DEFAULT_FEATURES
+    out_features: Features = DEFAULT_FEATURES
     in_points: List[int] = list(range(len(used_joints)))
     out_points: List[int] = list(range(len(used_joints)))

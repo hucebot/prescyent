@@ -8,6 +8,7 @@ from prescyent.dataset.features import (
     CoordinateXYZ,
     CoordinateXY,
     CoordinateX,
+    Features,
     RotationRep6D,
     RotationQuat,
     RotationEuler,
@@ -52,7 +53,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
+            _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
         except NotImplementedError:
@@ -69,7 +70,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -85,20 +86,24 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(list(range(3))),
-                        RotationRep6D(list(range(3, 9))),
-                    ],
-                    out_features=[
-                        CoordinateXYZ(list(range(6, 9))),
-                        RotationRep6D(list(range(6))),
-                    ],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(list(range(3))),
+                            RotationRep6D(list(range(3, 9))),
+                        ]
+                    ),
+                    out_features=Features(
+                        [
+                            CoordinateXYZ(list(range(6, 9))),
+                            RotationRep6D(list(range(6))),
+                        ]
+                    ),
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
-            sample, _ = dataset.test_datasample[dataset.config.history_size]
+            _, _, truth = dataset.test_datasample[0]
+            sample, _, _ = dataset.test_datasample[dataset.config.history_size]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 9)
@@ -112,16 +117,18 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(range(3)),
-                        RotationRep6D([3, 4, 5, 6, 7, 8]),
-                    ],
-                    out_features=[CoordinateXYZ(range(3))],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(range(3)),
+                            RotationRep6D([3, 4, 5, 6, 7, 8]),
+                        ]
+                    ),
+                    out_features=Features([CoordinateXYZ(range(3))]),
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 3)
@@ -134,13 +141,17 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))],
-                    out_features=[CoordinateXY(range(2)), RotationEuler(range(2, 5))],
+                    in_features=Features(
+                        [CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))]
+                    ),
+                    out_features=Features(
+                        [CoordinateXY(range(2)), RotationEuler(range(2, 5))]
+                    ),
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 12)
             self.assertEqual(truth.shape[-1], 5)
@@ -153,16 +164,20 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(
                     subjects_train=["S1"],
                     actions=["directions"],
-                    in_features=[
-                        CoordinateXYZ(range(3)),
-                        RotationRep6D([3, 4, 5, 6, 7, 8]),
-                    ],
-                    out_features=[CoordinateX(range(1)), RotationQuat([1, 2, 3, 4])],
+                    in_features=Features(
+                        [
+                            CoordinateXYZ(range(3)),
+                            RotationRep6D(range(3, 9)),
+                        ]
+                    ),
+                    out_features=Features(
+                        [CoordinateX(range(1)), RotationQuat(range(1, 5))]
+                    ),
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 5)

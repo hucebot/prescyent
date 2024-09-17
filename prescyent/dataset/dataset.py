@@ -1,20 +1,34 @@
 """Standard class for motion datasets"""
+import math
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Union, Type
 
 import json
 import requests
+import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
-from prescyent.dataset.features import Feature
+from prescyent.dataset.features import Features
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
+
+
+def collate_context_fn(list_of_tensors):
+    sample_batch = torch.stack([t[0] for t in list_of_tensors])
+    truth_batch = torch.stack([t[2] for t in list_of_tensors])
+    context_batch = None
+    if list_of_tensors[0][1] is not None:
+        context_batch = {
+            c_name: torch.stack([context[1][c_name] for context in list_of_tensors])
+            for c_name in list_of_tensors[0][1].keys()
+        }
+    return sample_batch, context_batch, truth_batch
 
 
 class MotionDataset(LightningDataModule):
@@ -90,7 +104,7 @@ class MotionDataset(LightningDataModule):
             logger.getChild(DATASET).info(
                 "Generated (x,y) pairs with shapes (%s, %s)",
                 self.train_datasample[0][0].shape,
-                self.train_datasample[0][1].shape,
+                self.train_datasample[0][2].shape,
             )
         if stage is None or stage == "test" or stage == "predict":
             # We will predict on the test dataset also
@@ -103,7 +117,7 @@ class MotionDataset(LightningDataModule):
             logger.getChild(DATASET).info(
                 "Generated (x,y) pairs with shapes (%s, %s)",
                 self.test_datasample[0][0].shape,
-                self.test_datasample[0][1].shape,
+                self.test_datasample[0][2].shape,
             )
 
     def convert_trajectories_from_config(self):
@@ -167,6 +181,7 @@ class MotionDataset(LightningDataModule):
                 pin_memory=self.config.pin_memory,
                 drop_last=self.config.drop_last,
                 persistent_workers=self.config.persistent_workers,
+                collate_fn=collate_context_fn,
             )
         except AttributeError:
             logger.getChild(DATASET).error(
@@ -186,6 +201,7 @@ class MotionDataset(LightningDataModule):
                 pin_memory=self.config.pin_memory,
                 drop_last=False,
                 persistent_workers=self.config.persistent_workers,
+                collate_fn=collate_context_fn,
             )
         except AttributeError:
             logger.getChild(DATASET).error(
@@ -205,6 +221,7 @@ class MotionDataset(LightningDataModule):
                 pin_memory=self.config.pin_memory,
                 drop_last=False,
                 persistent_workers=self.config.persistent_workers,
+                collate_fn=collate_context_fn,
             )
         except AttributeError:
             logger.getChild(DATASET).error(
@@ -225,6 +242,7 @@ class MotionDataset(LightningDataModule):
                 pin_memory=self.config.pin_memory,
                 drop_last=False,
                 persistent_workers=self.config.persistent_workers,
+                collate_fn=collate_context_fn,
             )
         except AttributeError:
             logger.getChild(DATASET).error(
@@ -246,12 +264,28 @@ class MotionDataset(LightningDataModule):
         return self.trajectories.train[0].shape[2]
 
     @property
-    def tensor_features(self) -> List[Feature]:
+    def tensor_features(self) -> Features:
         return self.trajectories.train[0].tensor_features
 
     @property
     def feature_size(self) -> int:
         return self.num_dims * self.num_points
+
+    @property
+    def context_sizes(self) -> Dict[str, int]:
+        return {
+            c_key: c_tensor.shape[1:]
+            for c_key, c_tensor in self.trajectories.train[0].context.items()
+        }
+
+    @property
+    def context_size_sum(self) -> int:
+        return sum(
+            [
+                math.prod(c_tensor.shape[1:])
+                for c_tensor in self.trajectories.train[0].context.values()
+            ]
+        )
 
     def _init_from_config(
         self,

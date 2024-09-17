@@ -110,7 +110,7 @@ class Dataset(MotionDataset):
         return Trajectory(
             trajectory,
             metadata.DEFAULT_FREQ,
-            metadata.FEATURES,
+            metadata.DEFAULT_FEATURES,
             file_path=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
             title=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
             point_names=metadata.POINT_LABELS,

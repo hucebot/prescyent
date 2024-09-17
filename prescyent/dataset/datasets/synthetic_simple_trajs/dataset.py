@@ -105,7 +105,7 @@ class Dataset(MotionDataset):
         return Trajectory(
             trajectory,
             int(1 / self.config.dt),
-            metadata.FEATURES,
+            metadata.DEFAULT_FEATURES,
             file_path=f"synthetic_traj_{traj_id}",
             title=f"synthetic_traj_{traj_id}",
             point_parents=metadata.POINT_PARENTS,

@@ -10,7 +10,7 @@ except:
 import torch
 import torch.utils
 
-from prescyent.dataset.features import Feature, Rotation
+from prescyent.dataset.features import Features, Rotation
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.enums import Scalers
 from prescyent.utils.tensor_manipulation import self_auto_batch
@@ -55,7 +55,7 @@ class Scaler:
     def train(
         self,
         dataset_dataloader: torch.utils.data.DataLoader,
-        dataset_features: List[Feature],
+        dataset_features: Features,
     ):
         if dataset_features is None or not self.config.do_feature_wise_scaling:
             scaler = norm_map.get(self.config.scaler, -1)
@@ -87,7 +87,7 @@ class Scaler:
         self,
         input_t: torch.Tensor,
         in_points_ids: Optional[List[int]] = None,
-        features: Optional[List[Feature]] = None,
+        features: Optional[Features] = None,
     ) -> torch.Tensor:
         if self.status == "untrained":
             raise AssertionError(
@@ -126,7 +126,7 @@ class Scaler:
         self,
         input_t: torch.Tensor,
         out_points_ids: Optional[List[int]] = None,
-        features: Optional[List[Feature]] = None,
+        features: Optional[Features] = None,
     ) -> torch.Tensor:
         if self.status == "untrained":
             raise AssertionError(
@@ -137,7 +137,9 @@ class Scaler:
             return input_t
         output_t = input_t.clone()
         if not self.config.do_feature_wise_scaling or features is None:
-            return self.scalers["feature"].unscale(output_t, out_points_ids)
+            return self.scalers["feature"].unscale(
+                output_t, out_points_ids, features.ids
+            )
         for feat in features:
             if not isinstance(feat, Rotation) or self.config.scale_rotations:
                 feat_ids = None

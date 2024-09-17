@@ -7,14 +7,14 @@ from prescyent.dataset import (
     Trajectories,
     Trajectory,
 )
-from prescyent.dataset.features import Any
+from prescyent.dataset.features import Any, Features
 from prescyent.predictor import DelayedPredictor, PredictorConfig
 from tests.custom_test_case import CustomTestCase
 
 
 class DelayedPredictorTests(CustomTestCase):
     def test_prediction(self):
-        features = [Any(range(6))]
+        features = Features([Any(range(6))])
         points = list(range(7))
         dataset_config = DatasetConfig(
             batch_size=20,
@@ -42,7 +42,7 @@ class DelayedPredictorTests(CustomTestCase):
         shutil.rmtree("tmp", ignore_errors=True)
 
     def test_test_loop(self):
-        features = [Any(range(7))]
+        features = Features([Any(range(7))])
         points = list(range(9))
         dataset_config = DatasetConfig(
             batch_size=64,

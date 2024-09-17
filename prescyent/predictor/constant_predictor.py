@@ -58,7 +58,9 @@ class ConstantPredictor(BasePredictor):
             self.__class__.__name__,
         )
 
-    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
+    def predict(
+        self, input_t: torch.Tensor, future_size: int, *args, **kwargs
+    ) -> torch.Tensor:
         unbatch = False
         if not is_tensor_is_batched(input_t):
             unbatch = True

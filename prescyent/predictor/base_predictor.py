@@ -13,14 +13,15 @@ from pytorch_lightning import LightningDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from tqdm import tqdm
 
+from prescyent.dataset import Trajectory
+from prescyent.dataset.features import Features
 from prescyent.dataset.features.feature_manipulation import (
     cal_distance_for_feat,
     convert_tensor_features_to,
 )
-from prescyent.dataset import Trajectory
 from prescyent.evaluator.eval_summary import EvaluationSummary
-from prescyent.scaler.scaler import Scaler
 from prescyent.predictor.config import PredictorConfig
+from prescyent.scaler.scaler import Scaler
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.dataset_manipulation import update_parent_ids
 from prescyent.utils.tensor_manipulation import (
@@ -67,15 +68,14 @@ class BasePredictor:
             not hasattr(self, "scaler") or self.scaler is None
         ):  # If scaler wasn't _init by child
             self._init_scaler()
-        logger.getChild(PREDICTOR).info(self.describe())
 
     def describe(self):
-        _str = f"""Predictor {self} is initialized with the following parameters:
+        _str = f"""\n{2*"    "}Predictor {self} is initialized with the following parameters:
             - Log path: {self.log_path}\n"""
         if self.scaler:
             _str += f"""{3*"    "}- Scaler:
                 {self.scaler.describe()}\n"""
-        return _str
+        logger.getChild(PREDICTOR).info(_str)
 
     def _init_scaler(self):
         """create instance of prescyent.Scaler"""
@@ -111,12 +111,21 @@ class BasePredictor:
 
     def __call__(
         self,
-        input_batch,
+        input_tensor,
         future_size: int = None,
         history_size: int = None,
         history_step: int = 1,
+        input_tensor_features: Optional[Features] = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
     ):
-        return self.run(input_batch, future_size, history_size, history_step)
+        return self.run(
+            input_tensor=input_tensor,
+            future_size=future_size,
+            history_size=history_size,
+            history_step=history_step,
+            input_tensor_features=input_tensor_features,
+            context=context,
+        )
 
     def __str__(self) -> str:
         return f"{self.name}_v{self.version}"
@@ -163,7 +172,12 @@ class BasePredictor:
             "This method must be overriden by the inherited predictor"
         )
 
-    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
+    def predict(
+        self,
+        input_t: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ) -> torch.Tensor:
         """run the model / algorithm for one input"""
         raise NotImplementedError(
             "This method must be overriden by the inherited predictor"
@@ -187,13 +201,13 @@ class BasePredictor:
         pbar = tqdm(
             datamodule.test_dataloader(),
             desc="Iterate over test_dataloader",
-            colour="orange",
+            colour="yellow",
         )
         pbar.set_description(f"Testing {self}:")
-        for sample, truth in pbar:
+        for sample, context, truth in pbar:
             # eval step
             feat2distances = dict()
-            pred = self.predict(sample, self.config.dataset_config.future_size)
+            pred = self.predict(sample, self.config.dataset_config.future_size, context)
             feat2distances["mse_loss"] = torch.nn.functional.mse_loss(pred, truth)
             for feat in features:
                 feat2distances[feat.name] = cal_distance_for_feat(
@@ -229,10 +243,11 @@ class BasePredictor:
     def run(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
-        history_size: int = None,
+        future_size: Optional[int] = None,
+        history_size: Optional[int] = None,
         history_step: int = 1,
-        input_tensor_features=None,
+        input_tensor_features: Optional[Features] = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
     ) -> List[torch.Tensor]:
         """run method/model inference over an unbatched or batched input sequence
         The run method outputs a List of prediction because it can iterate over the input_tensor
@@ -246,15 +261,25 @@ class BasePredictor:
                 be splitted sequences of len == history_size. Defaults to predictor's value from config if None.
             history_step (int, optional): When splitting the input_tensor (history_size != None)
                 defines the step of the iteration. Defaults to 1.
+            input_tensor_features: (Features, optional). Defaults to None,
+            context: (Dict[str, torch.Tensor], optional). Defaults to None,
         Returns:
             List[torch.Tensor]: the list of model predictions
         """
         prediction_list = []
 
+        # allows batched or unbatched inputs, returns batched or unbatched prediction accordingly
         unbatch = False
         if not is_tensor_is_batched(input_tensor):
             unbatch = True
             input_tensor = torch.unsqueeze(input_tensor, 0)
+        if context:
+            context = {
+                c_name: c_tensor.unsqueeze(0)
+                if not len(c_tensor.shape) <= 2
+                else c_tensor
+                for c_name, c_tensor in context.items()
+            }
         # Keep only model input points if the input shape doesn't match
         if input_tensor.shape[2] != len(self.config.dataset_config.in_points):
             input_tensor = input_tensor[:, :, self.config.dataset_config.in_points]
@@ -267,6 +292,7 @@ class BasePredictor:
                 self.config.dataset_config.in_features,
             )
         # Else we assume feats are in the right format
+        context_sub_batch = None  # init sub_batch of the context to None
         input_len = input_tensor.shape[1]
         if future_size is None:
             future_size = self.config.dataset_config.future_size
@@ -293,9 +319,27 @@ class BasePredictor:
                     ),
                     1,
                 )
+                if context:  # If context we iterate over it along the input
+                    context_sub_batch = {
+                        c_name: torch.cat(
+                            (
+                                c_tensor[:, i:],
+                                c_tensor[:, : history_size - c_tensor[:, i:].shape[1]],
+                            ),
+                            1,
+                        )
+                        for c_name, c_tensor in context.items()
+                    }
             else:
                 input_sub_batch = input_tensor[:, i : i + history_size]
-            prediction = self.predict(input_sub_batch, future_size)
+                if context:  # If context we iterate over it along the input
+                    context_sub_batch = {
+                        c_name: c_tensor[i : i + history_size]
+                        for c_name, c_tensor in context.items()
+                    }
+            prediction = self.predict(
+                input_sub_batch, future_size=future_size, context=context_sub_batch
+            )
             if unbatch:
                 prediction = prediction.squeeze(0)
             prediction_list.append(prediction)
@@ -319,6 +363,7 @@ class BasePredictor:
         self.tb_logger.experiment.add_scalar(
             "Eval/max_rtf", evaluation_summary.max_rtf, 0
         )
+        self.tb_logger.save()
 
     def log_metrics(self, metrics: dict, pre_key=""):
         for key, value in metrics.items():
@@ -336,14 +381,23 @@ class BasePredictor:
     ) -> Tuple[Trajectory, int]:
         """Returns new traj with predicted tensor and offset that can be used to compare new traj and base traj"""
         list_pred_tensor = self.run(
-            traj.tensor,
+            input_tensor=traj.tensor,
             future_size=future_size,
+            history_size=None,
+            history_step=1,
             input_tensor_features=traj.tensor_features,
+            context=traj.context,
         )
         pred_tensor = cat_list_with_seq_idx(list_pred_tensor, -1)
+        offset = (
+            self.config.dataset_config.history_size
+            + self.config.dataset_config.future_size
+            - 1
+        )
         pred_traj = Trajectory(
             tensor=pred_tensor,
             tensor_features=self.config.dataset_config.out_features,
+            context=None,
             frequency=traj.frequency,
             file_path=traj.file_path,
             title=f"{traj.title}_pred_{self.name}",
@@ -354,12 +408,7 @@ class BasePredictor:
                 traj.point_names[i] for i in self.config.dataset_config.out_points
             ],
         )
-        return (
-            pred_traj,
-            self.config.dataset_config.history_size
-            + self.config.dataset_config.future_size
-            - 1,
-        )
+        return (pred_traj, offset)
 
     @staticmethod
     def use_scaler(function):

@@ -69,7 +69,22 @@ class Normalizer:
         Returns:
             torch.Tensor: Normalized input tensor
         """
-        return (sample_tensor - self.min_t) / (self.max_t - self.min_t + self.eps)
+        min_t = self.min_t.detach().clone()
+        max_t = self.max_t.detach().clone()
+        if self.dim == [0, 1, 3]:
+            sample_tensor = sample_tensor.transpose(2, 3)
+        if point_ids and 2 not in self.dim:
+            # If we scale a subset of the dataset feats, and it is not averaged over
+            min_t = min_t[point_ids]
+            max_t = max_t[point_ids]
+        if feat_ids and 3 not in self.dim:
+            # If we scale a subset of the dataset feats, and it is not averaged over
+            min_t = min_t[..., feat_ids]
+            max_t = max_t[..., feat_ids]
+        res = (sample_tensor - min_t) / (max_t - min_t + self.eps)
+        if self.dim == [0, 1, 3]:
+            res = res.transpose(2, 3)
+        return res
 
     def unscale(
         self,
@@ -89,4 +104,19 @@ class Normalizer:
         Returns:
             torch.Tensor: Unnormalized input tensor
         """
-        return sample_tensor * (self.max_t - self.min_t) + self.min_t
+        min_t = self.min_t.detach().clone()
+        max_t = self.max_t.detach().clone()
+        if self.dim == [0, 1, 3]:
+            sample_tensor = sample_tensor.transpose(2, 3)
+        if point_ids and 2 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            min_t = min_t[point_ids]
+            max_t = max_t[point_ids]
+        if feat_ids and 3 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            min_t = min_t[..., feat_ids]
+            max_t = max_t[..., feat_ids]
+        res = sample_tensor * (max_t - min_t) + min_t
+        if self.dim == [0, 1, 3]:
+            res = res.transpose(2, 3)
+        return res

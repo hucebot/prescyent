@@ -45,7 +45,7 @@ class InitH36MDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, truth = dataset.test_datasample[0]
+            sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -64,7 +64,7 @@ class InitH36MDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            _, truth = dataset.test_datasample[0]
+            _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
         except NotImplementedError:

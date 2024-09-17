@@ -58,9 +58,11 @@ class MotionDataSamples:
             _map += [(t, i) for i in range(len(trajectory) - invalid_frames_per_traj)]
         return _map
 
-    def _get_seq_with_size(self, index: int, size: int):
+    def _get_seq_with_size(self, index: int, history_size: int, future_size: int):
+        size = history_size + future_size
         traj_id, tensor_id = self.sample_ids[index]
         trajectory = self.trajectories[traj_id]
+        context = None
         if tensor_id + size > len(trajectory.tensor) and self.config.loop_over_traj:
             seq = torch.cat(
                 (
@@ -69,44 +71,62 @@ class MotionDataSamples:
                 ),
                 0,
             )
+            if trajectory.context and self.config.context_keys:
+                context = {
+                    c_name: torch.cat(
+                        (
+                            c_tensor[tensor_id:],
+                            c_tensor[: size - len(c_tensor[tensor_id:])],
+                        ),
+                        0,
+                    )[:history_size]
+                    for c_name, c_tensor in trajectory.context.items()
+                    if c_name in self.config.context_keys
+                }
         else:
             seq = trajectory.tensor[tensor_id : tensor_id + size]
+            if trajectory.context and self.config.context_keys:
+                context = {
+                    c_name: c_tensor[tensor_id : tensor_id + history_size]
+                    for c_name, c_tensor in trajectory.context.items()
+                    if c_name in self.config.context_keys
+                }
         if (
             self.config.reverse_pair_ratio
             and np.random.uniform(0, 1) <= self.config.reverse_pair_ratio
         ):
             seq = torch.flip(seq, (0,))
-        return seq
+        return seq, context
 
     def _get_item_seq2seq(self, index: int):
-        seq = self._get_seq_with_size(
-            index, self.config.history_size + self.config.future_size
+        seq, context = self._get_seq_with_size(
+            index, self.config.history_size, self.config.future_size
         )
         sample = seq[: self.config.history_size]
         truth = seq[self.config.history_size :]
-        return sample, truth
+        return sample, context, truth
 
     def _get_item_autoreg(self, index: int):
-        seq = self._get_seq_with_size(index, self.config.history_size + 1)
+        seq, context = self._get_seq_with_size(index, self.config.history_size, 1)
         sample = seq[:-1]
         truth = seq[1:]
-        return sample, truth
+        return sample, context, truth
 
     def _get_item_seq2one(self, index: int):
-        seq = self._get_seq_with_size(
-            index, self.config.history_size + self.config.future_size
+        seq, context = self._get_seq_with_size(
+            index, self.config.history_size, self.config.future_size
         )
         sample = seq[: self.config.history_size]
         truth = torch.unsqueeze(seq[-1], 0)
-        return sample, truth
+        return sample, context, truth
 
     def __getitem__(self, index: int):
         if self.config.learning_type == LearningTypes.SEQ2SEQ:
-            _in, _out = self._get_item_seq2seq(index)
+            _in, _in_context, _out = self._get_item_seq2seq(index)
         elif self.config.learning_type == LearningTypes.AUTOREG:
-            _in, _out = self._get_item_autoreg(index)
+            _in, _in_context, _out = self._get_item_autoreg(index)
         elif self.config.learning_type == LearningTypes.SEQ2ONE:
-            _in, _out = self._get_item_seq2one(index)
+            _in, _in_context, _out = self._get_item_seq2one(index)
         else:
             raise NotImplementedError(
                 f"We don't handle {self.config.learning_type} sampling for now."
@@ -118,7 +138,7 @@ class MotionDataSamples:
         _out = convert_tensor_features_to(
             _out, tensor_feats, (self.config.out_features)
         )
-        return _in, _out
+        return _in, _in_context, _out
 
     def __len__(self):
         return len(self.sample_ids)

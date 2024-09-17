@@ -1,5 +1,4 @@
-from prescyent.dataset.features.feature.coordinate import CoordinateXYZ
-from prescyent.dataset.features.feature.rotation import RotationQuat
+from prescyent.dataset.features import CoordinateXYZ, Features, RotationQuat
 
 
 BASE_FREQUENCY = 240
@@ -55,4 +54,4 @@ SEGMENT_PARENTS = [
 ]
 
 SCHEMA = "{http://www.xsens.com/mvn/mvnx}"
-FEATURES = [CoordinateXYZ(range(3)), RotationQuat(range(3, 7))]
+DEFAULT_FEATURES = Features([CoordinateXYZ(range(3)), RotationQuat(range(3, 7))])

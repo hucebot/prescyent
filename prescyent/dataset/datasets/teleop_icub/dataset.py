@@ -14,7 +14,6 @@ from prescyent.utils.dataset_manipulation import (
 )
 from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
 from prescyent.dataset.datasets.teleop_icub import metadata
-from prescyent.dataset.features import CoordinateXYZ
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.dataset import MotionDataset
@@ -131,7 +130,7 @@ class Dataset(MotionDataset):
             trajectory_arrray.append(
                 Trajectory(
                     tensor=tensor,
-                    tensor_features=[CoordinateXYZ(range(3))],
+                    tensor_features=metadata.DEFAULT_FEATURES,
                     frequency=metadata.BASE_FREQUENCY,
                     file_path=file,
                     title=title,

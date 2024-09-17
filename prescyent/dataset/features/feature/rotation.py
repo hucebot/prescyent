@@ -10,12 +10,14 @@ from prescyent.dataset.features.feature import Feature
 class Rotation(Feature):
     """base class used for conversion"""
 
-    def __init__(self, ids: Union[List, range], distance_unit="rad") -> None:
+    def __init__(
+        self,
+        ids: Union[List, range],
+        distance_unit: str = "rad",
+        name: str = "Rotation",
+    ) -> None:
+        self.name = name
         super().__init__(ids, distance_unit)
-
-    @property
-    def name(self) -> str:
-        return "Rotation"
 
     def _is_convertible(self, __value: object) -> bool:
         return isinstance(__value, Rotation)

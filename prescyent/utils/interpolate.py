@@ -3,7 +3,7 @@ from typing import Iterable, List
 import numpy as np
 import torch
 
-from prescyent.dataset.features import Feature, Rotation, RotationQuat
+from prescyent.dataset.features import Features, Rotation, RotationQuat
 from prescyent.dataset.features.rotation_methods import convert_rotation_tensor_to
 
 
@@ -40,7 +40,9 @@ def interpolate_trajectory_tensor_with_ratio(
     return output_tensor
 
 
-def downsample_trajectory_tensor(input_tensor, frequency, target_freq) -> torch.Tensor:
+def downsample_trajectory_tensor(
+    input_tensor: torch.Tensor, frequency: int, target_freq: int
+) -> torch.Tensor:
     """
     Downsamples the input tensor from frequency to target_freq.
 
@@ -62,7 +64,7 @@ def downsample_trajectory_tensor(input_tensor, frequency, target_freq) -> torch.
 
 def upsample_trajectory_tensor(
     input_tensor: torch.Tensor,
-    tensor_features: List[Feature],
+    tensor_features: Features,
     frequency: int,
     target_freq: int,
 ) -> torch.Tensor:

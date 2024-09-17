@@ -5,6 +5,7 @@ import torch
 
 from prescyent.dataset import Trajectory
 from prescyent.dataset.features import (
+    Features,
     RotationEuler,
     RotationQuat,
     RotationRep6D,
@@ -27,16 +28,16 @@ class TestTrajRotations(unittest.TestCase):
             # rotation of 179.88 degrees around x axis
         ]
         pos_sequence = torch.FloatTensor([positions_quaternions])
-        traj = Trajectory(pos_sequence, 1, [RotationQuat(range(4))])
+        traj = Trajectory(pos_sequence, 1, Features([RotationQuat(range(4))]))
         quat_tensor = copy.deepcopy(traj.tensor)
-        traj.convert_tensor_features([RotationRotMat(range(9))])
-        traj.convert_tensor_features([RotationQuat(range(4))])
+        traj.convert_tensor_features(Features([RotationRotMat(range(9))]))
+        traj.convert_tensor_features(Features([RotationQuat(range(4))]))
         self.assertTrue(torch.allclose(traj.tensor, quat_tensor, atol=1e-6))
-        traj.convert_tensor_features([RotationRep6D(range(6))])
-        traj.convert_tensor_features([RotationQuat(range(4))])
+        traj.convert_tensor_features(Features([RotationRep6D(range(6))]))
+        traj.convert_tensor_features(Features([RotationQuat(range(4))]))
         self.assertTrue(torch.allclose(traj.tensor, quat_tensor, atol=1e-6))
-        traj.convert_tensor_features([RotationEuler(range(3))])
-        traj.convert_tensor_features([RotationQuat(range(4))])
+        traj.convert_tensor_features(Features([RotationEuler(range(3))]))
+        traj.convert_tensor_features(Features([RotationQuat(range(4))]))
         self.assertTrue(torch.allclose(traj.tensor, quat_tensor, atol=1e-6))
 
 

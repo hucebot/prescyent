@@ -148,7 +148,7 @@ class Dataset(MotionDataset):
             else:
                 torch_tensor = torch.load(file_path)
             if self.config.make_joints_position_relative_to is not None:
-                for feat in metadata.FEATURES:
+                for feat in metadata.DEFAULT_FEATURES:
                     if isinstance(feat, Coordinate):
                         torch_tensor[:, :, feat.ids] -= torch.index_select(
                             torch_tensor,
@@ -165,7 +165,7 @@ class Dataset(MotionDataset):
             traj = Trajectory(
                 torch_tensor,
                 frequency=int(metadata.BASE_FREQUENCY),
-                tensor_features=metadata.FEATURES,
+                tensor_features=metadata.DEFAULT_FEATURES,
                 file_path=file_path,
                 title=Path(file_path).name.split(".")[0],
                 point_parents=point_parents,

@@ -60,7 +60,9 @@ class DelayedPredictor(BasePredictor):
 
     @self_auto_batch
     @BasePredictor.use_scaler
-    def predict(self, input_t: torch.Tensor, future_size: int) -> torch.Tensor:
+    def predict(
+        self, input_t: torch.Tensor, future_size: int, *args, **kwargs
+    ) -> torch.Tensor:
         input_t = torch.transpose(input_t, 0, 1)
         if future_size > len(input_t):
             new_inputs = [

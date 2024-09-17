@@ -4,7 +4,7 @@ import numpy as np
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import SCCDataset, SCCDatasetConfig
-from prescyent.dataset.features import CoordinateX
+from prescyent.dataset.features import CoordinateX, Features
 from prescyent.utils.enums import LearningTypes
 
 
@@ -26,7 +26,7 @@ class InitSCCDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, truth = dataset.test_datasample[0]
+        sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(len(sample), len(truth))
         np.testing.assert_allclose(
             sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -38,25 +38,25 @@ class InitSCCDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        _, truth = dataset.test_datasample[0]
+        _, _, truth = dataset.test_datasample[0]
         self.assertEqual(1, len(truth))
         self.assertEqual(10, dataset.config.future_size)
 
     def test_coordinates_1d(self):
         dataset = SCCDataset(
             SCCDatasetConfig(
-                out_features=[CoordinateX([0])],
+                out_features=Features([CoordinateX([0])]),
             ),
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, truth = dataset.test_datasample[0]
+        sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
-        sample, truth = dataset.train_datasample[0]
+        sample, context, truth = dataset.train_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
-        sample, truth = dataset.val_datasample[0]
+        sample, context, truth = dataset.val_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
 
