@@ -1,22 +1,24 @@
 """Class and methods for the TeleopIcub Dataset
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
-from pathlib import Path
-from typing import List, Union, Dict
 
+import shutil
+import tempfile
+from pathlib import Path
+
+import h5py
 import numpy as np
 import torch
+from tqdm import tqdm
 
-from prescyent.utils.logger import logger, DATASET
-from prescyent.utils.dataset_manipulation import (
-    split_array_with_ratios,
-    update_parent_ids,
-)
-from prescyent.dataset.datasets.teleop_icub.config import DatasetConfig
-from prescyent.dataset.datasets.teleop_icub import metadata
-from prescyent.dataset.trajectories.trajectories import Trajectories
-from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.dataset.hdf5_utils import get_dataset_keys, write_metadata
 from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.trajectories import Trajectories
+from prescyent.utils.logger import logger, DATASET
+from prescyent.utils.dataset_manipulation import split_array_with_ratios
+
+from . import metadata
+from .config import DatasetConfig
 
 
 class Dataset(MotionDataset):
@@ -28,116 +30,115 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(
-        self,
-        config: Union[Dict, DatasetConfig, str, Path] = None,
-        load_data_at_init: bool = True,
-    ) -> None:
+    def __init__(self, config=DatasetConfig(), load_data_at_init: bool = True) -> None:
         self._init_from_config(config, DatasetConfig)
         super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
 
     def prepare_data(self):
         """get trajectories from files or web"""
-        if not Path(self.config.data_path).exists():
+        # Download and prepare hdf5 ??
+        if not Path(self.config.hdf5_path).exists():
             logger.getChild(DATASET).warning(
                 "Dataset files not found at path %s",
-                self.config.data_path,
+                self.config.hdf5_path,
             )
             self._get_from_web()
-        self.trajectories = self._load_files()
-
-    # load a set of trajectory, keeping them separate
-    def _load_files(self) -> Trajectories:
-        logger.getChild(DATASET).debug(
-            "Searching Dataset files from path %s", self.config.data_path
-        )
-        files = list(Path(self.config.data_path).rglob(self.config.glob_dir))
-        files.sort()
-        if len(files) == 0:
-            logger.getChild(DATASET).error(
-                "No files matching '%s' rule for this path %s",
-                self.config.glob_dir,
-                self.config.data_path,
-            )
-            raise FileNotFoundError(self.config.data_path)
-        train_files, test_files, val_files = split_array_with_ratios(
-            files,
+        # Create new temp hdf5 with features from config
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        hdf5_data = h5py.File(self.config.hdf5_path, "r")
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        # Copy root attributes
+        for attr in hdf5_data.attrs.keys():
+            tmp_hdf5_data.attrs[attr] = hdf5_data.attrs[attr]
+        all_keys = get_dataset_keys(hdf5_data)
+        # Features
+        all_feature_names = [key for key in all_keys if key[:16] == "tensor_features/"]
+        for feat_name in all_feature_names:
+            old_feat = hdf5_data[feat_name]
+            feat = tmp_hdf5_data.create_dataset(feat_name, data=old_feat)
+            for attr_name in old_feat.attrs.keys():
+                feat.attrs[attr_name] = old_feat.attrs[attr_name]
+        # Select only trajs from subset:
+        all_trajectory_names = [key for key in all_keys if key[-5:] == "/traj"]
+        if self.config.subsets:
+            all_trajectory_names = [
+                key
+                for key in all_trajectory_names
+                if any([subset in key for subset in self.config.subsets])
+            ]
+        # create subset train, test, val from ratios:
+        train_trajs, test_trajs, val_trajs = split_array_with_ratios(
+            all_trajectory_names,
             self.config.ratio_train,
             self.config.ratio_test,
             self.config.ratio_val,
             shuffle=self.config.shuffle_data_files,
         )
-        train = self.pathfiles_to_trajectories(train_files)
-        logger.getChild(DATASET).info(
-            "Found %d trajectories in the train set", len(train)
-        )
-        test = self.pathfiles_to_trajectories(test_files)
-        logger.getChild(DATASET).info(
-            "Found %d trajectories in the test set", len(test)
-        )
-        val = self.pathfiles_to_trajectories(val_files)
-        logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
-        return Trajectories(train, test, val)
+        for key, trajs in {
+            "train/": train_trajs,
+            "test/": test_trajs,
+            "val/": val_trajs,
+        }.items():
+            for traj_name in trajs:
+                tmp_hdf5_data.create_dataset(key + traj_name, data=hdf5_data[traj_name])
+                if self.config.context_keys:
+                    for context_name in self.config.context_keys:
+                        tmp_hdf5_data.create_dataset(
+                            key + traj_name[:-4] + context_name,
+                            data=hdf5_data[traj_name[:-4] + context_name],
+                        )
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
 
     def _get_from_web(self) -> None:
-        self._download_files(self.config.url, self.config.data_path + ".zip")
-        self._unzip(self.config.data_path + ".zip")
+        zip_path = Path(self.config.hdf5_path).with_suffix(".zip")
+        self._download_files(self.config.url, zip_path)
+        data_dir = self._unzip(zip_path)
+        data_dir = data_dir / "AndyData-lab-prescientTeleopICub"
+        Dataset.create_teleop_icub_hdf5(self.config.hdf5_path, data_dir, "*.csv", True)
 
-    def pathfiles_to_trajectories(
-        self,
-        files: List,
-        delimiter: str = ",",
-        start: int = None,
-        end: int = None,
-    ) -> List[Trajectory]:
-        """util method to turn a list of pathfiles to a list of their data
+    @staticmethod
+    def create_teleop_icub_hdf5(
+        hdf5_path: str, data_dir: str, subsets: str, remove_csv: bool = False
+    ):
+        files = list(Path(data_dir).rglob(subsets))
+        logger.getChild(DATASET).info(f"Found {len(files)} files")
+        with h5py.File(hdf5_path, "w") as hdf5_f:
+            write_metadata(hdf5_f, metadata)
 
-        :param files: list of files
-        :type files: List
-        :param delimiter: delimiter to split the data on, defaults to ','
-        :type delimiter: str, optional
-        :raises FileNotFoundError: _description_
-        :return: the data of the dataset, grouped per file
-        :rtype: list
-        """
-        used_joints = self.config.used_joints
-        if start is None:
-            start = 0
-        trajectory_arrray = list()
-        for file in files:
-            if not file.exists():
-                logger.getChild(DATASET).error("file does not exist: %s", file)
-                raise FileNotFoundError(file)
-            file_sequence = np.loadtxt(file, delimiter=delimiter)
-            if end is None:
-                end = len(file_sequence)
-            file_sequence = file_sequence[start:end]
-            # add waist x and waist y
-            tensor = torch.FloatTensor(
-                np.array(
-                    [
-                        np.concatenate((np.zeros(2), file_timestep))
-                        for file_timestep in file_sequence
-                    ]
+        for f_path in tqdm(files):
+            file_sequence = np.loadtxt(f_path, delimiter=",")
+            subgroups = list(f_path.relative_to(data_dir).parts)
+            traj_groups = subgroups[:-1]
+            file_type = subgroups[-1]
+            if file_type[0] == "c":  # center of mass
+                traj_groups = traj_groups + [subgroups[-1][1:-4]]
+                tensor = file_sequence
+                key = "center_of_mass"
+            elif file_type[0] == "p":  # positions
+                traj_groups = subgroups[:-1] + [subgroups[-1][1:-4]]
+                tensor = torch.FloatTensor(
+                    np.array(
+                        [
+                            np.concatenate((np.zeros(2), file_timestep))
+                            for file_timestep in file_sequence
+                        ]
+                    )
                 )
-            )
-            # reshape (seq_len, 9) => (seq_len, 3, 3)
-            seq_len = tensor.shape[0]
-            tensor = tensor.reshape(seq_len, 3, 3)
-            # keep only asked joints
-            tensor = tensor[:, used_joints]
-            title = f"{Path(file).parts[-3]}_{Path(file).parts[-2]}_{Path(file).stem}"
-            trajectory_arrray.append(
-                Trajectory(
-                    tensor=tensor,
-                    tensor_features=metadata.DEFAULT_FEATURES,
-                    frequency=metadata.BASE_FREQUENCY,
-                    file_path=file,
-                    title=title,
-                    point_parents=update_parent_ids(
-                        used_joints, metadata.POINT_PARENTS
-                    ),
-                    point_names=[metadata.POINT_LABELS[i] for i in used_joints],
-                )
-            )
-        return trajectory_arrray
+                seq_len = tensor.shape[0]
+                tensor = tensor.reshape(seq_len, 3, 3)
+                key = "traj"
+                # reshape (seq_len, 9) => (seq_len, 3, 3)
+            else:  # icub dofs
+                traj_groups = subgroups[:-1] + [subgroups[-1][:-4]]
+                tensor = file_sequence
+                key = "icub_dof"
+            with h5py.File(hdf5_path, "a") as f:
+                try:
+                    group = f.create_group("/".join(traj_groups))
+                except ValueError:  # Group already exist
+                    group = f["/".join(traj_groups)]
+                group.create_dataset(key, data=tensor)
+        logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
+        if remove_csv:
+            logger.getChild(DATASET).info(f"Removing all files in {data_dir}")
+            shutil.rmtree(data_dir)

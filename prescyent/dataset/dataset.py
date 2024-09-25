@@ -1,5 +1,6 @@
 """Standard class for motion datasets"""
 import math
+import os
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Union, Type
@@ -19,7 +20,8 @@ from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
 
 
-def collate_context_fn(list_of_tensors):
+def collate_context_fn(list_of_tensors: List[torch.Tensor]):
+    """custom collate function to allow context_batch to be None, or a dict of batched tensors"""
     sample_batch = torch.stack([t[0] for t in list_of_tensors])
     truth_batch = torch.stack([t[2] for t in list_of_tensors])
     context_batch = None
@@ -80,6 +82,7 @@ class MotionDataset(LightningDataModule):
         raise NotImplementedError("This method must be implemented in the child class")
 
     def setup(self, stage: str = None):
+        """Method to generate the dataset.x_datasample used in the x_dataloader()"""
         self.update_trajectories_frequency(self.config.frequency)
         if self.config.convert_trajectories_beforehand:
             self.convert_trajectories_from_config()
@@ -253,39 +256,31 @@ class MotionDataset(LightningDataModule):
 
     @property
     def frequency(self) -> int:
-        return self.trajectories.train[0].frequency
+        return self.trajectories.frequency
 
     @property
     def num_points(self) -> int:
-        return self.trajectories.train[0].shape[1]
+        return self.trajectories.num_points
 
     @property
     def num_dims(self) -> int:
-        return self.trajectories.train[0].shape[2]
+        return self.trajectories.num_dims
 
     @property
     def tensor_features(self) -> Features:
-        return self.trajectories.train[0].tensor_features
+        return self.trajectories.tensor_features
+
+    @property
+    def context_sizes(self) -> Dict[str, int]:
+        return self.trajectories.context_sizes
+
+    @property
+    def context_size_sum(self) -> int:
+        return self.trajectories.context_size_sum
 
     @property
     def feature_size(self) -> int:
         return self.num_dims * self.num_points
-
-    @property
-    def context_sizes(self) -> Dict[str, int]:
-        return {
-            c_key: c_tensor.shape[1:]
-            for c_key, c_tensor in self.trajectories.train[0].context.items()
-        }
-
-    @property
-    def context_size_sum(self) -> int:
-        return sum(
-            [
-                math.prod(c_tensor.shape[1:])
-                for c_tensor in self.trajectories.train[0].context.values()
-            ]
-        )
 
     def _init_from_config(
         self,
@@ -327,7 +322,7 @@ class MotionDataset(LightningDataModule):
             logger.getChild(DATASET).debug(config_dict)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)
 
-    def _download_files(self, url, path) -> None:
+    def _download_files(self, url: str, path: str) -> None:
         """get the dataset files from an url"""
         logger.getChild(DATASET).info("Downloading data from %s", url)
         data = requests.get(url, timeout=10)
@@ -339,8 +334,14 @@ class MotionDataset(LightningDataModule):
         with path.open("wb") as pfile:
             pfile.write(data.content)
 
-    def _unzip(self, zip_path: str) -> None:
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+    def _unzip(self, zip_path: str, out_path=None, remove_zip: bool = True) -> Path:
+        if isinstance(zip_path, str):
             zip_path = Path(zip_path)
-            zip_ref.extractall(zip_path.parent)
-        logger.getChild(DATASET).info("Archive unziped at %s", zip_path.parent)
+        if out_path is None:
+            out_path = zip_path.parent
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(out_path)
+        logger.getChild(DATASET).info("Archive unziped at %s", out_path)
+        if remove_zip:
+            os.remove(zip_path)
+        return out_path

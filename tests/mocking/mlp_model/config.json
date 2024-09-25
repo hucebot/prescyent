@@ -70,13 +70,13 @@
             "scaler": "standardization",
             "scaling_axis": "[1]"
         },
-        "used_profiler": null,
         "version": 29
     },
     "training_config": {
         "accelerator": "auto",
         "accumulate_grad_batches": 1,
         "devices": "auto",
+        "used_profiler": null,
         "early_stopping_mode": "min",
         "early_stopping_patience": 15,
         "early_stopping_value": "Val/loss",

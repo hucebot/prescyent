@@ -5,6 +5,7 @@ from typing import List, Optional, Union
 from pydantic import model_validator
 
 from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
+from prescyent.utils.enums.profilers import Profilers
 
 
 class TrainingConfig(OptimizerConfig):
@@ -42,6 +43,9 @@ class TrainingConfig(OptimizerConfig):
     See https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.tuner.tuning.Tuner.html#lightning.pytorch.tuner.tuning.Tuner.lr_find"""
     seed: Optional[int] = None
     """Seed used during training and any predictor random operation"""
+    used_profiler: Optional[Profilers] = None
+    """List of profilers to use during training
+    See https://lightning.ai/docs/pytorch/stable/tuning/profiler_basic.html"""
 
     @model_validator(mode="after")
     def training_has_at_least_one_positive_limit(self):

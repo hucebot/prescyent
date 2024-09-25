@@ -7,7 +7,7 @@ from prescyent.dataset.features.feature import Feature
 
 
 class Any(Feature):
-    def __init__(self, ids: List | range, distance_unit=None, name="Any") -> None:
+    def __init__(self, ids: List | range, distance_unit="_", name="Any") -> None:
         self.name = name
         super().__init__(ids, distance_unit)
 

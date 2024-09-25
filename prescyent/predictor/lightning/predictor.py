@@ -211,19 +211,19 @@ class LightningPredictor(BasePredictor):
         )
 
     def _init_profilers(self, callbacks):
-        if self.config.used_profiler == "advanced":
+        if self.training_config.used_profiler == "advanced":
             profiler = AdvancedProfiler(
                 dirpath=self.log_path, filename="advanced_profiler"
             )
-        elif self.config.used_profiler == "simple":
+        elif self.training_config.used_profiler == "simple":
             profiler = SimpleProfiler(dirpath=self.log_path, filename="simple_profiler")
-        elif self.config.used_profiler == "torch":
+        elif self.training_config.used_profiler == "torch":
             profiler = PyTorchProfiler(
                 dirpath=self.log_path, filename="torch_profiler", emit_nvtx=True
             )
         else:
             profiler = None
-        if self.config.used_profiler is not None:
+        if self.training_config.used_profiler is not None:
             callbacks.append(DeviceStatsMonitor())
         return callbacks, profiler
 
