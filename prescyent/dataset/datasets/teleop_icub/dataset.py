@@ -8,6 +8,7 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+import requests
 import torch
 from tqdm import tqdm
 
@@ -90,14 +91,21 @@ class Dataset(MotionDataset):
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
 
     def _get_from_web(self) -> None:
-        zip_path = Path(self.config.hdf5_path).with_suffix(".zip")
-        self._download_files(self.config.url, zip_path)
-        data_dir = self._unzip(zip_path)
-        data_dir = data_dir / "AndyData-lab-prescientTeleopICub"
-        Dataset.create_teleop_icub_hdf5(self.config.hdf5_path, data_dir, "*.csv", True)
+        resp = requests.get(self.config.url, stream=True, allow_redirects=True)
+        total = int(resp.headers.get("content-length", 0))
+        with open(self.config.hdf5_path, "wb") as file, tqdm(
+            desc=self.config.hdf5_path,
+            total=total,
+            unit="iB",
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as bar:
+            for data in resp.iter_content(chunk_size=1024):
+                size = file.write(data)
+                bar.update(size)
 
     @staticmethod
-    def create_teleop_icub_hdf5(
+    def create_hdf5(
         hdf5_path: str, data_dir: str, subsets: str, remove_csv: bool = False
     ):
         files = list(Path(data_dir).rglob(subsets))
@@ -105,7 +113,9 @@ class Dataset(MotionDataset):
         with h5py.File(hdf5_path, "w") as hdf5_f:
             write_metadata(hdf5_f, metadata)
 
-        for f_path in tqdm(files):
+        for f_path in tqdm(
+            files, colour="blue", desc="Iterating through dataset files"
+        ):
             file_sequence = np.loadtxt(f_path, delimiter=",")
             subgroups = list(f_path.relative_to(data_dir).parts)
             traj_groups = subgroups[:-1]

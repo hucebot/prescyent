@@ -7,11 +7,7 @@ from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
 
 from prescyent.utils.dataset_manipulation import update_parent_ids
-from prescyent.utils.interpolate import (
-    downsample_trajectory_tensor,
-    interpolate_trajectory_tensor_with_ratio,
-    upsample_trajectory_tensor,
-)
+from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import (
     Feature,
@@ -168,25 +164,9 @@ class Trajectory:
         self.tensor_features = new_tensor_feats
 
     def update_frequency(self, target_freq: int) -> None:
-        if target_freq == self.frequency:
-            return
-        if target_freq < self.frequency:
-            self.tensor = downsample_trajectory_tensor(
-                self.tensor, self.frequency, target_freq
-            )
-            if self.context:
-                for c_name, c_tensor in self.context.items():
-                    self.context[c_name] = downsample_trajectory_tensor(
-                        c_tensor.unsqueeze(1), self.frequency, target_freq
-                    ).squeeze(1)
-        else:
-            self.tensor = upsample_trajectory_tensor(
-                self.tensor, self.tensor_features, self.frequency, target_freq
-            )
-            if self.context:
-                raise AttributeError(
-                    "We cannot automatically upsample unkown data in context. Please upsample your trajectory and context tensors yourself before initialising the Trajectory object"
-                )
+        self.tensor, self.context = update_tensor_frequency(
+            self.tensor, self.frequency, target_freq, self.tensor_features, self.context
+        )
         self.frequency = target_freq
 
     def dump(

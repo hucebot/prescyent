@@ -6,6 +6,7 @@ __version__ = "0.3.0"
 
 
 CORE_REQUIREMENTS = [
+    "h5py>=3.10,<4",
     "matplotlib>=3.0,<3.8",
     "numpy>=1.17.3,<1.25.0",
     "pydantic>=2.0,<2.5",

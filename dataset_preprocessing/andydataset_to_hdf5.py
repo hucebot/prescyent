@@ -2,14 +2,14 @@
 
 from argparse import ArgumentParser
 
-from prescyent.dataset.datasets.teleop_icub import TeleopIcubDataset
+from prescyent.dataset import AndyDataset
 
 
 DELIMITER = ','
 
-DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-prescientTeleopICub"
-DEFAULT_GLOB_PATERN = "*.csv"
-DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"
+DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson/xsens_mvnx"
+DEFAULT_GLOB_PATERN = "*.mvnx"
+DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-onePerson.hdf5"
 
 
 if __name__ == "__main__":
@@ -35,4 +35,4 @@ if __name__ == "__main__":
     data_path = args.data_path
     glob_patern = args.glob_patern
 
-    TeleopIcubDataset.create_hdf5(hdf5_path, data_path, glob_patern)
+    AndyDataset.create_hdf5(hdf5_path, data_path, glob_patern)

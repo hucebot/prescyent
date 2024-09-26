@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import Dict, Iterable, List
 
 import numpy as np
 import torch
@@ -108,6 +108,35 @@ def upsample_trajectory_tensor(
                     left_index, :, feat.ids
                 ] + alpha * input_tensor[right_index, :, feat.ids]
     return output_tensor
+
+
+def update_tensor_frequency(
+    tensor: torch.Tensor,
+    freq: float,
+    target_freq: float,
+    tensor_features: Features = None,
+    context: Dict[str, torch.Tensor] = {},
+):
+    if target_freq == freq:
+        return tensor, context
+    if target_freq < freq:
+        tensor = downsample_trajectory_tensor(tensor, freq, target_freq)
+        if context:
+            for c_name, c_tensor in context.items():
+                context[c_name] = downsample_trajectory_tensor(
+                    c_tensor.unsqueeze(1), freq, target_freq
+                ).squeeze(1)
+    else:
+        if context:
+            raise AttributeError(
+                "We cannot automatically upsample unkown data in context. Please upsample your trajectory and context tensors yourself before initialising the Trajectory object"
+            )
+        if tensor_features is None:
+            raise AttributeError(
+                "We cannot upsample tensor with unknown features, please provide them as attributes"
+            )
+        tensor = upsample_trajectory_tensor(tensor, tensor_features, freq, target_freq)
+    return tensor, context
 
 
 def slerp(q1, q2, t):
