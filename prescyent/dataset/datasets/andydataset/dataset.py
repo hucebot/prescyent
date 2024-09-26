@@ -3,8 +3,7 @@ https://andydataset.loria.fr/
 """
 from pathlib import Path
 import shutil
-import tempfile
-from typing import List, Union, Dict
+from typing import Union, Dict
 import xml.etree.ElementTree as ET
 
 import h5py
@@ -12,18 +11,16 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from prescyent.dataset.hdf5_utils import write_metadata, get_dataset_keys
+from prescyent.dataset.hdf5_utils import write_metadata
 from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.dataset_manipulation import (
     split_array_with_ratios,
-    update_parent_ids,
 )
 from prescyent.utils.interpolate import update_tensor_frequency
 import prescyent.dataset.datasets.andydataset.metadata as metadata
 from prescyent.dataset.datasets.andydataset.config import DatasetConfig
 from prescyent.dataset.features import Coordinate
 from prescyent.dataset.trajectories.trajectories import Trajectories
-from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.dataset import MotionDataset
 
 
@@ -46,39 +43,20 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
-        # Download and prepare hdf5 ??
-        if not Path(self.config.hdf5_path).exists():
-            logger.getChild(DATASET).warning(
-                "Dataset files not found at path %s",
-                self.config.hdf5_path,
-            )
-            self._get_from_web()
-        # Create new temp hdf5 with features from config
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
-        # Copy root attributes
-        for attr in hdf5_data.attrs.keys():
-            tmp_hdf5_data.attrs[attr] = hdf5_data.attrs[attr]
-        all_keys = get_dataset_keys(hdf5_data)
-        # Features
-        all_feature_names = [key for key in all_keys if key[:16] == "tensor_features/"]
-        for feat_name in all_feature_names:
-            old_feat = hdf5_data[feat_name]
-            feat = tmp_hdf5_data.create_dataset(feat_name, data=old_feat)
-            for attr_name in old_feat.attrs.keys():
-                feat.attrs[attr_name] = old_feat.attrs[attr_name]
-        # Select only trajs from given participants:
-        all_trajectory_names = [key for key in all_keys if key[-5:] == "/traj"]
+        trajectory_names = self.get_trajnames_from_hdf5(
+            hdf5_data, tmp_hdf5_data, can_load_from_web=True
+        )
         if self.config.participants:
-            all_trajectory_names = [
+            trajectory_names = [
                 key
-                for key in all_trajectory_names
+                for key in trajectory_names
                 if any([participant in key for participant in self.config.participants])
             ]
         # create subset train, test, val from ratios:
         train_trajs, test_trajs, val_trajs = split_array_with_ratios(
-            all_trajectory_names,
+            trajectory_names,
             self.config.ratio_train,
             self.config.ratio_test,
             self.config.ratio_val,

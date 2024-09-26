@@ -1,17 +1,21 @@
 """Standard class for motion datasets"""
-import math
 import os
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Union, Type
 
+
+import h5py
 import json
 import requests
 import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from prescyent.dataset.features import Features
+from prescyent.dataset.hdf5_utils import get_dataset_keys
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
@@ -62,6 +66,7 @@ class MotionDataset(LightningDataModule):
         """
         super().__init__()
         self.name = name
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         if self.config.name is None:
             self.config.name = self.name
         if load_data_at_init:
@@ -87,6 +92,49 @@ class MotionDataset(LightningDataModule):
         if self.config.convert_trajectories_beforehand:
             self.convert_trajectories_from_config()
         self.generate_samples(stage)
+
+    def _get_from_web(self) -> None:
+        resp = requests.get(self.config.url, stream=True, allow_redirects=True)
+        total = int(resp.headers.get("content-length", 0))
+        with open(self.config.hdf5_path, "wb") as file, tqdm(
+            desc=self.config.hdf5_path,
+            total=total,
+            unit="iB",
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as bar:
+            for data in resp.iter_content(chunk_size=1024):
+                size = file.write(data)
+                bar.update(size)
+
+    def get_trajnames_from_hdf5(
+        self,
+        hdf5_data: h5py.File,
+        tmp_hdf5_data: h5py.File,
+        can_load_from_web: bool = False,
+    ) -> List[str]:
+        if can_load_from_web:
+            # Download hdf5 if not found
+            if not Path(self.config.hdf5_path).exists():
+                logger.getChild(DATASET).warning(
+                    "Dataset files not found at path %s",
+                    self.config.hdf5_path,
+                )
+                self._get_from_web()
+        # Create new temp hdf5 with features from config
+        # Copy root attributes
+        for attr in hdf5_data.attrs.keys():
+            tmp_hdf5_data.attrs[attr] = hdf5_data.attrs[attr]
+        all_keys = get_dataset_keys(hdf5_data)
+        # Features
+        all_feature_names = [key for key in all_keys if key[:16] == "tensor_features/"]
+        for feat_name in all_feature_names:
+            old_feat = hdf5_data[feat_name]
+            feat = tmp_hdf5_data.create_dataset(feat_name, data=old_feat)
+            for attr_name in old_feat.attrs.keys():
+                feat.attrs[attr_name] = old_feat.attrs[attr_name]
+        all_trajectory_names = [key for key in all_keys if key[-5:] == "/traj"]
+        return all_trajectory_names
 
     def generate_samples(self, stage: str = None):
         logger.getChild(DATASET).debug(
@@ -321,27 +369,3 @@ class MotionDataset(LightningDataModule):
         with save_path.open("w", encoding="utf-8") as conf_file:
             logger.getChild(DATASET).debug(config_dict)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)
-
-    def _download_files(self, url: str, path: str) -> None:
-        """get the dataset files from an url"""
-        logger.getChild(DATASET).info("Downloading data from %s", url)
-        data = requests.get(url, timeout=10)
-        path = Path(path)
-        if path.is_dir():
-            path = path / "downloaded_data.zip"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        logger.getChild(DATASET).info("Saving data to %s", path)
-        with path.open("wb") as pfile:
-            pfile.write(data.content)
-
-    def _unzip(self, zip_path: str, out_path=None, remove_zip: bool = True) -> Path:
-        if isinstance(zip_path, str):
-            zip_path = Path(zip_path)
-        if out_path is None:
-            out_path = zip_path.parent
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(out_path)
-        logger.getChild(DATASET).info("Archive unziped at %s", out_path)
-        if remove_zip:
-            os.remove(zip_path)
-        return out_path
