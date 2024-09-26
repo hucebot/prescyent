@@ -66,7 +66,6 @@ class MotionDataset(LightningDataModule):
         """
         super().__init__()
         self.name = name
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         if self.config.name is None:
             self.config.name = self.name
         if load_data_at_init:
@@ -111,16 +110,7 @@ class MotionDataset(LightningDataModule):
         self,
         hdf5_data: h5py.File,
         tmp_hdf5_data: h5py.File,
-        can_load_from_web: bool = False,
     ) -> List[str]:
-        if can_load_from_web:
-            # Download hdf5 if not found
-            if not Path(self.config.hdf5_path).exists():
-                logger.getChild(DATASET).warning(
-                    "Dataset files not found at path %s",
-                    self.config.hdf5_path,
-                )
-                self._get_from_web()
         # Create new temp hdf5 with features from config
         # Copy root attributes
         for attr in hdf5_data.attrs.keys():

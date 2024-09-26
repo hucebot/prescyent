@@ -38,11 +38,17 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
+        # Download hdf5 if not found
+        # if not Path(self.config.hdf5_path).exists():
+        #     logger.getChild(DATASET).warning(
+        #         "Dataset files not found at path %s",
+        #         self.config.hdf5_path,
+        #     )
+        #     self._get_from_web()
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
-        trajectory_names = self.get_trajnames_from_hdf5(
-            hdf5_data, tmp_hdf5_data, can_load_from_web=True
-        )
+        trajectory_names = self.get_trajnames_from_hdf5(hdf5_data, tmp_hdf5_data)
         if self.config.subsets:
             trajectory_names = [
                 key
@@ -84,6 +90,8 @@ class Dataset(MotionDataset):
                         )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
+        hdf5_data.close()
 
     def _get_from_web(self) -> None:
         resp = requests.get(self.config.url, stream=True, allow_redirects=True)
@@ -114,8 +122,13 @@ class Dataset(MotionDataset):
         files = list(Path(data_dir).rglob(subsets))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
         with h5py.File(hdf5_path, "w") as hdf5_f:
-            write_metadata(hdf5_f, metadata)
-
+            write_metadata(
+                hdf5_f,
+                metadata.BASE_FREQUENCY,
+                metadata.POINT_PARENTS,
+                metadata.POINT_LABELS,
+                metadata.DEFAULT_FEATURES,
+            )
         for f_path in tqdm(
             files, colour="blue", desc="Iterating through dataset files"
         ):

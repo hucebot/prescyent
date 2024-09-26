@@ -3,6 +3,7 @@ https://andydataset.loria.fr/
 """
 from pathlib import Path
 import shutil
+import tempfile
 from typing import Union, Dict
 import xml.etree.ElementTree as ET
 
@@ -43,11 +44,10 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
-        trajectory_names = self.get_trajnames_from_hdf5(
-            hdf5_data, tmp_hdf5_data, can_load_from_web=True
-        )
+        trajectory_names = self.get_trajnames_from_hdf5(hdf5_data, tmp_hdf5_data)
         if self.config.participants:
             trajectory_names = [
                 key
@@ -101,6 +101,8 @@ class Dataset(MotionDataset):
                     )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
+        hdf5_data.close()
 
     def _get_from_web(self) -> None:
         raise NotImplementedError(
@@ -115,8 +117,13 @@ class Dataset(MotionDataset):
         files = list(Path(data_dir).rglob(subsets))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
         with h5py.File(hdf5_path, "w") as hdf5_f:
-            write_metadata(hdf5_f, metadata)
-
+            write_metadata(
+                hdf5_f,
+                metadata.BASE_FREQUENCY,
+                metadata.POINT_PARENTS,
+                metadata.POINT_LABELS,
+                metadata.DEFAULT_FEATURES,
+            )
         for f_path in tqdm(files, colour="blue", desc="Iterating mvxn files"):
             traj_groups = list(f_path.relative_to(data_dir).parts)
             tree = ET.parse(f_path)

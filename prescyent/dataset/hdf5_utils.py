@@ -1,3 +1,4 @@
+from typing import List
 import h5py
 
 import prescyent.dataset.features as p_features
@@ -17,13 +18,19 @@ def load_features(h_file: h5py.File):
     return p_features.Features(features, index_name=False)
 
 
-def write_metadata(h_file: h5py.File, metadata):
+def write_metadata(
+    h_file: h5py.File,
+    frequency: float,
+    point_parents: List[int],
+    point_names: List[str],
+    features: p_features.Features,
+) -> None:
     """write the metadata of a dataset into the hdf5 file"""
-    h_file.attrs["frequency"] = metadata.BASE_FREQUENCY
-    h_file.attrs["point_parents"] = metadata.POINT_PARENTS
-    h_file.attrs["point_names"] = metadata.POINT_LABELS
+    h_file.attrs["frequency"] = frequency
+    h_file.attrs["point_parents"] = point_parents
+    h_file.attrs["point_names"] = point_names
     tensor_features = h_file.create_group("tensor_features")
-    for feat in metadata.DEFAULT_FEATURES:
+    for feat in features:
         hdf_feat = tensor_features.create_dataset(feat.name, data=feat.ids)
         hdf_feat.attrs["distance_unit"] = feat.distance_unit
         hdf_feat.attrs["feature_class"] = feat.__class__.__name__

@@ -2,19 +2,24 @@
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
 from pathlib import Path
+import tempfile
 from typing import Union, Dict, List
 
+import h5py
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as R
 from tqdm import tqdm
 
-from . import metadata
-from .config import DatasetConfig
+from prescyent.dataset.hdf5_utils import write_metadata
+from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.dataset.dataset import MotionDataset
 from prescyent.utils.logger import logger, DATASET
+from prescyent.utils.interpolate import update_tensor_frequency
+
+from . import metadata
+from .config import DatasetConfig
 
 
 SEQ = "zyx"
@@ -44,73 +49,81 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        frequency = 1 / self.config.dt
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        write_metadata(
+            tmp_hdf5_data,
+            frequency=frequency,
+            point_parents=metadata.POINT_PARENTS,
+            point_names=metadata.POINT_LABELS,
+            features=metadata.DEFAULT_FEATURES,
+        )
         np.random.seed(self.config.seed)
-        train_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(
-                range(int(self.config.num_traj * self.config.ratio_train)),
-                desc="Generating train_trajectories",
-                colour="blue",
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_train)),
+            desc="Generating train_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            context = {}
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
             )
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(train_trajectories)} train trajectories",
-        )
-        test_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(
-                range(int(self.config.num_traj * self.config.ratio_test)),
-                desc="Generating test_trajectories",
-                colour="blue",
+            tmp_hdf5_data.create_dataset(f"train/synthetic_traj_{i}/traj", data=tensor)
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_test)),
+            desc="Generating test_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
             )
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(test_trajectories)} test trajectories",
-        )
-        val_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(
-                range(int(self.config.num_traj * self.config.ratio_val)),
-                desc="Generating val_trajectories",
-                colour="blue",
+            tmp_hdf5_data.create_dataset(f"test/synthetic_traj_{i}/traj", data=tensor)
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_val)),
+            desc="Generating val_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
             )
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(val_trajectories)} val trajectories",
-        )
-        self.trajectories = Trajectories(
-            train_trajectories, test_trajectories, val_trajectories
-        )
+            tmp_hdf5_data.create_dataset(f"val/synthetic_traj_{i}/traj", data=tensor)
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
 
-    def generate_traj(self, traj_id: int) -> Trajectory:
+    def generate_traj(self) -> torch.Tensor:
         """generate smooth linear traj from a starting point and random target point
          all variables are taken from dataset config
 
-        Args:
-            traj_id (int): traj_id used for trajectory name
-
         Returns:
-            Trajectory: new smooth simple traj between two pose
+            torch.Tensor: new smooth simple traj between two pose
         """
         starting_pose = np.array(self.config.starting_pose)
         target_pose = self.get_random_target()
-        trajectory = torch.FloatTensor(starting_pose).unsqueeze(0)
+        tensor = torch.FloatTensor(starting_pose).unsqueeze(0)
         curr_pose = starting_pose
         while not np.allclose(curr_pose, target_pose, rtol=0.001):
             curr_pose = self.controller_goto(curr_pose, target_pose)
-            trajectory = torch.cat(
-                (trajectory, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
+            tensor = torch.cat(
+                (tensor, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
             )
-        trajectory = trajectory.unsqueeze(1)
-        return Trajectory(
-            trajectory,
-            int(1 / self.config.dt),
-            metadata.DEFAULT_FEATURES,
-            file_path=f"synthetic_traj_{traj_id}",
-            title=f"synthetic_traj_{traj_id}",
-            point_parents=metadata.POINT_PARENTS,
-            point_names=metadata.POINT_LABELS,
-        )
+        tensor = tensor.unsqueeze(1)
+        return tensor
 
     def get_random_target(self) -> List[float]:
         x = np.random.uniform(self.config.min_x, self.config.max_x)
