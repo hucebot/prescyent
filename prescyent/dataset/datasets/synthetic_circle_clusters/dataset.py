@@ -2,19 +2,24 @@
 https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 """
 from pathlib import Path
+import tempfile
 from typing import Union, Dict, List
 
+import h5py
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from scipy.interpolate import splrep, BSpline
 
-from . import metadata
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.datasets.synthetic_circle_clusters.config import DatasetConfig
+from prescyent.dataset.hdf5_utils import write_metadata
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
+from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
+
+from . import metadata
 
 
 class Dataset(MotionDataset):
@@ -35,43 +40,50 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        frequency = metadata.DEFAULT_FREQ
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        write_metadata(
+            tmp_hdf5_data,
+            frequency=frequency,
+            point_parents=metadata.POINT_PARENTS,
+            point_names=metadata.POINT_LABELS,
+            features=metadata.DEFAULT_FEATURES,
+        )
         np.random.seed(self.config.seed)
-        train_trajectories = []
-        test_trajectories = []
-        val_trajectories = []
         traj_id = 0
         for c in range(self.config.num_clusters):
             cluster_counter = 0
+            context = {}
             for cluster_counter in range(self.config.num_trajs[c]):
+                tensor = self.generate_traj(c)
+                tensor, context = update_tensor_frequency(
+                    tensor,
+                    frequency,
+                    self.config.frequency,
+                    metadata.DEFAULT_FEATURES,
+                    context,
+                )
                 if cluster_counter < int(
                     self.config.num_trajs[c] * self.config.ratio_train
                 ):
-                    train_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id += 1
+                    key = "train"
                 elif cluster_counter < int(
                     self.config.num_trajs[c]
                     * (self.config.ratio_train + self.config.ratio_test)
                 ):
-                    test_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id += 1
+                    key = "test"
                 else:
-                    val_trajectories.append(self.generate_traj(traj_id, c))
-                    traj_id += 1
-        logger.getChild(DATASET).info(
-            f"Generated {len(train_trajectories)} train trajectories",
-        )
-        logger.getChild(DATASET).info(
-            f"Generated {len(test_trajectories)} test trajectories",
-        )
-        logger.getChild(DATASET).info(
-            f"Generated {len(val_trajectories)} val trajectories",
-        )
-        self.trajectories = Trajectories(
-            train_trajectories, test_trajectories, val_trajectories
-        )
+                    key = "val"
+                tmp_hdf5_data.create_dataset(
+                    f"{key}/cluster_{c}/trajectory_{traj_id}/traj", data=tensor
+                )
+                traj_id += 1
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
         np.random.seed()
 
-    def generate_traj(self, traj_id: int, cluster_id: int) -> Trajectory:
+    def generate_traj(self, cluster_id: int) -> Trajectory:
         """Generate a circular 2D trajectory using the parameters from the config
 
         Args:
@@ -103,19 +115,11 @@ class Dataset(MotionDataset):
         # Offset Y
         circle_y = torch.from_numpy((circle_y + starting_y).astype("float32"))
         # Create corresponding Trajectory
-        trajectory = torch.cat(
+        tensor = torch.cat(
             (circle_x.unsqueeze(1).unsqueeze(1), circle_y.unsqueeze(1).unsqueeze(1)),
             dim=-1,
         )
-        return Trajectory(
-            trajectory,
-            metadata.DEFAULT_FREQ,
-            metadata.DEFAULT_FEATURES,
-            file_path=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
-            title=f"synthetic_circle_{traj_id}_cluster_{cluster_id}",
-            point_names=metadata.POINT_LABELS,
-            point_parents=metadata.POINT_PARENTS,
-        )
+        return tensor
 
     def plot_trajs(
         self,

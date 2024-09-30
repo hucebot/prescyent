@@ -105,6 +105,7 @@ class Dataset(MotionDataset):
             tmp_hdf5_data.create_dataset(f"val/synthetic_traj_{i}/traj", data=tensor)
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
         tmp_hdf5_data.close()
+        np.random.seed()
 
     def generate_traj(self) -> torch.Tensor:
         """generate smooth linear traj from a starting point and random target point
