@@ -8,8 +8,14 @@ from typing import Union, Dict, List
 import h5py
 import numpy as np
 import torch
+import matplotlib
+
+matplotlib.use("TkAgg", force=True)
 from matplotlib import pyplot as plt
+
+print("Switched to:", matplotlib.get_backend())
 from scipy.interpolate import splrep, BSpline
+from tqdm.auto import tqdm
 
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.datasets.synthetic_circle_clusters.config import DatasetConfig
@@ -52,10 +58,18 @@ class Dataset(MotionDataset):
         )
         np.random.seed(self.config.seed)
         traj_id = 0
-        for c in range(self.config.num_clusters):
+        for c in tqdm(
+            range(self.config.num_clusters),
+            desc=f"Iterating of clusters",
+            colour="green",
+        ):
             cluster_counter = 0
             context = {}
-            for cluster_counter in range(self.config.num_trajs[c]):
+            for cluster_counter in tqdm(
+                range(self.config.num_trajs[c]),
+                desc=f"Creating trajs in cluster {c}",
+                colour="blue",
+            ):
                 tensor = self.generate_traj(c)
                 tensor, context = update_tensor_frequency(
                     tensor,

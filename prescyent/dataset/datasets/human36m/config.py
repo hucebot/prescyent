@@ -2,9 +2,11 @@
 import os
 from typing import List, Optional
 
+from pydantic import model_validator, ValidationError
+
 from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
 from prescyent.dataset.features import Features
-from .metadata import DEFAULT_FEATURES
+from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -12,50 +14,8 @@ class DatasetConfig(MotionDatasetConfig):
 
     url: Optional[str] = None
     """Url used to download the dataset"""
-    data_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m")
-    """Directory where the data files is"""
-    used_joints: List[int] = [
-        2,
-        3,
-        4,
-        5,
-        7,
-        8,
-        9,
-        10,
-        12,
-        13,
-        14,
-        15,
-        17,
-        18,
-        19,
-        21,
-        22,
-        25,
-        26,
-        27,
-        29,
-        30,
-    ]  # indexes of the joints, default is taken from benchmarks like siMLPe's
-    """Ids of the joints loaded. Default is all joints"""
-    actions: List[str] = [
-        "directions",
-        "discussion",
-        "eating",
-        "greeting",
-        "phoning",
-        "posing",
-        "purchases",
-        "sitting",
-        "sittingdown",
-        "smoking",
-        "takingphoto",
-        "waiting",
-        "walking",
-        "walkingdog",
-        "walkingtogether",
-    ]
+    hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m.hdf5")
+    actions: List[str] = DEFAULT_ACTIONS
     """List of the H36M Actions to consider"""
     subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]
     """Subject from which's trajectories are placed in Trajectories.train"""
@@ -74,5 +34,11 @@ class DatasetConfig(MotionDatasetConfig):
     # Override default values with the dataset's
     in_features: Features = DEFAULT_FEATURES
     out_features: Features = DEFAULT_FEATURES
-    in_points: List[int] = list(range(len(used_joints)))
-    out_points: List[int] = list(range(len(used_joints)))
+    in_points: List[int] = DEFAULT_USED_JOINTS
+    out_points: List[int] = DEFAULT_USED_JOINTS
+
+    @model_validator(mode="after")
+    def check_context_keys(self):
+        if self.context_keys:
+            raise ValidationError("This dataset cannot handle context keys")
+        return self

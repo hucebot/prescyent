@@ -4,8 +4,9 @@ from pathlib import Path
 from tqdm import tqdm
 from typing import List
 
-import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.use("TkAgg", force=True)
+from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from prescyent.dataset import Trajectory
@@ -217,7 +218,7 @@ def render_3d_trajectories(
     if interactive:
         try:
             matplotlib.use("TkAgg")
-        except AttributeError:
+        except ImportError:
             logger.getChild(EVAL).warning("can't use TkAgg backend for matplotlib")
             matplotlib.use("agg")
         plt.show()

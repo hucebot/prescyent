@@ -1,6 +1,8 @@
 """Config elements for SCC dataset usage"""
 from typing import List
 
+from pydantic import model_validator, ValidationError
+
 from prescyent.dataset.config import MotionDatasetConfig, model_validator
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS
@@ -63,4 +65,10 @@ class DatasetConfig(MotionDatasetConfig):
             raise ValueError(
                 '"num_trajs", "starting_xs", "starting_ys" and "radius" must be lists of same size.'
             )
+        return self
+
+    @model_validator(mode="after")
+    def check_context_keys(self):
+        if self.context_keys:
+            raise ValidationError("This dataset cannot handle context keys")
         return self

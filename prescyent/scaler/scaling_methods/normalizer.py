@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from prescyent.utils.enums import TrajectoryDimensions
 
@@ -36,7 +37,7 @@ class Normalizer:
             data = data[..., feat_ids]
         self.min_t = torch.amin(data, dim=self.dim)
         self.max_t = torch.amax(data, dim=self.dim)
-        for batch in dataset_dataloader:
+        for batch in tqdm(dataset_dataloader, desc='iterating over dataset', colour='red'):
             data = batch.unsqueeze(0)
             if feat_ids:
                 data = data[..., feat_ids]

@@ -4,7 +4,7 @@ import unittest
 import torch
 from torch.utils.data import DataLoader
 
-from prescyent.dataset import SSTDataset, SSTDatasetConfig
+from prescyent.dataset import SCCDataset, SCCDatasetConfig
 from prescyent.dataset.features import CoordinateXY, Features, RotationEuler
 from prescyent.dataset.features.feature.rotation import Rotation
 from prescyent.predictor import (
@@ -25,10 +25,8 @@ class ScalerNormalizationTest(CustomTestCase):
     def setUpClass(cls):
         """setup dataset for the scaling tests"""
         feats = Features([CoordinateXY(range(2)), RotationEuler(range(2, 5))])
-        dataset_config = SSTDatasetConfig(
-            num_traj=10, dt=0.05, seed=5, out_features=feats
-        )
-        cls.dataset = SSTDataset(dataset_config)
+        dataset_config = SCCDatasetConfig()
+        cls.dataset = SCCDataset(dataset_config)
 
     @classmethod
     def tearDownClass(cls):
@@ -86,7 +84,11 @@ class ScalerNormalizationTest(CustomTestCase):
                 [traj.tensor for traj in self.dataset.trajectories.train], dim=0
             )
             scaler.train(
-                DataLoader(dataset_tensor, batch_size=self.dataset.config.batch_size),
+                DataLoader(
+                    dataset_tensor,
+                    batch_size=self.dataset.config.batch_size,
+                    num_workers=self.dataset.config.num_workers,
+                ),
                 dataset_features=self.dataset.tensor_features,
             )
             self.verify_normalization(scaler)

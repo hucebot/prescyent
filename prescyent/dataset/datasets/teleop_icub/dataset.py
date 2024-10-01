@@ -68,7 +68,9 @@ class Dataset(MotionDataset):
             "test/": test_trajs,
             "val/": val_trajs,
         }.items():
-            for traj_name in trajs:
+            for traj_name in tqdm(
+                trajs, colour="blue", desc="Writing used trajectories in temp file hdf5"
+            ):
                 tensor = torch.from_numpy(np.array(hdf5_data[traj_name]))
                 context = {
                     key: hdf5_data[traj_name[:-4] + key]

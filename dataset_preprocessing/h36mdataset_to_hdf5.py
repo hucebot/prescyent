@@ -1,13 +1,13 @@
-"""Script to transform AndyDataset dataset's xsens .mvnx files to one hdf5 file in the prescyent format"""
+"""Script to transform H36M dataset's txt files to one hdf5 file in the prescyent format"""
 
 from argparse import ArgumentParser
 
-from prescyent.dataset import AndyDataset
+from prescyent.dataset import H36MDataset
 
 
-DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson/xsens_mvnx"
-DEFAULT_GLOB_PATERN = "*.mvnx"
-DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-onePerson.hdf5"
+DEFAULT_DATA_PATH = "data/datasets/h36m"
+DEFAULT_GLOB_PATERN = "*.txt"
+DEFAULT_HDF5_PATH = "data/datasets/h36m.hdf5"
 
 
 if __name__ == "__main__":
@@ -29,4 +29,4 @@ if __name__ == "__main__":
     data_path = args.data_path
     glob_patern = args.glob_patern
 
-    AndyDataset.create_hdf5(hdf5_path, data_path, glob_patern)
+    H36MDataset.create_hdf5(hdf5_path, data_path, glob_patern)

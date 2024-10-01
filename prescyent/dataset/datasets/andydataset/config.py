@@ -2,9 +2,11 @@
 import os
 from typing import List, Optional
 
+from pydantic import model_validator, ValidationError
+
 from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
 from prescyent.dataset.features import Features
-from .metadata import DEFAULT_FEATURES, POINT_LABELS
+from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
 
 class DatasetConfig(MotionDatasetConfig):
@@ -38,3 +40,11 @@ class DatasetConfig(MotionDatasetConfig):
     out_features: Features = DEFAULT_FEATURES
     in_points: List[int] = list(range(len(POINT_LABELS)))
     out_points: List[int] = list(range(len(POINT_LABELS)))
+
+    @model_validator(mode="after")
+    def check_context_keys(self):
+        if self.context_keys:
+            for key in self.context_keys:
+                if key not in CONTEXT_KEYS:
+                    raise ValidationError(f"{key} is not valid in context_keys")
+        return self
