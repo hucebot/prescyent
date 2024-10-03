@@ -12,12 +12,10 @@ from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
-    url: str = "https://mybox.inria.fr/seafhttp/files/f87f63ee-7ad6-468b-ad64-ef7504761c9f/AndyData-lab-prescientTeleopICub.hdf5"
-    """Url used to download the dataset"""
     hdf5_path: str = os.path.join(
         DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub.hdf5"
     )
-    """Directory where the data files is"""
+    """Path to the hdf5 data file"""
     subsets: Optional[List[str]] = None
     """Pattern used to find the list of files using a rglob method"""
     shuffle_data_files: bool = True

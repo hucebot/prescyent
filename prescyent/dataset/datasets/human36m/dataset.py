@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 import tempfile
-from typing import List, Union, Dict
+from typing import List, Literal, Union, Dict
 
 import h5py
 import numpy as np
@@ -40,6 +40,10 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
+        if not Path(self.config.hdf5_path).exists():
+            raise FileNotFoundError(
+                "Dataset file not found at %s" % self.config.hdf5_path
+            )
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
@@ -79,11 +83,21 @@ class Dataset(MotionDataset):
                     metadata.DEFAULT_FEATURES,
                     context,
                 )
-                tmp_hdf5_data.create_dataset(key + traj_name, data=tensor)
+                tmp_hdf5_data.create_dataset(
+                    key + traj_name,
+                    tensor.shape,
+                    data=tensor,
+                    compression="gzip",
+                    shuffle=True,
+                    chunks=tensor.shape,
+                )
                 if self.config.context_keys:
                     for context_name, context_tensor in context.items():
                         tmp_hdf5_data.create_dataset(
-                            key + traj_name[:-4] + context_name, data=context_tensor
+                            key + traj_name[:-4] + context_name,
+                            data=context_tensor,
+                            compression="gzip",
+                            shuffle=True,
                         )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
@@ -92,10 +106,15 @@ class Dataset(MotionDataset):
 
     @staticmethod
     def create_hdf5(
-        hdf5_path: str, data_dir: str, file_patern: str, remove_csv: bool = False
+        hdf5_path: str,
+        data_dir: str,
+        file_patern: str,
+        remove_csv: bool = False,
+        compression="gzip",
     ):
         files = list(Path(data_dir).rglob(file_patern))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
+        Path(hdf5_path).parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(hdf5_path, "w") as hdf5_f:
             write_metadata(
                 hdf5_f,
@@ -127,24 +146,17 @@ class Dataset(MotionDataset):
             xyz_info, world_rotmatrices = rotmat2xyz_torch(
                 rotmatrices.clone().detach(), metadata._get_metadata
             )
+            world_rotmatrices = world_rotmatrices.reshape(S, 32, 9)
             xyz_info = xyz_info / 1000  # mm to meter conversion
-            S, P = xyz_info.shape[0], xyz_info.shape[1]
-            # as we permuted x and y in "fkl_torch", we permute x and y axis in rotmatrices
-            permute_x_y = torch.FloatTensor(
-                [
-                    [0.0000000, 1.0000000, 0.0000000],
-                    [1.0000000, 0.0000000, 0.0000000],
-                    [0.0000000, 0.0000000, 1.0000000],
-                ]
-            )
-            world_rotmatrices = (
-                permute_x_y @ world_rotmatrices.reshape(-1, 3, 3) @ permute_x_y.T
-            ).reshape(S, P, 9)
             position_traj_tensor = torch.cat((xyz_info, world_rotmatrices), dim=-1)
             traj_groups = traj_groups[:-1] + [traj_groups[-1][:-4]]
             with h5py.File(hdf5_path, "a") as f:
                 group = f.create_group("/".join(traj_groups))
-                group.create_dataset("traj", data=position_traj_tensor)
+                group.create_dataset(
+                    "traj",
+                    data=position_traj_tensor,
+                    compression=compression,
+                )
         logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
         if remove_csv:
             logger.getChild(DATASET).info(f"Removing all files in {data_dir}")

@@ -38,13 +38,10 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
-        # Download hdf5 if not found
-        # if not Path(self.config.hdf5_path).exists():
-        #     logger.getChild(DATASET).warning(
-        #         "Dataset files not found at path %s",
-        #         self.config.hdf5_path,
-        #     )
-        #     self._get_from_web()
+        if not Path(self.config.hdf5_path).exists():
+            raise FileNotFoundError(
+                "Dataset file not found at %s" % self.config.hdf5_path
+            )
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
@@ -84,34 +81,28 @@ class Dataset(MotionDataset):
                     metadata.DEFAULT_FEATURES,
                     context,
                 )
-                tmp_hdf5_data.create_dataset(key + traj_name, data=tensor)
+                tmp_hdf5_data.create_dataset(
+                    key + traj_name, data=tensor, compression="gzip"
+                )
                 if self.config.context_keys:
                     for context_name, context_tensor in context.items():
                         tmp_hdf5_data.create_dataset(
-                            key + traj_name[:-4] + context_name, data=context_tensor
+                            key + traj_name[:-4] + context_name,
+                            data=context_tensor,
+                            compression="gzip",
                         )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
         tmp_hdf5_data.close()
         hdf5_data.close()
 
-    def _get_from_web(self) -> None:
-        resp = requests.get(self.config.url, stream=True, allow_redirects=True)
-        total = int(resp.headers.get("content-length", 0))
-        with open(self.config.hdf5_path, "wb") as file, tqdm(
-            desc=self.config.hdf5_path,
-            total=total,
-            unit="iB",
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
-            for data in resp.iter_content(chunk_size=1024):
-                size = file.write(data)
-                bar.update(size)
-
     @staticmethod
     def create_hdf5(
-        hdf5_path: str, data_dir: str, subsets: str, remove_csv: bool = False
+        hdf5_path: str,
+        data_dir: str,
+        subsets: str,
+        remove_csv: bool = False,
+        compression="gzip",
     ):
         """Method to parse the original files of the dataset and create a new hdf5 for uses in the library
 
@@ -123,6 +114,7 @@ class Dataset(MotionDataset):
         """
         files = list(Path(data_dir).rglob(subsets))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
+        Path(hdf5_path).parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(hdf5_path, "w") as hdf5_f:
             write_metadata(
                 hdf5_f,
@@ -165,7 +157,7 @@ class Dataset(MotionDataset):
                     group = f.create_group("/".join(traj_groups))
                 except ValueError:  # Group already exist
                     group = f["/".join(traj_groups)]
-                group.create_dataset(key, data=tensor)
+                group.create_dataset(key, data=tensor, compression=compression)
         logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
         if remove_csv:
             logger.getChild(DATASET).info(f"Removing all files in {data_dir}")

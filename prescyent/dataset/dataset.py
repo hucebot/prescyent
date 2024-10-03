@@ -92,20 +92,6 @@ class MotionDataset(LightningDataModule):
             self.convert_trajectories_from_config()
         self.generate_samples(stage)
 
-    def _get_from_web(self) -> None:
-        resp = requests.get(self.config.url, stream=True, allow_redirects=True)
-        total = int(resp.headers.get("content-length", 0))
-        with open(self.config.hdf5_path, "wb") as file, tqdm(
-            desc=self.config.hdf5_path,
-            total=total,
-            unit="iB",
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
-            for data in resp.iter_content(chunk_size=1024):
-                size = file.write(data)
-                bar.update(size)
-
     def get_trajnames_from_hdf5(
         self,
         hdf5_data: h5py.File,
@@ -120,7 +106,9 @@ class MotionDataset(LightningDataModule):
         all_feature_names = [key for key in all_keys if key[:16] == "tensor_features/"]
         for feat_name in all_feature_names:
             old_feat = hdf5_data[feat_name]
-            feat = tmp_hdf5_data.create_dataset(feat_name, data=old_feat)
+            feat = tmp_hdf5_data.create_dataset(
+                feat_name, data=old_feat, compression="gzip"
+            )
             for attr_name in old_feat.attrs.keys():
                 feat.attrs[attr_name] = old_feat.attrs[attr_name]
         all_trajectory_names = [key for key in all_keys if key[-5:] == "/traj"]

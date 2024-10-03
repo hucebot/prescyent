@@ -44,6 +44,10 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
+        if not Path(self.config.hdf5_path).exists():
+            raise FileNotFoundError(
+                "Dataset file not found at %s" % self.config.hdf5_path
+            )
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
@@ -93,29 +97,31 @@ class Dataset(MotionDataset):
                                     [self.config.make_joints_position_relative_to]
                                 ),
                             )[:, :, feat.ids]
-                tmp_hdf5_data.create_dataset(key + traj_name, data=tensor)
+                tmp_hdf5_data.create_dataset(
+                    key + traj_name, data=tensor, compression="gzip"
+                )
                 for context_name, context_tensor in context.items():
                     tmp_hdf5_data.create_dataset(
                         key + traj_name[:-4] + context_name,
                         data=context_tensor,
+                        compression="gzip",
                     )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
         tmp_hdf5_data.close()
         hdf5_data.close()
 
-    def _get_from_web(self) -> None:
-        raise NotImplementedError(
-            "This dataset must be downloaded manually, "
-            "please follow the instructions in the README"
-        )
-
     @staticmethod
     def create_hdf5(
-        hdf5_path: str, data_dir: str, subsets: str, remove_csv: bool = False
+        hdf5_path: str,
+        data_dir: str,
+        subsets: str,
+        remove_csv: bool = False,
+        compression="gzip",
     ):
         files = list(Path(data_dir).rglob(subsets))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
+        Path(hdf5_path).parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(hdf5_path, "w") as hdf5_f:
             write_metadata(
                 hdf5_f,
@@ -171,9 +177,13 @@ class Dataset(MotionDataset):
             traj_groups = traj_groups[:-1] + [traj_groups[-1][:-5]]
             with h5py.File(hdf5_path, "a") as f:
                 group = f.create_group("/".join(traj_groups))
-                group.create_dataset("traj", data=torch_tensor)
+                group.create_dataset("traj", data=torch_tensor, compression=compression)
                 for key in metadata.CONTEXT_KEYS:
-                    group.create_dataset(f"{key}", data=torch.FloatTensor(context[key]))
+                    group.create_dataset(
+                        f"{key}",
+                        data=torch.FloatTensor(context[key]),
+                        compression=compression,
+                    )
         logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
         if remove_csv:
             logger.getChild(DATASET).info(f"Removing all files in {data_dir}")

@@ -90,7 +90,9 @@ class Dataset(MotionDataset):
                 else:
                     key = "val"
                 tmp_hdf5_data.create_dataset(
-                    f"{key}/cluster_{c}/trajectory_{traj_id}/traj", data=tensor
+                    f"{key}/cluster_{c}/trajectory_{traj_id}/traj",
+                    data=tensor,
+                    compression="gzip",
                 )
                 traj_id += 1
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)

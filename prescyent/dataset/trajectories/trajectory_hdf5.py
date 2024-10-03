@@ -45,7 +45,7 @@ class TrajectoryHDF5(Trajectory):
     def tensor(self, value):
         # Create new dataset with the value, as shapes may vary
         del self.traj_group["traj"]
-        self.traj_group.create_dataset("traj", data=value)
+        self.traj_group.create_dataset("traj", data=value, compression="gzip")
 
     @property
     def context(self):
@@ -63,10 +63,10 @@ class TrajectoryHDF5(Trajectory):
             return
         for key, value in new_context.keys():
             if key not in self.context_keys:
-                self.traj_group.create_dataset(key, data=value)
+                self.traj_group.create_dataset(key, data=value, compression="gzip")
                 self.context_keys.append(key)
             else:
                 del self.traj_group[
                     key
                 ]  # Create new dataset with the values, as shapes may vary
-                self.traj_group.create_dataset(key, data=value)
+                self.traj_group.create_dataset(key, data=value, compression="gzip")

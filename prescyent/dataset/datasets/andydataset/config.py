@@ -12,10 +12,8 @@ from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for AndyDataset configuration"""
 
-    # url: str = "https://zenodo.org/records/3254403/files/xens_mnvx.zip?download=1"
-    # """Url used to download the dataset"""
     hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "AndyData-lab-onePerson.hdf5")
-    """Directory where the data files is"""
+    """Path to the hdf5 data file"""
     shuffle_data_files: bool = True
     participants: List[str] = []
     """If True the list of files is shuffled"""

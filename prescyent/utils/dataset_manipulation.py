@@ -74,8 +74,6 @@ def fkl_torch(rotmat, parent, offset, rotInd, expmapInd):
             p3d[:, i, :] = (
                 torch.matmul(p3d[0, i, :], R[:, parent[i], :, :]) + p3d[:, parent[i], :]
             )
-    # We permute x and y to make positive x the "front"
-    p3d = p3d[:, :, [2, 0, 1]]  # (y, x, z) instead of (x, z, y)
     return p3d, R
 
 

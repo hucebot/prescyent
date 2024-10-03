@@ -31,7 +31,9 @@ def write_metadata(
     h_file.attrs["point_names"] = point_names
     tensor_features = h_file.create_group("tensor_features")
     for feat in features:
-        hdf_feat = tensor_features.create_dataset(feat.name, data=feat.ids)
+        hdf_feat = tensor_features.create_dataset(
+            feat.name, data=feat.ids, compression="gzip"
+        )
         hdf_feat.attrs["distance_unit"] = feat.distance_unit
         hdf_feat.attrs["feature_class"] = feat.__class__.__name__
 

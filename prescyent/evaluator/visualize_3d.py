@@ -5,6 +5,7 @@ from tqdm import tqdm
 from typing import List
 
 import matplotlib
+
 matplotlib.use("TkAgg", force=True)
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation

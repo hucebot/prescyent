@@ -37,7 +37,9 @@ class Normalizer:
             data = data[..., feat_ids]
         self.min_t = torch.amin(data, dim=self.dim)
         self.max_t = torch.amax(data, dim=self.dim)
-        for batch in tqdm(dataset_dataloader, desc='iterating over dataset', colour='red'):
+        for batch in tqdm(
+            dataset_dataloader, desc="iterating over dataset", colour="red"
+        ):
             data = batch.unsqueeze(0)
             if feat_ids:
                 data = data[..., feat_ids]

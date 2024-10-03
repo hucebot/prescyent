@@ -8,6 +8,7 @@ from typing import Callable, List, Optional, Union
 import torch
 
 import matplotlib
+
 matplotlib.use("TkAgg", force=True)
 from matplotlib import pyplot as plt
 import numpy as np

@@ -12,9 +12,8 @@ from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 class DatasetConfig(MotionDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
-    url: Optional[str] = None
-    """Url used to download the dataset"""
     hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m.hdf5")
+    """Path to the hdf5 data file"""
     actions: List[str] = DEFAULT_ACTIONS
     """List of the H36M Actions to consider"""
     subjects_train: List[str] = ["S1", "S6", "S7", "S8", "S9"]

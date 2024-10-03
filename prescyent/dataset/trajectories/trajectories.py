@@ -127,7 +127,7 @@ class Trajectories:
         return self._all_len()
 
     def __getitem__(self, index) -> Trajectory:
-        return self.train[index]
+        return (self.train + self.test + self.val)[index]
 
     @property
     def frequency(self) -> int:

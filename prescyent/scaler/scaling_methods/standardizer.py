@@ -33,7 +33,9 @@ class Standardizer:
         n_samples = 0
         total_sum = 0
         total_sum_sq = 0
-        for batch in tqdm(dataset_dataloader, desc='iterating over dataset', colour='red'):
+        for batch in tqdm(
+            dataset_dataloader, desc="iterating over dataset", colour="red"
+        ):
             data = batch.unsqueeze(0)
             if feat_ids:
                 data = data[..., feat_ids]
