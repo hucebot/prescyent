@@ -17,7 +17,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(load_data_at_init=True)
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2seq(self):
@@ -27,7 +27,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_autoreg(self):
@@ -42,7 +42,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="truth and sample differ"
             )
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2one(self):
@@ -55,7 +55,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(10, dataset.config.future_size)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_coordinates_2d(self):
@@ -76,7 +76,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             sample, _, truth = dataset.val_datasample[0]
             self.assertEqual(sample.shape[-1], 3)
             self.assertEqual(truth.shape[-1], 2)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_impossible_configs(self):
@@ -87,7 +87,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             self.assertRaises(ValueError, TeleopIcubDataset, config, True)
             config = TeleopIcubDatasetConfig(history_size=100)
             TeleopIcubDataset(config, True)  # this is ok
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_from_path(self):
@@ -97,5 +97,5 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
             config = dataset._load_config("tmp/test.json")
             TeleopIcubDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

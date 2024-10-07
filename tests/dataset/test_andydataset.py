@@ -20,7 +20,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2seq(self):
@@ -32,7 +32,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_autoreg(self):
@@ -49,7 +49,7 @@ class InitAndyDatasetTest(CustomTestCase):
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
             )
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2one(self):
@@ -64,7 +64,7 @@ class InitAndyDatasetTest(CustomTestCase):
             _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(10, dataset.config.future_size)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_coordinates_2d(self):
@@ -87,7 +87,7 @@ class InitAndyDatasetTest(CustomTestCase):
             sample, context, truth = dataset.val_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_from_path(self):
@@ -99,5 +99,5 @@ class InitAndyDatasetTest(CustomTestCase):
             config = dataset._load_config("tmp/test.json")
             AndyDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

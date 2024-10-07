@@ -27,7 +27,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 H36MArmDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2seq(self):
@@ -42,7 +42,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2one(self):
@@ -60,7 +60,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
             _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_autoreg(self):
@@ -80,7 +80,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
             )
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
 
@@ -121,7 +121,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 9)
             np.testing.assert_allclose(sample[..., [0, 1, 2]], truth[..., [6, 7, 8]])
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_rep6d_none(self):
@@ -146,7 +146,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 3)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_rotmat_euler(self):
@@ -170,7 +170,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 12)
             self.assertEqual(truth.shape[-1], 5)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_quat(self):
@@ -197,5 +197,5 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 5)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
