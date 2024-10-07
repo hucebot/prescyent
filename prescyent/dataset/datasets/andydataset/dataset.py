@@ -97,14 +97,11 @@ class Dataset(MotionDataset):
                                     [self.config.make_joints_position_relative_to]
                                 ),
                             )[:, :, feat.ids]
-                tmp_hdf5_data.create_dataset(
-                    key + traj_name, data=tensor, compression="gzip"
-                )
+                tmp_hdf5_data.create_dataset(key + traj_name, data=tensor)
                 for context_name, context_tensor in context.items():
                     tmp_hdf5_data.create_dataset(
                         key + traj_name[:-4] + context_name,
                         data=context_tensor,
-                        compression="gzip",
                     )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)

@@ -87,17 +87,12 @@ class Dataset(MotionDataset):
                     key + traj_name,
                     tensor.shape,
                     data=tensor,
-                    compression="gzip",
-                    shuffle=True,
-                    chunks=tensor.shape,
                 )
                 if self.config.context_keys:
                     for context_name, context_tensor in context.items():
                         tmp_hdf5_data.create_dataset(
                             key + traj_name[:-4] + context_name,
                             data=context_tensor,
-                            compression="gzip",
-                            shuffle=True,
                         )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)

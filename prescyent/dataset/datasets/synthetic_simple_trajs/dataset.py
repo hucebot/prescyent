@@ -74,9 +74,7 @@ class Dataset(MotionDataset):
                 metadata.DEFAULT_FEATURES,
                 context,
             )
-            tmp_hdf5_data.create_dataset(
-                f"train/synthetic_traj_{i}/traj", data=tensor, compression="gzip"
-            )
+            tmp_hdf5_data.create_dataset(f"train/synthetic_traj_{i}/traj", data=tensor)
         for i in tqdm(
             range(int(self.config.num_traj * self.config.ratio_test)),
             desc="Generating test_trajectories",
@@ -90,9 +88,7 @@ class Dataset(MotionDataset):
                 metadata.DEFAULT_FEATURES,
                 context,
             )
-            tmp_hdf5_data.create_dataset(
-                f"test/synthetic_traj_{i}/traj", data=tensor, compression="gzip"
-            )
+            tmp_hdf5_data.create_dataset(f"test/synthetic_traj_{i}/traj", data=tensor)
         for i in tqdm(
             range(int(self.config.num_traj * self.config.ratio_val)),
             desc="Generating val_trajectories",
@@ -106,9 +102,7 @@ class Dataset(MotionDataset):
                 metadata.DEFAULT_FEATURES,
                 context,
             )
-            tmp_hdf5_data.create_dataset(
-                f"val/synthetic_traj_{i}/traj", data=tensor, compression="gzip"
-            )
+            tmp_hdf5_data.create_dataset(f"val/synthetic_traj_{i}/traj", data=tensor)
         self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
         tmp_hdf5_data.close()
         np.random.seed()

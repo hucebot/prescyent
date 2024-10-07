@@ -15,7 +15,9 @@ NO_DATA_WARNING = (
 class InitH36MDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = H36MDataset(load_data_at_init=True)
+            dataset = H36MDataset(
+                H36MDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+            )
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
@@ -24,7 +26,8 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
                 ),
@@ -38,7 +41,8 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
                 ),
@@ -57,7 +61,8 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
                 ),

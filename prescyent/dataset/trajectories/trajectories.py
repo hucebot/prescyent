@@ -1,8 +1,9 @@
 """Module for trajectories classes"""
 import math
-from typing import Dict, List
+from typing import Dict, Iterable
 
 import h5py
+import numpy as np
 
 from prescyent.dataset.hdf5_utils import load_features, get_dataset_keys
 from prescyent.dataset.features import Features
@@ -13,21 +14,21 @@ from prescyent.dataset.trajectories.trajectory_hdf5 import TrajectoryHDF5
 class Trajectories:
     """Trajectories are collections of n Trajectory, organized into train, val, test"""
 
-    train: List[Trajectory]
-    test: List[Trajectory]
-    val: List[Trajectory]
+    train: Iterable[Trajectory]
+    test: Iterable[Trajectory]
+    val: Iterable[Trajectory]
 
     def __init__(
         self,
-        train: List[Trajectory],
-        test: List[Trajectory],
-        val: List[Trajectory],
-        h_file: h5py.File = None,
+        train: Iterable[Trajectory],
+        test: Iterable[Trajectory],
+        val: Iterable[Trajectory],
+        # h_file: h5py.File = None,
     ) -> None:
         self.train = train
         self.test = test
         self.val = val
-        self.h_file = h_file
+        # self.h_file = h_file
         self._check_trajectories_consistancy()
 
     @staticmethod
@@ -40,12 +41,13 @@ class Trajectories:
         tensor_features = load_features(h_file)
         all_keys = get_dataset_keys(h_file)
         traj_keys = [key for key in all_keys if key[-5:] == "/traj"]
+        train, test, val = [], [], []
         if "train" in h_file.keys():
             train = [
                 TrajectoryHDF5(
                     frequency=frequency,
                     tensor_features=tensor_features,
-                    h_file=h_file,
+                    file_path=h_file.filename,
                     title=traj_name,
                     point_parents=point_parents,
                     point_names=point_names,
@@ -58,7 +60,7 @@ class Trajectories:
                 TrajectoryHDF5(
                     frequency=frequency,
                     tensor_features=tensor_features,
-                    h_file=h_file,
+                    file_path=h_file.filename,
                     title=traj_name,
                     point_parents=point_parents,
                     point_names=point_names,
@@ -71,7 +73,7 @@ class Trajectories:
                 TrajectoryHDF5(
                     frequency=frequency,
                     tensor_features=tensor_features,
-                    h_file=h_file,
+                    file_path=h_file.filename,
                     title=traj_name,
                     point_parents=point_parents,
                     point_names=point_names,
@@ -79,7 +81,8 @@ class Trajectories:
                 for traj_name in traj_keys
                 if traj_name[: len("val")] == "val"
             ]
-        return Trajectories(train=train, test=test, val=val, h_file=h_file)
+        h_file.close()
+        return Trajectories(train=train, test=test, val=val)
 
     def _check_trajectories_consistancy(self):
         _frequency = {t.frequency for t in self.train + self.test + self.val}

@@ -50,13 +50,13 @@ class InitSCCDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, context, truth = dataset.test_datasample[0]
+        sample, _, truth = dataset.test_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
-        sample, context, truth = dataset.train_datasample[0]
+        sample, _, truth = dataset.train_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
-        sample, context, truth = dataset.val_datasample[0]
+        sample, _, truth = dataset.val_datasample[0]
         self.assertEqual(sample.shape[-1], 2)
         self.assertEqual(truth.shape[-1], 1)
 

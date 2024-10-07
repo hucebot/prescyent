@@ -23,7 +23,9 @@ NO_DATA_WARNING = "H36MArm dataset is not installed, please refer to the README 
 class InitH36MArmDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = H36MArmDataset(load_data_at_init=True)
+            dataset = H36MArmDataset(
+                H36MArmDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+            )
             self.assertGreater(len(dataset), 0)
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
@@ -32,7 +34,8 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
                 ),
@@ -46,7 +49,8 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
                 ),
@@ -63,14 +67,15 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -84,7 +89,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     in_features=Features(
                         [
@@ -104,10 +110,17 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
             self.assertGreater(len(dataset), 0)
             _, _, truth = dataset.test_datasample[0]
             sample, _, _ = dataset.test_datasample[dataset.config.history_size]
-            self.assertEqual(len(sample), len(truth))
+            self.assertTrue(
+                all(
+                    [
+                        sample.shape[i] == truth.shape[i]
+                        for i in range(len(sample.shape))
+                    ]
+                )
+            )
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 9)
-            np.testing.assert_allclose(sample[:, :, [0, 1, 2]], truth[:, :, [6, 7, 8]])
+            np.testing.assert_allclose(sample[..., [0, 1, 2]], truth[..., [6, 7, 8]])
         except NotImplementedError:
             warnings.warn(NO_DATA_WARNING)
 
@@ -115,7 +128,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     in_features=Features(
                         [
@@ -128,7 +142,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 3)
@@ -139,7 +153,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     in_features=Features(
                         [CoordinateXYZ(range(3)), RotationRotMat(range(3, 12))]
@@ -151,7 +166,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 12)
             self.assertEqual(truth.shape[-1], 5)
@@ -162,7 +177,8 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     in_features=Features(
                         [
@@ -177,7 +193,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 5)

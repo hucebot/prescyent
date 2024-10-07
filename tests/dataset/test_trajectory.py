@@ -13,7 +13,7 @@ class InitTrajectoryTest(CustomTestCase):
             frequency=10,
         )
         self.assertEqual(traj.duration, 10)
-        self.assertEqual(traj.context, None)
+        self.assertEqual(traj.context, {})
         self.assertEqual(traj.tensor_features, Features([Any(range(3))]))
         self.assertEqual(traj.point_parents, [-1, -1])
         self.assertEqual(traj.point_names, ["point_0", "point_1"])

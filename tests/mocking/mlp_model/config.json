@@ -6,7 +6,6 @@
             "batch_size": 256,
             "context_keys": [],
             "convert_trajectories_beforehand": true,
-            "drop_last": true,
             "frequency": 10,
             "future_size": 10,
             "history_size": 10,
@@ -25,32 +24,12 @@
             "in_points": [
                 0,
                 1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22
+                2
             ],
             "learning_type": "sequence_2_sequence",
             "loop_over_traj": false,
-            "name": "AndyDataset",
-            "num_workers": 8,
+            "name": "TeleopIcub",
+            "num_workers": 4,
             "out_features": [
                 {
                     "distance_unit": "m",
@@ -70,12 +49,10 @@
             "persistent_workers": true,
             "pin_memory": true,
             "reverse_pair_ratio": 0,
-            "seed": 51262331,
-            "shuffle_test": false,
-            "shuffle_train": true,
-            "shuffle_val": false
+            "save_samples_on_disk": true,
+            "seed": 389054121
         },
-        "deriv_on_last_frame": false,
+        "deriv_on_last_frame": true,
         "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
@@ -84,8 +61,13 @@
         "name": "MlpPredictor",
         "num_layers": 4,
         "save_path": "data/models",
-        "scaler_config": null,
-        "version": 49
+        "scaler_config": {
+            "do_feature_wise_scaling": true,
+            "scale_rotations": false,
+            "scaler": "standardization",
+            "scaling_axis": "[1]"
+        },
+        "version": 72
     },
     "training_config": {
         "accelerator": "auto",
@@ -97,15 +79,15 @@
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
-        "lr": 0.001,
-        "max_epochs": 1,
+        "lr": 0.0005,
+        "max_epochs": 300,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 67145485,
+        "seed": 865997167,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,
-        "used_profiler": "simple",
+        "used_profiler": null,
         "weight_decay": 0.01
     }
 }

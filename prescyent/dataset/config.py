@@ -25,20 +25,14 @@ class MotionDatasetConfig(BaseConfig):
     # Dataloader values
     batch_size: int = 128
     """Size of the batch of all dataloaders"""
-    shuffle_train: bool = True
-    """If True, shuffles the train dataloader"""
-    shuffle_test: bool = False
-    """If True, shuffles the test dataloader"""
-    shuffle_val: bool = False
-    """If True, shuffles the val dataloader"""
     num_workers: int = 1
     """See https://pytorch.org/docs/stable/data.html#single-and-multi-process-data-loading"""
-    drop_last: bool = True
-    """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     persistent_workers: bool = True
     """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     pin_memory: bool = True
     """See https://pytorch.org/docs/stable/data.html#memory-pinning"""
+    save_samples_on_disk: bool = True
+    """If True we'll use a tmp hdf5 file to store the x, y pairs and win some time at computation during training in the detriment of some init time and temporary disk space"""
 
     # x, y pairs related variables for motion data samples:
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
