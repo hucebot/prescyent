@@ -72,8 +72,8 @@ class Normalizer:
         Returns:
             torch.Tensor: Normalized input tensor
         """
-        min_t = self.min_t.detach().clone()
-        max_t = self.max_t.detach().clone()
+        min_t = self.min_t.detach().clone().to(sample_tensor.device)
+        max_t = self.max_t.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
         if point_ids and 2 not in self.dim:
@@ -107,8 +107,8 @@ class Normalizer:
         Returns:
             torch.Tensor: Unnormalized input tensor
         """
-        min_t = self.min_t.detach().clone()
-        max_t = self.max_t.detach().clone()
+        min_t = self.min_t.detach().clone().to(sample_tensor.device)
+        max_t = self.max_t.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
         if point_ids and 2 not in self.dim:

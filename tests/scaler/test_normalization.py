@@ -25,7 +25,7 @@ class ScalerNormalizationTest(CustomTestCase):
     def setUpClass(cls):
         """setup dataset for the scaling tests"""
         feats = Features([CoordinateXY(range(2)), RotationEuler(range(2, 5))])
-        dataset_config = SCCDatasetConfig()
+        dataset_config = SCCDatasetConfig(num_trajs=[5, 5])
         cls.dataset = SCCDataset(dataset_config)
 
     @classmethod

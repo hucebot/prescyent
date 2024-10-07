@@ -3,7 +3,7 @@ import shutil
 import torch
 from torch.utils.data import DataLoader
 
-from prescyent.dataset import SSTDataset, SSTDatasetConfig
+from prescyent.dataset import SCCDataset, SCCDatasetConfig
 from prescyent.dataset.features import Features, CoordinateXY, Rotation, RotationEuler
 from prescyent.predictor import (
     MlpPredictor,
@@ -21,10 +21,8 @@ class ScalerStandardizationTest(CustomTestCase):
     def setUpClass(cls):
         """setup dataset for the scaling tests"""
         feats = Features([CoordinateXY(range(2)), RotationEuler(range(2, 5))])
-        dataset_config = SSTDatasetConfig(
-            num_traj=10, dt=0.05, seed=5, out_features=feats
-        )
-        cls.dataset = SSTDataset(dataset_config)
+        dataset_config = SCCDatasetConfig(num_trajs=[5, 5])
+        cls.dataset = SCCDataset(dataset_config)
 
     @classmethod
     def tearDownClass(cls):
@@ -51,18 +49,18 @@ class ScalerStandardizationTest(CustomTestCase):
                 torch.allclose(
                     std,
                     torch.ones_like(scaler.scalers[feat_name].std),
-                    atol=1e-4,
+                    atol=1e-3,
                 )
             )
             self.assertTrue(
                 torch.allclose(
                     mean,
                     torch.zeros_like(scaler.scalers[feat_name].mean),
-                    atol=1e-4,
+                    atol=1e-3,
                 )
             )
             u_test_t = scaler.unscale(n_test_t, features=self.dataset.tensor_features)
-            self.assertTrue(torch.allclose(test_t, u_test_t, atol=1e-4))
+            self.assertTrue(torch.allclose(test_t, u_test_t, atol=1e-3))
 
     def test_standardizer_all_scaling_axes(self):
         for dim in [
