@@ -1,6 +1,8 @@
 """Config elements for SST dataset usage"""
 from typing import List
 
+from pydantic import model_validator, ValidationError
+
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS
@@ -52,3 +54,9 @@ class DatasetConfig(MotionDatasetConfig):
     out_features: Features = DEFAULT_FEATURES
     in_points: List[int] = list(range(len(POINT_LABELS)))
     out_points: List[int] = list(range(len(POINT_LABELS)))
+
+    @model_validator(mode="after")
+    def check_context_keys(self):
+        if self.context_keys:
+            raise ValidationError("This dataset cannot handle context keys")
+        return self

@@ -158,7 +158,11 @@ class BasePredictor:
             [traj.tensor for traj in datamodule.trajectories.train], dim=0
         )
         self.scaler.train(
-            DataLoader(dataset_tensor, batch_size=datamodule.config.batch_size),
+            DataLoader(
+                dataset_tensor,
+                batch_size=datamodule.config.batch_size,
+                num_workers=datamodule.config.num_workers,
+            ),
             dataset_features=datamodule.tensor_features,
         )
 

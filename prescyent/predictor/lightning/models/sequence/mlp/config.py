@@ -22,9 +22,9 @@ class Config(ModuleConfig):
     def check_context_attributes(self):
         if (
             self.context_size is None
-            and not self.dataset_config.context_keys is None
+            and self.dataset_config.context_keys
             or not self.context_size is None
-            and self.dataset_config.context_keys is None
+            and not self.dataset_config.context_keys
         ):
             raise AttributeError(
                 "If we have a context as input, it keys should be described "

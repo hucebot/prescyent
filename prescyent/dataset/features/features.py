@@ -22,3 +22,6 @@ class Features(list):
         for feat in self:
             ids += feat.ids
         return ids
+
+    def __hash__(self):
+        return hash(str(self))

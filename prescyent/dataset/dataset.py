@@ -1,16 +1,22 @@
 """Standard class for motion datasets"""
-import math
+import os
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Union, Type
 
+
+import h5py
 import json
 import requests
 import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from prescyent.dataset.features import Features
+from prescyent.dataset.hdf5_datasample import HDF5MotionDataSamples
+from prescyent.dataset.hdf5_utils import get_dataset_keys
 from prescyent.dataset.features.feature_manipulation import features_are_convertible_to
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.datasamples import MotionDataSamples
@@ -19,16 +25,21 @@ from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
 
 
-def collate_context_fn(list_of_tensors):
+def collate_context_fn(list_of_tensors: List[torch.Tensor]):
+    """custom collate function to allow context_batch to be None, or a dict of batched tensors"""
     sample_batch = torch.stack([t[0] for t in list_of_tensors])
     truth_batch = torch.stack([t[2] for t in list_of_tensors])
-    context_batch = None
-    if list_of_tensors[0][1] is not None:
-        context_batch = {
-            c_name: torch.stack([context[1][c_name] for context in list_of_tensors])
-            for c_name in list_of_tensors[0][1].keys()
-        }
+    context_batch = {}
+    context_batch = {
+        c_name: torch.stack([context[1][c_name] for context in list_of_tensors])
+        for c_name in list_of_tensors[0][1].keys()
+    }
     return sample_batch, context_batch, truth_batch
+
+
+def collate_batched_fn(list_of_tensors: List[torch.Tensor]):
+    """simply return first occurence of tensors that are already batched by batch sampler"""
+    return list_of_tensors[0]
 
 
 class MotionDataset(LightningDataModule):
@@ -80,10 +91,31 @@ class MotionDataset(LightningDataModule):
         raise NotImplementedError("This method must be implemented in the child class")
 
     def setup(self, stage: str = None):
+        """Method to generate the dataset.x_datasample used in the x_dataloader()"""
         self.update_trajectories_frequency(self.config.frequency)
         if self.config.convert_trajectories_beforehand:
             self.convert_trajectories_from_config()
         self.generate_samples(stage)
+
+    def get_trajnames_from_hdf5(
+        self,
+        hdf5_data: h5py.File,
+        tmp_hdf5_data: h5py.File,
+    ) -> List[str]:
+        # Create new temp hdf5 with features from config
+        # Copy root attributes
+        for attr in hdf5_data.attrs.keys():
+            tmp_hdf5_data.attrs[attr] = hdf5_data.attrs[attr]
+        all_keys = get_dataset_keys(hdf5_data)
+        # Features
+        all_feature_names = [key for key in all_keys if key[:16] == "tensor_features/"]
+        for feat_name in all_feature_names:
+            old_feat = hdf5_data[feat_name]
+            feat = tmp_hdf5_data.create_dataset(feat_name, data=old_feat)
+            for attr_name in old_feat.attrs.keys():
+                feat.attrs[attr_name] = old_feat.attrs[attr_name]
+        all_trajectory_names = [key for key in all_keys if key[-5:] == "/traj"]
+        return all_trajectory_names
 
     def generate_samples(self, stage: str = None):
         logger.getChild(DATASET).debug(
@@ -91,34 +123,53 @@ class MotionDataset(LightningDataModule):
             self.config.learning_type,
         )
         if stage is None or stage == "fit":
-            self.train_datasample = MotionDataSamples(
-                self.trajectories.train, self.config
-            )
+            if self.config.save_samples_on_disk and self.trajectories.train:
+                self.train_datasample = HDF5MotionDataSamples(
+                    self.trajectories.train, self.config
+                )
+            else:
+                self.train_datasample = MotionDataSamples(
+                    self.trajectories.train, self.config
+                )
             logger.getChild(DATASET).info(
                 "Train dataset has a size of %d", len(self.train_datasample)
             )
-            self.val_datasample = MotionDataSamples(self.trajectories.val, self.config)
+            if self.config.save_samples_on_disk and self.trajectories.val:
+                self.val_datasample = HDF5MotionDataSamples(
+                    self.trajectories.val, self.config
+                )
+            else:
+                self.val_datasample = MotionDataSamples(
+                    self.trajectories.val, self.config
+                )
             logger.getChild(DATASET).info(
                 "Val dataset has a size of %d", len(self.val_datasample)
             )
-            logger.getChild(DATASET).info(
-                "Generated (x,y) pairs with shapes (%s, %s)",
-                self.train_datasample[0][0].shape,
-                self.train_datasample[0][2].shape,
-            )
+            if self.train_datasample:
+                logger.getChild(DATASET).info(
+                    "Generated (x,y) pairs with shapes (%s, %s)",
+                    self.train_datasample[0][0].shape,
+                    self.train_datasample[0][2].shape,
+                )
         if stage is None or stage == "test" or stage == "predict":
             # We will predict on the test dataset also
-            self.test_datasample = MotionDataSamples(
-                self.trajectories.test, self.config
-            )
+            if self.config.save_samples_on_disk and self.trajectories.test:
+                self.test_datasample = HDF5MotionDataSamples(
+                    self.trajectories.test, self.config
+                )
+            else:
+                self.test_datasample = MotionDataSamples(
+                    self.trajectories.test, self.config
+                )
             logger.getChild(DATASET).info(
                 "Test dataset has a size of %d", len(self.test_datasample)
             )
-            logger.getChild(DATASET).info(
-                "Generated (x,y) pairs with shapes (%s, %s)",
-                self.test_datasample[0][0].shape,
-                self.test_datasample[0][2].shape,
-            )
+            if self.test_datasample:
+                logger.getChild(DATASET).info(
+                    "Generated (x,y) pairs with shapes (%s, %s)",
+                    self.test_datasample[0][0].shape,
+                    self.test_datasample[0][2].shape,
+                )
 
     def convert_trajectories_from_config(self):
         """Convert trajectories features to match required in and out features
@@ -126,18 +177,18 @@ class MotionDataset(LightningDataModule):
         """
         if (
             self.config.in_features == self.config.out_features
-            and self.config.in_features != self.trajectories.train[0].tensor_features
+            and self.config.in_features != self.trajectories.tensor_features
         ) or (
             self.config.in_features != self.config.out_features
-            and self.config.in_features != self.trajectories.train[0].tensor_features
-            and self.config.out_features != self.trajectories.train[0].tensor_features
+            and self.config.in_features != self.trajectories.tensor_features
+            and self.config.out_features != self.trajectories.tensor_features
         ):
             if features_are_convertible_to(
                 self.config.in_features, self.config.out_features
             ):
                 logger.getChild(DATASET).info(
                     "Converting trajectories features from %s to %s",
-                    self.trajectories.train[0].tensor_features,
+                    self.trajectories.tensor_features,
                     self.config.in_features,
                 )
                 for traj in self.trajectories.train:
@@ -151,7 +202,7 @@ class MotionDataset(LightningDataModule):
             ):
                 logger.getChild(DATASET).info(
                     "Converting trajectories features from %s to %s",
-                    self.trajectories.train[0].tensor_features,
+                    self.trajectories.tensor_features,
                     self.config.out_features,
                 )
                 for traj in self.trajectories.train:
@@ -163,26 +214,42 @@ class MotionDataset(LightningDataModule):
 
     def update_trajectories_frequency(self, target_frequency):
         """Update all trajectories frequency"""
-        for traj in self.trajectories.train:
-            traj.update_frequency(target_frequency)
-        for traj in self.trajectories.test:
-            traj.update_frequency(target_frequency)
-        for traj in self.trajectories.val:
-            traj.update_frequency(target_frequency)
+        if self.trajectories.frequency != target_frequency:
+            for traj in self.trajectories.train:
+                traj.update_frequency(target_frequency)
+            for traj in self.trajectories.test:
+                traj.update_frequency(target_frequency)
+            for traj in self.trajectories.val:
+                traj.update_frequency(target_frequency)
 
     def train_dataloader(self) -> DataLoader:
         """the train torch dataloader with the MotionDataSamples"""
         try:
-            return DataLoader(
-                self.train_datasample,
-                batch_size=self.config.batch_size,
-                shuffle=self.config.shuffle_train,
-                num_workers=self.config.num_workers,
-                pin_memory=self.config.pin_memory,
-                drop_last=self.config.drop_last,
-                persistent_workers=self.config.persistent_workers,
-                collate_fn=collate_context_fn,
-            )
+            if self.config.save_samples_on_disk:
+                sampler = torch.utils.data.sampler.BatchSampler(
+                    torch.utils.data.sampler.RandomSampler(self.train_datasample),
+                    batch_size=self.config.batch_size,
+                    drop_last=False,
+                )
+                return DataLoader(
+                    self.train_datasample,
+                    sampler=sampler,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_batched_fn,
+                )
+            else:
+                return DataLoader(
+                    self.train_datasample,
+                    batch_size=self.config.batch_size,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    shuffle=True,
+                    drop_last=False,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_context_fn,
+                )
         except AttributeError:
             logger.getChild(DATASET).error(
                 "Pairs were not created for this datamodule. "
@@ -193,36 +260,67 @@ class MotionDataset(LightningDataModule):
     def test_dataloader(self) -> DataLoader:
         """the test torch dataloader with the MotionDataSamples"""
         try:
-            return DataLoader(
-                self.test_datasample,
-                batch_size=self.config.batch_size,
-                shuffle=self.config.shuffle_test,
-                num_workers=self.config.num_workers,
-                pin_memory=self.config.pin_memory,
-                drop_last=False,
-                persistent_workers=self.config.persistent_workers,
-                collate_fn=collate_context_fn,
-            )
+            if self.config.save_samples_on_disk:
+                sampler = torch.utils.data.sampler.BatchSampler(
+                    torch.utils.data.SequentialSampler(self.test_datasample),
+                    batch_size=self.config.batch_size,
+                    drop_last=False,
+                )
+                return DataLoader(
+                    self.test_datasample,
+                    sampler=sampler,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_batched_fn,
+                )
+            else:
+                return DataLoader(
+                    self.test_datasample,
+                    batch_size=self.config.batch_size,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    shuffle=False,
+                    drop_last=False,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_context_fn,
+                )
         except AttributeError:
             logger.getChild(DATASET).error(
                 "Pairs were not created for this datamodule. "
                 + "Please make sure that you are using this dm through Lightning, "
                 + "or call .prepare_data() and .setup() manually."
             )
+            raise
 
     def val_dataloader(self) -> DataLoader:
         """the val torch dataloader with the MotionDataSamples"""
         try:
-            return DataLoader(
-                self.val_datasample,
-                batch_size=self.config.batch_size,
-                shuffle=self.config.shuffle_val,
-                num_workers=self.config.num_workers,
-                pin_memory=self.config.pin_memory,
-                drop_last=False,
-                persistent_workers=self.config.persistent_workers,
-                collate_fn=collate_context_fn,
-            )
+            if self.config.save_samples_on_disk:
+                sampler = torch.utils.data.sampler.BatchSampler(
+                    torch.utils.data.SequentialSampler(self.val_datasample),
+                    batch_size=self.config.batch_size,
+                    drop_last=False,
+                )
+                return DataLoader(
+                    self.val_datasample,
+                    sampler=sampler,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_batched_fn,
+                )
+            else:
+                return DataLoader(
+                    self.val_datasample,
+                    batch_size=self.config.batch_size,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    shuffle=False,
+                    drop_last=False,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_context_fn,
+                )
         except AttributeError:
             logger.getChild(DATASET).error(
                 "Pairs were not created for this datamodule. "
@@ -234,16 +332,31 @@ class MotionDataset(LightningDataModule):
     def predict_dataloader(self) -> DataLoader:
         """the predict torch dataloader with the MotionDataSamples"""
         try:
-            return DataLoader(
-                self.test_datasample,
-                batch_size=self.config.batch_size,
-                shuffle=self.config.shuffle_test,
-                num_workers=self.config.num_workers,
-                pin_memory=self.config.pin_memory,
-                drop_last=False,
-                persistent_workers=self.config.persistent_workers,
-                collate_fn=collate_context_fn,
-            )
+            if self.config.save_samples_on_disk:
+                sampler = torch.utils.data.sampler.BatchSampler(
+                    torch.utils.data.SequentialSampler(self.test_datasample),
+                    batch_size=self.config.batch_size,
+                    drop_last=False,
+                )
+                return DataLoader(
+                    self.test_datasample,
+                    sampler=sampler,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_batched_fn,
+                )
+            else:
+                return DataLoader(
+                    self.test_datasample,
+                    batch_size=self.config.batch_size,
+                    num_workers=self.config.num_workers,
+                    pin_memory=self.config.pin_memory,
+                    shuffle=False,
+                    drop_last=False,
+                    persistent_workers=self.config.persistent_workers,
+                    collate_fn=collate_context_fn,
+                )
         except AttributeError:
             logger.getChild(DATASET).error(
                 "Pairs were not created for this datamodule. "
@@ -253,39 +366,31 @@ class MotionDataset(LightningDataModule):
 
     @property
     def frequency(self) -> int:
-        return self.trajectories.train[0].frequency
+        return self.trajectories.frequency
 
     @property
     def num_points(self) -> int:
-        return self.trajectories.train[0].shape[1]
+        return self.trajectories.num_points
 
     @property
     def num_dims(self) -> int:
-        return self.trajectories.train[0].shape[2]
+        return self.trajectories.num_dims
 
     @property
     def tensor_features(self) -> Features:
-        return self.trajectories.train[0].tensor_features
+        return self.trajectories.tensor_features
+
+    @property
+    def context_sizes(self) -> Dict[str, int]:
+        return self.trajectories.context_sizes
+
+    @property
+    def context_size_sum(self) -> int:
+        return self.trajectories.context_size_sum
 
     @property
     def feature_size(self) -> int:
         return self.num_dims * self.num_points
-
-    @property
-    def context_sizes(self) -> Dict[str, int]:
-        return {
-            c_key: c_tensor.shape[1:]
-            for c_key, c_tensor in self.trajectories.train[0].context.items()
-        }
-
-    @property
-    def context_size_sum(self) -> int:
-        return sum(
-            [
-                math.prod(c_tensor.shape[1:])
-                for c_tensor in self.trajectories.train[0].context.values()
-            ]
-        )
 
     def _init_from_config(
         self,
@@ -326,21 +431,3 @@ class MotionDataset(LightningDataModule):
         with save_path.open("w", encoding="utf-8") as conf_file:
             logger.getChild(DATASET).debug(config_dict)
             json.dump(config_dict, conf_file, indent=4, sort_keys=True)
-
-    def _download_files(self, url, path) -> None:
-        """get the dataset files from an url"""
-        logger.getChild(DATASET).info("Downloading data from %s", url)
-        data = requests.get(url, timeout=10)
-        path = Path(path)
-        if path.is_dir():
-            path = path / "downloaded_data.zip"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        logger.getChild(DATASET).info("Saving data to %s", path)
-        with path.open("wb") as pfile:
-            pfile.write(data.content)
-
-    def _unzip(self, zip_path: str) -> None:
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_path = Path(zip_path)
-            zip_ref.extractall(zip_path.parent)
-        logger.getChild(DATASET).info("Archive unziped at %s", zip_path.parent)

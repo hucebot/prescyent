@@ -15,30 +15,34 @@ NO_DATA_WARNING = (
 class InitH36MDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = H36MDataset(load_data_at_init=True)
+            dataset = H36MDataset(
+                H36MDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+            )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2seq(self):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
                 ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_autoreg(self):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
                 ),
@@ -50,14 +54,15 @@ class InitH36MDatasetTest(CustomTestCase):
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
             )
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2one(self):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
-                    subjects_train=["S1"],
+                    subjects_train=[],
+                    subjects_val=[],
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
                 ),
@@ -67,5 +72,5 @@ class InitH36MDatasetTest(CustomTestCase):
             _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
-        except NotImplementedError:
+        except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

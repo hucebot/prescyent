@@ -25,20 +25,14 @@ class MotionDatasetConfig(BaseConfig):
     # Dataloader values
     batch_size: int = 128
     """Size of the batch of all dataloaders"""
-    shuffle_train: bool = True
-    """If True, shuffles the train dataloader"""
-    shuffle_test: bool = False
-    """If True, shuffles the test dataloader"""
-    shuffle_val: bool = False
-    """If True, shuffles the val dataloader"""
-    num_workers: int = 0
+    num_workers: int = 1
     """See https://pytorch.org/docs/stable/data.html#single-and-multi-process-data-loading"""
-    drop_last: bool = True
-    """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
-    persistent_workers: bool = False
+    persistent_workers: bool = True
     """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     pin_memory: bool = True
     """See https://pytorch.org/docs/stable/data.html#memory-pinning"""
+    save_samples_on_disk: bool = True
+    """If True we'll use a tmp hdf5 file to store the x, y pairs and win some time at computation during training in the detriment of some init time and temporary disk space"""
 
     # x, y pairs related variables for motion data samples:
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
@@ -64,7 +58,7 @@ class MotionDatasetConfig(BaseConfig):
     Do not mistake with the "used joint".
     Use joints are used on Trajectory level while in_points and out_points
     are relative to previous used joint changes, and are used only for MotionSamples pair."""
-    context_keys: Optional[List[str]] = None
+    context_keys: List[str] = []
     """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
     convert_trajectories_beforehand: bool = True
     """If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders"""

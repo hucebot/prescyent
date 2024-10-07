@@ -8,7 +8,9 @@ from typing import Callable, List, Optional, Union
 import torch
 
 import matplotlib
-import matplotlib.pyplot as plt
+
+matplotlib.use("TkAgg", force=True)
+from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D

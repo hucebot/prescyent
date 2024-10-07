@@ -1,22 +1,16 @@
 """Config elements for Pytorch Lightning Modules usage"""
 from typing import Optional
-from pydantic import model_validator
 
 from prescyent.predictor.config import PredictorConfig
 from prescyent.utils.enums import (
     LearningTypes,
     LossFunctions,
-    Profilers,
 )
-from prescyent.dataset.config import MotionDatasetConfig
 
 
 class ModuleConfig(PredictorConfig):
     """Pydantic Basemodel for Torch Module configuration"""
 
-    used_profiler: Optional[Profilers] = None
-    """List of profilers to use during training
-    See https://lightning.ai/docs/pytorch/stable/tuning/profiler_basic.html"""
     loss_fn: Optional[LossFunctions] = None
     """Define what loss function will be used to train your model"""
     do_lipschitz_continuation: bool = False

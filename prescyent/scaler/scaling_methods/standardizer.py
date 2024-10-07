@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from prescyent.utils.enums import TrajectoryDimensions
 
@@ -32,7 +33,9 @@ class Standardizer:
         n_samples = 0
         total_sum = 0
         total_sum_sq = 0
-        for batch in dataset_dataloader:
+        for batch in tqdm(
+            dataset_dataloader, desc="iterating over dataset", colour="red"
+        ):
             data = batch.unsqueeze(0)
             if feat_ids:
                 data = data[..., feat_ids]
@@ -63,28 +66,19 @@ class Standardizer:
         Returns:
             torch.Tensor: Standardized input tensor
         """
+        std = self.std.detach().clone().to(sample_tensor.device)
+        mean = self.mean.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
-        if (
-            point_ids and 2 not in self.dim and feat_ids and 3 not in self.dim
-        ):  # If we scale a subset of the dataset points, and it is not averaged over
-            res = (sample_tensor - self.mean[point_ids, feat_ids]) / (
-                self.std[point_ids, feat_ids] + self.eps
-            )
-        elif (
-            point_ids and 2 not in self.dim
-        ):  # If we scale a subset of the dataset points, and it is not averaged over
-            res = (sample_tensor - self.mean[point_ids]) / (
-                self.std[point_ids] + self.eps
-            )
-        elif (
-            feat_ids and 3 not in self.dim
-        ):  # If we scale a subset of the dataset feats, and it is not averaged over
-            res = (sample_tensor - self.mean[..., feat_ids]) / (
-                self.std[..., feat_ids] + self.eps
-            )
-        else:
-            res = (sample_tensor - self.mean) / (self.std + self.eps)
+        if point_ids and 2 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            std = std[point_ids]
+            mean = mean[point_ids]
+        if feat_ids and 3 not in self.dim:
+            # If we unscale a subset of the dataset feats, and it is not averaged over
+            std = std[..., feat_ids]
+            mean = mean[..., feat_ids]
+        res = (sample_tensor - mean) / (std + self.eps)
         if self.dim == [0, 1, 3]:
             res = res.transpose(2, 3)
         return res
@@ -107,8 +101,8 @@ class Standardizer:
         Returns:
             torch.Tensor: Unstandardized input tensor
         """
-        std = self.std.detach().clone()
-        mean = self.mean.detach().clone()
+        std = self.std.detach().clone().to(sample_tensor.device)
+        mean = self.mean.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
             sample_tensor = sample_tensor.transpose(2, 3)
         if point_ids and 2 not in self.dim:

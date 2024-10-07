@@ -4,9 +4,8 @@
         "context_size": null,
         "dataset_config": {
             "batch_size": 256,
-            "context_keys": null,
+            "context_keys": [],
             "convert_trajectories_beforehand": true,
-            "drop_last": true,
             "frequency": 10,
             "future_size": 10,
             "history_size": 10,
@@ -30,7 +29,7 @@
             "learning_type": "sequence_2_sequence",
             "loop_over_traj": false,
             "name": "TeleopIcub",
-            "num_workers": 0,
+            "num_workers": 4,
             "out_features": [
                 {
                     "distance_unit": "m",
@@ -47,20 +46,18 @@
                 1,
                 2
             ],
-            "persistent_workers": false,
+            "persistent_workers": true,
             "pin_memory": true,
             "reverse_pair_ratio": 0,
-            "seed": 195481014,
-            "shuffle_test": false,
-            "shuffle_train": true,
-            "shuffle_val": false
+            "save_samples_on_disk": true,
+            "seed": 389054121
         },
         "deriv_on_last_frame": true,
         "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
         "hidden_size": 128,
-        "loss_fn": "mtdloss",
+        "loss_fn": null,
         "name": "MlpPredictor",
         "num_layers": 4,
         "save_path": "data/models",
@@ -70,8 +67,7 @@
             "scaler": "standardization",
             "scaling_axis": "[1]"
         },
-        "used_profiler": null,
-        "version": 29
+        "version": 72
     },
     "training_config": {
         "accelerator": "auto",
@@ -83,14 +79,15 @@
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
-        "lr": 0.0001,
+        "lr": 0.0005,
         "max_epochs": 300,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 954447727,
+        "seed": 865997167,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,
+        "used_profiler": null,
         "weight_decay": 0.01
     }
 }

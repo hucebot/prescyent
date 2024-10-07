@@ -62,7 +62,7 @@ class MotionDataSamples:
         size = history_size + future_size
         traj_id, tensor_id = self.sample_ids[index]
         trajectory = self.trajectories[traj_id]
-        context = None
+        context = {}
         if tensor_id + size > len(trajectory.tensor) and self.config.loop_over_traj:
             seq = torch.cat(
                 (

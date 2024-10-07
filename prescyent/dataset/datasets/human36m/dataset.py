@@ -1,10 +1,16 @@
 """Class and methods for the Human 3.6M Dataset"""
 from pathlib import Path
-from typing import List, Union, Dict
+import shutil
+import tempfile
+from typing import List, Literal, Union, Dict
 
+import h5py
 import numpy as np
 import torch
+from tqdm.auto import tqdm
 
+from prescyent.dataset.hdf5_utils import write_metadata
+from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
@@ -34,67 +40,91 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """get trajectories from files or web"""
-        if not Path(self.config.data_path).exists():
-            logger.getChild(DATASET).warning(
-                "Dataset files not found at path %s",
-                self.config.data_path,
+        if not Path(self.config.hdf5_path).exists():
+            raise FileNotFoundError(
+                "Dataset file not found at %s" % self.config.hdf5_path
             )
-            self._get_from_web()
-        self.trajectories = self._load_files()
-
-    # load a set of trajectory, keeping them separate
-    def _load_files(self) -> Trajectories:
-        """read txt files and create trajectories"""
-        logger.getChild(DATASET).info("Reading files from %s", self.config.data_path)
-        train_files = self._get_filenames_for_subject(self.config.subjects_train)
-        val_files = self._get_filenames_for_subject(self.config.subjects_val)
-        test_files = self._get_filenames_for_subject(self.config.subjects_test)
-        # each files gives an expmap and has to be converted into xyz
-        train = self.pathfiles_to_trajectories(train_files)
-        logger.getChild(DATASET).info(
-            "Found %d trajectories in the train set", len(train)
-        )
-        test = self.pathfiles_to_trajectories(test_files)
-        logger.getChild(DATASET).info(
-            "Found %d trajectories in the test set", len(test)
-        )
-        val = self.pathfiles_to_trajectories(val_files)
-        logger.getChild(DATASET).info("Found %d trajectories in the val set", len(val))
-        return Trajectories(train, test, val)
-
-    def _get_filenames_for_subject(self, subject_names: List[str]) -> List[Path]:
-        filenames = []
-        for subject_name in subject_names:
-            for action in self.config.actions:
-                filenames += list(
-                    (Path(self.config.data_path) / subject_name).rglob(
-                        f"{action}_*.txt"
-                    )
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        hdf5_data = h5py.File(self.config.hdf5_path, "r")
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        trajectory_names = self.get_trajnames_from_hdf5(hdf5_data, tmp_hdf5_data)
+        # keep only given actions
+        if self.config.actions:
+            trajectory_names = [
+                key
+                for key in trajectory_names
+                if any([subset in key for subset in self.config.actions])
+            ]
+        # create subset train, test, val from ratios:
+        train_trajs = [
+            t for t in trajectory_names if t.split("/")[0] in self.config.subjects_train
+        ]
+        test_trajs = [
+            t for t in trajectory_names if t.split("/")[0] in self.config.subjects_test
+        ]
+        val_trajs = [
+            t for t in trajectory_names if t.split("/")[0] in self.config.subjects_val
+        ]
+        for key, trajs in {
+            "train/": train_trajs,
+            "test/": test_trajs,
+            "val/": val_trajs,
+        }.items():
+            for traj_name in tqdm(
+                trajs, colour="blue", desc="Writing used trajectories in temp file hdf5"
+            ):
+                tensor = torch.from_numpy(np.array(hdf5_data[traj_name]))
+                context = {}
+                # update frequency
+                tensor, context = update_tensor_frequency(
+                    tensor,
+                    metadata.BASE_FREQUENCY,
+                    self.config.frequency,
+                    metadata.DEFAULT_FEATURES,
+                    context,
                 )
-        filenames.sort()
-        return filenames
+                tmp_hdf5_data.create_dataset(
+                    key + traj_name,
+                    tensor.shape,
+                    data=tensor,
+                )
+                if self.config.context_keys:
+                    for context_name, context_tensor in context.items():
+                        tmp_hdf5_data.create_dataset(
+                            key + traj_name[:-4] + context_name,
+                            data=context_tensor,
+                        )
+        tmp_hdf5_data.attrs["frequency"] = self.config.frequency
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
+        hdf5_data.close()
 
-    def _get_from_web(self) -> None:
-        raise NotImplementedError(
-            "This dataset must be downloaded manually, "
-            "please follow the instructions in the README"
-        )
-
-    def pathfiles_to_trajectories(
-        self, files: List, delimiter: str = ",", used_joints=None
-    ) -> List[Trajectory]:
-        """util method to turn a list of pathfiles to a list of their data
-        :rtype: List[Trajectory]
-        """
-        if used_joints is None:
-            used_joints = self.config.used_joints
-        trajectory_arrray = list()
-        for file_path in files:
-            with file_path.open() as file:
+    @staticmethod
+    def create_hdf5(
+        hdf5_path: str,
+        data_dir: str,
+        file_patern: str,
+        remove_csv: bool = False,
+        compression="gzip",
+    ):
+        files = list(Path(data_dir).rglob(file_patern))
+        logger.getChild(DATASET).info(f"Found {len(files)} files")
+        Path(hdf5_path).parent.mkdir(parents=True, exist_ok=True)
+        with h5py.File(hdf5_path, "w") as hdf5_f:
+            write_metadata(
+                hdf5_f,
+                metadata.BASE_FREQUENCY,
+                metadata.POINT_PARENTS,
+                metadata.POINT_LABELS,
+                metadata.DEFAULT_FEATURES,
+            )
+        for f_path in tqdm(files, colour="blue", desc="Iterating txt files"):
+            traj_groups = list(f_path.relative_to(data_dir).parts)
+            with f_path.open() as file:
                 expmap = file.readlines()
             pose_info = []
             for line in expmap:
-                line = line.strip().split(delimiter)
+                line = line.strip().split(",")
                 if len(line) > 0:
                     pose_info.append(np.array([float(x) for x in line]))
             # get expmap from file
@@ -111,30 +141,18 @@ class Dataset(MotionDataset):
             xyz_info, world_rotmatrices = rotmat2xyz_torch(
                 rotmatrices.clone().detach(), metadata._get_metadata
             )
-            xyz_info = xyz_info[:, used_joints, :] / 1000  # mm to meter conversion
-            rotmatrices = world_rotmatrices[:, used_joints, :]
-            S, P = xyz_info.shape[0], xyz_info.shape[1]
-            # as we permuted x and y in "fkl_torch", we permute x and y axis in rotmatrices
-            permute_x_y = torch.FloatTensor(
-                [
-                    [0.0000000, 1.0000000, 0.0000000],
-                    [1.0000000, 0.0000000, 0.0000000],
-                    [0.0000000, 0.0000000, 1.0000000],
-                ]
-            )
-            rotmatrices = (
-                permute_x_y @ rotmatrices.reshape(-1, 3, 3) @ permute_x_y.T
-            ).reshape(S, P, 9)
-            position_traj_tensor = torch.cat((xyz_info, rotmatrices), dim=-1)
-            title = f"{Path(file_path).parts[-2]}_{Path(file_path).stem}"
-            trajectory = Trajectory(
-                tensor=position_traj_tensor,
-                frequency=metadata.BASE_FREQUENCY,
-                tensor_features=metadata.DEFAULT_FEATURES,
-                file_path=file_path,
-                title=title,
-                point_parents=update_parent_ids(used_joints, metadata.POINT_PARENTS),
-                point_names=[metadata.POINT_LABELS[i] for i in used_joints],
-            )
-            trajectory_arrray.append(trajectory)
-        return trajectory_arrray
+            world_rotmatrices = world_rotmatrices.reshape(S, 32, 9)
+            xyz_info = xyz_info / 1000  # mm to meter conversion
+            position_traj_tensor = torch.cat((xyz_info, world_rotmatrices), dim=-1)
+            traj_groups = traj_groups[:-1] + [traj_groups[-1][:-4]]
+            with h5py.File(hdf5_path, "a") as f:
+                group = f.create_group("/".join(traj_groups))
+                group.create_dataset(
+                    "traj",
+                    data=position_traj_tensor,
+                    compression=compression,
+                )
+        logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
+        if remove_csv:
+            logger.getChild(DATASET).info(f"Removing all files in {data_dir}")
+            shutil.rmtree(data_dir)
