@@ -39,7 +39,7 @@ if __name__ == "__main__":
     history_size = dataset.config.history_size
     future_size = dataset.config.future_size
 
-    ### Uncomment this section if you want to mannualy iterate over your trajectory instead for some reason
+    # # Uncomment this section if you want to mannualy iterate over your trajectory instead for some reason
     # all_preds = []
     # import
     # with .no_grad():
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #             pred[i] = p[-1]
     #         all_preds += [pred]
     # print("Predictions OK")
-    ### Here you get the list of the predicted tensor !
+    # # Here you get the list of the predicted tensor !
 
     print("Plotting...")
     # plot MPJPE evaluation metric for this predictor
