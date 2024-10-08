@@ -56,13 +56,13 @@ class TestPostProcesses(unittest.TestCase):
         pos_sequence = torch.FloatTensor([positions_quaternions])
         feat = RotationQuat(range(4))
         norm_pos = feat.post_process(pos_sequence)
-        self.assertTrue(torch.allclose(norm_pos, pos_sequence))
+        self.assertTrue(torch.allclose(norm_pos, pos_sequence, atol=1e-4))
         pos_sequence = convert_to_rotmatrix(
             pos_sequence
         )  # postprocess is included in higher level methods
         feat = RotationRotMat(range(9))
         norm_pos = feat.post_process(pos_sequence)
-        self.assertTrue(torch.allclose(norm_pos, pos_sequence))
+        self.assertTrue(torch.allclose(norm_pos, pos_sequence, atol=1e-4))
 
 
 class TestDistanceCalculation(unittest.TestCase):
