@@ -25,8 +25,8 @@ class SinglePromp:
         self.data = data
         self.mean_w = mean_w
         self.std_w = std_w
-        if mean_w != None:
-            assert std_w != None
+        if mean_w is not None:
+            assert std_w is not None
             self.s = self.data.size(1)
             self.phase = torch.linspace(
                 0, 1, math.floor(self.s / self.alpha)
@@ -121,7 +121,7 @@ class SinglePromp:
         mean_length = math.floor(
             functools.reduce(lambda x, y: x + y.size(0), trajs, 0) / float(len(trajs))
         )
-        ## Put all the trajectories with the same length (interpolate when needed)
+        # Put all the trajectories with the same length (interpolate when needed)
         self.data = self.normalize(trajs, mean_length)
         assert self.data.size(0) == len(trajs)
         self.s = mean_length  # number of timesteps in the trajectory / we take the mean from the data
@@ -156,7 +156,7 @@ class SinglePromp:
     # TODO: we should have a simpler version that by adding a single point
     # this would be faster for multiple/continuous predictions
     def condition(self, traj: torch.Tensor, std: torch.Tensor = None):
-        if std == None:
+        if std is None:
             std = torch.zeros_like(traj) + 0.0000001
         mean_w = self.mean_w.clone()
         std_w = self.std_w.clone()
@@ -169,9 +169,9 @@ class SinglePromp:
             obs_std = torch.Tensor([std[i]])
             # we make a simple diagonal covariance matrix ; not in C++ code
             cov = std_w * torch.eye(self.std_w.size(0), self.std_w.size(0))
-            l = cov @ psi_obs @ (obs_std + psi_obs.T @ cov @ psi_obs + 0.01).inverse()
-            mean_w = mean_w + l @ (obs - psi_obs.T @ mean_w)
-            std_w = std_w - l @ psi_obs.T @ std_w
+            l_ = cov @ psi_obs @ (obs_std + psi_obs.T @ cov @ psi_obs + 0.01).inverse()
+            mean_w = mean_w + l_ @ (obs - psi_obs.T @ mean_w)
+            std_w = std_w - l_ @ psi_obs.T @ std_w
 
         # self.mean_w = mean_w
         # self.std_w = std_w

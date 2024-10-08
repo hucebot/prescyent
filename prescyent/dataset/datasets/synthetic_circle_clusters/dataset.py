@@ -8,12 +8,7 @@ from typing import Union, Dict, List
 import h5py
 import numpy as np
 import torch
-import matplotlib
-
-matplotlib.use("TkAgg", force=True)
 from matplotlib import pyplot as plt
-
-print("Switched to:", matplotlib.get_backend())
 from scipy.interpolate import splrep, BSpline
 from tqdm.auto import tqdm
 
@@ -60,7 +55,7 @@ class Dataset(MotionDataset):
         traj_id = 0
         for c in tqdm(
             range(self.config.num_clusters),
-            desc=f"Iterating of clusters",
+            desc="Iterating on clusters",
             colour="green",
         ):
             cluster_counter = 0

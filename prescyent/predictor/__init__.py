@@ -26,7 +26,7 @@ from prescyent.predictor.lightning.models.autoreg.sarlstm import (
 
 from prescyent.utils.logger import logger, PREDICTOR
 
-## No more experimental predictor for now, kept logic for later use
+# No more experimental predictor for now, kept logic for later use
 # try:
 #     # from prescyent.experimental.simlpe import SiMLPePredictor
 

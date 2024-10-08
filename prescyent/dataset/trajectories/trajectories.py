@@ -88,29 +88,27 @@ class Trajectories:
         _frequency = {t.frequency for t in self.train + self.test + self.val}
         try:
             assert len(_frequency) == 1
-        except:
-            raise AssertionError("We expect all Trajectory to have the same frequency")
+        except AssertionError as err:
+            raise AssertionError("We expect all Trajectory to have the same frequency") from err
         _num_points = {t.shape[1] for t in self.train + self.test + self.val}
         try:
             assert len(_num_points) == 1
-        except:
-            raise AssertionError("We expect all Trajectory to have the same num_points")
+        except AssertionError as err:
+            raise AssertionError("We expect all Trajectory to have the same num_points") from err
 
         _num_dims = {t.shape[2] for t in self.train + self.test + self.val}
         try:
             assert len(_num_dims) == 1
-        except:
-            raise AssertionError("We expect all Trajectory to have the same num_dims")
+        except AssertionError as err:
+            raise AssertionError("We expect all Trajectory to have the same num_dims") from err
 
         _tensor_features = {
             t.tensor_features for t in self.train + self.test + self.val
         }
         try:
             assert len(_tensor_features) == 1
-        except:
-            raise AssertionError(
-                "We expect all Trajectory to have the same tensor_features"
-            )
+        except AssertionError as err:
+            raise AssertionError("We expect all Trajectory to have the same tensor_features") from err
         if all([t.context for t in self.train + self.test + self.val]):
             _context_size_sum = {
                 sum([math.prod(c_tensor.shape[1:]) for c_tensor in t.context.values()])
@@ -118,10 +116,8 @@ class Trajectories:
             }
             try:
                 assert len(_context_size_sum) == 1
-            except:
-                raise AssertionError(
-                    "When calling .context_size_sum on Trajectories level, we expect all Trajectory to have the same context_size_sum"
-                )
+            except AssertionError as err:
+                raise AssertionError("When calling .context_size_sum on Trajectories level, we expect all Trajectory to have the same context_size_sum") from err
 
     def _all_len(self) -> int:
         return len(self.train) + len(self.test) + len(self.val)

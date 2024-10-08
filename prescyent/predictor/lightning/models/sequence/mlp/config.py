@@ -23,7 +23,7 @@ class Config(ModuleConfig):
         if (
             self.context_size is None
             and self.dataset_config.context_keys
-            or not self.context_size is None
+            or self.context_size is not None
             and not self.dataset_config.context_keys
         ):
             raise AttributeError(

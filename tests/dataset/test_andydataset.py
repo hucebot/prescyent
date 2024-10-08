@@ -96,7 +96,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(participants=["909"]), load_data_at_init=True
             )
             dataset.save_config("tmp/test.json")
-            config = dataset._load_config("tmp/test.json")
+            _ = dataset._load_config("tmp/test.json")
             AndyDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
         except FileNotFoundError:

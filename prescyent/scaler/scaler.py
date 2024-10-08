@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 
 
@@ -44,7 +44,7 @@ class Scaler:
             return "Untrained Scaler"
         if not self.config.do_feature_wise_scaling:
             return f"Scaler with {self.scalers['feature'].__class__.__name__} on dim {self.scalers['feature'].dim}"
-        _str = f"Feature Wise Scaler with:"
+        _str = "Feature Wise Scaler with:"
         for feat_name, scaler in self.scalers.items():
             _str += "\n" + 5 * "    "
             _str += (

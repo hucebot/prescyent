@@ -41,6 +41,7 @@ class DatasetConfig(MotionDatasetConfig):
 
     @model_validator(mode="after")
     def check_context_keys(self):
+        """check that requested keys exists in the dataset"""
         if self.context_keys:
             for key in self.context_keys:
                 if key not in CONTEXT_KEYS:

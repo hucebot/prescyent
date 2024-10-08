@@ -106,8 +106,8 @@ class HDF5MotionDataSamples:
         context = {
             key: tmp_hdf5_data.create_dataset(
                 key,
-                shape=(num_pairs, *trajectories[0].context[c_key].shape),
-                dtype=trajectories[0].context[c_key].numpy().dtype,
+                shape=(num_pairs, *trajectories[0].context[key].shape),
+                dtype=trajectories[0].context[key].numpy().dtype,
             )
             for key in self.config.context_keys
         }

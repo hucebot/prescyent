@@ -26,7 +26,7 @@ class InitSSTDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, context, truth = dataset.test_datasample[0]
+        sample, _, truth = dataset.test_datasample[0]
         self.assertEqual(len(sample), len(truth))
         np.testing.assert_allclose(
             sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -51,19 +51,19 @@ class InitSSTDatasetTest(CustomTestCase):
             load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
-        sample, context, truth = dataset.test_datasample[0]
+        sample, _, truth = dataset.test_datasample[0]
         self.assertEqual(sample.shape[-1], 6)
         self.assertEqual(truth.shape[-1], 4)
-        sample, context, truth = dataset.train_datasample[0]
+        sample, _, truth = dataset.train_datasample[0]
         self.assertEqual(sample.shape[-1], 6)
         self.assertEqual(truth.shape[-1], 4)
-        sample, context, truth = dataset.val_datasample[0]
+        sample, _, truth = dataset.val_datasample[0]
         self.assertEqual(sample.shape[-1], 6)
         self.assertEqual(truth.shape[-1], 4)
 
     def test_load_from_path(self):
         dataset = SSTDataset(SSTDatasetConfig(num_traj=10), load_data_at_init=True)
         dataset.save_config("tmp/test.json")
-        config = dataset._load_config("tmp/test.json")
+        _ = dataset._load_config("tmp/test.json")
         SSTDataset("tmp/test.json", load_data_at_init=True)
         shutil.rmtree("tmp", ignore_errors=True)
