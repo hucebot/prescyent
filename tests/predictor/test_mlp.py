@@ -1,18 +1,22 @@
 from pydantic import ValidationError
-from prescyent.predictor import MlpPredictor, MlpConfig
+
 from prescyent.dataset import DatasetConfig
-from prescyent.dataset.features import Any
+from prescyent.dataset.features import Any, Features
+from prescyent.predictor import MlpPredictor, MlpConfig
+from prescyent.predictor.lightning.predictor import MODEL_CHECKPOINT_NAME
+
 
 from tests.custom_test_case import CustomTestCase
 
-
+features = Features([Any(range(1))])
 dataset_config = DatasetConfig(
+    frequency=10,
     history_size=10,
     future_size=10,
     in_points=[0],
     out_points=[0],
-    in_features=[Any([0])],
-    out_features=[Any([0])],
+    in_features=features,
+    out_features=features,
 )
 
 
@@ -42,25 +46,20 @@ class MlpInitTests(CustomTestCase):
             MlpConfig(feature_size=1)
 
     def test_missing_config_error(self):
-        self.assertRaises(NotImplementedError, MlpPredictor)
+        self.assertRaises(TypeError, MlpPredictor)
 
     # -- INIT FROM STATE
     def test_init_with_pathname(self):
-        MlpPredictor(model_path="tests/mocking/mlp_model")
-        MlpPredictor(model_path="tests/mocking/mlp_model/trainer_checkpoint.ckpt")
-        with self.assertRaises(NotImplementedError) as context:
-            MlpPredictor(model_path="tests/mocking/mlp_model/bad_model.bin")
-        self.assertTrue(
-            "Given file extention .bin is not supported" in str(context.exception)
-        )
+        MlpPredictor.load_pretrained("tests/mocking/mlp_model")
+        MlpPredictor.load_pretrained(f"tests/mocking/mlp_model/{MODEL_CHECKPOINT_NAME}")
         with self.assertRaises(FileNotFoundError) as context:
-            MlpPredictor(model_path="tests/mocking/mlp_model/non_existing.bin")
+            MlpPredictor.load_pretrained("tests/mocking/non_existing/")
         self.assertTrue("No file or directory" in str(context.exception))
 
     def test_init_with_config_containing_path(self):
         model_path = "tests/mocking/mlp_model"
         config = MlpConfig(
             dataset_config=dataset_config,
-            model_path=model_path,
+            save_path=model_path,
         )
         MlpPredictor(config=config)

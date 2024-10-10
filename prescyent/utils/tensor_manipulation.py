@@ -1,4 +1,5 @@
 """util functions for tensors"""
+import functools
 from typing import Iterable, List, Tuple, Union
 import torch
 
@@ -31,6 +32,43 @@ def cat_list_with_seq_idx(preds: torch.Tensor, flatt_idx: int = -1):
 
 def is_tensor_is_batched(iterable: Iterable):
     return isinstance(iterable, torch.Tensor) and len(iterable.shape) >= 4
+
+
+def self_auto_batch(function):
+    """decorator for seemless batched/unbatched forward methods"""
+
+    @functools.wraps(function)
+    def reshape(self, input_tensor, *args, **kwargs):
+        unbatched = len(input_tensor.shape) == 3
+        if unbatched:
+            input_tensor = torch.unsqueeze(input_tensor, dim=0)
+        if kwargs.get("context", None):
+            kwargs["context"] = {
+                c_name: c_tensor.unsqueeze(0) if len(c_tensor.shape) <= 2 else c_tensor
+                for c_name, c_tensor in kwargs["context"].items()
+            }
+        predictions = function(self, input_tensor, *args, **kwargs)
+        if unbatched:
+            predictions = torch.squeeze(predictions, dim=0)
+        return predictions
+
+    return reshape
+
+
+def auto_batch(function):
+    """decorator for seemless batched/unbatched forward methods"""
+
+    @functools.wraps(function)
+    def reshape(input_tensor, *args, **kwargs):
+        unbatched = len(input_tensor.shape) == 3
+        if unbatched:
+            input_tensor = torch.unsqueeze(input_tensor, dim=0)
+        predictions = function(input_tensor, *args, **kwargs)
+        if unbatched:
+            predictions = torch.squeeze(predictions, dim=0)
+        return predictions
+
+    return reshape
 
 
 def trajectory_tensor_get_dim_limits(

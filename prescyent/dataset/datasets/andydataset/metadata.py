@@ -1,9 +1,8 @@
-from prescyent.dataset.features.feature.coordinate import CoordinateXYZ
-from prescyent.dataset.features.feature.rotation import RotationQuat
+from prescyent.dataset.features import CoordinateXYZ, Features, RotationQuat
 
 
 BASE_FREQUENCY = 240
-SEGMENT_LABELS = [
+POINT_LABELS = [
     "Pelvis",  # 0
     "L5",  # 1
     "L3",  # 2
@@ -28,7 +27,7 @@ SEGMENT_LABELS = [
     "LeftFoot",  # 21
     "LeftToe",  # 22
 ]
-SEGMENT_PARENTS = [
+POINT_PARENTS = [
     -1,  # 0: Pelvis
     0,  # 1: L5
     1,  # 2: L3
@@ -55,4 +54,16 @@ SEGMENT_PARENTS = [
 ]
 
 SCHEMA = "{http://www.xsens.com/mvn/mvnx}"
-FEATURES = [CoordinateXYZ(range(3)), RotationQuat(range(3, 7))]
+DEFAULT_FEATURES = Features([CoordinateXYZ(range(3)), RotationQuat(range(3, 7))])
+CONTEXT_KEYS = [
+    "velocity",
+    "acceleration",
+    "angularVelocity",
+    "angularAcceleration",
+    "sensorFreeAcceleration",
+    "sensorMagneticField",
+    "sensorOrientation",
+    "jointAngle",
+    "jointAngleXZY",
+    "centerOfMass",
+]

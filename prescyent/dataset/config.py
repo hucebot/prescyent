@@ -1,10 +1,12 @@
 """Common config elements for motion datasets usage"""
+import random
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 import prescyent.dataset.features as tensor_features
+from prescyent.base_config import BaseConfig
 from prescyent.utils.enums import LearningTypes
 
 
@@ -12,25 +14,58 @@ root_dir = Path(__file__).parent.parent.parent
 DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
 
 
-class MotionDatasetConfig(BaseModel):
+class MotionDatasetConfig(BaseConfig):
     """Pydantic Basemodel for MotionDatasets configuration"""
 
+    name: Optional[str] = None
+    """Name of your dataset. WARNING, If you override default value, AutoDataset won't be able to load your dataset"""
+    seed: int = None
+    """A seed for all random operations in the dataset class"""
+
+    # Dataloader values
     batch_size: int = 128
-    learning_type: LearningTypes = LearningTypes.SEQ2SEQ
-    shuffle: bool = True
-    num_workers: int = 0
-    drop_last: bool = True
-    persistent_workers: bool = False
+    """Size of the batch of all dataloaders"""
+    num_workers: int = 1
+    """See https://pytorch.org/docs/stable/data.html#single-and-multi-process-data-loading"""
+    persistent_workers: bool = True
+    """See https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"""
     pin_memory: bool = True
+    """See https://pytorch.org/docs/stable/data.html#memory-pinning"""
+    save_samples_on_disk: bool = True
+    """If True we'll use a tmp hdf5 file to store the x, y pairs and win some time at computation during training in the detriment of some init time and temporary disk space"""
+
     # x, y pairs related variables for motion data samples:
-    history_size: int  # number of timesteps as input
-    future_size: int  # number of predicted timesteps
-    in_features: Optional[List[tensor_features.Feature]] = None
-    out_features: Optional[List[tensor_features.Feature]] = None
-    # do not mistake theses with the "used joint" one that is used on Trajectory level. Theses values are relative to the used_joints one
-    in_points: Optional[List[int]] = None
-    out_points: Optional[List[int]] = None
-    convert_trajectories_beforehand: bool = True  # If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders
+    learning_type: LearningTypes = LearningTypes.SEQ2SEQ
+    """Method used to generate MotionDataSamples"""
+    frequency: int
+    """The frequency in Hz of the dataset,
+    If different from original data we'll use linear upsampling or downsampling of the data"""
+    history_size: int
+    """Number of timesteps as input"""
+    future_size: int
+    """Number of timesteps predicted as output"""
+    in_features: Optional[tensor_features.Features]
+    """List of features used as input, if None, use default from the dataset"""
+    out_features: Optional[tensor_features.Features]
+    """List of features used as output, if None, use default from the dataset"""
+    in_points: Optional[List[int]]
+    """Ids of the points used as input.
+    Do not mistake with the "used joint".
+    Use joints are used on Trajectory level while in_points and out_points
+    are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    out_points: Optional[List[int]]
+    """Ids of the points used as output.
+    Do not mistake with the "used joint".
+    Use joints are used on Trajectory level while in_points and out_points
+    are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    context_keys: List[str] = []
+    """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
+    convert_trajectories_beforehand: bool = True
+    """If in_features and out_features allows it, convert the trajectories as a preprocessing instead of in the dataloaders"""
+    loop_over_traj: bool = False
+    """Make the trajectory loop over itself where generating training pairs"""
+    reverse_pair_ratio: float = 0
+    """Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1"""
 
     @property
     def num_out_features(self) -> int:
@@ -90,21 +125,46 @@ class MotionDatasetConfig(BaseModel):
     def unserialize_features(self):
         if self.get("out_features", None):
             if isinstance(self["out_features"], tensor_features.Feature):
-                self["out_features"] = [self["out_features"]]
+                self["out_features"] = tensor_features.Features(
+                    [self["out_features"]], index_name=False
+                )
             if not isinstance(self["out_features"][0], tensor_features.Feature):
-                self["out_features"] = [
-                    getattr(tensor_features, feature["name"])(feature["ids"])
-                    for feature in self["out_features"]
-                ]
+                self["out_features"] = tensor_features.Features(
+                    [
+                        getattr(tensor_features, feature["feature_class"])(
+                            feature["ids"], name=feature["name"]
+                        )
+                        for feature in self["out_features"]
+                    ],
+                    index_name=False,
+                )
+            if isinstance(self["out_features"], list):
+                self["out_features"] = tensor_features.Features(
+                    self["out_features"], index_name=False
+                )
         if self.get("in_features", None):
             if isinstance(self["in_features"], tensor_features.Feature):
-                self["in_features"] = [self["in_features"]]
+                self["in_features"] = tensor_features.Features(
+                    [self["in_features"]], index_name=False
+                )
             if not isinstance(self["in_features"][0], tensor_features.Feature):
-                self["in_features"] = [
-                    getattr(tensor_features, feature["name"])(feature["ids"])
-                    for feature in self["in_features"]
-                ]
+                self["in_features"] = tensor_features.Features(
+                    [
+                        getattr(tensor_features, feature["feature_class"])(
+                            feature["ids"], name=feature["name"]
+                        )
+                        for feature in self["in_features"]
+                    ],
+                    index_name=False,
+                )
+            if isinstance(self["in_features"], list):
+                self["in_features"] = tensor_features.Features(
+                    self["in_features"], index_name=False
+                )
         return self
 
-    class Config:
-        arbitrary_types_allowed = True
+    @model_validator(mode="after")
+    def generate_random_seed_if_none(self):
+        if self.seed is None:
+            self.seed = random.randint(1, 10**9)
+        return self

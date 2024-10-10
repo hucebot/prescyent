@@ -113,29 +113,44 @@ def quat_to_rotmatrix(quat: torch.Tensor) -> torch.Tensor:
 
 
 def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
-    """
-    Converts a rotation matrix to quaternion
-    :param rotmatrix: N * 3 * 3
-    :return: N * 4  with
-    """
-    rotdiff = rotmatrix - rotmatrix.transpose(1, 2)
-    r = torch.zeros_like(rotdiff[:, 0])
-    r[:, 0] = -rotdiff[:, 1, 2]
-    r[:, 1] = rotdiff[:, 0, 2]
-    r[:, 2] = -rotdiff[:, 0, 1]
-    r_norm = torch.norm(r, dim=1)
-    sintheta = r_norm / 2
-    r0 = torch.div(r, r_norm.unsqueeze(1).repeat(1, 3) + 0.00000001)
-    t1 = rotmatrix[:, 0, 0]
-    t2 = rotmatrix[:, 1, 1]
-    t3 = rotmatrix[:, 2, 2]
-    costheta = (t1 + t2 + t3 - 1) / 2
-    theta = torch.atan2(sintheta, costheta)
-    q = torch.zeros(rotmatrix.shape[0], 4).float().to(rotmatrix.device)
-    q[:, -1] = torch.cos(theta / 2)
-    q[:, :-1] = torch.mul(r0, torch.sin(theta / 2).unsqueeze(1).repeat(1, 3))
+    """Converts a rotation matrix to quaternion
+    torch implementation with logic from https://github.com/scipy/scipy/blob/7cb3d751756907238996502b92709dc45e1c6596/scipy/spatial/transform/rotation.py#L480
+    WARNING: You cannot use this method in backpropagation as it uses inplace operations
 
-    return q
+    Args:
+        rotmatrix (torch.Tensor): Rotmatrix with shape (N, 3, 3)
+
+    Returns:
+        torch.Tensor: Quaternion with shape (N, 4)
+    """
+    diag_elements = rotmatrix.diagonal(dim1=1, dim2=2)
+    sum_diag = diag_elements.sum(dim=1, keepdim=True)
+    decision_matrix = torch.cat([diag_elements, sum_diag], dim=1)
+    indices = decision_matrix.argmax(dim=1)
+    # init empty quat
+    quat = torch.zeros((rotmatrix.shape[0], 4), device=rotmatrix.device)
+    indice = torch.nonzero(indices != 3)
+    i = indices[indice]
+    j = (i + 1) % 3
+    k = (j + 1) % 3
+    quat[indice, i] = 1 - decision_matrix[indice, -1] + 2 * rotmatrix[indice, i, i]
+    quat[indice, j] = rotmatrix[indice, j, i] + rotmatrix[indice, i, j]
+    quat[indice, k] = rotmatrix[indice, k, i] + rotmatrix[indice, i, k]
+    quat[indice, 3] = rotmatrix[indice, k, j] - rotmatrix[indice, j, k]
+    indice = torch.nonzero(indices == 3)
+    quat[indice, 0] = rotmatrix[indice, 2, 1] - rotmatrix[indice, 1, 2]
+    quat[indice, 1] = rotmatrix[indice, 0, 2] - rotmatrix[indice, 2, 0]
+    quat[indice, 2] = rotmatrix[indice, 1, 0] - rotmatrix[indice, 0, 1]
+    quat[indice, 3] = 1 + decision_matrix[indice, -1]
+    return normalize_quaternion(quat)
+
+
+def normalize_quaternion(quat_t: torch.Tensor) -> torch.Tensor:
+    quat_normed = quat_t / quat_t.norm(dim=-1, keepdim=True)
+    # Ensure we have the quaternion with a positive w to avoid double cover
+    indices = torch.nonzero(quat_normed[..., -1] < 0, as_tuple=True)
+    quat_normed[indices] = -quat_normed[indices]
+    return quat_normed
 
 
 def normalize_with_torch(t_tensor):
@@ -314,7 +329,7 @@ def get_relative_rotation_from(
 
     Args:
         input_tensor (torch.Tensor): the input tensor to update (B, S, P, D)
-        basis_tensor (torch.Tensor): the new basis tensor (B, 1, P, D)
+        basis_tensor (torch.Tensor): the new basis tensor (B, [1:S], P, D)
 
     Returns:
         torch.Tensor: tensor relative to new basis
@@ -331,7 +346,7 @@ def get_relative_rotation_from(
     basis_tensor = basis_tensor.reshape(*basis_tensor.shape[:-1], 3, 3).expand(
         input_tensor.shape
     )
-    input_tensor[:, :, :] = torch.matmul(input_tensor[:, :, :], basis_tensor[:, :, :])
+    input_tensor = torch.matmul(input_tensor, basis_tensor)
     input_tensor = input_tensor.transpose(3, 4)
     input_tensor = input_tensor.reshape(*input_tensor.shape[:-2], 9)
     if not isinstance(rotation_rep, RotationRotMat):

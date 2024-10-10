@@ -1,19 +1,24 @@
 {
     "model_config": {
         "activation": "relu",
+        "context_size": null,
         "dataset_config": {
             "batch_size": 256,
-            "drop_last": true,
+            "context_keys": [],
+            "convert_trajectories_beforehand": true,
+            "frequency": 10,
             "future_size": 10,
             "history_size": 10,
             "in_features": [
                 {
+                    "distance_unit": "m",
+                    "feature_class": "CoordinateXYZ",
                     "ids": [
                         0,
                         1,
                         2
                     ],
-                    "name": "CoordinateXYZ"
+                    "name": "Coordinate_0"
                 }
             ],
             "in_points": [
@@ -22,56 +27,67 @@
                 2
             ],
             "learning_type": "sequence_2_sequence",
-            "num_workers": 0,
+            "loop_over_traj": false,
+            "name": "TeleopIcub",
+            "num_workers": 4,
             "out_features": [
                 {
+                    "distance_unit": "m",
+                    "feature_class": "CoordinateXYZ",
                     "ids": [
                         0,
                         1,
                         2
                     ],
-                    "name": "CoordinateXYZ"
+                    "name": "Coordinate_0"
                 }
             ],
             "out_points": [
-                0,
                 1,
                 2
             ],
-            "persistent_workers": false,
+            "persistent_workers": true,
             "pin_memory": true,
-            "shuffle": true
+            "reverse_pair_ratio": 0,
+            "save_samples_on_disk": true,
+            "seed": 389054121
         },
+        "deriv_on_last_frame": true,
+        "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
-        "hidden_size": 256,
-        "loss_fn": "mseloss",
+        "hidden_size": 128,
+        "loss_fn": null,
         "name": "MlpPredictor",
-        "norm_on_last_input": true,
         "num_layers": 4,
         "save_path": "data/models",
-        "used_norm": "batch_normalization",
-        "used_profiler": null,
-        "version": 0
+        "scaler_config": {
+            "do_feature_wise_scaling": true,
+            "scale_rotations": false,
+            "scaler": "standardization",
+            "scaling_axis": "[1]"
+        },
+        "version": 72
     },
     "training_config": {
-        "accelerator": "cpu",
+        "accelerator": "auto",
         "accumulate_grad_batches": 1,
         "devices": "auto",
         "early_stopping_mode": "min",
-        "early_stopping_patience": 10,
+        "early_stopping_patience": 15,
         "early_stopping_value": "Val/loss",
-        "epoch": 100,
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
-        "lr": 0.0001,
+        "lr": 0.0005,
+        "max_epochs": 300,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 419717352,
+        "seed": 865997167,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,
+        "used_profiler": null,
         "weight_decay": 0.01
     }
 }

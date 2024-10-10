@@ -4,8 +4,8 @@ from pathlib import Path
 from tqdm import tqdm
 from typing import List
 
-import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from prescyent.dataset import Trajectory
@@ -162,7 +162,7 @@ def render_3d_trajectories(
                                 line_plot[:, 2]
                             )
         if not interactive and turn_view:
-            ax_3d.view_init(elev=elevation, azim=i % 360)
+            ax_3d.view_init(elev=elevation, azim=int(i * 10 / trajs[0].frequency) % 360)
         ax_3d.legend(
             handles=[point_list[traj_id][0] for traj_id, _ in enumerate(trajs)],
             labels=[traj.title for traj in trajs],
@@ -187,6 +187,7 @@ def render_3d_trajectories(
                 ),
             ),
             "Rendering trajectory frames",
+            colour="red",
         ),
     )
 
@@ -216,7 +217,7 @@ def render_3d_trajectories(
     if interactive:
         try:
             matplotlib.use("TkAgg")
-        except AttributeError:
-            print("can't use TkAgg backend for matplotlib")
+        except ImportError:
+            logger.getChild(EVAL).warning("can't use TkAgg backend for matplotlib")
             matplotlib.use("agg")
         plt.show()

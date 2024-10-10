@@ -2,16 +2,19 @@
 simple MLP implementation
 [This is a basic multi-layer perceptron, with configurable hidden layers and activation function]
 """
+from typing import Dict, Optional
+
 import numpy as np
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
-from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.dataset.features import (
     convert_tensor_features_to,
     features_are_convertible_to,
 )
+from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.tensor_manipulation import self_auto_batch
 from .mlp import TransMLP
 
 
@@ -21,6 +24,10 @@ class TorchModule(BaseTorchModule):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
+        if self.config.out_sequence_size > self.config.in_sequence_size:
+            raise AttributeError(
+                "This model cannot be used with an output sequence bigger than input's sequence size"
+            )
         self.motion_mlp = TransMLP(self.config)
         # Configure DCT
         if self.config.dct:
@@ -28,8 +35,7 @@ class TorchModule(BaseTorchModule):
                 raise AttributeError(
                     "We cannot apply DCT with non matching in and out features"
                 )
-            dct_m, _ = get_dct_matrix(self.config.in_sequence_size)
-            _, idct_m = get_dct_matrix(self.config.out_sequence_size)
+            dct_m, idct_m = get_dct_matrix(self.in_sequence_size)
             self.register_buffer(
                 "dct_m", torch.tensor(dct_m, requires_grad=False).float().unsqueeze(0)
             )
@@ -47,7 +53,7 @@ class TorchModule(BaseTorchModule):
             )
         if self.config.temporal_fc_out:
             self.motion_fc_out = nn.Linear(
-                self.config.in_sequence_size, self.config.out_sequence_size
+                self.config.in_sequence_size, self.config.in_sequence_size
             )
             if self.config.in_points_dims != self.config.out_points_dims:
                 self.motion_fc_out = nn.Sequential(
@@ -60,15 +66,6 @@ class TorchModule(BaseTorchModule):
             self.motion_fc_out = nn.Linear(
                 self.config.in_points_dims, self.config.out_points_dims
             )
-            if self.config.in_sequence_size != self.config.out_sequence_size:
-                self.motion_fc_out = nn.Sequential(
-                    TransposeLayer(1, 2),
-                    nn.Linear(
-                        self.config.in_sequence_size, self.config.out_sequence_size
-                    ),
-                    TransposeLayer(1, 2),
-                    self.motion_fc_out,
-                )
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -81,8 +78,14 @@ class TorchModule(BaseTorchModule):
                     nn.init.xavier_uniform_(layer.weight, gain=1e-8)
                     nn.init.constant_(layer.bias, 0)
 
-    @BaseTorchModule.allow_unbatched
-    def forward(self, input_tensor: torch.Tensor, future_size: int = None):
+    @self_auto_batch
+    @BaseTorchModule.deriv_tensor
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int = None,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         batch_size = input_tensor.shape[0]
         # (batch_size, seq_len, num_point, num_dim) => (batch_size, seq_len, num_point * num_dim)
         input_tensor_ = input_tensor.reshape(batch_size, self.in_sequence_size, -1)

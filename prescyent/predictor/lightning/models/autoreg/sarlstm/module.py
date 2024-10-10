@@ -4,14 +4,16 @@ for benchmark, example and tests of autoregressive method
 inspired by pytorch Time Sequence prediction:
 https://github.com/pytorch/examples/tree/main/time_sequence_prediction
 """
+from typing import Dict, Optional
 import torch
 from torch import nn
 
-from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.dataset.features import (
     convert_tensor_features_to,
     features_are_convertible_to,
 )
+from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class TorchModule(BaseTorchModule):
@@ -26,6 +28,10 @@ class TorchModule(BaseTorchModule):
         self.num_layers = config.num_layers
         self.num_in_features = self.num_in_dims * self.num_in_points
         self.num_out_features = self.num_out_dims * self.num_out_points
+        if self.num_in_features != self.num_out_features:
+            raise AttributeError(
+                "We cannot use autoregressive models if we cannot recurse on the model output ! Please ajdust your input or chose another model"
+            )
         self.lstms = nn.ModuleList(
             [nn.LSTMCell(self.num_in_features, self.hidden_size)]
         )
@@ -38,9 +44,14 @@ class TorchModule(BaseTorchModule):
         self.linear = nn.Linear(self.hidden_size, self.num_out_features)
         self.convert_output = sorted(self.in_features) != sorted(self.out_features)
 
-    @BaseTorchModule.allow_unbatched
-    @BaseTorchModule.normalize_tensor
-    def forward(self, input_tensor: torch.Tensor, future_size: int = 1):
+    @self_auto_batch
+    @BaseTorchModule.deriv_tensor
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        future_size: int = 1,
+        context: Optional[Dict[str, torch.Tensor]] = None,
+    ):
         if (
             self.convert_output
             and future_size > 1
@@ -93,7 +104,7 @@ class TorchModule(BaseTorchModule):
         predictions = torch.cat(predictions, dim=1)
         predictions = predictions.reshape(
             batch_size,
-            self.out_sequence_size,
+            self.in_sequence_size + future_size - 1,
             self.num_out_points,
             self.num_out_dims,
         )

@@ -1,5 +1,54 @@
 import numpy as np
+from prescyent.dataset.features import CoordinateXYZ, Features, RotationRotMat
 
+
+DEFAULT_ACTIONS = [
+    "directions",
+    "discussion",
+    "eating",
+    "greeting",
+    "phoning",
+    "posing",
+    "purchases",
+    "sitting",
+    "sittingdown",
+    "smoking",
+    "takingphoto",
+    "waiting",
+    "walking",
+    "walkingdog",
+    "walkingtogether",
+]
+DEFAULT_USED_JOINTS = [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    21,
+    22,
+    25,
+    26,
+    27,
+    29,
+    30,
+]  # indexes of the joints, default is taken from benchmarks like siMLPe's
+DEFAULT_FEATURES = Features(
+    [
+        CoordinateXYZ(list(range(3))),
+        RotationRotMat(list(range(3, 12))),
+    ]
+)
 BASE_FREQUENCY = 50
 POINT_LABELS = [
     "hips_0",
@@ -262,5 +311,4 @@ def _get_metadata():
     ]
 
     expmapInd = np.split(np.arange(4, 100) - 1, 32)
-
     return parent, offset, rotInd, expmapInd

@@ -12,5 +12,5 @@ class Predictor(LightningPredictor):
     module_class = TorchModule
     config_class = Config
 
-    def __init__(self, model_path=None, config=None):
-        super().__init__(model_path, config, self.PREDICTOR_NAME)
+    def __init__(self, config, skip_build=False):
+        super().__init__(config=config, name=self.PREDICTOR_NAME, skip_build=skip_build)

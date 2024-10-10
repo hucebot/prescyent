@@ -99,7 +99,6 @@ if __name__ == "__main__":
         history_size=25,
         in_features=features,
         out_features=features,
-        in_points=None,  # All points as input
         out_points=[10],  # only right hand as output
         make_joints_position_relative_to=0,  # Whole points coordinates are relative to PELVIS's position
         num_workers=4,
@@ -115,7 +114,7 @@ if __name__ == "__main__":
 
     # Test Baselines first
     constant = ConstantPredictor(dataset.config, str(exp_path))
-    constant.test(dataset.test_dataloader)
+    constant.test(dataset)
     plot_mpjpe(constant, dataset, savefig_dir_path=f"{constant.log_path}/")
 
     # Start a new training per config file

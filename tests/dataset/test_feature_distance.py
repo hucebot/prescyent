@@ -31,10 +31,12 @@ class TestFeatureWiseDistance(unittest.TestCase):
         )
         truth_coord = torch.FloatTensor([[[0.0, 1.0, 1.0, 10.0, 6.0]]])
         truth_rot = torch.FloatTensor([[[1.0, 0.0, 0.5, 2.0, 2.0]]])
-        feature = [
-            tensor_features.CoordinateXYZ(range(3)),
-            tensor_features.RotationQuat(range(3, 7)),
-        ]
+        feature = tensor_features.Features(
+            [
+                tensor_features.CoordinateXYZ(range(3)),
+                tensor_features.RotationQuat(range(3, 7)),
+            ]
+        )
         dist = tensor_features.get_distance(a, feature, b, feature)
-        self.assertTrue(torch.allclose(dist["Rotation"], truth_rot))
-        self.assertTrue(torch.allclose(dist["Coordinate"], truth_coord))
+        self.assertTrue(torch.allclose(dist["Coordinate_0"], truth_coord))
+        self.assertTrue(torch.allclose(dist["Rotation_1"], truth_rot, atol=1e-3))

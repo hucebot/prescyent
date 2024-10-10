@@ -1,0 +1,93 @@
+# This workflow will retreive version name from setup.py and build the according Docker Image, pypi package and documentation
+
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]  # Reference the test workflow
+    types:
+      - completed  # Trigger only after the test workflow is completed
+
+jobs:
+  create_release:
+    name: Build and create release
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}  # Ensure it's on the 'main' branch and the test workflow was successful
+    environment: testpypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+        # PACKAGE AND PYPI
+      - name: Install dependencies
+        run: pip install build
+
+      - name: Build python package
+        run: python -m build
+
+      - name: Publish package distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+      # - name: Publish package distributions to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+
+        # DOCKER
+      - name: Get the current version
+        id: extract_version
+        run: |
+          VERSION=$(python setup.py --version)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Image
+        id: docker_build
+        run: |
+          docker build -t prescyent:latest -t prescyent:${{ env.VERSION }} .
+
+      - name: Save Docker Image to tar
+        run: |
+          docker save prescyent:latest -o prescyent-${{ env.VERSION }}.tar
+
+        # CREATE RELEASE
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
+          body: |
+            Automatic release for version v${{ env.VERSION }}.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Docker Image to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./prescyent-${{ env.VERSION }}.tar
+          asset_name: prescyent-${{ env.VERSION }}.tar
+          asset_content_type: application/x-tar
+
+      - name: Upload Python Wheel to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/*.whl
+          asset_name: prescyent-${{ env.VERSION }}.whl
+          asset_content_type: application/octet-stream
+
+      - name: Upload Python Source Distribution to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/*.tar.gz
+          asset_name: prescyent-${{ env.VERSION }}.tar.gz
+          asset_content_type: application/gzip

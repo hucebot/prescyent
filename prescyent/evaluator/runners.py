@@ -1,14 +1,13 @@
 """module to run model and methods evaluation"""
 
 from pathlib import Path
-from typing import Callable, List, Union
+from typing import Callable, Dict, List, Union
 import timeit
 
 import torch
 from tqdm import tqdm
 from prescyent.dataset import Trajectory
 from prescyent.dataset.config import MotionDatasetConfig
-from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
 
@@ -19,17 +18,18 @@ from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
 def run_predictor(
     predictor: Callable,
-    trajectory: torch.Tensor,
+    input_tensor: torch.Tensor,
+    context: Dict[str, torch.Tensor],
     history_size: int,
     future_size: int,
     run_method: str = "windowed",
     output_all: bool = False,
 ) -> Union[List[torch.Tensor], torch.Tensor]:
-    """loops a predictor over a whole trajectory / tensor
+    """loops a predictor over a whole input_tensor / tensor
 
     Args:
         predictor (Callable):  Any predictor module (or any callable)
-        trajectory (torch.Tensor): a tensor of positions to predict in the shape
+        input_tensor (torch.Tensor): a tensor of positions to predict in the shape
                 (batch_len, seq_len, num_points, num_dims) or (seq_len, num_points, num_dims)
         history_size (int): size used as input for the predictor.
         future_size (int): size used as output for the predictor
@@ -54,7 +54,7 @@ def run_predictor(
     if run_method == "windowed":
         history_step = future_size
         prediction = predictor(
-            trajectory,
+            input_tensor,
             history_size=history_size,
             history_step=history_step,
             future_size=future_size,
@@ -65,10 +65,12 @@ def run_predictor(
             prediction = torch.cat(prediction, dim=0)
     elif run_method == "step_every_timestamp":
         prediction = predictor(
-            trajectory,
+            input_tensor=input_tensor,
+            future_size=future_size,
             history_size=history_size,
             history_step=1,
-            future_size=future_size,
+            input_tensor_features=None,
+            context=context,
         )
         if not output_all:  # here we choose to keep the last pred at each step
             prediction = cat_list_with_seq_idx(prediction, flatt_idx=-1)
@@ -81,7 +83,7 @@ def eval_predictors(
     predictors: List[Callable],
     trajectories: List[Trajectory],
     dataset_config: MotionDatasetConfig,
-    future_size=None,
+    future_size: int = None,
     run_method: str = "step_every_timestamp",
     do_plotting: bool = True,
     saveplot_pattern: str = "%d_%s_prediction.png",
@@ -118,35 +120,36 @@ def eval_predictors(
         f"Running evaluation for {len(predictors)} predictors"
         f" on {len(trajectories)} trajectories",
     )
-    for t, trajectory in tqdm(enumerate(trajectories), desc="Trajectory n°"):
+    for t, trajectory in tqdm(
+        enumerate(trajectories), desc="Trajectory n°", colour="green"
+    ):
         predictions = []
         for p, predictor in enumerate(predictors):
             # prediction is made with chosen method and timed
-            start = timeit.default_timer()
-            history = convert_tensor_features_to(
-                trajectory.tensor,
-                trajectory.tensor_features,
+            in_traj = trajectory.create_subtraj(
+                dataset_config.in_points,
                 dataset_config.in_features,
+                dataset_config.context_keys,
             )
-            history = history[:, dataset_config.in_points]
-            history = history[:, :, dataset_config.in_dims]
+            start = timeit.default_timer()
             prediction = run_predictor(
-                predictor, history, dataset_config.history_size, future_size, run_method
+                predictor,
+                in_traj.tensor,
+                in_traj.context,
+                dataset_config.history_size,
+                future_size,
+                run_method,
             )
             elapsed = timeit.default_timer() - start
-            truth = convert_tensor_features_to(
-                trajectory.tensor,
-                trajectory.tensor_features,
-                dataset_config.out_features,
+            truth_traj = trajectory.create_subtraj(
+                dataset_config.out_points, dataset_config.out_features
             )
-            truth = truth[dataset_config.history_size :]
-            truth = truth[:, dataset_config.out_points]
-            truth = truth[:, :, dataset_config.out_dims]
             # we generate new evaluation results with the task metrics
             evaluation_results[p].results.append(
                 EvaluationResult(
-                    history,
-                    truth,
+                    truth_traj.tensor[
+                        dataset_config.history_size + dataset_config.future_size - 1 :
+                    ],
                     prediction,
                     elapsed / trajectory.duration,
                     dataset_config.out_features,
@@ -159,10 +162,12 @@ def eval_predictors(
                 )
                 trajectory.convert_tensor_features(dataset_config.out_features)
                 plot_trajectory_prediction(
-                    trajectory,
-                    truth,
+                    truth_traj,
+                    truth_traj.tensor[
+                        dataset_config.history_size + dataset_config.future_size - 1 :
+                    ],
                     prediction,
-                    step=dataset_config.history_size,
+                    overprediction=dataset_config.future_size,
                     savefig_path=savefig_path,
                 )
             predictions.append(prediction)

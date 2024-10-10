@@ -3,8 +3,11 @@ import torch
 
 
 class GeodesicLoss(torch.nn.modules.loss._Loss):
-    def __init__(self, size_average=None, reduce=None, reduction: str = "mean") -> None:
+    def __init__(
+        self, size_average=None, reduce=None, reduction: str = "mean", eps: float = 1e-7
+    ) -> None:
         super(GeodesicLoss, self).__init__(size_average, reduce, reduction)
+        self.eps = eps
         self.reduction = reduction
 
     def forward(
@@ -20,7 +23,7 @@ class GeodesicLoss(torch.nn.modules.loss._Loss):
         R_diffs = rotmatrix_inputs @ rotmatrix_targets.permute(0, 2, 1)
         all_traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
         # Clip the trace to ensure it is within the valid range for arcos
-        all_traces = torch.clamp((all_traces - 1) / 2, -1.0, 1.0)
+        all_traces = torch.clamp((all_traces - 1) / 2, -1.0 + self.eps, 1.0 - self.eps)
         # Compute the loss
         loss = torch.arccos(all_traces)
         if self.reduction == "mean":

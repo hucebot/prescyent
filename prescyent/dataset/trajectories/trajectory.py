@@ -7,10 +7,11 @@ from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
 
 from prescyent.utils.dataset_manipulation import update_parent_ids
-from prescyent.utils.interpolate import interpolate_trajectory_tensor_with_ratio
+from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.features import (
     Feature,
+    Features,
     Any,
     convert_tensor_features_to,
     get_distance,
@@ -22,29 +23,62 @@ from prescyent.dataset.features.rotation_methods import convert_to_quat
 
 class Trajectory:
     """
-    An trajectory represents a full dataset sample, that we can retrieve with its file name
-    An trajectory tracks n dimensions in time, represented in a tensor of shape (seq_len, n_dim)
+    A trajectory represents a full dataset sample, that we can retrieve with its file name
+    A trajectory tracks n features of m points over time, represented in a tensor of shape (frames, points, features)
+    We describe its tensor with Features, a list of the Feature in the tensor.
+    We also use point_parents and point_names to describe the entities we are tracking at each frame, and their relations.
+    Finally we'll use context as additional data that we may want to pass to predictors along the trajectory
     """
 
     tensor: torch.Tensor
+    """The tensor with the data describing the trajectory"""
     frequency: int
-    tensor_features: List[Feature]
+    """Frequency of the trajectory in Hz"""
+    tensor_features: Features
+    """Description of the features of the tensor with corresponding ids"""
+    context: Dict[str, torch.Tensor]
+    """Additionnal data about the trajectory. Allows some flexibility over the inputs and the way it will be passed to predictors.
+    The tensors must have the same frequency as the base tensor"""
     file_path: str
+    """Path to the file from which the trajectory is created"""
     title: str
+    """Name given to the trajectory to describe it (especially in plots)"""
     point_parents: List[int]
+    """List with the ids of the parent of each points, used to draw bones. -1 if no parent."""
     point_names: List[str]
+    """List of a label to give to each point"""
 
     def __init__(
         self,
         tensor: torch.Tensor,
-        frequency: int,
-        tensor_features: List[Feature] = None,
-        file_path: str = "trajectory_file_path",
+        frequency: float,
+        tensor_features: Features = None,
+        context: Dict[str, torch.Tensor] = {},
+        file_path: Optional[str] = None,
         title: str = "trajectory_name",
         point_parents: List[int] = None,
         point_names: List[str] = None,
     ) -> None:
+        """
+        Args:
+            tensor (torch.Tensor): The tensor with the data
+            frequency (float): Frequency of the trajectory in Hz
+            tensor_features (Features, optional): Description of the features of the tensor with corresponding ids. Defaults to None.
+            context (Dict[str, torch.Tensor], optional): Additionnal data about the trajectory.
+                    Allows some flexibility over the inputs and the way it will be passed to predictors
+                    The tensors must have the same frequency as the base tensor. Default's to None
+            file_path (str, optional): Path to the file from which the trajectory is created. Defaults to "trajectory_file_path".
+            title (str, optional): Name given to the trajectory to describe it (especially in plots. Defaults to "trajectory_name".
+            point_parents (List[int], optional): List with the ids of the parent of each points, used to draw bones. -1 if no parent. Defaults to None.
+            point_names (List[str], optional): List of a label to give to each point. Defaults to None.
+        """
         self.tensor = tensor
+        self.context = context
+        if context:
+            # All context tensors must have the same frequency as the base tensor and a shape like (num_frames, feat_dim). For context, we consider we have one dict entry per "point"
+            assert all(
+                [c_tensor.shape[0] == tensor.shape[0] for c_tensor in context.values()]
+            )
         self.frequency = frequency
         self.file_path = file_path
         self.title = title
@@ -52,16 +86,26 @@ class Trajectory:
             point_parents = [
                 -1 for i in range(tensor.shape[1])
             ]  # default is -1 foreach point
+        # All points are described
+        assert len(point_parents) == tensor.shape[1]
+        # All parents ids exists
+        assert all(p_ids in range(-1, tensor.shape[1]) for p_ids in point_parents)
         self.point_parents = point_parents
         if not point_names:
             point_names = [
                 f"point_{i}" for i in range(tensor.shape[1])
-            ]  # default is -1 foreach point
+            ]  # default is "point_{i}" foreach point
+        # All points are described
+        assert len(point_names) == tensor.shape[1]
         self.point_names = point_names
         if tensor_features is None:
-            tensor_features = [Any(list(range(tensor.shape[-1])))]
+            tensor_features = Features([Any(list(range(tensor.shape[-1])))])
         elif isinstance(tensor_features, Feature):
-            tensor_features = [tensor_features]
+            tensor_features = Features([tensor_features])
+        # No duplicate ids in features
+        assert len(set(tensor_features.ids)) == len(tensor_features.ids)
+        # All feats are described
+        assert len(tensor_features.ids) == tensor.shape[-1]
         self.tensor_features = tensor_features
 
     def __getitem__(self, index) -> torch.Tensor:
@@ -75,6 +119,7 @@ class Trajectory:
 
     @property
     def shape(self) -> torch.Size:
+        """Tensor shape"""
         return self.tensor.shape
 
     @property
@@ -92,29 +137,33 @@ class Trajectory:
         """number of dimensions of each point in the trajectory"""
         return self.tensor.shape[2]
 
-    def convert_tensor_features(self, new_tensor_feats: List[Feature]):
+    @property
+    def context_len(self) -> int:
+        """number of elements in the context"""
+        return len(self.context)
+
+    @property
+    def context_dims(self) -> int:
+        """sum of the dimensions of each element in context"""
+        return sum([c_tensor.shape[-1] for c_tensor in self.context.values()])
+
+    def convert_tensor_features(self, new_tensor_feats: Features):
         """convert trajectory's tensor to new requested features if possible,
             else raises an AttributeError
             self.tensor and self.tensor_features are updated.
         Args:
-            new_tensor_feats (List[Feature]): new list of Feature
+            new_tensor_feats (Features): new list of Feature
         """
         self.tensor = convert_tensor_features_to(
             self.tensor, self.tensor_features, new_tensor_feats
         )
         self.tensor_features = new_tensor_feats
 
-    def augment_frequency(self, augmentation_ratio: int) -> None:
-        """Augment the tensor's frequency using a ratio and linear interpolation
-            new self.tensor will have shape (B, S*ratio, P, D)
-            and, self.frequency is also updated this way
-        Args:
-            augmentation_ratio (int): ratio used for interpolation
-        """
-        self.frequency = self.frequency * augmentation_ratio
-        self.tensor = interpolate_trajectory_tensor_with_ratio(
-            self.tensor, augmentation_ratio
+    def update_frequency(self, target_freq: int) -> None:
+        self.tensor, self.context = update_tensor_frequency(
+            self.tensor, self.frequency, target_freq, self.tensor_features, self.context
         )
+        self.frequency = target_freq
 
     def dump(
         self,
@@ -239,20 +288,32 @@ class Trajectory:
             metrics.append(mean_dists)
         return metrics
 
-    def create_subtraj(self, points: List[int], features: List[Feature]):
+    def create_subtraj(
+        self, points: List[int] = None, features: Features = None, context_keys=None
+    ):
         """Create a subset of this trajectory with given new list of points and features
 
         Args:
-            points (List[int]): ids of the points to keep
-            features (List[Feature]): features to keep
+            points (List[int]): ids of the points to keep. If None, the values will be same as self.
+            features (Features): features to keep. If None, the values will be same as self.
 
         Returns:
             Trajectory: A new subtrajectory of self
         """
+        if points is None:
+            points = list(range(len(self.point_names)))
+        if features is None:
+            features = self.tensor_features
+        context = None
+        if context_keys is None and self.context is not None:
+            context = {
+                c_key: self.context[c_key] for c_key in list(self.context.keys())
+            }
         subtraj = Trajectory(
             tensor=self.tensor[:, points],
             tensor_features=self.tensor_features,
             frequency=self.frequency,
+            context=context,
             file_path=self.file_path,
             title=self.title,
             point_parents=update_parent_ids(points, self.point_parents),

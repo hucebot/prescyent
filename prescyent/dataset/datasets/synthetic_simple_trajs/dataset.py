@@ -1,27 +1,28 @@
 """Class and methods for the SST Dataset
 https://zenodo.org/record/5913573#.Y75xK_7MIaw
 """
-import random
 from pathlib import Path
+import tempfile
 from typing import Union, Dict, List
 
+import h5py
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as R
 from tqdm import tqdm
 
-from prescyent.utils.logger import logger, DATASET
-from prescyent.utils.dataset_manipulation import (
-    split_array_with_ratios,
-    update_parent_ids,
-)
-from prescyent.dataset.datasets.synthetic_simple_trajs.config import DatasetConfig
-from prescyent.dataset.datasets.synthetic_simple_trajs.metadata import *
-from prescyent.dataset.features import CoordinateXYZ, RotationQuat
+from prescyent.dataset.hdf5_utils import write_metadata
+from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
-from prescyent.dataset.dataset import MotionDataset
 from prescyent.utils.logger import logger, DATASET
+from prescyent.utils.interpolate import update_tensor_frequency
+
+from . import metadata
+from .config import DatasetConfig
+
+
+SEQ = "zyx"
 
 
 def clamp_vect_norm(vect, limit):
@@ -35,82 +36,110 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "SST"
 
-    def __init__(self, config: Union[Dict, DatasetConfig, str, Path] = None) -> None:
+    def __init__(
+        self,
+        config: Union[Dict, DatasetConfig, str, Path] = None,
+        load_data_at_init: bool = True,
+    ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
         )
         self._init_from_config(config, DatasetConfig)
-        self.trajectories = self.generate_trajectories()
-        super().__init__(self.DATASET_NAME)
+        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
 
-    def generate_trajectories(self):
+    def prepare_data(self):
         """create a list of Trajectories from config variables"""
-        train_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_train)))
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(train_trajectories)} train trajectories",
+        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        frequency = 1 / self.config.dt
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        write_metadata(
+            tmp_hdf5_data,
+            frequency=frequency,
+            point_parents=metadata.POINT_PARENTS,
+            point_names=metadata.POINT_LABELS,
+            features=metadata.DEFAULT_FEATURES,
         )
-        test_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_test)))
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(test_trajectories)} test trajectories",
-        )
-        val_trajectories = [
-            self.generate_traj(i)
-            for i in tqdm(range(int(self.config.num_traj * self.config.ratio_val)))
-        ]
-        logger.getChild(DATASET).info(
-            f"Generated {len(val_trajectories)} val trajectories",
-        )
-        return Trajectories(train_trajectories, test_trajectories, val_trajectories)
+        np.random.seed(self.config.seed)
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_train)),
+            desc="Generating train_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            context = {}
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
+            )
+            tmp_hdf5_data.create_dataset(f"train/synthetic_traj_{i}/traj", data=tensor)
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_test)),
+            desc="Generating test_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
+            )
+            tmp_hdf5_data.create_dataset(f"test/synthetic_traj_{i}/traj", data=tensor)
+        for i in tqdm(
+            range(int(self.config.num_traj * self.config.ratio_val)),
+            desc="Generating val_trajectories",
+            colour="blue",
+        ):
+            tensor = self.generate_traj()
+            tensor, context = update_tensor_frequency(
+                tensor,
+                frequency,
+                self.config.frequency,
+                metadata.DEFAULT_FEATURES,
+                context,
+            )
+            tmp_hdf5_data.create_dataset(f"val/synthetic_traj_{i}/traj", data=tensor)
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        tmp_hdf5_data.close()
+        np.random.seed()
 
-    def generate_traj(self, id: int) -> Trajectory:
+    def generate_traj(self) -> torch.Tensor:
         """generate smooth linear traj from a starting point and random target point
          all variables are taken from dataset config
 
-        Args:
-            id (int): id used for trajectory name
-
         Returns:
-            Trajectory: new smooth simple traj between two pose
+            torch.Tensor: new smooth simple traj between two pose
         """
         starting_pose = np.array(self.config.starting_pose)
         target_pose = self.get_random_target()
-        trajectory = torch.FloatTensor(starting_pose).unsqueeze(0)
+        tensor = torch.FloatTensor(starting_pose).unsqueeze(0)
         curr_pose = starting_pose
         while not np.allclose(curr_pose, target_pose, rtol=0.001):
             curr_pose = self.controller_goto(curr_pose, target_pose)
-            trajectory = torch.cat(
-                (trajectory, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
+            tensor = torch.cat(
+                (tensor, torch.FloatTensor(curr_pose).unsqueeze(0)), dim=0
             )
-        trajectory = trajectory.unsqueeze(1)
-        trajectory = trajectory[:: self.config.subsampling_step]
-        return Trajectory(
-            trajectory,
-            int(1 / self.config.dt / self.config.subsampling_step),
-            FEATURES,
-            file_path=f"synthetic_traj_{id}",
-            title=f"synthetic_traj_{id}",
-        )
+        tensor = tensor.unsqueeze(1)
+        return tensor
 
     def get_random_target(self) -> List[float]:
-        x = random.uniform(self.config.min_x, self.config.max_x)
-        y = random.uniform(self.config.min_y, self.config.max_y)
-        z = random.uniform(self.config.min_z, self.config.max_z)
-        random_quat = list(R.random().as_quat(canonical=True))  # x, y, z, w
-        return np.array([x, y, z] + random_quat)
+        x = np.random.uniform(self.config.min_x, self.config.max_x)
+        y = np.random.uniform(self.config.min_y, self.config.max_y)
+        z = np.random.uniform(self.config.min_z, self.config.max_z)
+        random_euler = list(R.random().as_euler(SEQ))  # zyx
+        return np.array([x, y, z] + random_euler)
 
     # Code from Quentin, used to loop over next pos to reach target
     def controller_goto(self, curr_pose, target_pose):
         # Compute rotation matrix from quaternions
-        curr_pos, curr_quat = np.array(curr_pose[:3]), np.array(curr_pose[3:])
-        target_pos, target_quat = np.array(target_pose[:3]), np.array(target_pose[3:])
-        curr_mat = R.from_quat(curr_quat).as_matrix()
-        target_mat = R.from_quat(target_quat).as_matrix()
+        curr_pos, curr_euler = np.array(curr_pose[:3]), np.array(curr_pose[3:])
+        target_pos, target_euler = np.array(target_pose[:3]), np.array(target_pose[3:])
+        curr_mat = R.from_euler(SEQ, curr_euler).as_matrix()
+        target_mat = R.from_euler(SEQ, target_euler).as_matrix()
         # Target pose in current commanded hand pose
         rel_mat = target_mat @ curr_mat.transpose()
         rel_pos = target_pos - curr_pos
@@ -124,6 +153,4 @@ class Dataset(MotionDataset):
         curr_pos = curr_pos + self.config.dt * vel_lin
         curr_mat = curr_mat @ R.from_rotvec(self.config.dt * vel_ang).as_matrix()
         # Return updated pose command
-        return np.concatenate(
-            [curr_pos, R.from_matrix(curr_mat).as_quat(canonical=True)]
-        )
+        return np.concatenate([curr_pos, R.from_matrix(curr_mat).as_euler(SEQ)])

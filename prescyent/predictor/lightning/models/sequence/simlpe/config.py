@@ -1,25 +1,31 @@
 """Config elements for Linear Pytorch Lightning module usage"""
-from pydantic import BaseModel, field_validator
+
+from typing import Literal, Optional
+from pydantic import Field
 
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
-
-
-DEFAULT_HIDDEN = 64
+from prescyent.utils.enums import TrajectoryDimensions
 
 
 class Config(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
-    hidden_size: int = DEFAULT_HIDDEN
-    num_layers: int = 48
+    num_layers: int = Field(48, gt=0)
+    """Number of MLPBlock"""
     dct: bool = True
+    """If True, we apply Discrete Cosine Transform over the input and inverse cosine transform over the output"""
     spatial_fc_only: bool = False
+    """If True, MLPBlock will have the Spatial features as inputs, else it's temporals"""
     temporal_fc_in: bool = False
+    """If True, First FC Layer will be have the temporal features as inputs, else it's spatial features"""
     temporal_fc_out: bool = False
-
-    @field_validator("num_layers")
-    @classmethod
-    def name_sup_or_equal_one(cls, v):
-        if v < 1:
-            raise ValueError("num_layers must be >= 1")
-        return v
+    """If True, Last FC Layer will be have the temporal features as inputs, else it's spatial features"""
+    mpl_blocks_norm: Optional[
+        Literal[
+            TrajectoryDimensions.BATCH,
+            TrajectoryDimensions.ALL,
+            TrajectoryDimensions.SPATIAL,
+            TrajectoryDimensions.TEMPORAL,
+        ]
+    ] = TrajectoryDimensions.SPATIAL
+    """Normalization used in each MLPBlock"""

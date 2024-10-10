@@ -10,6 +10,7 @@ import copy
 from typing import List, Tuple
 import torch
 
+from prescyent.dataset.features.features import Features
 from prescyent.dataset.features.feature.feature import Feature
 from prescyent.dataset.features.feature.any import Any
 from prescyent.dataset.features.feature.coordinate import (
