@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prescyent"
-version = "0.4.0"
+dynamic = ["version"]
 description = "Data-driven trajectory forecasting library"
 readme = "README.md"
 authors = [
@@ -40,3 +40,6 @@ Issues = "https://github.com/hucebot/prescyent/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.dynamic]
+version = {attr = "prescyent.__version__"}

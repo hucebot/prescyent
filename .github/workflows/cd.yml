@@ -39,7 +39,7 @@ jobs:
       - name: Get the current version
         id: extract_version
         run: |
-          VERSION=$(python setup.py --version)
+          VERSION=$(python -c "import prescyent; print(prescyent.__version__)")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
