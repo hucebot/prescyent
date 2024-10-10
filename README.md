@@ -3,7 +3,7 @@
 </p>
 
 <h2 style="text-align: center;">
-Data-driven trajectory prediction library built in python
+Data-driven trajectory forecasting library built in python
 </h2>
 
 <p align="center" width="100%">

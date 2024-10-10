@@ -1,5 +1,5 @@
 # for a more complete implementation : https://pypi.org/project/mp-pytorch/
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from tqdm import tqdm
 
 import torch
