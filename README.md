@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="PreScyent" src="https://github.com/hucebot/prescyent/assets/logo.png">
+    <img alt="PreScyent" src="https://github.com/hucebot/prescyent/blob/main/assets/logo.png">
 </p>
 
 <h2 style="text-align: center;">
@@ -7,8 +7,8 @@ Data-driven trajectory forecasting library built in python
 </h2>
 
 <p align="center" width="100%">
-    <img alt="Trajectory plot" src="https://github.com/hucebot/prescyent/assets/mlp_icub_test_plot.png" width="48%" >
-    <img alt="Trajectory visualization" src="https://github.com/hucebot/prescyent/assets/S5_greeting_1_animation.gif" width="40%">
+    <img alt="Trajectory plot" src="https://github.com/hucebot/prescyent/blob/main/assets/mlp_icub_test_plot.png" width="48%" >
+    <img alt="Trajectory visualization" src="https://github.com/hucebot/prescyent/blob/main/assets/S5_greeting_1_animation.gif" width="40%">
 </p>
 
 # Get Started
@@ -72,47 +72,46 @@ and unzip it, it should be following this structure:
 │           │   ├── 1.csv
 │           │   ├── 2.csv
 │           │   ├── 3.csv
-...
+│           │   ├── ...
 │           ├── datasetObstacles
 │           │   ├── 1.csv
 │           │   ├── 2.csv
 │           │   ├── 3.csv
-...
+│           │   ├── ...
 │           ├── datasetMultipleTasks
 │           │   ├── BottleBox
 │           │   │   ├── 1.csv
 │           │   │   ├── 2.csv
 │           │   │   ├── 3.csv
-...
+│           │   │   ├── ...
 │           │   ├── BottleTable
 │           │   │   ├── 1.csv
 │           │   │   ├── 2.csv
 │           │   │   ├── 3.csv
-...
+│           │   │   ├── ...
+│           │   ├── ...
 
 ```
 
 For [Human3.6M](http://vision.imar.ro/human3.6m/description.php) you need to download the zip [here](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip) and prepare your data following this directory structure:  
 ```bash
-data/datasets (or any custom directory that you specify in the DatasetConfig object)
-|-- h36m
-|   |-- S1
-|   |-- S5
-|   |-- S6
-|   |-- ...
-|   |-- S11
+└── h36m
+|   ├── S1
+|   ├── S5
+|   ├── S6
+|   ├── ...
+|   ├── S11
 ```
 
 For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [here](https://zenodo.org/records/3254403/files/xens_mnvx.zip?download=1) and prepare your data following this directory structure:  
 ```bash
-data/datasets (or any custom directory that you specify in the DatasetConfig object)
-|-- AndyData-lab-onePerson
-|   |-- xsens_mnvx
-|   |   |-- Participant_541
-|   |   |-- Participant_909
-|   |   |-- Participant_2193
-|   |   |-- ...
-|   |   |-- Participant_9875
+└── AndyData-lab-onePerson
+|   └── xsens_mnvx
+|       ├── Participant_541
+|       ├── Participant_909
+|       ├── Participant_2193
+|       ├── ...
+|       ├── Participant_9875
 ```
 
 ## Predictors
