@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="PreScyent" src="assets/logo.png">
+    <img alt="PreScyent" src="https://github.com/hucebot/prescyent/assets/logo.png">
 </p>
 
 <h2 style="text-align: center;">
@@ -7,13 +7,14 @@ Data-driven trajectory forecasting library built in python
 </h2>
 
 <p align="center" width="100%">
-    <img alt="Trajectory plot" src="assets/mlp_icub_test_plot.png" width="48%" >
-    <img alt="Trajectory visualization" src="assets/S5_greeting_1_animation.gif" width="40%">
+    <img alt="Trajectory plot" src="https://github.com/hucebot/prescyent/assets/mlp_icub_test_plot.png" width="48%" >
+    <img alt="Trajectory visualization" src="https://github.com/hucebot/prescyent/assets/S5_greeting_1_animation.gif" width="40%">
 </p>
 
 # Get Started
 PreScyent is a trajectory forecasting library, built upon pytorch_lightning  
 It comes with datasets such as:
+- [AndyData-lab-onePerson](https://zenodo.org/records/3254403#.Y_9fwBeZMVk)  
 - [AndyData-lab-onePersonTeleoperatingICub](https://zenodo.org/record/5913573)  
 - [Human3.6M](http://vision.imar.ro/human3.6m/description.php)  
 
@@ -21,13 +22,18 @@ And methods to perform trajectory prediction on this kind of datasets
 
 ## Installation
 
+### From pipy
+You can install released versions of the project from [PyPi](https://pypi.org/project/prescyent/). install using pip from source (you may want to be in a [virtualenv](https://python-guide-pt-br.readthedocs.io/fr/latest/dev/virtualenvs.html) beforehand):  
+```bash
+pip install prescyent
+```
 ### From Docker
 You can build an image docker from the Dockerfile at the source of the repository.  
 Please refer to [docker documentation](https://docs.docker.com) for build command and options.  
 The Dockerfile is designed to be run interactively.  
 
 ### From source
-Clone the repository and cd  
+Clone the repository:  
 
 ```bash
 git clone git@github.com:hucebot/prescyent.git
@@ -44,14 +50,48 @@ pip install .
 ```
 
 ## Datasets
-In this lib, we call "Trajectory" a sequence in time, of n points of m dimensions.  
-It is represented with a tensor of shape:  
-`(batch_size, sequence_len, num_points, num_dims)`.  
-Unbatched tensors are also allowed for inference.  
-  
+Each dataset is composed a list Trajectories, splitted as train, test and val.  
+In this lib, we call "Trajectory" a sequence in time splitted in F frames, tracking P points above D dimensions.  
+It is represented with a batched tensor of shape:  
+`(B, F, P, D)`.  
+Note that unbatched tensors are also allowed for inference.  
+For each Trajectory we describe its tensor with Features, a list of Feature describing what are the dimensions trasked for each point at each frame. Theses allows conversions to occur in background or as preprocessing, as well as using some distance specific losses and metrics (e.g. euclidian distance for Coordinates and geodesic distance for Rotations)  
+Alongside each trajectory tensor, some dataset provide some additional "context" (images, center of mass, velocities...), that is represented inside the library as a dictionary of tensors.  
+
 ### Downloads
-The dataset [AndyData-lab-prescientTeleopICub](https://zenodo.org/record/5913573/) can be downloaded automatically if the files are not found in the given config path.  
-  
+We use HDF5 file format to load a dataset internally. Please get the original data and pre process them using the scripts in `/datapreprocessing` to match the library's format.  
+Then when creating an instance of a Dataset, make sure you pass the path to the newly generated hdf5 file to teh dataset's config attribute `hdf5_path`.  
+
+Download AndyData-lab-prescientTeleopICub's data [here](https://zenodo.org/record/5913573/)
+and unzip it, it should be following this structure:  
+```bash
+├── AndyData-lab-prescientTeleopICub
+│   └── datasetMultipleTasks
+│       └── AndyData-lab-prescientTeleopICub
+│           ├── datasetGoals
+│           │   ├── 1.csv
+│           │   ├── 2.csv
+│           │   ├── 3.csv
+...
+│           ├── datasetObstacles
+│           │   ├── 1.csv
+│           │   ├── 2.csv
+│           │   ├── 3.csv
+...
+│           ├── datasetMultipleTasks
+│           │   ├── BottleBox
+│           │   │   ├── 1.csv
+│           │   │   ├── 2.csv
+│           │   │   ├── 3.csv
+...
+│           │   ├── BottleTable
+│           │   │   ├── 1.csv
+│           │   │   ├── 2.csv
+│           │   │   ├── 3.csv
+...
+
+```
+
 For [Human3.6M](http://vision.imar.ro/human3.6m/description.php) you need to download the zip [here](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip) and prepare your data following this directory structure:  
 ```bash
 data/datasets (or any custom directory that you specify in the DatasetConfig object)
@@ -74,12 +114,10 @@ data/datasets (or any custom directory that you specify in the DatasetConfig obj
 |   |   |-- ...
 |   |   |-- Participant_9875
 ```
-.mvnx files will be parsed and we will extract only orientation and position at each frame for all joints.  
-When reading .mvnx file, we save the resulting tensor as a .pt file, so it can be loaded instead of the whole .mvnx files later if the flag "use_pt" is True in the dataset config, saving a huge amount of time when loading the dataset.  
 
 ## Predictors
-The trajectory prediction methods are organized as Predictor classes  
-For example, the LinearPredictor class is the implementation of a simple Linear layer as a baseline for the task of Trajectory prediction  
+The trajectory prediction methods are organized as Predictor classes.  
+For example, the MlpPredictor class is the implementation of a configurable MLP as a baseline for the task of Trajectory prediction.  
 Relying on the PytorchLightning Framework, it instantiates or load an existing torch Module, with a generic predictor wrapper for saving, loading, iterations over a sample and logging.  
 Feel free to add some new predictor implementations following the example of this simple class, inheriting at least from the BasePredictor class.  
 
