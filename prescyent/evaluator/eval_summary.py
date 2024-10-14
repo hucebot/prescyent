@@ -8,6 +8,8 @@ from prescyent.evaluator.eval_result import EvaluationResult
 
 
 class EvaluationSummary:
+    """class to store a list of evaluation results, and summarize metrics"""
+
     results: List[EvaluationResult]
 
     def __init__(self, results: List[EvaluationResult] = None) -> None:

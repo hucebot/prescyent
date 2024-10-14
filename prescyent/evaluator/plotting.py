@@ -2,23 +2,20 @@
 
 from math import pi as math_pi
 from pathlib import Path
-from tqdm import tqdm
 from typing import Callable, List, Optional, Union
 
-import torch
-
-from matplotlib import pyplot as plt
 import numpy as np
+import torch
+from tqdm import tqdm
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
-from matplotlib.cm import get_cmap
-
 
 from prescyent.dataset.features.rotation_methods import convert_to_euler
 from prescyent.dataset.features.feature import Rotation
 from prescyent.dataset import Trajectory
 from prescyent.dataset.dataset import MotionDataset
 from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
+from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.utils.logger import logger, EVAL
 
 
@@ -29,6 +26,7 @@ def plot_trajectory_prediction(
     Truth and pred's frame must already be aligned,
     and the amount of frames predicted that aren't in truth must appear in overprediction
     """
+
     # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
     truth = torch.transpose(truth, 0, 1)
     pred = torch.transpose(pred, 0, 1)
@@ -87,6 +85,17 @@ def plot_trajs(
     legend_labels: Optional[List[str]] = None,
     rot_to_euler: bool = True,
 ):
+    """plot a list of trajectories
+
+    Args:
+        trajectories (List[Trajectory]): list of N trajectories
+        offsets (List[int]): list of N offsets to shift trajectories[N] over offsets[N] frames
+        savefig_path (str): path where to save the plot
+        title (Optional[str], optional): title of the plot. If none, the title is the title of trajectories[0]. Defaults to None.
+        legend_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+
     assert len(trajectories) >= 1
     feats = trajectories[0].tensor_features
     num_points = trajectories[0].tensor.shape[1]
@@ -157,37 +166,37 @@ def plot_trajs(
 
 def plot_multiple_predictors(
     trajectory: Trajectory,
-    predictors: List[Callable],
-    predictions: List[torch.Tensor],
-    step: int,
+    predictors: List[BasePredictor],
     savefig_path: str,
 ):
-    pred_last_idx = max([len(pred) for pred in predictions]) + step
-    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    truth = torch.transpose(trajectory.tensor, 0, 1)
-    preds = [torch.transpose(pred, 0, 1) for pred in predictions]
-    time_steps = range(pred_last_idx)
-    # we do one subplot per feature
-    fig, axes = plt.subplots(truth.shape[0], sharex=True)
-    if preds[0].shape[0] == 1:
-        axes = [axes]
-    for i, axe in enumerate(axes):
-        axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=2)
-        for pred in preds:
-            axe.plot(
-                time_steps[pred_last_idx - len(pred[i]) :],
-                pred[i],
-                linewidth=1,
-                linestyle="--",
-            )
-    legend_plot(
-        axes,
-        ["Truth"] + [str(predictor) for predictor in predictors],
-        ylabels=trajectory.point_names,
-    )
-    fig.set_size_inches(150, len(trajectory.point_names) + 10)
-    fig.suptitle(trajectory.title)
-    save_plot_and_close(savefig_path)
+    """given a trajectory and a list of predictors, plots the predictions and truth
+
+    Args:
+        trajectory (Trajectory): trajectory to predict over
+        predictors (List[BasePredictor]): list of predictors which prediction's we will compare
+        savefig_path (str): path where to save the plot
+
+    Raises:
+        AttributeError: All predictors must share the same dataset config to be compared
+    """
+
+    if not len(set([p.config.dataset_config for p in predictors])):
+        raise AttributeError("All predictors must share the same dataset config to be compared")
+    dataset_config = predictors[0].config.dataset_config
+    input_traj = trajectory.create_subtraj(dataset_config.in_points, dataset_config.in_features, dataset_config.context_keys)
+    truth = trajectory.create_subtraj(dataset_config.out_points, dataset_config.out_features)
+    trajs, offsets = [], []
+    for predictor in predictors:
+        traj, offset = predictor.predict_trajectory(input_traj)
+        trajs.append(traj)
+        offsets.append(offset)
+    plot_trajs(
+        trajectories=[truth] + trajs,
+        offsets=[0] + offsets,
+        savefig_path=savefig_path,
+        title=trajectory.title,
+        legend_labels=["Truth"] + [str(p) for p in predictors],
+        rot_to_euler=True)
 
 
 def plot_multiple_future(
@@ -268,6 +277,15 @@ def legend_plot(
 def plot_mpjpe(
     predictor: Callable, dataset: MotionDataset, savefig_dir_path: str, log_x=False
 ):
+    """Plot the MPJPE evaluation of the predictor
+
+    Args:
+        predictor (Callable): predictor to test
+        dataset (MotionDataset): dataset instance
+        savefig_dir_path (str): path where to save the plot
+        log_x (bool, optional): if true, use log scale. Defaults to False.
+    """
+
     distances = list()
     features = dataset.config.out_features
     pbar = tqdm(dataset.test_dataloader(), colour="green")
@@ -314,6 +332,14 @@ def plot_mpjpes(
     savefig_dir_path: str,
     log_x=False,
 ):
+    """Plot the MPJPE evaluation of the predictor
+
+    Args:
+        predictor (List[Callable]): list of predictors to test
+        dataset (MotionDataset): dataset instance
+        savefig_dir_path (str): path where to save the plot
+        log_x (bool, optional): if true, use log scale. Defaults to False.
+    """
     predictors_distances = list()
     features = dataset.config.out_features
     for predictor in predictors:

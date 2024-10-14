@@ -31,6 +31,7 @@ def run_predictor(
         predictor (Callable):  Any predictor module (or any callable)
         input_tensor (torch.Tensor): a tensor of positions to predict in the shape
                 (batch_len, seq_len, num_points, num_dims) or (seq_len, num_points, num_dims)
+        context (Dict[torch.Tensor]): context alongside the tensor
         history_size (int): size used as input for the predictor.
         future_size (int): size used as output for the predictor
         run_method (str, optional): method used to generate the predictions.
@@ -38,9 +39,6 @@ def run_predictor(
                         The output is cat as a single Tensor
                 "step_every_timestamp" will predict with a step == 1
                 Defaults to 'windowed'.
-        custom_step (int, optional): step used to loop over the input_tensor.
-                If ommited, the step is determmimed by the run_method
-                Defaults to None
         output_all (bool, optional): if True, will simply output the list of
                 results, otherwise does the run_method postprocessing
                 Defaults to False.
@@ -51,6 +49,7 @@ def run_predictor(
     Returns:
         List[torch.Tensor]: the list of predictions
     """
+
     if run_method == "windowed":
         history_step = future_size
         prediction = predictor(
@@ -94,11 +93,8 @@ def eval_predictors(
     Args:
         predictors (List[Callable]): list of predictors
         trajectories (List[Trajectory]): list of trajectories
-        history_size (int): size used as input for the predictor. (default is 1 second)
+        dataset_config (MotionDatasetConfig): config of the dataset used to get its infos
         future_size (int): size used as output for the predictor. (default is 1 second)
-        custom_step (int, optional): step used to loop over the input_tensor.
-                If omitted, the step is determined by the run_method
-                Defaults to None
         run_method (str, optional): method used to generate the predictions.
                 "windowed" will predict with a step == history_size
                 "step_every_timestamp" will predict with a step == 1
@@ -113,6 +109,7 @@ def eval_predictors(
     Returns:
         List[EvaluationSummary]: list of an evaluation summary for each predictor
     """
+
     if future_size is None:
         future_size = dataset_config.future_size
     evaluation_results = [EvaluationSummary() for _ in predictors]
