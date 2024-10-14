@@ -17,7 +17,7 @@ class Any(Feature):
 
     @property
     def dims_names(self) -> List[str]:
-        return [f"feature_{i}" for i in range(self.ids)]
+        return [f"feature_{i}" for i in range(len(self.ids))]
 
     def _is_convertible(self, __value: object) -> bool:
         return isinstance(__value, Any) and len(self.ids) > len(__value.ids)
