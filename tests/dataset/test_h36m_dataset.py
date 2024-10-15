@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+from pydantic import ValidationError
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import H36MDataset, H36MDatasetConfig
@@ -72,5 +73,14 @@ class InitH36MDatasetTest(CustomTestCase):
             _, _, truth = dataset.test_datasample[0]
             self.assertEqual(1, len(truth))
             self.assertEqual(25, dataset.config.future_size)
+        except FileNotFoundError:
+            warnings.warn(NO_DATA_WARNING)
+
+    def test_load_bad_context(self):
+        try:
+            with self.assertRaises(ValidationError):
+                H36MDatasetConfig(
+                    context_keys=["any_key"],
+                )
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

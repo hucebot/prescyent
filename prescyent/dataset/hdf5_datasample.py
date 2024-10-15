@@ -87,6 +87,18 @@ class HDF5MotionDataSamples:
             ),
             dtype=trajectories[0].tensor.numpy().dtype,
         )
+        context = {
+            key: tmp_hdf5_data.create_dataset(
+                key,
+                shape=(
+                    num_pairs,
+                    self.config.history_size,
+                    *trajectories[0].context[key].shape[1:],
+                ),
+                dtype=trajectories[0].context[key].numpy().dtype,
+            )
+            for key in self.config.context_keys
+        }
         if self.config.learning_type == LearningTypes.SEQ2SEQ:
             out_size = self.config.future_size
         elif self.config.learning_type == LearningTypes.SEQ2ONE:
@@ -103,21 +115,12 @@ class HDF5MotionDataSamples:
             ),
             dtype=trajectories[0].tensor.numpy().dtype,
         )
-        context = {
-            key: tmp_hdf5_data.create_dataset(
-                key,
-                shape=(num_pairs, *trajectories[0].context[key].shape),
-                dtype=trajectories[0].context[key].numpy().dtype,
-            )
-            for key in self.config.context_keys
-        }
         i = 0
         for traj in tqdm(
             trajectories,
             desc="Iterating over trajectories to create data pairs",
             colour="blue",
         ):
-            context = {key: None for key in self.config.context_keys}
             in_tensor = traj.tensor[:, self.config.in_points]
             in_tensor = convert_tensor_features_to(
                 in_tensor, traj.tensor_features, self.config.in_features

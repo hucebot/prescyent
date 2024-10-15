@@ -105,9 +105,7 @@ class ScalerNormalizationTest(CustomTestCase):
         )
         mlp = MlpPredictor(config=mlp_config)
         training_config = TrainingConfig(max_epochs=1)
-        _ = torch.cat(
-            [traj.tensor for traj in self.dataset.trajectories.train], dim=0
-        )
+        _ = torch.cat([traj.tensor for traj in self.dataset.trajectories.train], dim=0)
         mlp.train(self.dataset, training_config)
         self.verify_normalization(mlp.scaler)
 

@@ -2,7 +2,7 @@
 import os
 from typing import List, Optional
 
-from pydantic import model_validator, ValidationError
+from pydantic import field_validator
 
 from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
 from prescyent.dataset.features import Features
@@ -36,9 +36,9 @@ class DatasetConfig(MotionDatasetConfig):
     in_points: List[int] = DEFAULT_USED_JOINTS
     out_points: List[int] = DEFAULT_USED_JOINTS
 
-    @model_validator(mode="after")
-    def check_context_keys(self):
+    @field_validator("context_keys")
+    def check_context_keys(cls, value):
         """check that requested keys exists in the dataset"""
-        if self.context_keys:
-            raise ValidationError("This dataset cannot handle context keys")
-        return self
+        if value:
+            raise ValueError("This dataset cannot handle context keys")
+        return value

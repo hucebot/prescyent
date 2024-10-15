@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import torch
+from pydantic import ValidationError
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import AndyDataset, AndyDatasetConfig
@@ -20,6 +21,7 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
             )
             self.assertGreater(len(dataset), 0)
+            self.assertEqual()
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
@@ -99,5 +101,44 @@ class InitAndyDatasetTest(CustomTestCase):
             _ = dataset._load_config("tmp/test.json")
             AndyDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
+        except FileNotFoundError:
+            warnings.warn(NO_DATA_WARNING)
+
+    def test_load_all_context(self):
+        try:
+            dataset = AndyDataset(
+                config=AndyDatasetConfig(
+                    context_keys=["centerOfMass"],
+                    participants=["909"],
+                ),
+                load_data_at_init=False,
+            )
+            dataset.prepare_data()
+            dataset.setup("test")
+            sample, context, truth = next(iter(dataset.test_dataloader()))
+            self.assertEqual(
+                context["centerOfMass"].shape[0], dataset.config.batch_size
+            )
+            self.assertEqual(
+                context["centerOfMass"].shape[1], dataset.config.history_size
+            )
+            self.assertEqual(context["centerOfMass"].shape[2], 3)
+            self.assertEqual(sample.shape[0], dataset.config.batch_size)
+            self.assertEqual(sample.shape[1], dataset.config.history_size)
+            self.assertEqual(sample.shape[2], dataset.config.num_in_points)
+            self.assertEqual(sample.shape[3], dataset.config.num_in_dims)
+            self.assertEqual(truth.shape[0], dataset.config.batch_size)
+            self.assertEqual(truth.shape[1], dataset.config.future_size)
+            self.assertEqual(truth.shape[2], dataset.config.num_out_points)
+            self.assertEqual(truth.shape[3], dataset.config.num_out_dims)
+        except FileNotFoundError:
+            warnings.warn(NO_DATA_WARNING)
+
+    def test_load_bad_context(self):
+        try:
+            with self.assertRaises(ValidationError):
+                AndyDatasetConfig(
+                    context_keys=["bad_key", "centerOfMass"],
+                )
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

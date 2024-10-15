@@ -60,7 +60,9 @@ class AutoPredictor:
     """Auto class building the requested Predictor class from a configuration and the predictor map {predictor_name_str: predictor_class"""
 
     @classmethod
-    def preprocess_config_attribute(cls, config: Union[str, Path, ModuleConfig, dict]) -> Tuple[dict, str]:
+    def preprocess_config_attribute(
+        cls, config: Union[str, Path, ModuleConfig, dict]
+    ) -> Tuple[dict, str]:
         """turn some acceptable config format to a tuple of config_data and its path
 
         Args:
@@ -98,7 +100,9 @@ class AutoPredictor:
         return predictor_class.config_class(**config.get("model_config", {}))
 
     @classmethod
-    def load_pretrained(cls, config: Union[str, Path, dict, ModuleConfig]) -> BasePredictor:
+    def load_pretrained(
+        cls, config: Union[str, Path, dict, ModuleConfig]
+    ) -> BasePredictor:
         """load a predictor previously saved to disk, given its path
 
         Args:

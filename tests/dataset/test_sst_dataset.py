@@ -1,6 +1,7 @@
 import shutil
 
 import numpy as np
+from pydantic import ValidationError
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import SSTDataset, SSTDatasetConfig
@@ -12,6 +13,14 @@ class InitSSTDatasetTest(CustomTestCase):
     def test_load_default(self):
         dataset = SSTDataset(SSTDatasetConfig(num_traj=10), load_data_at_init=True)
         self.assertGreater(len(dataset), 0)
+        sample, context, truth = dataset.test_datasample[0]
+        self.assertEqual(context, {})
+        self.assertEqual(sample.shape[1], dataset.config.history_size)
+        self.assertEqual(sample.shape[2], dataset.config.num_in_points)
+        self.assertEqual(sample.shape[3], dataset.config.num_in_dims)
+        self.assertEqual(truth.shape[1], dataset.config.future_size)
+        self.assertEqual(truth.shape[2], dataset.config.num_out_points)
+        self.assertEqual(truth.shape[3], dataset.config.num_out_dims)
 
     def test_load_seq2seq(self):
         dataset = SSTDataset(
@@ -67,3 +76,9 @@ class InitSSTDatasetTest(CustomTestCase):
         _ = dataset._load_config("tmp/test.json")
         SSTDataset("tmp/test.json", load_data_at_init=True)
         shutil.rmtree("tmp", ignore_errors=True)
+
+    def test_load_bad_context(self):
+        with self.assertRaises(ValidationError):
+            SSTDatasetConfig(
+                context_keys=["any_key"],
+            )

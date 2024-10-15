@@ -181,10 +181,18 @@ def plot_multiple_predictors(
     """
 
     if not len(set([p.config.dataset_config for p in predictors])):
-        raise AttributeError("All predictors must share the same dataset config to be compared")
+        raise AttributeError(
+            "All predictors must share the same dataset config to be compared"
+        )
     dataset_config = predictors[0].config.dataset_config
-    input_traj = trajectory.create_subtraj(dataset_config.in_points, dataset_config.in_features, dataset_config.context_keys)
-    truth = trajectory.create_subtraj(dataset_config.out_points, dataset_config.out_features)
+    input_traj = trajectory.create_subtraj(
+        dataset_config.in_points,
+        dataset_config.in_features,
+        dataset_config.context_keys,
+    )
+    truth = trajectory.create_subtraj(
+        dataset_config.out_points, dataset_config.out_features
+    )
     trajs, offsets = [], []
     for predictor in predictors:
         traj, offset = predictor.predict_trajectory(input_traj)
@@ -196,7 +204,8 @@ def plot_multiple_predictors(
         savefig_path=savefig_path,
         title=trajectory.title,
         legend_labels=["Truth"] + [str(p) for p in predictors],
-        rot_to_euler=True)
+        rot_to_euler=True,
+    )
 
 
 def plot_multiple_future(

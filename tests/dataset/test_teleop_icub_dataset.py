@@ -2,6 +2,7 @@ import shutil
 import warnings
 
 import numpy as np
+from pydantic import ValidationError
 
 from tests.custom_test_case import CustomTestCase
 from prescyent.dataset import TeleopIcubDataset, TeleopIcubDatasetConfig
@@ -17,13 +18,21 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(load_data_at_init=True)
             self.assertGreater(len(dataset), 0)
+            sample, context, truth = dataset.test_datasample[0]
+            self.assertEqual(context, {})
+            self.assertEqual(sample.shape[1], dataset.config.history_size)
+            self.assertEqual(sample.shape[2], dataset.config.num_in_points)
+            self.assertEqual(sample.shape[3], dataset.config.num_in_dims)
+            self.assertEqual(truth.shape[1], dataset.config.future_size)
+            self.assertEqual(truth.shape[2], dataset.config.num_out_points)
+            self.assertEqual(truth.shape[3], dataset.config.num_out_dims)
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_seq2seq(self):
         try:
             dataset = TeleopIcubDataset(
-                TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2SEQ),
+                TeleopIcubDatasetConfig(subsets=["BottleTable"], learning_type=LearningTypes.SEQ2SEQ),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
@@ -33,7 +42,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_load_autoreg(self):
         try:
             dataset = TeleopIcubDataset(
-                TeleopIcubDatasetConfig(learning_type=LearningTypes.AUTOREG),
+                TeleopIcubDatasetConfig(subsets=["BottleTable"], learning_type=LearningTypes.AUTOREG),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
@@ -48,7 +57,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_load_seq2one(self):
         try:
             dataset = TeleopIcubDataset(
-                TeleopIcubDatasetConfig(learning_type=LearningTypes.SEQ2ONE),
+                TeleopIcubDatasetConfig(subsets=["BottleTable"], learning_type=LearningTypes.SEQ2ONE),
                 load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
@@ -62,6 +71,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 TeleopIcubDatasetConfig(
+                    subsets=["BottleTable"],
                     out_features=Features([CoordinateXY(range(2))]),
                 ),
                 load_data_at_init=True,
@@ -92,10 +102,52 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_load_from_path(self):
         try:
-            dataset = TeleopIcubDataset(load_data_at_init=True)
+            dataset = TeleopIcubDataset(load_data_at_init=False)
             dataset.save_config("tmp/test.json")
             _ = dataset._load_config("tmp/test.json")
             TeleopIcubDataset("tmp/test.json", load_data_at_init=True)
             shutil.rmtree("tmp", ignore_errors=True)
+        except FileNotFoundError:
+            warnings.warn(NO_DATA_WARNING)
+
+    def test_load_all_context(self):
+        try:
+            dataset = TeleopIcubDataset(
+                config=TeleopIcubDatasetConfig(
+                    subsets=["BottleTable"],
+                    context_keys=["center_of_mass", "icub_dof"],
+                ),
+                load_data_at_init=False,
+            )
+            dataset.prepare_data()
+            dataset.setup("test")
+            sample, context, truth = next(iter(dataset.test_dataloader()))
+            self.assertEqual(
+                context["center_of_mass"].shape[0], dataset.config.batch_size
+            )
+            self.assertEqual(
+                context["center_of_mass"].shape[1], dataset.config.history_size
+            )
+            self.assertEqual(context["center_of_mass"].shape[2], 3)
+            self.assertEqual(context["icub_dof"].shape[0], dataset.config.batch_size)
+            self.assertEqual(context["icub_dof"].shape[1], dataset.config.history_size)
+            self.assertEqual(context["icub_dof"].shape[2], 32)
+            self.assertEqual(sample.shape[0], dataset.config.batch_size)
+            self.assertEqual(sample.shape[1], dataset.config.history_size)
+            self.assertEqual(sample.shape[2], dataset.config.num_in_points)
+            self.assertEqual(sample.shape[3], dataset.config.num_in_dims)
+            self.assertEqual(truth.shape[0], dataset.config.batch_size)
+            self.assertEqual(truth.shape[1], dataset.config.future_size)
+            self.assertEqual(truth.shape[2], dataset.config.num_out_points)
+            self.assertEqual(truth.shape[3], dataset.config.num_out_dims)
+        except FileNotFoundError:
+            warnings.warn(NO_DATA_WARNING)
+
+    def test_load_bad_context(self):
+        try:
+            with self.assertRaises(ValidationError):
+                TeleopIcubDatasetConfig(
+                    context_keys=["bad_key", "icub_dof"],
+                )
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)

@@ -76,7 +76,7 @@ class Dataset(MotionDataset):
             ):
                 tensor = torch.from_numpy(np.array(hdf5_data[traj_name]))
                 context = {
-                    key: hdf5_data[traj_name[:-4] + key]
+                    key: torch.from_numpy(np.array(hdf5_data[traj_name[:-4] + key]))
                     for key in self.config.context_keys
                 }
                 # update frequency

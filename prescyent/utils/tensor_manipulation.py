@@ -4,7 +4,9 @@ from typing import Iterable, List, Tuple
 import torch
 
 
-def cat_list_with_seq_idx(preds: List[torch.Tensor], flatt_idx: int = -1) -> torch.Tensor:
+def cat_list_with_seq_idx(
+    preds: List[torch.Tensor], flatt_idx: int = -1
+) -> torch.Tensor:
     """given a list of T traj tensors [(S, P, D)...], returns a tensor of shape [T, P, D], keeping only the frame flatt_idx from all tensors
 
     Args:
@@ -20,7 +22,9 @@ def cat_list_with_seq_idx(preds: List[torch.Tensor], flatt_idx: int = -1) -> tor
     if is_tensor_is_unbatched(preds[0]):
         return torch.cat([pred[flatt_idx].unsqueeze(0) for pred in preds], dim=0)
     else:
-        raise AttributeError("tensors in list have different shapes of trajectory tensors")
+        raise AttributeError(
+            "tensors in list have different shapes of trajectory tensors"
+        )
 
 
 def is_tensor_is_batched(iterable: Iterable) -> bool:

@@ -1,7 +1,7 @@
 """Config elements for SCC dataset usage"""
 from typing import List
 
-from pydantic import model_validator, ValidationError
+from pydantic import model_validator, field_validator
 
 from prescyent.dataset.config import MotionDatasetConfig
 from prescyent.dataset.features import Features
@@ -67,9 +67,9 @@ class DatasetConfig(MotionDatasetConfig):
             )
         return self
 
-    @model_validator(mode="after")
-    def check_context_keys(self):
+    @field_validator("context_keys")
+    def check_context_keys(cls, value):
         """check that requested keys exists in the dataset"""
-        if self.context_keys:
-            raise ValidationError("This dataset cannot handle context keys")
-        return self
+        if value:
+            raise ValueError("This dataset cannot handle context keys")
+        return value
