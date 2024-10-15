@@ -2,8 +2,6 @@
 Download and/or load dataset
 Manipulate and Visualize the dataset
 Configure the use of the dataset
-
-Built with torch dataset and dataloader
 """
 
 from prescyent.dataset.datasets.human36m import H36MDataset, H36MDatasetConfig
@@ -41,4 +39,5 @@ DATASET_LIST = [
     TeleopIcubDataset,
 ]
 
+# Map used for AutoDataset
 DATASET_MAP = {p.DATASET_NAME: p for p in DATASET_LIST}

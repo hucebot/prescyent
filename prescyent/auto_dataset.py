@@ -15,13 +15,11 @@ class AutoDataset:
     def build_from_config(
         cls,
         config: Union[str, Path, dict, MotionDatasetConfig],
-        load_data_at_init: bool = True,
     ) -> MotionDataset:
         """Method to call upon to generate a new instance of a dataset from a config
 
         Args:
             config (Union[str, Path, dict, MotionDatasetConfig]): Path to a config json or actual config data
-            load_data_at_init (bool, optional): If True, will generate dataset.trajectories on _init_. Defaults to True.
 
         Raises:
             AttributeError: if we cannot find the requested dataset class from the config file
@@ -43,7 +41,7 @@ class AutoDataset:
             )
             raise AttributeError(dataset_class_name)
         logger.getChild(DATASET).info("Building new %s", dataset_class.__name__)
-        return dataset_class(config=config, load_data_at_init=load_data_at_init)
+        return dataset_class(config=config)
 
     @classmethod
     def _get_config_from_path(cls, config_path: Path) -> Dict[str, Any]:

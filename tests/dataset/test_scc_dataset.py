@@ -11,7 +11,7 @@ from prescyent.utils.enums import LearningTypes
 
 class InitSCCDatasetTest(CustomTestCase):
     def test_load_default(self):
-        dataset = SCCDataset(load_data_at_init=True)
+        dataset = SCCDataset()
         self.assertGreater(len(dataset), 0)
         sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(context, {})
@@ -25,14 +25,12 @@ class InitSCCDatasetTest(CustomTestCase):
     def test_load_seq2seq(self):
         dataset = SCCDataset(
             SCCDatasetConfig(learning_type=LearningTypes.SEQ2SEQ),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
 
     def test_load_autoreg(self):
         dataset = SCCDataset(
             SCCDatasetConfig(learning_type=LearningTypes.AUTOREG),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, context, truth = dataset.test_datasample[0]
@@ -44,7 +42,6 @@ class InitSCCDatasetTest(CustomTestCase):
     def test_load_seq2one(self):
         dataset = SCCDataset(
             SCCDatasetConfig(learning_type=LearningTypes.SEQ2ONE),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         _, _, truth = dataset.test_datasample[0]
@@ -56,7 +53,6 @@ class InitSCCDatasetTest(CustomTestCase):
             SCCDatasetConfig(
                 out_features=Features([CoordinateX([0])]),
             ),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, _, truth = dataset.test_datasample[0]
@@ -70,10 +66,12 @@ class InitSCCDatasetTest(CustomTestCase):
         self.assertEqual(truth.shape[-1], 1)
 
     def test_load_from_path(self):
-        dataset = SCCDataset(load_data_at_init=True)
+        dataset = SCCDataset()
         dataset.save_config("tmp/test.json")
         _ = dataset._load_config("tmp/test.json")
-        SCCDataset("tmp/test.json", load_data_at_init=True)
+        SCCDataset(
+            "tmp/test.json",
+        )
         shutil.rmtree("tmp", ignore_errors=True)
 
     def test_load_bad_context(self):

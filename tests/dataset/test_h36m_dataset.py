@@ -17,7 +17,7 @@ class InitH36MDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = H36MDataset(
-                H36MDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+                H36MDatasetConfig(save_samples_on_disk=False),
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -32,7 +32,6 @@ class InitH36MDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -47,7 +46,6 @@ class InitH36MDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, context, truth = dataset.test_datasample[0]
@@ -67,7 +65,6 @@ class InitH36MDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, _, truth = dataset.test_datasample[0]

@@ -18,10 +18,9 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+                AndyDatasetConfig(save_samples_on_disk=False),
             )
             self.assertGreater(len(dataset), 0)
-            self.assertEqual()
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
@@ -31,7 +30,6 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(
                     learning_type=LearningTypes.SEQ2SEQ, participants=["909"]
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -43,10 +41,9 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(
                     learning_type=LearningTypes.AUTOREG, participants=["909"]
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(len(sample), len(truth))
             np.testing.assert_allclose(
                 sample[1:], truth[:-1], err_msg="thruth and sample differ"
@@ -60,7 +57,6 @@ class InitAndyDatasetTest(CustomTestCase):
                 AndyDatasetConfig(
                     learning_type=LearningTypes.SEQ2ONE, participants=["909"]
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, _, truth = dataset.test_datasample[0]
@@ -77,16 +73,15 @@ class InitAndyDatasetTest(CustomTestCase):
                     out_features=Features([CoordinateX([0])]),
                     participants=["909"],
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
-            sample, context, truth = dataset.test_datasample[0]
+            sample, _, truth = dataset.test_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
-            sample, context, truth = dataset.train_datasample[0]
+            sample, _, truth = dataset.train_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
-            sample, context, truth = dataset.val_datasample[0]
+            sample, _, truth = dataset.val_datasample[0]
             self.assertEqual(sample.shape[-1], 9)
             self.assertEqual(truth.shape[-1], 1)
         except FileNotFoundError:
@@ -95,11 +90,13 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_from_path(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(participants=["909"]), load_data_at_init=True
+                AndyDatasetConfig(participants=["909"]),
             )
             dataset.save_config("tmp/test.json")
             _ = dataset._load_config("tmp/test.json")
-            AndyDataset("tmp/test.json", load_data_at_init=True)
+            AndyDataset(
+                "tmp/test.json",
+            )
             shutil.rmtree("tmp", ignore_errors=True)
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
@@ -111,7 +108,6 @@ class InitAndyDatasetTest(CustomTestCase):
                     context_keys=["centerOfMass"],
                     participants=["909"],
                 ),
-                load_data_at_init=False,
             )
             dataset.prepare_data()
             dataset.setup("test")

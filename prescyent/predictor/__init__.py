@@ -48,4 +48,5 @@ PREDICTOR_LIST = [
 #     PREDICTOR_LIST.append(SiMLPePredictor)
 
 
+# Map used for AutoPredictor
 PREDICTOR_MAP = {p.PREDICTOR_NAME: p for p in PREDICTOR_LIST}

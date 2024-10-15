@@ -24,7 +24,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = H36MArmDataset(
-                H36MArmDatasetConfig(save_samples_on_disk=False), load_data_at_init=True
+                H36MArmDatasetConfig(save_samples_on_disk=False),
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -39,7 +39,6 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2SEQ,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -54,7 +53,6 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.SEQ2ONE,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, _, truth = dataset.test_datasample[0]
@@ -72,7 +70,6 @@ class InitH36MArmDatasetTest(CustomTestCase):
                     actions=["directions"],
                     learning_type=LearningTypes.AUTOREG,
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, _, truth = dataset.test_datasample[0]
@@ -105,7 +102,6 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         ]
                     ),
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             _, _, truth = dataset.test_datasample[0]
@@ -139,7 +135,6 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                     ),
                     out_features=Features([CoordinateXYZ(range(3))]),
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, _, truth = dataset.test_datasample[0]
@@ -163,7 +158,6 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         [CoordinateXY(range(2)), RotationEuler(range(2, 5))]
                     ),
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, _, truth = dataset.test_datasample[0]
@@ -190,7 +184,6 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
                         [CoordinateX(range(1)), RotationQuat(range(1, 5))]
                     ),
                 ),
-                load_data_at_init=True,
             )
             self.assertGreater(len(dataset), 0)
             sample, _, truth = dataset.test_datasample[0]

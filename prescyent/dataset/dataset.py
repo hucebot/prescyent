@@ -53,29 +53,22 @@ class MotionDataset(LightningDataModule):
     """Name of the dataset, inherited from child class"""
     trajectories: Trajectories
     """Trajectories instance storing the trajectories per subset train, test and val"""
-    train_datasample: MotionDataSamples
+    train_datasample: Union[MotionDataSamples, HDF5MotionDataSamples]
     """Generated pairs for train"""
-    test_datasample: MotionDataSamples
+    test_datasample: Union[MotionDataSamples, HDF5MotionDataSamples]
     """Generated pairs for test"""
-    val_datasample: MotionDataSamples
+    val_datasample: Union[MotionDataSamples, HDF5MotionDataSamples]
     """Generated pairs for val"""
 
-    def __init__(self, name: str, load_data_at_init: bool = True) -> None:
+    def __init__(self, name: str) -> None:
         """
         Args:
             name (str): Name of the dataset, inherited from child class.
-            load_data_at_init (bool, optional):
-                If True, we'll call the prepare_data (load trajectories from files)
-                and setup (create MotionDataSamples) methods at init.
-                Defaults to True.
         """
         super().__init__()
         self.name = name
         if self.config.name is None:
             self.config.name = self.name
-        if load_data_at_init:
-            self.prepare_data()
-            self.setup()
 
     def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]
@@ -363,6 +356,46 @@ class MotionDataset(LightningDataModule):
                 + "Please make sure that you are using this dm through Lightning, "
                 + "or call .prepare_data() and .setup() manually."
             )
+
+    @property
+    def trajectories(self):
+        if not hasattr(self, "_trajectories"):
+            self.prepare_data()
+        return self._trajectories
+
+    @trajectories.setter
+    def trajectories(self, trajectories):
+        self._trajectories = trajectories
+
+    @property
+    def train_datasample(self):
+        if not hasattr(self, "_train_datasample"):
+            self.setup("fit")
+        return self._train_datasample
+
+    @train_datasample.setter
+    def train_datasample(self, train_datasample):
+        self._train_datasample = train_datasample
+
+    @property
+    def test_datasample(self):
+        if not hasattr(self, "_test_datasample"):
+            self.setup("test")
+        return self._test_datasample
+
+    @test_datasample.setter
+    def test_datasample(self, test_datasample):
+        self._test_datasample = test_datasample
+
+    @property
+    def val_datasample(self):
+        if not hasattr(self, "_val_datasample"):
+            self.setup("fit")
+        return self._val_datasample
+
+    @val_datasample.setter
+    def val_datasample(self, val_datasample):
+        self._val_datasample = val_datasample
 
     @property
     def frequency(self) -> int:

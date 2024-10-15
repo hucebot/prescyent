@@ -62,6 +62,9 @@ class DelayedPredictorTests(CustomTestCase):
             [(Trajectory(torch.rand(500, 9, 7), 10, features)) for i in range(10)],
             [(Trajectory(torch.rand(500, 9, 7), 10, features)) for i in range(1)],
         )
-        dataset = CustomDataset(dataset_config, trajs, load_data_at_init=True)
+        dataset = CustomDataset(
+            dataset_config,
+            trajs,
+        )
         predictor.test(dataset)
         shutil.rmtree("tmp", ignore_errors=True)

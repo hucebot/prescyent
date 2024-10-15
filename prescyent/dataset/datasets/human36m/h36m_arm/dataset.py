@@ -18,16 +18,10 @@ class Dataset(H36MDataset):
 
     DATASET_NAME = "H36MArm"
 
-    def __init__(
-        self, config: Union[Dict, DatasetConfig] = None, load_data_at_init: bool = True
-    ) -> None:
+    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
         if config is None:
             config = DatasetConfig()
-        super().__init__(
-            config=config,
-            config_class=DatasetConfig,
-            load_data_at_init=load_data_at_init,
-        )
+        super().__init__(config=config, config_class=DatasetConfig)
 
     def prepare_data(self):
         """util method to turn a list of pathfiles to a list of their data

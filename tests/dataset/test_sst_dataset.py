@@ -11,7 +11,9 @@ from prescyent.utils.enums import LearningTypes
 
 class InitSSTDatasetTest(CustomTestCase):
     def test_load_default(self):
-        dataset = SSTDataset(SSTDatasetConfig(num_traj=10), load_data_at_init=True)
+        dataset = SSTDataset(
+            SSTDatasetConfig(num_traj=10),
+        )
         self.assertGreater(len(dataset), 0)
         sample, context, truth = dataset.test_datasample[0]
         self.assertEqual(context, {})
@@ -25,14 +27,12 @@ class InitSSTDatasetTest(CustomTestCase):
     def test_load_seq2seq(self):
         dataset = SSTDataset(
             SSTDatasetConfig(num_traj=10, learning_type=LearningTypes.SEQ2SEQ),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
 
     def test_load_autoreg(self):
         dataset = SSTDataset(
             SSTDatasetConfig(num_traj=10, learning_type=LearningTypes.AUTOREG),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, _, truth = dataset.test_datasample[0]
@@ -44,7 +44,6 @@ class InitSSTDatasetTest(CustomTestCase):
     def test_load_seq2one(self):
         dataset = SSTDataset(
             SSTDatasetConfig(num_traj=10, learning_type=LearningTypes.SEQ2ONE),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         _, _, truth = dataset.test_datasample[0]
@@ -57,7 +56,6 @@ class InitSSTDatasetTest(CustomTestCase):
                 num_traj=10,
                 out_features=Features([RotationQuat([0, 1, 2, 3])]),
             ),
-            load_data_at_init=True,
         )
         self.assertGreater(len(dataset), 0)
         sample, _, truth = dataset.test_datasample[0]
@@ -71,10 +69,14 @@ class InitSSTDatasetTest(CustomTestCase):
         self.assertEqual(truth.shape[-1], 4)
 
     def test_load_from_path(self):
-        dataset = SSTDataset(SSTDatasetConfig(num_traj=10), load_data_at_init=True)
+        dataset = SSTDataset(
+            SSTDatasetConfig(num_traj=10),
+        )
         dataset.save_config("tmp/test.json")
         _ = dataset._load_config("tmp/test.json")
-        SSTDataset("tmp/test.json", load_data_at_init=True)
+        SSTDataset(
+            "tmp/test.json",
+        )
         shutil.rmtree("tmp", ignore_errors=True)
 
     def test_load_bad_context(self):

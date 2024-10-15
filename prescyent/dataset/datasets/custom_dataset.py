@@ -12,12 +12,11 @@ class CustomDataset(MotionDataset):
         config: MotionDatasetConfig,
         trajectories: Trajectories,
         name: str = "CustomDataset",
-        load_data_at_init: bool = True,
     ) -> None:
         self._init_from_config(config, MotionDatasetConfig)
         self.trajectories = trajectories
         self.DATASET_NAME = name
-        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+        super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):
         """no need to prepare data as the trajectories are passed in init"""
