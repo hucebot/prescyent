@@ -53,9 +53,9 @@ Example:
 
 It would have the tensor_features: `[CoordinatesXYZ([0, 1, 2]), RotationQuat([3, 4, 5, 6])]`
 
-### MotionDataset
+### TrajectoriesDataset
 
-### MotionDatasetConfig
+### TrajectoriesDatasetConfig
 
 ### MotionDataSample
 

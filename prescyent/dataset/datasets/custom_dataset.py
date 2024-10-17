@@ -1,19 +1,19 @@
 "simple interface to create a motion dataset from already loaded trajectories"
-from prescyent.dataset.dataset import MotionDataset
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.dataset import TrajectoriesDataset
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.trajectories.trajectories import Trajectories
 
 
-class CustomDataset(MotionDataset):
-    """Simple class to create a MotionDataset from existing trajectories"""
+class CustomDataset(TrajectoriesDataset):
+    """Simple class to create a TrajectoriesDataset from existing trajectories"""
 
     def __init__(
         self,
-        config: MotionDatasetConfig,
+        config: TrajectoriesDatasetConfig,
         trajectories: Trajectories,
         name: str = "CustomDataset",
     ) -> None:
-        self._init_from_config(config, MotionDatasetConfig)
+        self._init_from_config(config, TrajectoriesDatasetConfig)
         self.trajectories = trajectories
         self.DATASET_NAME = name
         super().__init__(name=self.DATASET_NAME)

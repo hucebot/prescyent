@@ -304,11 +304,9 @@ class Trajectory:
             points = list(range(len(self.point_names)))
         if features is None:
             features = self.tensor_features
-        context = None
-        if context_keys is None and self.context is not None:
-            context = {
-                c_key: self.context[c_key] for c_key in list(self.context.keys())
-            }
+        if context_keys is None:
+            context_keys = []
+        context = {c_key: self.context[c_key] for c_key in context_keys}
         subtraj = Trajectory(
             tensor=self.tensor[:, points],
             tensor_features=self.tensor_features,

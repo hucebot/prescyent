@@ -1,5 +1,4 @@
-"""Class and methods for the SST Dataset
-https://zenodo.org/record/5913573#.Y75xK_7MIaw
+"""Class and methods to generate simple linear trajectories with a rotation
 """
 from pathlib import Path
 import tempfile
@@ -12,9 +11,8 @@ from scipy.spatial.transform import Rotation as R
 from tqdm import tqdm
 
 from prescyent.dataset.hdf5_utils import write_metadata
-from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
-from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.interpolate import update_tensor_frequency
 
@@ -31,7 +29,7 @@ def clamp_vect_norm(vect, limit):
     return axis * min(norm, limit)
 
 
-class Dataset(MotionDataset):
+class Dataset(TrajectoriesDataset):
     """Simple dataset with generated trajectories from a starting and ending pose"""
 
     DATASET_NAME = "SST"
@@ -48,6 +46,8 @@ class Dataset(MotionDataset):
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
+        if hasattr(self, "_trajectories"):
+            return
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         frequency = 1 / self.config.dt
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
@@ -126,15 +126,29 @@ class Dataset(MotionDataset):
         return tensor
 
     def get_random_target(self) -> List[float]:
+        """return a random position, given the config's attribute
+
+        Returns:
+            List[float]: [x, y, z, euler_z, euler_y, euler_x]
+        """
         x = np.random.uniform(self.config.min_x, self.config.max_x)
         y = np.random.uniform(self.config.min_y, self.config.max_y)
         z = np.random.uniform(self.config.min_z, self.config.max_z)
         random_euler = list(R.random().as_euler(SEQ))  # zyx
         return np.array([x, y, z] + random_euler)
 
-    # Code from Quentin, used to loop over next pos to reach target
-    def controller_goto(self, curr_pose, target_pose):
-        # Compute rotation matrix from quaternions
+    # Code adapted from Quentin's simple controller, used to loop over next pos to reach target
+    def controller_goto(self, curr_pose, target_pose) -> np.ndarray:
+        """generate next pose given current and target
+
+        Args:
+            curr_pose (np.ndarray): current position and rotation
+            target_pose (np.ndarray): target position and rotation
+
+        Returns:
+            np.ndarray: next pose toward target
+        """
+        # Compute rotation matrix from eulers
         curr_pos, curr_euler = np.array(curr_pose[:3]), np.array(curr_pose[3:])
         target_pos, target_euler = np.array(target_pose[:3]), np.array(target_pose[3:])
         curr_mat = R.from_euler(SEQ, curr_euler).as_matrix()

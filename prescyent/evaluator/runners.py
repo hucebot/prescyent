@@ -7,7 +7,7 @@ import timeit
 import torch
 from tqdm import tqdm
 from prescyent.dataset import Trajectory
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
 
@@ -81,7 +81,7 @@ def run_predictor(
 def eval_predictors(
     predictors: List[Callable],
     trajectories: List[Trajectory],
-    dataset_config: MotionDatasetConfig,
+    dataset_config: TrajectoriesDatasetConfig,
     future_size: int = None,
     run_method: str = "step_every_timestamp",
     do_plotting: bool = True,
@@ -93,7 +93,7 @@ def eval_predictors(
     Args:
         predictors (List[Callable]): list of predictors
         trajectories (List[Trajectory]): list of trajectories
-        dataset_config (MotionDatasetConfig): config of the dataset used to get its infos
+        dataset_config (TrajectoriesDatasetConfig): config of the dataset used to get its infos
         future_size (int): size used as output for the predictor. (default is 1 second)
         run_method (str, optional): method used to generate the predictions.
                 "windowed" will predict with a step == history_size

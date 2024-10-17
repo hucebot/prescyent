@@ -1,5 +1,6 @@
+"""functions to convert features or calculate distances"""
 import copy
-from typing import Dict, List
+from typing import Dict
 
 import torch
 
@@ -13,7 +14,6 @@ from prescyent.dataset.features import (
 from prescyent.dataset.features.rotation_methods import (
     convert_rotation_tensor_to,
     convert_to_rotmatrix,
-    convert_to_quat,
 )
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
@@ -32,9 +32,10 @@ def get_distance(
         tensor_feats_a (Features): first tensor's features
         tensor_b (torch.Tensor): second tensor
         tensor_feats_b (Features): second tensor's features
+        get_mean (bool) = IF true, we average each results dict instead of returning the distances, Defaults to False
 
     Returns:
-        Dict[str, torch.Tensor]: a distance of each feature of the input tensors
+        Dict[str, torch.Tensor]: a distance of each feature of the input tensors, or the average distance for each feature
     """
     # convert into same feats with a as the priority
     if not is_tensor_is_batched(tensor_a):
@@ -70,6 +71,16 @@ def get_distance(
 def cal_distance_for_feat(
     tensor_a: torch.Tensor, tensor_b: torch.Tensor, feat: Feature
 ) -> torch.Tensor:
+    """get the distance between two tensors of given feat
+
+    Args:
+        tensor_a (torch.Tensor): tensor to compare
+        tensor_b (torch.Tensor): tensor to compare
+        feat (Feature): feature of the tensors
+
+    Returns:
+        torch.Tensor: distance between the two tensors calculated by feat.get_distance
+    """
     if (
         isinstance(feat, Rotation)
         and not isinstance(feat, RotationQuat)
@@ -139,6 +150,15 @@ def convert_tensor_features_to(
 
 
 def features_are_convertible_to(features_a: Features, features_b: Features) -> bool:
+    """Checks if a conversion is possible between a and b
+
+    Args:
+        features_a (Features): feature to convert
+        features_b (Features): target feature
+
+    Returns:
+        bool: is features_a convertible to features_b
+    """
     feats_a = copy.deepcopy(features_a)
     for feat in features_b:
         equals = [i for i, _feat in enumerate(feats_a) if feat == _feat]

@@ -271,18 +271,15 @@ class BasePredictor:
             List[torch.Tensor]: the list of model predictions
         """
         prediction_list = []
-
+        if context is None:
+            context = {}
         # allows batched or unbatched inputs, returns batched or unbatched prediction accordingly
         unbatch = False
         if not is_tensor_is_batched(input_tensor):
             unbatch = True
             input_tensor = torch.unsqueeze(input_tensor, 0)
-        if context:
             context = {
-                c_name: c_tensor.unsqueeze(0)
-                if not len(c_tensor.shape) <= 2
-                else c_tensor
-                for c_name, c_tensor in context.items()
+                c_name: c_tensor.unsqueeze(0) for c_name, c_tensor in context.items()
             }
         # Keep only model input points if the input shape doesn't match
         if input_tensor.shape[2] != len(self.config.dataset_config.in_points):
@@ -338,7 +335,7 @@ class BasePredictor:
                 input_sub_batch = input_tensor[:, i : i + history_size]
                 if context:  # If context we iterate over it along the input
                     context_sub_batch = {
-                        c_name: c_tensor[i : i + history_size]
+                        c_name: c_tensor[:, i : i + history_size]
                         for c_name, c_tensor in context.items()
                     }
             prediction = self.predict(
@@ -401,7 +398,7 @@ class BasePredictor:
         pred_traj = Trajectory(
             tensor=pred_tensor,
             tensor_features=self.config.dataset_config.out_features,
-            context=None,
+            context={},
             frequency=traj.frequency,
             file_path=traj.file_path,
             title=f"{traj.title}_pred_{self.name}",

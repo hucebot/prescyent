@@ -61,16 +61,19 @@ class TorchModule(BaseTorchModule):
         self,
         input_tensor: torch.Tensor,
         future_size: int = None,
-        context: Optional[Dict[str, torch.Tensor]] = None,
+        context: Optional[Dict[str, torch.Tensor]] = {},
     ):
         # simple single feature prediction of the next item in sequence
         batch_size, sequence_size = input_tensor.shape[0:2]
         input_tensor = torch.reshape(input_tensor, (batch_size, sequence_size, -1))
-        if (
-            context
-        ):  # Cat context and input with (batch, seq_len, in_feat + context_feats)
+        if context:
+            # Cat context and input with (batch, seq_len, in_feat + context_feats)
             context_tensor = torch.cat(
-                [context[c_key] for c_key in context.keys()], dim=2
+                [
+                    context[c_key].reshape(batch_size, sequence_size, -1)
+                    for c_key in context.keys()
+                ],
+                dim=2,
             )
             input_tensor = torch.cat((input_tensor, context_tensor), dim=2)
         # (batch, seq_len, num_point, num_dim) -> (batch, seq_len * num_point * num_dim)

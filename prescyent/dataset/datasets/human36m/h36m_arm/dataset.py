@@ -6,15 +6,12 @@ import torch
 import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
 from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
 from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
-from prescyent.dataset.datasets.human36m.metadata import POINT_LABELS
 from prescyent.dataset.features import Coordinate
-from prescyent.dataset.hdf5_utils import get_dataset_keys
-from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
 
 class Dataset(H36MDataset):
-    """Class for data loading et preparation before the MotionDataset sampling"""
+    """Class for data loading et preparation before the TrajectoriesDataset sampling"""
 
     DATASET_NAME = "H36MArm"
 
@@ -24,9 +21,9 @@ class Dataset(H36MDataset):
         super().__init__(config=config, config_class=DatasetConfig)
 
     def prepare_data(self):
-        """util method to turn a list of pathfiles to a list of their data
-        :rtype: List[Trajectory]
-        """
+        """generates self.trajectories from dataset's file"""
+        if hasattr(self, "_trajectories"):
+            return
         super().prepare_data()
         traj_point_names = (
             self.trajectories.train + self.trajectories.test + self.trajectories.val

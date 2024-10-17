@@ -1,34 +1,32 @@
 """Data pair of sample and truth for motion data in ML"""
-import copy
 import tempfile
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import h5py
 import numpy as np
 import torch
 from tqdm.auto import tqdm
 
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, DATASET
 
 
-class HDF5MotionDataSamples:
-    """Class storing x,y pairs for ML trainings on motion data"""
+class HDF5TrajectoryDataSamples:
+    """Class storing x,y pairs for ML trainings on trajectory data"""
 
-    trajectories: List[Trajectory]
-    """List of the trajectories that are sampled"""
-    config: MotionDatasetConfig
-    """The dataset configuration used to create the MotionDataSamples"""
-    hdf5_file: h5py.File
-    """The list of ids used to iterate over the trajectories"""
+    config: TrajectoriesDatasetConfig
+    """The dataset configuration used to create the TrajectoryDataSamples"""
+    tmp_hdf5: tempfile._TemporaryFileWrapper
+    """generated hdf5 temporary file"""
+    size: int
+    """len of the class"""
 
     def __init__(
-        self, trajectories: List[Trajectory], config: MotionDatasetConfig
+        self, trajectories: List[Trajectory], config: TrajectoriesDatasetConfig
     ) -> None:
-        self.trajectories = trajectories
         self.config = config
         if (
             config.learning_type != LearningTypes.SEQ2SEQ
@@ -45,7 +43,12 @@ class HDF5MotionDataSamples:
         if self.config.reverse_pair_ratio:
             np.random.seed(seed=self.config.seed)
 
-    def create_data_pairs_to_hdf5(self, trajectories):
+    def create_data_pairs_to_hdf5(self, trajectories: List[Trajectory]):
+        """generate samples, context and truth into a new tmp hdf5 file from given list of Trajectory
+
+        Args:
+            trajectories (List[Trajectory]): trajectories used to generate the samples
+        """
         if self.config.loop_over_traj:
             raise ValueError(
                 "We cannot use 'loop_over_traj' along with 'save_samples_on_disk', please switch one off"
@@ -155,18 +158,28 @@ class HDF5MotionDataSamples:
         self.size = len(samples)
         tmp_hdf5_data.close()
 
-    def __getitem__(self, index: Union[int, List[int]]):
+    def __getitem__(
+        self, index: Union[int, List[int]]
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
+        """iterate over generated samples
+
+        Args:
+            index (int): the sample id
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]: the input of the model, additional context, the truth to compare the model output with
+        """
         if isinstance(index, int):
             index = [index]
         index = sorted(index)
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "r")
         samples = tmp_hdf5_data["samples"]
-        _in = torch.from_numpy(np.array(samples[index]))
+        _in = torch.FloatTensor(np.array(samples[index]))
         _in_context = {
-            key: torch.from_numpy(np.array(tmp_hdf5_data[key][index]))
+            key: torch.FloatTensor(np.array(tmp_hdf5_data[key][index]))
             for key in self.config.context_keys
         }
-        _out = torch.from_numpy(np.array(tmp_hdf5_data["truths"][index]))
+        _out = torch.FloatTensor(np.array(tmp_hdf5_data["truths"][index]))
         tmp_hdf5_data.close()
         if (
             self.config.reverse_pair_ratio

@@ -14,15 +14,15 @@ QUAT_FEATURE_SIZE = 4
 EULER_FEATURE_SIZE = 3
 
 
-def rotrep2size(rotation_representation: Rotation) -> int:
-    return rotation_representation.num_dims
-
-
 def euler_to_rotmatrix(euler: torch.Tensor) -> torch.Tensor:
     """
     Converts batch of euler rotations to batch of rotmatrix
-    :param euler: N*3 with roll, pitch, yaw, expressed in radian
-    :return: N*3*3
+
+    Args:
+        euler (torch.Tensor): N*3 with roll, pitch, yaw, expressed in radian
+
+    Returns:
+        torch.Tensor: rotation representation with shapes N*3*3
     """
     roll, pitch, yaw = euler[:, 0], euler[:, 1], euler[:, 2]
     c1 = torch.cos(roll)
@@ -49,10 +49,12 @@ def euler_to_rotmatrix(euler: torch.Tensor) -> torch.Tensor:
 def rotmatrix_to_euler(rot_matrix: torch.Tensor) -> torch.Tensor:
     """
     Converts batch of rotation matrices to batch of Euler angles.
-    Parameters:
-    rot_matrix (torch.Tensor): Tensor of shape [N, 3, 3] representing the rotation matrices.
+
+    Args:
+        rot_matrix (torch.Tensor): Tensor of shape [N, 3, 3] representing the rotation matrices.
+
     Returns:
-    torch.Tensor: Tensor of shape [N, 3] representing the Euler angles (roll, pitch, yaw).
+        torch.Tensor: Tensor of shape [N, 3] representing the Euler angles (roll, pitch, yaw).
     """
     euler_angles = torch.empty(
         (rot_matrix.shape[0], 3), dtype=rot_matrix.dtype, device=rot_matrix.device
@@ -84,8 +86,12 @@ def rotmatrix_to_euler(rot_matrix: torch.Tensor) -> torch.Tensor:
 def quat_to_rotmatrix(quat: torch.Tensor) -> torch.Tensor:
     """
     Converts batch of quaternion rotations to batch of rotmatrix
-    :param quat: N*4
-    :return: N*3*3
+
+    Args:
+        quat (torch.Tensor): rotation representation with shapes N*4
+
+    Returns:
+        torch.Tensor: rotation representation with shapes N*3*3
     """
     # Normalize the quaternions
     norm = torch.sqrt(torch.sum(quat**2, dim=1, keepdim=True))
@@ -146,6 +152,14 @@ def rotmatrix_to_quat(rotmatrix: torch.Tensor) -> torch.Tensor:
 
 
 def normalize_quaternion(quat_t: torch.Tensor) -> torch.Tensor:
+    """normalizes a quaternion tensor
+
+    Args:
+        quat_t (torch.Tensor): tensor quaternion
+
+    Returns:
+        torch.Tensor: normalized tensor quaternion
+    """
     quat_normed = quat_t / quat_t.norm(dim=-1, keepdim=True)
     # Ensure we have the quaternion with a positive w to avoid double cover
     indices = torch.nonzero(quat_normed[..., -1] < 0, as_tuple=True)
@@ -153,16 +167,27 @@ def normalize_quaternion(quat_t: torch.Tensor) -> torch.Tensor:
     return quat_normed
 
 
-def normalize_with_torch(t_tensor):
-    """Normalize along the last dimension."""
+def normalize_with_torch(t_tensor: torch.Tensor) -> torch.Tensor:
+    """Normalize along the last dimension.
+
+    Args:
+        t_tensor (torch.Tensor): tensor to normalize
+
+    Returns:
+        torch.Tensor: normalized tensor
+    """
     return t_tensor / t_tensor.norm(dim=-1, keepdim=True)
 
 
 def rep6d_to_rotmatrix(rep6d: torch.Tensor) -> torch.Tensor:
     """
     Converts a batch of rep6d to rotmatrix
-    :param rep6d: N * 3 * 2
-    :return: N * 3 * 3
+
+    Args:
+        rep6d (torch.Tensor): rotation representation with shapes N*3*2
+
+    Returns:
+        torch.Tensor: rotation representation with shapes N*3*3
     """
     a1 = rep6d[:, :, 0]
     a2 = rep6d[:, :, 1]
@@ -182,8 +207,12 @@ def rep6d_to_rotmatrix(rep6d: torch.Tensor) -> torch.Tensor:
 def rotmatrix_to_rep6d(rotmatrix: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to rep6d
-    :param rotmatrix: N * 3 * 3
-    :return: N * 3 * 2
+
+    Args:
+        rep6d (torch.Tensor): rotation representation with shapes N*3*3
+
+    Returns:
+        torch.Tensor: rotation representation with shapes N*3*2
     """
     # remove last dimension on last axis
     rep6d = torch.narrow(rotmatrix, -1, 0, rotmatrix.shape[1] - 1)
@@ -191,6 +220,12 @@ def rotmatrix_to_rep6d(rotmatrix: torch.Tensor) -> torch.Tensor:
 
 
 def _squeeze_batch(func):
+    """decorator to squeeze a batch if any
+
+    Args:
+        func (_type_): function to decorate
+    """
+
     def reshape_tensors(rotation_tensor: torch.Tensor):
         shape = rotation_tensor.shape
         if len(shape) > 2:
@@ -209,8 +244,11 @@ def _squeeze_batch(func):
 def convert_to_rotmatrix(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotation tensor to rotmatrix
-    :param rotation_tensor: N * F with F in [3, 4, 6, 9]
-    :return: N * 9
+
+    Args:
+        rotation_tensor(torch.Tensor): N * F with F in [3, 4, 6, 9]
+    Returns:
+        torch.Tensor: rotation tensor with shapes N * 9
     """
     if rotation_tensor.shape[-1] == ROTMATRIX_FEATURE_SIZE:
         return rotation_tensor
@@ -226,8 +264,11 @@ def convert_to_rotmatrix(rotation_tensor: torch.Tensor) -> torch.Tensor:
 def convert_to_rep6d(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to rep6d
-    :param rotation_tensor: N * F with F in [3, 4, 6, 9]
-    :return: N * 6
+
+    Args:
+        rotation_tensor(torch.Tensor): N * F with F in [3, 4, 6, 9]
+    Returns:
+        torch.Tensor: rotation tensor with shapes N * 6
     """
     if rotation_tensor.shape[-1] == REP6D_FEATURE_SIZE:
         return rotation_tensor
@@ -241,8 +282,11 @@ def convert_to_rep6d(rotation_tensor: torch.Tensor) -> torch.Tensor:
 def convert_to_quat(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to quat
-    :param rotation_tensor: N * F with F in [3, 4, 6, 9]
-    :return: N * 4
+
+    Args:
+        rotation_tensor(torch.Tensor): N * F with F in [3, 4, 6, 9]
+    Returns:
+        torch.Tensor: rotation tensor with shapes N * 4
     """
     if rotation_tensor.shape[-1] == QUAT_FEATURE_SIZE:
         return rotation_tensor
@@ -256,8 +300,11 @@ def convert_to_quat(rotation_tensor: torch.Tensor) -> torch.Tensor:
 def convert_to_euler(rotation_tensor: torch.Tensor) -> torch.Tensor:
     """
     Converts a rotmatrix to euler
-    :param rotation_tensor: N * F with F in [3, 4, 6, 9]
-    :return: N * 3
+
+    Args:
+        rotation_tensor(torch.Tensor): N * F with F in [3, 4, 6, 9]
+    Returns:
+        torch.Tensor: rotation tensor with shapes N * 3
     """
     if rotation_tensor.shape[-1] == EULER_FEATURE_SIZE:
         return rotation_tensor

@@ -1,28 +1,27 @@
-"""Data pair of sample and truth for motion data in ML"""
-import copy
-from typing import List, Tuple
+"""generation of samples, context and truth for trajectory data usage in ML"""
+from typing import Dict, List, Tuple
 
 import numpy as np
 import torch
 
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.utils.enums import LearningTypes
 
 
-class MotionDataSamples:
-    """Class storing x,y pairs for ML trainings on motion data"""
+class TrajectoryDataSamples:
+    """Class generating (sample, context, truth) from a list of Trajectory for ML trainings on traj data"""
 
     trajectories: List[Trajectory]
     """List of the trajectories that are sampled"""
-    config: MotionDatasetConfig
-    """The dataset configuration used to create the MotionDataSamples"""
+    config: TrajectoriesDatasetConfig
+    """The dataset configuration used to create the TrajectoryDataSamples"""
     sample_ids: List[Tuple[int, int]]
     """The list of ids used to iterate over the trajectories"""
 
     def __init__(
-        self, trajectories: List[Trajectory], config: MotionDatasetConfig
+        self, trajectories: List[Trajectory], config: TrajectoriesDatasetConfig
     ) -> None:
         self.trajectories = trajectories
         self.config = config
@@ -39,6 +38,7 @@ class MotionDataSamples:
             np.random.seed(seed=self.config.seed)
 
     def _map_to_flatten_trajs(self):
+        """creates a map to frames from all trajectories if they are valid as a starting frame for the sampling"""
         _map = []
         if self.config.learning_type in [LearningTypes.SEQ2SEQ, LearningTypes.SEQ2ONE]:
             invalid_frames_per_traj = (
@@ -58,7 +58,19 @@ class MotionDataSamples:
             _map += [(t, i) for i in range(len(trajectory) - invalid_frames_per_traj)]
         return _map
 
-    def _get_seq_with_size(self, index: int, history_size: int, future_size: int):
+    def _get_seq_with_size(
+        self, index: int, history_size: int, future_size: int
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        """returns tensor frames and context according to starting id, history_size and future_size
+
+        Args:
+            index (int): strating frame id
+            history_size (int): number of frames as history
+            future_size (int): number of frames as future
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor]]: frames tensor and context
+        """
         size = history_size + future_size
         traj_id, tensor_id = self.sample_ids[index]
         trajectory = self.trajectories[traj_id]
@@ -98,7 +110,17 @@ class MotionDataSamples:
             seq = torch.flip(seq, (0,))
         return seq, context
 
-    def _get_item_seq2seq(self, index: int):
+    def _get_item_seq2seq(
+        self, index: int
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
+        """get seq2seq tensors
+
+        Args:
+            index (int): the sample id
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]: the input of the model, additional context, the truth to compare the model output with
+        """
         seq, context = self._get_seq_with_size(
             index, self.config.history_size, self.config.future_size
         )
@@ -106,13 +128,33 @@ class MotionDataSamples:
         truth = seq[self.config.history_size :]
         return sample, context, truth
 
-    def _get_item_autoreg(self, index: int):
+    def _get_item_autoreg(
+        self, index: int
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
+        """get autoregressive tensors
+
+        Args:
+            index (int): the sample id
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]: the input of the model, additional context, the truth to compare the model output with
+        """
         seq, context = self._get_seq_with_size(index, self.config.history_size, 1)
         sample = seq[:-1]
         truth = seq[1:]
         return sample, context, truth
 
-    def _get_item_seq2one(self, index: int):
+    def _get_item_seq2one(
+        self, index: int
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
+        """get seq2one tensors
+
+        Args:
+            index (int): the sample id
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]: the input of the model, additional context, the truth to compare the model output with
+        """
         seq, context = self._get_seq_with_size(
             index, self.config.history_size, self.config.future_size
         )
@@ -120,7 +162,17 @@ class MotionDataSamples:
         truth = torch.unsqueeze(seq[-1], 0)
         return sample, context, truth
 
-    def __getitem__(self, index: int):
+    def __getitem__(
+        self, index: int
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]:
+        """iterate over generated samples
+
+        Args:
+            index (int): the sample id
+
+        Returns:
+            Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]: the input of the model, additional context, the truth to compare the model output with
+        """
         if self.config.learning_type == LearningTypes.SEQ2SEQ:
             _in, _in_context, _out = self._get_item_seq2seq(index)
         elif self.config.learning_type == LearningTypes.AUTOREG:

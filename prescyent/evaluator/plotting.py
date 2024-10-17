@@ -13,9 +13,10 @@ from matplotlib.axes import Axes
 from prescyent.dataset.features.rotation_methods import convert_to_euler
 from prescyent.dataset.features.feature import Rotation
 from prescyent.dataset import Trajectory
-from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
 from prescyent.predictor.base_predictor import BasePredictor
+from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, EVAL
 
 
@@ -284,17 +285,24 @@ def legend_plot(
 
 
 def plot_mpjpe(
-    predictor: Callable, dataset: MotionDataset, savefig_dir_path: str, log_x=False
+    predictor: Callable,
+    dataset: TrajectoriesDataset,
+    savefig_dir_path: str,
+    log_x=False,
 ):
     """Plot the MPJPE evaluation of the predictor
 
     Args:
         predictor (Callable): predictor to test
-        dataset (MotionDataset): dataset instance
+        dataset (TrajectoriesDataset): dataset instance
         savefig_dir_path (str): path where to save the plot
         log_x (bool, optional): if true, use log scale. Defaults to False.
     """
-
+    if predictor.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+        logger.getChild(EVAL).warning(
+            f"Cannot compute per frame evaluation of SEQ2ONE predictor {predictor}. Simlpy refer to ADE or FDE."
+        )
+        return
     distances = list()
     features = dataset.config.out_features
     pbar = tqdm(dataset.test_dataloader(), colour="green")
@@ -337,7 +345,7 @@ def plot_mpjpe(
 
 def plot_mpjpes(
     predictors: List[Callable],
-    dataset: MotionDataset,
+    dataset: TrajectoriesDataset,
     savefig_dir_path: str,
     log_x=False,
 ):
@@ -345,13 +353,18 @@ def plot_mpjpes(
 
     Args:
         predictor (List[Callable]): list of predictors to test
-        dataset (MotionDataset): dataset instance
+        dataset (TrajectoriesDataset): dataset instance
         savefig_dir_path (str): path where to save the plot
         log_x (bool, optional): if true, use log scale. Defaults to False.
     """
     predictors_distances = list()
     features = dataset.config.out_features
     for predictor in predictors:
+        if predictor.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+            logger.getChild(EVAL).warning(
+                f"Cannot compute per frame evaluation of SEQ2ONE predictor {predictor}. Simlpy refer to ADE or FDE."
+            )
+            continue
         distances = list()
         pbar = tqdm(dataset.test_dataloader(), colour="green")
         pbar.set_description(f"Running {predictor} over test_dataloader:")

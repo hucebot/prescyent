@@ -49,7 +49,7 @@ def self_auto_batch(function):
         unbatched = is_tensor_is_unbatched(input_tensor)
         if unbatched:
             input_tensor = torch.unsqueeze(input_tensor, dim=0)
-            if kwargs.get("context", None):
+            if kwargs.get("context", {}):
                 kwargs["context"] = {
                     c_name: c_tensor.unsqueeze(0)
                     for c_name, c_tensor in kwargs["context"].items()

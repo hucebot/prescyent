@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Union
 
-from prescyent.dataset.dataset import MotionDataset, MotionDatasetConfig
+from prescyent.dataset.dataset import TrajectoriesDataset, TrajectoriesDatasetConfig
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset import DATASET_MAP
 
@@ -14,23 +14,23 @@ class AutoDataset:
     @classmethod
     def build_from_config(
         cls,
-        config: Union[str, Path, dict, MotionDatasetConfig],
-    ) -> MotionDataset:
+        config: Union[str, Path, dict, TrajectoriesDatasetConfig],
+    ) -> TrajectoriesDataset:
         """Method to call upon to generate a new instance of a dataset from a config
 
         Args:
-            config (Union[str, Path, dict, MotionDatasetConfig]): Path to a config json or actual config data
+            config (Union[str, Path, dict, TrajectoriesDatasetConfig]): Path to a config json or actual config data
 
         Raises:
             AttributeError: if we cannot find the requested dataset class from the config file
 
         Returns:
-            MotionDataset: an instance of the motion dataset from its configuration
+            TrajectoriesDataset: an instance of the motion dataset from its configuration
         """
 
         if isinstance(config, (str, Path)):
             config = cls._get_config_from_path(Path(config))
-        if isinstance(config, MotionDatasetConfig):
+        if isinstance(config, TrajectoriesDatasetConfig):
             config = config.model_dump()
         dataset_class_name = config.get("name", None)
         dataset_class = DATASET_MAP.get(dataset_class_name, None)

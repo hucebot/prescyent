@@ -4,12 +4,12 @@ from typing import List, Optional
 
 from pydantic import field_validator, ValidationError
 
-from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
+from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
 
-class DatasetConfig(MotionDatasetConfig):
+class DatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
     hdf5_path: str = os.path.join(
@@ -36,9 +36,13 @@ class DatasetConfig(MotionDatasetConfig):
     future_size: int = 10
     """number of predicted timesteps, default to 1s at 10Hz"""
     in_features: Features = DEFAULT_FEATURES
+    """List of features used as input, if None, use default from the dataset"""
     out_features: Features = DEFAULT_FEATURES
+    """List of features used as output, if None, use default from the dataset"""
     in_points: List[int] = list(range(len(POINT_LABELS)))
+    """Ids of the points used as input."""
     out_points: List[int] = list(range(len(POINT_LABELS)))
+    """Ids of the points used as output."""
 
     @field_validator("context_keys")
     def check_context_keys(cls, value):
