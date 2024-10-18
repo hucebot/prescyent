@@ -8,28 +8,39 @@ import socket
 
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
+from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.evaluator.plotting import plot_mpjpe
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.evaluator.runners import eval_predictors
+from prescyent.utils.logger import logger, TRAINING, TESTING
 
 
 DEFAULT_EXP_PATH = str(Path("data") / "models" / "exp")
 
 
 def train_from_config(
-    config_path: Path, rm_config: bool = False, dataset=None, exp_path=DEFAULT_EXP_PATH
+    config_path: Path, rm_config: bool = False, dataset: TrajectoriesDataset = None, exp_path: str = DEFAULT_EXP_PATH
 ):
+    """Start a training for a predictor instanciated through a config file
+
+    Args:
+        config_path (Path): path to the config file
+        rm_config (bool, optional): if true, config file is removed when trained predictor is saved. Defaults to False.
+        dataset (_type_, optional): if not None, this instance will be used instead of loading a new dataset from the config. Defaults to None.
+        exp_path (_type_, optional): custom path to save all models. Defaults to DEFAULT_EXP_PATH.
+    """
+
     if not config_path.exists():
-        print("The provided config_file does not exist.")
+        logger.getChild(TRAINING).error("The provided config_file does not exist.")
         exit(1)
     try:
         with config_path.open(encoding="utf-8") as config_file:
             config_dict = json.load(config_file)
     except json.JSONDecodeError as e:
-        print(
+        logger.getChild(TRAINING).error(
             "The provided config_file could not be loaded as Json, please check your file"
         )
-        print(e)
+        logger.getChild(TRAINING).error(e)
         exit(1)
 
     # Get subparts of the global config
@@ -38,9 +49,9 @@ def train_from_config(
     dataset_config = config_dict.get("dataset_config", {})
     if not dataset_config:
         dataset_config = model_config.get("dataset_config", {})
-    print(f"Using model config: {model_config}")
-    print(f"Using training config: {training_config}")
-    print(f"Using dataset config: {dataset_config}")
+    logger.getChild(TRAINING).info(f"Using model config: {model_config}")
+    logger.getChild(TRAINING).info(f"Using training config: {training_config}")
+    logger.getChild(TRAINING).info(f"Using dataset config: {dataset_config}")
 
     # Validate config content and create Dataset and Predictor
     if not dataset:
@@ -56,15 +67,15 @@ def train_from_config(
     dataset.save_config(model_dir / "dataset_config.json")
 
     # Launch training
-    print("Training starts...")
+    logger.getChild(TRAINING).info("Training starts...")
     predictor.train(dataset, training_config)
 
-    print("Model directory:", model_dir)
+    logger.getChild(TRAINING).info(f"Model directory: {model_dir}")
     predictor.save()
     if rm_config:
         os.remove(str(config_path))
 
-    print("Testing predictor...")
+    logger.getChild(TESTING).info("Testing predictor...")
     predictor.test(dataset)
     predictor.free_trainer()
     plot_mpjpe(predictor, dataset, savefig_dir_path=predictor.log_path)

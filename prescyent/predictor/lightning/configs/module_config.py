@@ -2,10 +2,7 @@
 from typing import Optional
 
 from prescyent.predictor.config import PredictorConfig
-from prescyent.utils.enums import (
-    LearningTypes,
-    LossFunctions,
-)
+from prescyent.utils.enums import LossFunctions
 
 
 class ModuleConfig(PredictorConfig):

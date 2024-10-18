@@ -1,4 +1,6 @@
-from typing import Dict, Iterable, List
+"""functions for interpolation"""
+
+from typing import Dict, Iterable, Tuple
 
 import numpy as np
 import torch
@@ -10,7 +12,15 @@ from prescyent.dataset.features.rotation_methods import convert_rotation_tensor_
 def interpolate_iterable_with_ratio(
     input_list: Iterable, interpolation_ratio: int
 ) -> Iterable:
-    """output has size (len(input_list) - 1) * ratio + 1"""
+    """interpolate iterable with ratio
+
+    Args:
+        input_list (Iterable): list to interpolate
+        interpolation_ratio (int): ratio of interpolation
+    Returns:
+        Iterable: output has size (len(input_list) - 1) * ratio + 1
+    """
+
     output_list = []
     for i, _ in enumerate(input_list[:-1]):
         x_interpolated = np.linspace(
@@ -24,6 +34,16 @@ def interpolate_iterable_with_ratio(
 def interpolate_trajectory_tensor_with_ratio(
     input_tensor: torch.Tensor, interpolation_ratio: int
 ) -> torch.Tensor:
+    """interpolate trajectory tensor with ratio
+
+    Args:
+        input_tensor (torch.Tensor): traj tensor of shape [S, P, D]
+        interpolation_ratio (int): ratio of interpolation
+
+    Returns:
+        torch.Tensor: interpolated tensor
+    """
+
     assert len(input_tensor.shape) == 3
     input_tensor = torch.transpose(input_tensor, 0, 1)
     input_tensor = torch.transpose(input_tensor, 1, 2)
@@ -69,12 +89,12 @@ def upsample_trajectory_tensor(
     target_freq: int,
 ) -> torch.Tensor:
     """
-    Manually upsamples the input tensor X from original_rate to new_rate.
+    Manually upsamples the input tensor from original_rate to new_rate.
 
     Args:
-        X (torch.Tensor): Input tensor with shape [T, H, W]
-        original_rate (int): Original sampling rate of the tensor
-        new_rate (int): Desired sampling rate of the tensor
+        input_tensor (torch.Tensor): Input tensor with shape [T, H, W]
+        frequency (int): Original sampling rate of the tensor
+        target_freq (int): Desired sampling rate of the tensor
 
     Returns:
         torch.Tensor: Upsampled tensor
@@ -115,8 +135,28 @@ def update_tensor_frequency(
     freq: float,
     target_freq: float,
     tensor_features: Features = None,
-    context: Dict[str, torch.Tensor] = {},
-):
+    context: Dict[str, torch.Tensor] = None,
+) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    """tensor of given frequency is returned to a updated freq
+
+    Args:
+        tensor (torch.Tensor): traj tensor of shape [S, P, D]
+        freq (float): frequency of the tensor
+        target_freq (float): target frequency
+        tensor_features (Features, optional): Features of the tensor. Defaults to None.
+        context (Dict[str, torch.Tensor], optional): context alongside the tensor. Defaults to None.
+
+    Raises:
+        AttributeError: if features are not provided and we want to upsample
+        AttributeError: if you try to upsample some context
+
+    Returns:
+        Tuple[torch.Tensor, Dict[str, torch.Tensor]: new tensor and context
+    """
+
+    assert len(tensor.shape) == 3  # works with unbatched tensors
+    if context is None:
+        context = {}
     if target_freq == freq:
         return tensor, context
     if target_freq < freq:

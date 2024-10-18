@@ -1,5 +1,5 @@
-"""util functions for list, files and data"""
-from typing import List
+"""util functions for list, files and data, plus methods to instanciate H36M in order to reproduce benchmarks"""
+from typing import Any, List, Tuple
 
 import numpy as np
 import torch
@@ -13,12 +13,27 @@ def split_array_with_ratios(
     ratio2: float,
     ratio3: float = None,
     shuffle: bool = True,
-):
+) -> Tuple[List[Any], List[Any], List[Any]]:
+    """split a list in three given ratios
+
+    Args:
+        array (List): the list to split
+        ratio1 (float): first ratio
+        ratio2 (float): second ration
+        ratio3 (float, optional): third ratio. Defaults to None.
+        shuffle (bool, optional): shuffle the original array if true. Defaults to True.
+
+    Raises:
+        ValueError: if array is empty
+
+    Returns:
+        Tuple[List[Any], List[Any], List[Any]]: the three arrays
+    """
+
     if len(array) < 1:
         raise ValueError("Can't split an empty array")
     if not isinstance(array, np.ndarray):
         array = np.array(array)
-
     if shuffle:
         np_rng = np.random.default_rng(2)  # have a deterministic shuffle for reruns
         np_rng.shuffle(array)
@@ -29,8 +44,7 @@ def split_array_with_ratios(
         len1 = round(len(array) * ratio1)
         if len(array) - len1 == 0:
             len1 -= 1
-        return array[:len1], array[len1:]
-
+        return array[:len1], array[len1:], list()
     if len(array) < 3:
         logger.getChild(DATASET).warning("Only 2 firsts array could contain data")
         return array[0], array[1], list()
@@ -40,7 +54,16 @@ def split_array_with_ratios(
 
 
 def update_parent_ids(kept_indexes: List[int], parents: List[int]) -> List[int]:
-    """update a reference map with a new list of indexes"""
+    """update a reference map with a new list of indexes
+
+    Args:
+        kept_indexes (List[int]): the list of the ids that are kept
+        parents (List[int]): reference map to update
+
+    Returns:
+        List[int]: updated reference map with new ids and -1 for missing ids
+    """
+
     key_map = {k: v for v, k in enumerate(kept_indexes)}
     return [key_map.get(parents[i], -1) for i in kept_indexes]
 

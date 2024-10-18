@@ -13,14 +13,12 @@ from prescyent.dataset.features import (
     features_are_convertible_to,
 )
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
+from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class TorchModule(BaseTorchModule):
-    """
-    feature_size - The number of dimensions to predict in parallel
-    hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
-    """
+    """Torch implementation of a LSTM autoregressive model"""
 
     def __init__(self, config):
         super().__init__(config)
@@ -52,6 +50,17 @@ class TorchModule(BaseTorchModule):
         future_size: int = 1,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
+        """lstm's autoregressive forward method
+
+        Args:
+            input_tensor (torch.Tensor): input traj_tensor
+            future_size (int, optional): number of frames to predict as output. Defaults to 1.
+            context (Optional[Dict[str, torch.Tensor]], optional): additionnal context to the trajectory.
+            Note that there is no default implementation to integrate the context to the prediction. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted traj
+        """
         if (
             self.convert_output
             and future_size > 1
@@ -61,6 +70,12 @@ class TorchModule(BaseTorchModule):
                 "Cannot output a future greater than 1 with this models features "
                 f"as we cannot convert {self.out_features} to {self.in_features}"
                 "and use our outputs as inputs"
+            )
+        if context is None:
+            context = {}
+        if context:
+            logger.getChild(PREDICTOR).warning(
+                "Context is not taken in account in SARLSTMPredictor's module"
             )
         # init the output
         predictions = []

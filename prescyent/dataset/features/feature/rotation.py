@@ -28,10 +28,12 @@ class RotationEuler(Rotation):
 
     @property
     def num_dims(self) -> int:
+        """size of the feature"""
         return 3
 
     @property
     def dims_names(self) -> List[str]:
+        """name of each dim"""
         return ["roll", "pitch", "yaw"]
 
 
@@ -44,10 +46,18 @@ class RotationQuat(Rotation):
 
     @property
     def must_post_process(self) -> bool:
+        """returns true as we want to manipulate actual quaternions in the lib"""
         return True
 
     def post_process(self, quaternion_t: torch.Tensor) -> torch.Tensor:
-        """normalise a quaternion as postprocessing"""
+        """normalise a quaternion as postprocessing
+
+        Args:
+            quaternion_t (torch.Tensor): quaternion to normalize
+
+        Returns:
+            torch.Tensor: normalized quaternion
+        """
         quat_normed = quaternion_t / quaternion_t.norm(dim=-1, keepdim=True)
         # Ensure we have the quaternion with a positive w to avoid double cover
         indices = torch.nonzero(quat_normed[..., -1] < 0, as_tuple=True)
@@ -56,15 +66,26 @@ class RotationQuat(Rotation):
 
     @property
     def num_dims(self) -> int:
+        """size of the feature"""
         return 4
 
     @property
     def dims_names(self) -> List[str]:
+        """name of each dim"""
         return ["qx", "qy", "qz", "qw"]
 
     def get_distance(
         self, tensor_a: torch.Tensor, tensor_b: torch.Tensor
     ) -> torch.Tensor:
+        """computes angular distance in radian
+
+        Args:
+            tensor_a (torch.Tensor): tensor to compare
+            tensor_b (torch.Tensor): tensor to compare
+
+        Returns:
+            torch.Tensor: distance between the two tensors
+        """
         inner_product = torch.sum(tensor_a * tensor_b, dim=-1)
         inner_product = 2 * torch.square(inner_product) - 1
         # clamp before arcos
@@ -81,10 +102,12 @@ class RotationRep6D(Rotation):
 
     @property
     def num_dims(self) -> int:
+        """size of the feature"""
         return 6
 
     @property
     def dims_names(self) -> List[str]:
+        """name of each dim"""
         return ["x1", "x2", "x3", "y1", "y2", "y3"]
 
 
@@ -95,6 +118,7 @@ def is_orthonormal_matrix(R, epsilon=1e-7):
     Args:
         R (...xDxD tensor): batch of square matrices.
         epsilon: tolerance threshold.
+
     Returns:
         boolean tensor (shape ...).
 
@@ -116,6 +140,7 @@ def is_rotation_matrix(R, epsilon=1e-7):
     Args:
         R (...xDxD tensor): batch of square matrices.
         epsilon: tolerance threshold.
+
     Returns:
         boolean tensor (shape ...).
     """
@@ -133,14 +158,17 @@ class RotationRotMat(Rotation):
 
     @property
     def num_dims(self) -> int:
+        """size of the feature"""
         return 9
 
     @property
     def dims_names(self) -> List[str]:
+        """name of each dim"""
         return ["x1", "x2", "x3", "y1", "y2", "y3", "z1", "z2", "z3"]
 
     @property
     def must_post_process(self) -> bool:
+        """returns true as we want to manipulate actual rotmatrices in the lib"""
         return True
 
     def post_process(self, rotmat_t: torch.Tensor) -> torch.Tensor:
@@ -164,6 +192,15 @@ class RotationRotMat(Rotation):
     def get_distance(
         self, tensor_a: torch.Tensor, tensor_b: torch.Tensor
     ) -> torch.Tensor:
+        """computes angular distance in radian
+
+        Args:
+            tensor_a (torch.Tensor): tensor to compare
+            tensor_b (torch.Tensor): tensor to compare
+
+        Returns:
+            torch.Tensor: distance between the two tensors
+        """
         # assert rotmatrices are valid
         rotmatrix_a = torch.reshape(tensor_a, [*tensor_a.shape[:-1], 3, 3])
         rotmatrix_b = torch.reshape(tensor_b, [*tensor_b.shape[:-1], 3, 3])

@@ -45,7 +45,7 @@ class TrajectoryHDF5(Trajectory):
     def tensor(self):
         with h5py.File(self.file_path, "r") as h_file:
             traj_group = h_file[self.title]
-            return torch.from_numpy(np.array(traj_group["traj"]))
+            return torch.FloatTensor(np.array(traj_group["traj"]))
 
     @tensor.setter
     def tensor(self, value):
@@ -61,7 +61,7 @@ class TrajectoryHDF5(Trajectory):
             traj_group = h_file[self.title]
             if self.context_keys:
                 return {
-                    key: torch.from_numpy(np.array(traj_group[f"{key}"]))
+                    key: torch.FloatTensor(np.array(traj_group[f"{key}"]))
                     for key in self.context_keys
                 }
             return None

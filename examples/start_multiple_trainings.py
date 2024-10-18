@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 
-from prescyent.train_from_config import train_from_config
+from examples.train_from_config import train_from_config
 from prescyent.utils.enums import LearningTypes, TrajectoryDimensions
 from prescyent.utils.enums.loss_functions import LossFunctions
 from prescyent.utils.enums.scalers import Scalers
@@ -44,10 +44,11 @@ VARIATIONS = {
     "training_config.early_stopping_patience": [15],
     "training_config.use_auto_lr": [True],
     # DATASET
-    "dataset_config.frequency": [10],
-    "dataset_config.history_size": [10],
-    "dataset_config.future_size": [10],
+    "dataset_config.frequency": [24],
+    "dataset_config.history_size": [24],
+    "dataset_config.future_size": [12],
     "dataset_config.name": ["TeleopIcub"],
+    "dataset_config.subsets": [["BottleTable"]],
     "dataset_config.batch_size": [256],
 }
 
@@ -120,7 +121,7 @@ if __name__ == "__main__":
         / "data"
         / "models"
         / "TeleopIcub"
-        / "10Hz_1s_1s"
+        / "24Hz_24in_12out"
     )
     for i, config_path in enumerate(config_paths):
         print(f"Training {i} starting...")

@@ -1,5 +1,5 @@
+"""class for normalization of tensors"""
 import json
-import math
 from typing import List, Optional
 
 import torch
@@ -10,6 +10,8 @@ from prescyent.utils.enums import TrajectoryDimensions
 
 
 class Normalizer:
+    """class to perfom normalization as a scaling method"""
+
     min_t: torch.Tensor
     max_t: torch.Tensor
     dim: List[int]
@@ -30,6 +32,7 @@ class Normalizer:
             dataset_dataloader (DataLoader): Dataloader over the whole training dataset
             feat_ids (Optional[List[int]], optional): List of the dataset features. Defaults to None.
         """
+
         dataset_dataloader = iter(dataset_dataloader)
         batch = next(dataset_dataloader)
         data = batch.unsqueeze(0)
@@ -72,6 +75,7 @@ class Normalizer:
         Returns:
             torch.Tensor: Normalized input tensor
         """
+
         min_t = self.min_t.detach().clone().to(sample_tensor.device)
         max_t = self.max_t.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
@@ -107,6 +111,7 @@ class Normalizer:
         Returns:
             torch.Tensor: Unnormalized input tensor
         """
+
         min_t = self.min_t.detach().clone().to(sample_tensor.device)
         max_t = self.max_t.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:

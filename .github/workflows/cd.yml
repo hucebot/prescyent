@@ -4,15 +4,16 @@ name: CD
 
 on:
   workflow_run:
-    workflows: ["CI"]  # Reference the test workflow
-    types:
-      - completed  # Trigger only after the test workflow is completed
+    workflows: "CI"  # Reference the test workflow
+    branches: main
+    types: completed  # Trigger only after the test workflow is completed
 
 jobs:
   create_release:
     name: Build and create release
     runs-on: ubuntu-22.04
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}  # Ensure it's on the 'main' branch and the test workflow was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+    # Ensure it's on the 'main' branch and the test workflow was successful
     environment: pipy
     permissions:
       id-token: write

@@ -2,14 +2,14 @@
 import os
 from typing import List, Optional
 
-from pydantic import model_validator, ValidationError
+from pydantic import field_validator
 
-from prescyent.dataset.config import DEFAULT_DATA_PATH, MotionDatasetConfig
+from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 
 
-class DatasetConfig(MotionDatasetConfig):
+class DatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
     hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m.hdf5")
@@ -32,13 +32,17 @@ class DatasetConfig(MotionDatasetConfig):
     """number of predicted timesteps, default to 1sec at 25Hz"""
     # Override default values with the dataset's
     in_features: Features = DEFAULT_FEATURES
+    """List of features used as input, if None, use default from the dataset"""
     out_features: Features = DEFAULT_FEATURES
+    """List of features used as output, if None, use default from the dataset"""
     in_points: List[int] = DEFAULT_USED_JOINTS
+    """Ids of the points used as input."""
     out_points: List[int] = DEFAULT_USED_JOINTS
+    """Ids of the points used as output."""
 
-    @model_validator(mode="after")
-    def check_context_keys(self):
+    @field_validator("context_keys")
+    def check_context_keys(cls, value):
         """check that requested keys exists in the dataset"""
-        if self.context_keys:
-            raise ValidationError("This dataset cannot handle context keys")
-        return self
+        if value:
+            raise ValueError("This dataset cannot handle context keys")
+        return value

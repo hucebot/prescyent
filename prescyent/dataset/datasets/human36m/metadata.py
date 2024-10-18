@@ -1,3 +1,5 @@
+"""constants and default values for the dataset"""
+
 import numpy as np
 from prescyent.dataset.features import CoordinateXYZ, Features, RotationRotMat
 

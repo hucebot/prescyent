@@ -1,6 +1,6 @@
 """simple predictor to use as a baseline"""
 
-from typing import Dict, Iterable, Optional
+from typing import Dict, Optional
 
 import torch
 from pytorch_lightning import LightningDataModule
@@ -10,7 +10,7 @@ from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class ConstantPredictor(BasePredictor):
@@ -34,7 +34,12 @@ class ConstantPredictor(BasePredictor):
         datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
     ):
-        """train predictor"""
+        """We don't need to train this baseline !
+
+        Args:
+            datamodule (LightningDataModule): instance of a TrajectoriesDataset
+            train_config (BaseModel, optional): configuration for the training. Defaults to None.
+        """
         logger.getChild(PREDICTOR).warning(
             "No training necessary for this predictor %s",
             self.__class__.__name__,
@@ -45,26 +50,34 @@ class ConstantPredictor(BasePredictor):
         datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
     ):
-        """finetune predictor"""
+        """We don't need to finetune this baseline !
+
+        Args:
+            datamodule (LightningDataModule): TrajectoriesDataset
+            train_config (BaseModel, optional): config for the training. Defaults to None.
+        """
         logger.getChild(PREDICTOR).warning(
-            "No training necessary for this predictor %s",
+            "No finetuning necessary for this predictor %s",
             self.__class__.__name__,
         )
 
-    def save(self, save_path: str):
-        """train predictor"""
-        logger.getChild(PREDICTOR).warning(
-            "No save necessary for this predictor %s",
-            self.__class__.__name__,
-        )
-
+    @self_auto_batch
     def predict(
-        self, input_t: torch.Tensor, future_size: int, *args, **kwargs
+        self,
+        input_t: torch.Tensor,
+        future_size: int,
+        context: Optional[Dict[str, torch.Tensor]],
     ) -> torch.Tensor:
-        unbatch = False
-        if not is_tensor_is_batched(input_t):
-            unbatch = True
-            input_t = input_t.unsqueeze(0)
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         input_t = torch.transpose(input_t, 0, 1)
         output = [input_t[-1].unsqueeze(0) for _ in range(future_size)]
         output_t = torch.cat(output, dim=0)
@@ -88,6 +101,4 @@ class ConstantPredictor(BasePredictor):
                 self.config.dataset_config.in_features,
                 self.config.dataset_config.out_features,
             )
-        if unbatch:
-            output_t = output_t.squeeze(0)
         return output_t

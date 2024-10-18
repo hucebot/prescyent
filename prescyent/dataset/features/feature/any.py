@@ -13,10 +13,12 @@ class Any(Feature):
 
     @property
     def num_dims(self) -> int:
+        """number of dimensions that there must be in the described tensor (with -1 we don't check)"""
         return -1
 
     @property
     def dims_names(self) -> List[str]:
+        """name for each dimension"""
         return [f"feature_{i}" for i in range(len(self.ids))]
 
     def _is_convertible(self, __value: object) -> bool:
@@ -25,5 +27,14 @@ class Any(Feature):
     def get_distance(
         self, tensor_a: torch.Tensor, tensor_b: torch.Tensor
     ) -> torch.Tensor:
+        """euclidian distance
+
+        Args:
+            tensor_a (torch.Tensor): tensor to compare
+            tensor_b (torch.Tensor): tensor to compare
+
+        Returns:
+            torch.Tensor: distance between the two tensors
+        """
         # Chose to treat Any as a coordinate for now
         return torch.sqrt(torch.sum(torch.square(tensor_b - tensor_a), dim=-1))

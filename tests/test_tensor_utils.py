@@ -3,16 +3,16 @@ import torch
 
 import prescyent.dataset.features as tensor_features
 from prescyent.utils.tensor_manipulation import (
-    cat_tensor_with_seq_idx,
+    cat_list_with_seq_idx,
     trajectory_tensor_get_dim_limits,
 )
 
 
 class TestFlattenListPreds(unittest.TestCase):
-    def test_return_as_is(self):
+    def test_bad_shapes(self):
         input_pred = torch.arange(3 * 3).view(3, 3)
-        output_pred = cat_tensor_with_seq_idx(input_pred)
-        self.assertTrue(torch.equal(input_pred, output_pred))
+        with self.assertRaises(AttributeError):
+            _ = cat_list_with_seq_idx(input_pred)
 
     def test_flatten(self):
         input_pred = torch.arange(3 * 3 * 3 * 3).view(3, 3, 3, 3)
@@ -23,7 +23,7 @@ class TestFlattenListPreds(unittest.TestCase):
                 [[72.0, 73.0, 74.0], [75.0, 76.0, 77.0], [78.0, 79.0, 80.0]],
             ]
         )
-        output_pred = cat_tensor_with_seq_idx(input_pred)
+        output_pred = cat_list_with_seq_idx(input_pred)
         self.assertTrue(torch.equal(expected_output, output_pred))
 
 

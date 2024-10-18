@@ -2,7 +2,7 @@ import torch
 
 
 class ReshapingLayer(torch.nn.Module):
-    """"""
+    """creates a new linear layer to match new input shape to old input shapes"""
 
     def __init__(self, input_shapes, output_shapes) -> None:
         super().__init__()

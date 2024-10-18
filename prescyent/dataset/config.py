@@ -14,8 +14,8 @@ root_dir = Path(__file__).parent.parent.parent
 DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
 
 
-class MotionDatasetConfig(BaseConfig):
-    """Pydantic Basemodel for MotionDatasets configuration"""
+class TrajectoriesDatasetConfig(BaseConfig):
+    """Pydantic Basemodel for TrajectoriesDatasets configuration"""
 
     name: Optional[str] = None
     """Name of your dataset. WARNING, If you override default value, AutoDataset won't be able to load your dataset"""
@@ -36,10 +36,9 @@ class MotionDatasetConfig(BaseConfig):
 
     # x, y pairs related variables for motion data samples:
     learning_type: LearningTypes = LearningTypes.SEQ2SEQ
-    """Method used to generate MotionDataSamples"""
+    """Method used to generate TrajectoryDataSamples"""
     frequency: int
-    """The frequency in Hz of the dataset,
-    If different from original data we'll use linear upsampling or downsampling of the data"""
+    """The frequency in Hz of the dataset, If different from original data we'll use linear upsampling or downsampling of the data"""
     history_size: int
     """Number of timesteps as input"""
     future_size: int
@@ -49,15 +48,9 @@ class MotionDatasetConfig(BaseConfig):
     out_features: Optional[tensor_features.Features]
     """List of features used as output, if None, use default from the dataset"""
     in_points: Optional[List[int]]
-    """Ids of the points used as input.
-    Do not mistake with the "used joint".
-    Use joints are used on Trajectory level while in_points and out_points
-    are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    """Ids of the points used as input."""
     out_points: Optional[List[int]]
-    """Ids of the points used as output.
-    Do not mistake with the "used joint".
-    Use joints are used on Trajectory level while in_points and out_points
-    are relative to previous used joint changes, and are used only for MotionSamples pair."""
+    """Ids of the points used as output."""
     context_keys: List[str] = []
     """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
     convert_trajectories_beforehand: bool = True
@@ -69,42 +62,49 @@ class MotionDatasetConfig(BaseConfig):
 
     @property
     def num_out_features(self) -> int:
+        """number of different output features"""
         if self.out_features is None:
             return 0
         return len(self.out_features)
 
     @property
     def num_in_features(self) -> int:
+        """number of different input features"""
         if self.in_features is None:
             return 0
         return len(self.in_features)
 
     @property
     def num_out_dims(self) -> int:
+        """sum of the dims of output features"""
         if self.out_features is None:
             return 0
         return sum([len(feat.ids) for feat in self.out_features])
 
     @property
     def num_in_dims(self) -> int:
+        """sum of the dims of input features"""
         if self.in_features is None:
             return 0
         return sum([len(feat.ids) for feat in self.in_features])
 
     @property
     def num_out_points(self) -> int:
+        """number of output points"""
         if self.out_points is None:
             return 0
         return len(self.out_points)
 
     @property
     def num_in_points(self) -> int:
+        """number of input points"""
         if self.in_points is None:
             return 0
         return len(self.in_points)
 
     @property
     def out_dims(self) -> List[int]:
+        """list of dims sizes per output feature"""
         dims = []
         if self.out_features is None:
             return dims
@@ -114,6 +114,7 @@ class MotionDatasetConfig(BaseConfig):
 
     @property
     def in_dims(self) -> List[int]:
+        """list of dims sizes per input feature"""
         dims = []
         if self.in_features is None:
             return dims
@@ -123,6 +124,7 @@ class MotionDatasetConfig(BaseConfig):
 
     @model_validator(mode="before")
     def unserialize_features(self):
+        """turns features dict from json data into the Features object"""
         if self.get("out_features", None):
             if isinstance(self["out_features"], tensor_features.Feature):
                 self["out_features"] = tensor_features.Features(
@@ -165,6 +167,7 @@ class MotionDatasetConfig(BaseConfig):
 
     @model_validator(mode="after")
     def generate_random_seed_if_none(self):
+        """generates a random seed if it is None"""
         if self.seed is None:
             self.seed = random.randint(1, 10**9)
         return self

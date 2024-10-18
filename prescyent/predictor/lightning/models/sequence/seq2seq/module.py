@@ -1,7 +1,9 @@
 """
 simple Seq2Seq implementation
-[short description]
-[link to the paper]
+RNN Encoder Decoder architecture as described in
+Sutskever, I., Vinyals, O., & Le, Q., V. (2014, September 10). Sequence to Sequence Learning with Neural Networks. arXiv.org. https://arxiv.org/abs/1409.3215
+or
+Cho, K., Bart, V. M., Gulcehre, C., Bahdanau, D., Bougares, F., Schwenk, H., & Bengio, Y. (2014, June 3). Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation. arXiv.org. https://arxiv.org/abs/1406.1078
 """
 from typing import Dict, Optional
 import torch
@@ -9,16 +11,18 @@ from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.tensor_manipulation import self_auto_batch
+from prescyent.utils.logger import logger, PREDICTOR
 
 
 class TorchModule(BaseTorchModule):
-    """
-    feature_size - The number of dimensions to predict in parrallel
-    hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
-    out_sequence_size - This will be equal to the prediction_periods input to get_x_y_pairs
-    """
+    """torch implementation of the Seq2Seq model"""
 
     def __init__(self, config):
+        """
+        feature_size - The number of dimensions to predict in parrallel
+        hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
+        out_sequence_size - This will be equal to the prediction_periods input to get_x_y_pairs
+        """
         super().__init__(config)
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
@@ -52,6 +56,29 @@ class TorchModule(BaseTorchModule):
         future_size: int = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
+        """seq2seq's forward method
+
+        Args:
+            input_tensor (torch.Tensor): input traj_tensor
+            future_size (int, optional): number of frames to predict as output. Defaults to model's config out_sequence_size.
+            context (Optional[Dict[str, torch.Tensor]], optional): additionnal context to the trajectory.
+            Note that there is no default implementation to integrate the context to the prediction. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted traj
+        """
+        if future_size is None:
+            future_size = self.out_sequence_size
+        elif future_size > self.out_sequence_size:
+            raise AttributeError(
+                f"module cannot output a future bigger than its configured future_size {self.out_sequence_size}"
+            )
+        if context is None:
+            context = {}
+        if context:
+            logger.getChild(PREDICTOR).warning(
+                "Context is not taken in account in Seq2SeqPredictor's module"
+            )
         # (batch_size, seq_len, num_point, num_dim) => (seq_len, batch_size, num_point * num_dim)
         batch_size = input_tensor.shape[0]
         input_tensor = input_tensor.reshape(batch_size, self.in_sequence_size, -1)
@@ -81,4 +108,4 @@ class TorchModule(BaseTorchModule):
         predictions = predictions.reshape(
             batch_size, self.out_sequence_size, self.num_out_points, self.num_out_dims
         )
-        return predictions
+        return predictions[:, -future_size:]
