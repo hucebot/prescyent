@@ -5,6 +5,7 @@ import torch
 
 from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.base_predictor import BasePredictor
+from prescyent.utils.enums.learning_types import LearningTypes
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import is_tensor_is_batched
 
@@ -21,11 +22,21 @@ class SequencePredictor(LightningPredictor):
         future_size: int = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         with torch.no_grad():
             self.model.eval()
             list_outputs = []
             if future_size is None:
-                future_size = self.model.torch_model.out_sequence_size
+                future_size = self.config.dataset_config.future_size
             # if is tensor and batched, input_len = seq_len's dim, else len()
             history_size = (
                 input_t.shape[1] if is_tensor_is_batched(input_t) else len(input_t)
@@ -52,7 +63,7 @@ class SequencePredictor(LightningPredictor):
                     c_key: c_tensor[-self.model.torch_model.in_sequence_size :]
                     for c_key, c_tensor in context
                 }
-            if future_size > self.model.torch_model.out_sequence_size and (
+            if future_size > self.config.dataset_config.future_size and (
                 self.config.dataset_config.in_features
                 != self.config.dataset_config.out_features
                 or self.config.dataset_config.in_points
@@ -61,17 +72,17 @@ class SequencePredictor(LightningPredictor):
             ):
                 raise AttributeError(
                     f"We cannot predict a futur_size bigger than "
-                    f"{self.model.torch_model.out_sequence_size} if we cannot recurse"
+                    f"{self.config.dataset_config.future_size} if we cannot recurse"
                     " on the model's output or with a context! "
                     " Please check your inputs and outputs'"
                     " in_features and out_features or in_points and out_points"
                 )
-            for i in range(0, future_size, self.model.torch_model.out_sequence_size):
+            for i in range(0, future_size, self.config.dataset_config.future_size):
                 prediction = self.model.torch_model(
                     input_t, future_size=future_size, context=context
                 )
                 list_outputs.append(prediction)
-                if i + self.model.torch_model.out_sequence_size < future_size:
+                if i + self.config.dataset_config.future_size < future_size:
                     if is_tensor_is_batched(input_t):
                         input_t = torch.cat((input_t, prediction), dim=1)[
                             :, -history_size:
@@ -79,6 +90,10 @@ class SequencePredictor(LightningPredictor):
                     else:
                         input_t = torch.cat((input_t, prediction))[-history_size:]
             if is_tensor_is_batched(input_t):
+                if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+                    return torch.cat(list_outputs, dim=1)[:, -1].unsqueeze(1)
                 return torch.cat(list_outputs, dim=1)[:, :future_size]
             else:
+                if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+                    return torch.cat(list_outputs, dim=0)[-1].unsqueeze(0)
                 return torch.cat(list_outputs, dim=0)[:future_size]

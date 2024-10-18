@@ -1,12 +1,13 @@
 """Module with methods common to every lightning modules"""
 import copy
 import inspect
-from typing import Any, Dict, List, Type
+from typing import Dict, List, Tuple, Type
 
 import pytorch_lightning as pl
 import torch
 
 from prescyent.dataset.features.feature_manipulation import cal_distance_for_feat
+from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.lightning.configs.module_config import LossFunctions
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalRigidDistanceLoss
@@ -32,9 +33,11 @@ CRITERION_MAPPING = {
     LossFunctions.MTRDVLOSS: MeanTotalRigidDistanceAndVelocityLoss,
 }
 DEFAULT_LOSS = torch.nn.MSELoss
+MODEL_PICKLE_NAME = "model.pb"
 
 
 def apply_spectral_norm(model):
+    """Apply spectral normalisation to each module of a model"""
     for module_name, module in copy.copy(model._modules).items():
         # recurse on sequentials
         if isinstance(module, torch.nn.Sequential):
@@ -66,7 +69,9 @@ class LightningModule(pl.LightningModule):
     test_output: List[Dict[str, float]]
     train_output: List[Dict[str, float]]
 
-    def __init__(self, torch_model_class: Type[BaseTorchModule], config) -> None:
+    def __init__(
+        self, torch_model_class: Type[BaseTorchModule], config: PredictorConfig
+    ) -> None:
         logger.getChild(PREDICTOR).info("Initialization of the Lightning Module...")
         super().__init__()
         self.config = config
@@ -112,18 +117,24 @@ class LightningModule(pl.LightningModule):
         self.save_hyperparameters(ignore=["torch_model", "criterion"])
         logger.getChild(PREDICTOR).info("Lightning Module ready.")
 
-    def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
-        optimizer.zero_grad(set_to_none=True)
-
     @classmethod
-    def load_from_binary(cls, path: str, config):
-        """Retrieve model infos from torch binary"""
+    def load_from_binary(cls, path: str, config: PredictorConfig):
+        """load model from state_dict and torch binary
+
+        Args:
+            path (str): path to the model pb
+            config (PredictorConfig): the config to load the predictor with
+        """
         model = torch.load(path)
         return cls(model.__class__, config)
 
     def save(self, save_path: str):
-        """Export model to state_dict and torch binary"""
-        torch.save(self.torch_model, save_path / "model.pb")
+        """Export model to state_dict and torch binary
+
+        Args:
+            save_path (str): directory where to save the model binary
+        """
+        torch.save(self.torch_model, save_path / MODEL_PICKLE_NAME)
 
     def configure_optimizers(self):
         """return module optimizer"""
@@ -143,8 +154,18 @@ class LightningModule(pl.LightningModule):
             return [optimizer], [{"scheduler": lr_scheduler, "interval": "step"}]
         return [optimizer]
 
-    def predict(self, batch):
-        """get prediction from batch and model"""
+    def predict(
+        self,
+        batch: Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor],
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """get prediction from batch and model
+
+        Args:
+            batch (Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor]): sample, context, truth
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: prediction and truth
+        """
         sample, context, truth = batch
         if self.scaler:
             sample = self.scaler.scale(
@@ -164,8 +185,24 @@ class LightningModule(pl.LightningModule):
             raise ValueError("Please check your loss function and architecture")
         return pred, truth
 
-    def compute_metrics(self, pred, truth, prefix: str = "", loss_only=False):
-        """get loss and accuracy metrics pred and truth"""
+    def compute_metrics(
+        self,
+        pred: torch.Tensor,
+        truth: torch.Tensor,
+        prefix: str = "",
+        loss_only: bool = False,
+    ) -> Dict[str, torch.Tensor]:
+        """get loss and accuracy metrics pred and truth
+
+        Args:
+            pred (torch.Tensor): predicted tensor
+            truth (torch.Tensor): truth tensor_
+            prefix (str, optional): value used as prefix of the metric key. Defaults to "".
+            loss_only (bool, optional): if true, will only compute loss metric. Defaults to False.
+
+        Returns:
+            Dict[str, torch.Tensor]: metrics dictionnary
+        """
         loss = self.criterion(pred, truth)
         if torch.any(torch.isnan(loss)):
             logger.getChild(PREDICTOR).error("NAN in loss")
@@ -184,8 +221,19 @@ class LightningModule(pl.LightningModule):
         feat2distances["loss"] = loss
         return feat2distances
 
-    def log_accuracy(self, outputs, prefix: str = "", loss_only=False):
-        """log accuracy metrics from epoch"""
+    def log_accuracy(
+        self,
+        outputs: Dict[str, torch.Tensor],
+        prefix: str = "",
+        loss_only: bool = False,
+    ):
+        """method to log accuracy metrics calculated at each epoch
+
+        Args:
+            outputs (Dict[str, torch.Tensor]): lightning epoch output
+            prefix (str, optional): key to prefix to the metric key. Defaults to "".
+            loss_only (bool, optional): if True, will compute only loss metric. Defaults to False.
+        """
         mean_loss = torch.stack([x["loss"] for x in outputs]).mean().detach()
         self.logger.experiment.add_scalar(
             f"{prefix}/loss_epoch", mean_loss, self.current_epoch
@@ -228,19 +276,24 @@ class LightningModule(pl.LightningModule):
                     )
 
     def on_validation_epoch_start(self) -> None:
+        """reinit our validation metrics at start of a validation epoch"""
         super().on_validation_epoch_start()
         self.val_output = []
 
     def on_test_epoch_start(self) -> None:
+        """reinit our test metrics at start of a test epoch"""
         super().on_test_epoch_start()
         self.test_output = []
 
     def on_train_epoch_start(self) -> None:
+        """reinit our train metrics at start of a train epoch"""
         super().on_train_epoch_start()
         self.train_output = []
 
     def training_step(self, *args, **kwargs):
-        """run every training step"""
+        """run every training step:
+        get data from batch, predict, compute metrics
+        """
         batch = args[0]
         pred, truth = self.predict(batch)
         res = self.compute_metrics(pred, truth, "Train", loss_only=True)
@@ -248,7 +301,9 @@ class LightningModule(pl.LightningModule):
         return res
 
     def test_step(self, *args, **kwargs):
-        """run every test step"""
+        """run every test step:
+        get data from batch, predict, compute metrics
+        """
         with torch.no_grad():
             batch = args[0]
             pred, truth = self.predict(batch)
@@ -257,7 +312,9 @@ class LightningModule(pl.LightningModule):
             return res
 
     def validation_step(self, *args, **kwargs):
-        """run every validation step"""
+        """run every validation step:
+        get data from batch, predict, compute metrics
+        """
         with torch.no_grad():
             batch = args[0]
             pred, truth = self.predict(batch)
@@ -266,16 +323,16 @@ class LightningModule(pl.LightningModule):
             return res
 
     def on_training_epoch_end(self):
-        """run every training epoch end"""
+        """log epoch results at every training epoch end"""
         with torch.no_grad():
             self.log_accuracy(self.train_output, "Train", loss_only=True)
 
     def on_test_epoch_end(self):
-        """run every test epoch end"""
+        """log epoch results at every test epoch end"""
         with torch.no_grad():
             self.log_accuracy(self.test_output, "Test")
 
     def on_validation_epoch_end(self):
-        """run every validation epoch end"""
+        """log epoch results at every validation epoch end"""
         with torch.no_grad():
             self.log_accuracy(self.val_output, "Val")

@@ -1,3 +1,6 @@
+"""constants and default values for the dataset"""
+
+
 LEFT_ARM_LABELS = [
     "left_shoulder_17",
     "left_elbow_18",

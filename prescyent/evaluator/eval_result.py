@@ -8,6 +8,8 @@ from prescyent.dataset.features.feature_manipulation import get_distance
 
 
 class EvaluationResult:
+    """class to store pred and truth and compute evaluation metrics"""
+
     average_prediction_error: Dict[str, float]
     max_prediction_error: Dict[str, float]
     rtf: float

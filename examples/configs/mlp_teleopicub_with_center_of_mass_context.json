@@ -1,0 +1,36 @@
+{
+    "model_config": {
+        "context_size": 3,
+        "dataset_config": {
+            "batch_size": 256,
+            "context_keys": [
+                "center_of_mass"
+            ],
+            "convert_trajectories_beforehand": true,
+            "frequency": 24,
+            "future_size": 12,
+            "history_size": 24,
+            "learning_type": "sequence_2_one",
+            "name": "TeleopIcub",
+            "out_points": [
+                1,
+                2
+            ],
+            "save_samples_on_disk": true,
+            "seed": 269398189
+        },
+        "deriv_on_last_frame": true,
+        "hidden_size": 128,
+        "loss_fn": "mtdloss",
+        "name": "MlpPredictor",
+        "num_layers": 4,
+        "save_path": "data/models",
+        "version": 1
+    },
+    "training_config": {
+        "early_stopping_patience": 5,
+        "lr": 0.0001,
+        "max_epochs": 200,
+        "seed": 194897967
+    }
+}

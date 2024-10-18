@@ -3,7 +3,7 @@ https://docs.scipy.org/doc/scipy/tutorial/interpolate/smoothing_splines.html
 """
 from pathlib import Path
 import tempfile
-from typing import Union, Dict, List
+from typing import Tuple, Union, Dict, List
 
 import h5py
 import numpy as np
@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from scipy.interpolate import splrep, BSpline
 from tqdm.auto import tqdm
 
-from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.dataset.datasets.synthetic_circle_clusters.config import DatasetConfig
 from prescyent.dataset.hdf5_utils import write_metadata
 from prescyent.dataset.trajectories.trajectories import Trajectories
@@ -23,7 +23,7 @@ from prescyent.utils.logger import logger, DATASET
 from . import metadata
 
 
-class Dataset(MotionDataset):
+class Dataset(TrajectoriesDataset):
     """Simple dataset generating n 2D circles"""
 
     DATASET_NAME = "SCC"
@@ -31,16 +31,17 @@ class Dataset(MotionDataset):
     def __init__(
         self,
         config: Union[Dict, DatasetConfig, str, Path] = None,
-        load_data_at_init: bool = True,
     ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
         )
         self._init_from_config(config, DatasetConfig)
-        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+        super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):
         """create a list of Trajectories from config variables"""
+        if hasattr(self, "_trajectories"):
+            return
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         frequency = metadata.DEFAULT_FREQ
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
@@ -135,9 +136,17 @@ class Dataset(MotionDataset):
         self,
         list_trajs: List[Trajectory],
         title="SCC Trajectories",
-        save_path=None,
+        save_path: str = None,
         legend_labels: List[str] = None,
     ):
+        """plot all trajectories as a 2D top view of x and y positions at all frames
+
+        Args:
+            list_trajs (List[Trajectory]): all trajectories to plot
+            title (str, optional): title for the plot. Defaults to "SCC Trajectories".
+            save_path (str, optional): where to save the plot. If None we do not save and use plt.show instead. Defaults to None.
+            legend_labels (List[str], optional): strings used to legend the plot. Defaults to None.
+        """
         from prescyent.evaluator.plotting import save_plot_and_close
 
         plt.figure()
@@ -157,7 +166,13 @@ class Dataset(MotionDataset):
         else:
             plt.show()
 
-    def plot_traj(self, traj: Trajectory, save_path=None):
+    def plot_traj(self, traj: Trajectory, save_path: str = None):
+        """plot one traj as a 2D top view of x and y positions at all frames
+
+        Args:
+            traj (Trajectory): the traj to plot
+            save_path (str, optional): where to save the plot. If None we do not save and use plt.show instead. Defaults to None.
+        """
         from prescyent.evaluator.plotting import save_plot_and_close
 
         plt.figure()
@@ -170,7 +185,19 @@ class Dataset(MotionDataset):
             plt.show()
 
 
-def generate_noisy_circle(radius, num_points, perturbation_range):
+def generate_noisy_circle(
+    radius: float, num_points: int, perturbation_range: float
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """generate circular coordinates given attributes
+
+    Args:
+        radius (float): size of the generated circle
+        num_points (int): number of points per circle
+        perturbation_range (float): level of noise added
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]: angles, x, y
+    """
     angles = np.linspace(0, 2 * np.pi, num_points)
     # Adding imperfections to the radius
     perturbations = np.random.uniform(

@@ -1,3 +1,5 @@
+"""constants and default values for the dataset"""
+
 from prescyent.dataset.features import CoordinateXYZ, Features
 
 BASE_FREQUENCY = 100

@@ -17,11 +17,14 @@ class Arms(str, Enum):
 class DatasetConfig(H36MDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
-    bimanual: bool = True  # If bimanual, subsample dataset to both arms,
-    # else we use the main arm:
-    main_arm: Arms = Arms.RIGHT  # For mono arm, decide which is main arm
+    bimanual: bool = True
+    """If bimanual, subsample dataset to both arms"""
+    main_arm: Arms = Arms.RIGHT
+    """If not bimanual, we use only the main arm"""
     in_points: List[int] = None
+    """Ids of the points used as input."""
     out_points: List[int] = None
+    """Ids of the points used as output."""
 
     @model_validator(mode="after")
     def check_out_points(self):

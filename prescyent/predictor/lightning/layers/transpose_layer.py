@@ -3,6 +3,8 @@ import torch
 
 
 class TransposeLayer(torch.nn.Module):
+    """simple transpose operation as a layer"""
+
     def __init__(self, dim0, dim1) -> None:
         super().__init__()
         self.dim0 = dim0

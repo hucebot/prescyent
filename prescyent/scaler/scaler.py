@@ -6,26 +6,22 @@ try:
 except ImportError:
     import pickle
 
-
 import torch
 import torch.utils
 
 from prescyent.dataset.features import Features, Rotation
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.enums import Scalers
-from prescyent.utils.tensor_manipulation import self_auto_batch
 from .config import ScalerConfig
 from .scaling_methods.standardizer import Standardizer
 from .scaling_methods.normalizer import Normalizer
 
 
-norm_map = {
+scaler_map = {
     Scalers.STANDARDIZATION: Standardizer,
     Scalers.NORMALIZATION: Normalizer,
     None: None,
 }
-
-# TODO: dct scaler ? or dct + scaling
 
 
 class Scaler:
@@ -40,6 +36,8 @@ class Scaler:
         self.dataset_features = None
 
     def describe(self) -> str:
+        """output string that describe the scaler's parameters"""
+
         if self.status == "untrained":
             return "Untrained Scaler"
         if not self.config.do_feature_wise_scaling:
@@ -57,12 +55,22 @@ class Scaler:
         dataset_dataloader: torch.utils.data.DataLoader,
         dataset_features: Features,
     ):
+        """train scalers from a dataloader over dataset trajectories
+
+        Args:
+            dataset_dataloader (torch.utils.data.DataLoader): dataloader over the whole dataset's train trajectories
+            dataset_features (Features): features of the dataset
+
+        Raises:
+            AttributeError: scaler not available
+        """
+
+        scaler = scaler_map.get(self.config.scaler, -1)
+        if scaler == -1:
+            raise AttributeError(
+                f"Please choose a valid scaler in NormalizationConfig from the following: {scaler_map.keys()}"
+            )
         if dataset_features is None or not self.config.do_feature_wise_scaling:
-            scaler = norm_map.get(self.config.scaler, -1)
-            if scaler == -1:
-                raise AttributeError(
-                    f"Please choose a valid scaler in NormalizationConfig from the following: {norm_map.keys()}"
-                )
             if scaler is not None and self.config.scaling_axis is not None:
                 self.scalers["feature"] = scaler(self.config.scaling_axis)
                 self.scalers["feature"].train(dataset_dataloader)
@@ -71,11 +79,6 @@ class Scaler:
                 if (
                     not isinstance(feat, Rotation) or self.config.scale_rotations
                 ):  # If its not a Rotation, or if we scale them
-                    scaler = norm_map.get(self.config.scaler, -1)
-                    if scaler == -1:
-                        raise AttributeError(
-                            f"Please choose a valid scaler in NormalizationConfig from the following: {norm_map.keys()}"
-                        )
                     if scaler is not None and self.config.scaling_axis is not None:
                         self.scalers[feat.name] = scaler(self.config.scaling_axis)
                         self.scalers[feat.name].train(dataset_dataloader, feat.ids)
@@ -89,12 +92,27 @@ class Scaler:
         in_points_ids: Optional[List[int]] = None,
         features: Optional[Features] = None,
     ) -> torch.Tensor:
+        """method to scale a tensor
+
+        Args:
+            input_t (torch.Tensor): traj tensor to scale
+            in_points_ids (Optional[List[int]], optional): ids of the points to keeps in the traj tensor. Defaults to None.
+            features (Optional[Features], optional): traj tensor's Features. Defaults to None.
+
+        Raises:
+            AssertionError: Scaler wasn't trained
+            AttributeError: if tried to scale a rotation that wasn't in the trained dataset
+
+        Returns:
+            torch.Tensor: scaled tensor
+        """
+
         if self.status == "untrained":
             raise AssertionError(
                 "Scaler wasn't trained, please train before using method"
             )
         assert len(input_t.shape) == 4
-        if not self.scalers:  # If we don't have any scaler init
+        if not self.scalers:  # If we don't have any scaler init, return as is
             return input_t
         output_t = input_t.clone()
         if not self.config.do_feature_wise_scaling or features is None:
@@ -128,6 +146,21 @@ class Scaler:
         out_points_ids: Optional[List[int]] = None,
         features: Optional[Features] = None,
     ) -> torch.Tensor:
+        """method to unscale a tensor
+
+        Args:
+            input_t (torch.Tensor): tensor to unscale
+            out_points_ids (Optional[List[int]], optional): ids of the points to keeps in the traj tensor. Defaults to None.
+            features (Optional[Features], optional): traj tensor's Features. Defaults to None.
+
+        Raises:
+            AssertionError: Scaler wasn't trained
+            AttributeError: if tried to unscale a rotation that wasn't in the trained dataset
+
+        Returns:
+            torch.Tensor: unscaled tensor
+        """
+
         if self.status == "untrained":
             raise AssertionError(
                 "Scaler wasn't trained, please train before using method"
@@ -155,6 +188,12 @@ class Scaler:
         return output_t
 
     def save(self, file_path: Union[str, Path]):
+        """save the scaler to path using pickle
+
+        Args:
+            file_path (Union[str, Path]): path where to save the scaler
+        """
+
         if isinstance(file_path, str):
             file_path = Path(file_path)
         if not file_path.parent.exists():
@@ -164,6 +203,12 @@ class Scaler:
 
     @classmethod
     def load(cls, file_path: Union[str, Path]):
+        """load a scaler from path using pickle
+
+        Args:
+            file_path (Union[str, Path]): path where to the scaler
+        """
+
         if isinstance(file_path, str):
             file_path = Path(file_path)
         with file_path.open("rb") as file_rb:

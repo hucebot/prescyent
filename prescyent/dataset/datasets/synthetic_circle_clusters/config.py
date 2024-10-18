@@ -1,14 +1,14 @@
 """Config elements for SCC dataset usage"""
 from typing import List
 
-from pydantic import model_validator, ValidationError
+from pydantic import model_validator, field_validator
 
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS
 
 
-class DatasetConfig(MotionDatasetConfig):
+class DatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for SCCDataset configuration"""
 
     ratio_train: float = 0.7
@@ -36,12 +36,19 @@ class DatasetConfig(MotionDatasetConfig):
     """number of points in the final shape after smoothing"""
     # Override default values with the dataset's
     frequency: int = 10
+    """The frequency in Hz of the dataset, If different from original data we'll use linear upsampling or downsampling of the data"""
     history_size: int = 10
+    """Number of timesteps as input"""
     future_size: int = 10
+    """Number of timesteps predicted as output"""
     in_features: Features = DEFAULT_FEATURES
+    """List of features used as input, if None, use default from the dataset"""
     out_features: Features = DEFAULT_FEATURES
+    """List of features used as output, if None, use default from the dataset"""
     in_points: List[int] = list(range(len(POINT_LABELS)))
+    """Ids of the points used as input."""
     out_points: List[int] = list(range(len(POINT_LABELS)))
+    """Ids of the points used as output."""
 
     @property
     def num_clusters(self) -> int:
@@ -67,9 +74,9 @@ class DatasetConfig(MotionDatasetConfig):
             )
         return self
 
-    @model_validator(mode="after")
-    def check_context_keys(self):
+    @field_validator("context_keys")
+    def check_context_keys(cls, value):
         """check that requested keys exists in the dataset"""
-        if self.context_keys:
-            raise ValidationError("This dataset cannot handle context keys")
-        return self
+        if value:
+            raise ValueError("This dataset cannot handle context keys")
+        return value

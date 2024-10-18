@@ -10,6 +10,8 @@ from prescyent.utils.enums import TrajectoryDimensions
 
 
 class Standardizer:
+    """class to perform standardization as a scaling method"""
+
     mean: torch.Tensor
     std: torch.Tensor
     dim: List[int]
@@ -30,6 +32,7 @@ class Standardizer:
             dataset_dataloader (DataLoader): Dataloader over the whole training dataset
             feat_ids (Optional[List[int]], optional): List of the dataset features. Defaults to None.
         """
+
         n_samples = 0
         total_sum = 0
         total_sum_sq = 0
@@ -66,6 +69,7 @@ class Standardizer:
         Returns:
             torch.Tensor: Standardized input tensor
         """
+
         std = self.std.detach().clone().to(sample_tensor.device)
         mean = self.mean.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:
@@ -101,6 +105,7 @@ class Standardizer:
         Returns:
             torch.Tensor: Unstandardized input tensor
         """
+
         std = self.std.detach().clone().to(sample_tensor.device)
         mean = self.mean.detach().clone().to(sample_tensor.device)
         if self.dim == [0, 1, 3]:

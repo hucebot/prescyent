@@ -2,7 +2,7 @@ import numpy as np
 import sys
 from pathlib import Path
 from tqdm import tqdm
-from typing import List
+from typing import List, Literal
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -12,6 +12,7 @@ from prescyent.dataset import Trajectory
 from prescyent.dataset.features import Rotation
 from prescyent.utils.logger import logger, EVAL
 from prescyent.utils.tensor_manipulation import trajectory_tensor_get_dim_limits
+
 
 POINT_COLORS = ["k", "b", "g", "r", "c"]
 POINT_SHAPES = ["o", "s", "v", "*", "D"]
@@ -36,7 +37,7 @@ def plot_rotated_axes(ax, r, name=None, offset=(0, 0, 0), scale=0.05):
 def render_3d_trajectories(
     trajs: List[Trajectory],
     offsets: List[int],
-    save_file_format: str = None,  # use "mp4" or "gif"
+    save_file_format: Literal["mp4", "gif", None] = None,
     save_dir: str = "data/eval/visualizations",
     min_max_layout: bool = True,
     interactive: bool = True,
@@ -45,7 +46,24 @@ def render_3d_trajectories(
     first_rendered_frames: int = 0,
     max_rendered_frames: int = sys.maxsize,
 ):
-    """"""
+    """render a 3D plot of a list of trajectories
+
+    Args:
+        trajs (List[Trajectory]): list of trajectories
+        offsets (List[int]): list of offsets
+        save_file_format (Literal["mp4", "gif"], optional): output gif or mp4. If None, runs only interactively. Defaults to None.
+        min_max_layout (bool, optional): if True sets coordinates limits to the min_max of the traj tensors. Defaults to True.
+        interactive (bool, optional): if true, render interactively. Defaults to True.
+        draw_bones (bool, optional): if true, draw segments between each points, using traj.point_parents infos. Defaults to True.
+        turn_view (bool, optional): if true, the view turns on each frame around the target. Defaults to True.
+        first_rendered_frames (int, optional): id of the first rendered frame. Defaults to 0.
+        max_rendered_frames (int, optional): id of the last rendered frame. Defaults to sys.maxsize.
+
+    Raises:
+        AttributeError: tried to draw more than 5 trajectories (convenient error, feel free to adapt the method)
+        AttributeError: save_file_format is not supported
+    """
+
     if len(trajs) >= 6:
         raise AttributeError(
             "We cannot draw more than 5 trajectories at a time (if you want to, remove this error and add some more options to POINT_COLORS, POINT_SHAPES and BONES_COLORS)"

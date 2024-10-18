@@ -1,14 +1,16 @@
-"""Config elements for Normalizing usage"""
+"""Config elements for predictor usage"""
 from typing import Optional
 
 from prescyent.base_config import BaseConfig
-from prescyent.dataset.config import MotionDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.scaler.config import ScalerConfig
 from prescyent.utils.enums import LearningTypes
 
 
 class PredictorConfig(BaseConfig):
-    """Pydantic Basemodel for Normalizing configuration"""
+    """Pydantic Basemodel for predictor configuration.
+    It includes the dataset_config and the scaler config !
+    """
 
     name: Optional[str] = None
     """The name of the predictor.
@@ -19,8 +21,8 @@ class PredictorConfig(BaseConfig):
     If None, we'll use TensorBoardLogger logic to aquire a version number from the log path"""
     save_path: str = "data/models"
     """Directory where the model will log and save"""
-    dataset_config: MotionDatasetConfig
-    """The MotionDatasetConfig used to understand the dataset and its tensor"""
+    dataset_config: TrajectoriesDatasetConfig
+    """The TrajectoriesDatasetConfig used to understand the dataset and its tensor"""
     scaler_config: Optional[ScalerConfig] = None
     """The ScalerConfig used instanciate the scaler of this predictor.
     If None, we'll not use a scaler ahead of the predictor"""

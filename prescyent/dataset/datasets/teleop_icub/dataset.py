@@ -8,12 +8,11 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-import requests
 import torch
 from tqdm import tqdm
 
-from prescyent.dataset.hdf5_utils import get_dataset_keys, write_metadata
-from prescyent.dataset.dataset import MotionDataset
+from prescyent.dataset.hdf5_utils import write_metadata
+from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.dataset.trajectories import Trajectories
 from prescyent.utils.dataset_manipulation import split_array_with_ratios
 from prescyent.utils.interpolate import update_tensor_frequency
@@ -23,7 +22,7 @@ from . import metadata
 from .config import DatasetConfig
 
 
-class Dataset(MotionDataset):
+class Dataset(TrajectoriesDataset):
     """
     https://zenodo.org/record/5913573#.Y75xK_7MIaw
     Dataset is not splitted into test / train / val
@@ -32,12 +31,14 @@ class Dataset(MotionDataset):
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(self, config=DatasetConfig(), load_data_at_init: bool = True) -> None:
+    def __init__(self, config=DatasetConfig()) -> None:
         self._init_from_config(config, DatasetConfig)
-        super().__init__(name=self.DATASET_NAME, load_data_at_init=load_data_at_init)
+        super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):
         """get trajectories from files or web"""
+        if hasattr(self, "_trajectories"):
+            return
         if not Path(self.config.hdf5_path).exists():
             raise FileNotFoundError(
                 "Dataset file not found at %s" % self.config.hdf5_path
@@ -45,7 +46,8 @@ class Dataset(MotionDataset):
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
         tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
-        trajectory_names = self.get_trajnames_from_hdf5(hdf5_data, tmp_hdf5_data)
+        trajectory_names = self.get_trajnames_from_hdf5(hdf5_data)
+        self.copy_attributes_from_hdf5(hdf5_data, tmp_hdf5_data)
         if self.config.subsets:
             trajectory_names = [
                 key
@@ -68,9 +70,9 @@ class Dataset(MotionDataset):
             for traj_name in tqdm(
                 trajs, colour="blue", desc="Writing used trajectories in temp file hdf5"
             ):
-                tensor = torch.from_numpy(np.array(hdf5_data[traj_name]))
+                tensor = torch.FloatTensor(np.array(hdf5_data[traj_name]))
                 context = {
-                    key: hdf5_data[traj_name[:-4] + key]
+                    key: torch.FloatTensor(np.array(hdf5_data[traj_name[:-4] + key]))
                     for key in self.config.context_keys
                 }
                 # update frequency
@@ -97,19 +99,20 @@ class Dataset(MotionDataset):
     def create_hdf5(
         hdf5_path: str,
         data_dir: str,
-        subsets: str,
-        remove_csv: bool = False,
+        glob_pattern: str,
+        remove_orignal_files: bool = False,
         compression="gzip",
     ):
-        """Method to parse the original files of the dataset and create a new hdf5 for uses in the library
+        """script to generate the hdf5 file from the original dataset's files
 
         Args:
-            hdf5_path (str): path for the generated hdf5 file
-            data_dir (str): path where the original data is
-            subsets (str): string used to glob search in the files
-            remove_csv (bool, optional): If True, original files are deleted after the function. Defaults to False.
+            hdf5_path (str): path where to save the hdf5 file
+            data_dir (str): dir of the original data
+            glob_pattern (str): pattern used to retreive the list of files
+            remove_orignal_files (bool, optional): if true, we delete the original files when the function is done. Defaults to False.
+            compression (str, optional): compression used writing the hdf5 file. Defaults to "gzip".
         """
-        files = list(Path(data_dir).rglob(subsets))
+        files = list(Path(data_dir).rglob(glob_pattern))
         logger.getChild(DATASET).info(f"Found {len(files)} files")
         Path(hdf5_path).parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(hdf5_path, "w") as hdf5_f:
@@ -156,6 +159,6 @@ class Dataset(MotionDataset):
                     group = f["/".join(traj_groups)]
                 group.create_dataset(key, data=tensor, compression=compression)
         logger.getChild(DATASET).info(f"Created new HDF5 at {hdf5_path}")
-        if remove_csv:
+        if remove_orignal_files:
             logger.getChild(DATASET).info(f"Removing all files in {data_dir}")
             shutil.rmtree(data_dir)

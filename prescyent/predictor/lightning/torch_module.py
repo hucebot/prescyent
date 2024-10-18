@@ -15,7 +15,7 @@ from prescyent.dataset.features.feature_relative import (
 
 
 class BaseTorchModule(torch.nn.Module):
-    """Common methods for any torch module to be a lightning predictor"""
+    """Common methods for any torch module to be a lightning predictor with decorators for the forward method"""
 
     def __init__(self, config) -> None:
         super().__init__()

@@ -12,18 +12,22 @@ from prescyent.predictor import (
 )
 from prescyent.scaler import ScalerConfig
 from prescyent.utils.enums import LossFunctions, Scalers, TrajectoryDimensions
+from prescyent.utils.enums.learning_types import LearningTypes
 
 
 if __name__ == "__main__":
     # -- Init dataset
     print("Initializing dataset...", end=" ")
-    frequency: int = 10  # target frequency
-    history_size = 10  # 10 frames at 10Hz => 1 seconds as history
-    future_size = 10  # 10 frames at 10Hz => 1 seconds as future
+    frequency: int = 24  # target frequency
+    history_size = 24  # 10 frames at 10Hz => 1 seconds as history
+    future_size = 12  # 10 frames at 10Hz => 1 seconds as future
     features = Features([CoordinateXYZ(range(3))])
     points_ids = [1, 2]  # ids of the hands
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
+        context_keys=["center_of_mass"],
+        subsets=["BottleTable"],
+        learning_type=LearningTypes.SEQ2ONE,
         history_size=history_size,
         future_size=future_size,
         frequency=frequency,  # subsampling default -> 100 Hz to 10Hz
@@ -45,6 +49,7 @@ if __name__ == "__main__":
     print("Initializing predictor...", end=" ")
     config = MlpConfig(
         dataset_config=dataset_config,
+        context_size=dataset.context_size_sum,
         scaler_config=scaler_config,
         hidden_size=128,
         num_layers=4,
@@ -56,11 +61,11 @@ if __name__ == "__main__":
 
     # Train
     training_config = TrainingConfig(
-        max_epochs=300,  # Maximum number of trainin epochs
+        max_epochs=200,  # Maximum number of trainin epochs
         devices="auto",  # Chose the best avaible devices (see lightning documentation for more)
         accelerator="auto",  # Chose the best avaible accelerator (see lightning documentation for more)
         lr=0.0001,  # The learning rate
-        early_stopping_patience=15,  # We'll stop the training before max_epochs if the validation loss doesn't improve for 10 epochs
+        early_stopping_patience=10,  # We'll stop the training before max_epochs if the validation loss doesn't improve for 10 epochs
     )
     predictor.train(dataset, training_config)
 

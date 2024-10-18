@@ -1,3 +1,5 @@
+"""enums used in the library"""
+
 from .activation_functions import ActivationFunctions
 from .learning_types import LearningTypes
 from .loss_functions import LossFunctions
