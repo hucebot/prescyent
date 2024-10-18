@@ -18,7 +18,7 @@ It comes with datasets such as:
 - [AndyData-lab-onePersonTeleoperatingICub](https://zenodo.org/record/5913573)  
 - [Human3.6M](http://vision.imar.ro/human3.6m/description.php)  
 
-And methods to perform trajectory prediction on this kind of datasets  
+And methods to perform trajectory prediction on this kind of datasets, and baselines to compare with.  
 
 ## Installation
 
@@ -33,7 +33,7 @@ Please refer to [docker documentation](https://docs.docker.com) for build comman
 The Dockerfile is designed to be run interactively.  
 
 ### From source
-Clone the repository:  
+If you want to setup a dev environment, you should clone the repository:  
 
 ```bash
 git clone git@github.com:hucebot/prescyent.git
@@ -43,10 +43,6 @@ Then install using pip from source (you may want to be in a [virtualenv](https:/
 For dev install (recommended if you intent to add new classes to the lib) use:  
 ```bash
 pip install -e .
-```
-Otherwise simply use:  
-```bash
-pip install .
 ```
 
 ## Datasets
