@@ -28,6 +28,12 @@ class PrompPredictor(BasePredictor):
         self.length = -1
 
     def train(self, data: TrajectoriesDataset, train_config: Dict = None):
+        """train promp over dataset
+
+        Args:
+            data (TrajectoriesDataset): isntance of a dataset
+            train_config (Dict, optional): configuration for training. Defaults to None.
+        """
         # we make a single PromMP for each value to predict
         num_points = data.trajectories.train[0].tensor.size(1)
         self.promps = []

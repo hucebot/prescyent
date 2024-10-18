@@ -1,4 +1,4 @@
-"""Config elements for Normalizing usage"""
+"""Config elements for predictor usage"""
 from typing import Optional
 
 from prescyent.base_config import BaseConfig
@@ -8,7 +8,9 @@ from prescyent.utils.enums import LearningTypes
 
 
 class PredictorConfig(BaseConfig):
-    """Pydantic Basemodel for Normalizing configuration"""
+    """Pydantic Basemodel for predictor configuration.
+    It includes the dataset_config and the scaler config !
+    """
 
     name: Optional[str] = None
     """The name of the predictor.

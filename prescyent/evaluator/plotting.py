@@ -305,9 +305,12 @@ def plot_mpjpe(
         return
     distances = list()
     features = dataset.config.out_features
+    # Run all test once and get distance from truth per feature
+    if dataset.config.learning_type == LearningTypes.AUTOREG:
+        dataset.config.learning_type = LearningTypes.SEQ2SEQ
+        dataset.generate_samples("test")
     pbar = tqdm(dataset.test_dataloader(), colour="green")
     pbar.set_description(f"Running {predictor} over test_dataloader:")
-    # Run all test once and get distance from truth per feature
     for sample, context, truth in pbar:
         feat2distances = dict()
         pred = predictor.predict(sample, dataset.config.future_size, context)

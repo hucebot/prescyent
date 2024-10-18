@@ -1,5 +1,5 @@
 """simple predictor to use as a baseline"""
-from typing import Dict, Optional
+from typing import Optional
 
 import torch
 
@@ -10,11 +10,11 @@ from prescyent.dataset.features.feature_relative import (
 )
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.constant_predictor import ConstantPredictor
-from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class ConstantDerivativePredictor(ConstantPredictor):
-    """simple predictor that simply return the last input"""
+    """simple predictor that output a tensor maintaining the velocity bewteen the last two frames of the input"""
 
     def __init__(
         self,
@@ -22,17 +22,24 @@ class ConstantDerivativePredictor(ConstantPredictor):
     ) -> None:
         if config is None:
             raise AttributeError(
-                "You need a valid dataset config with out_features to use this dataset"
+                "You need a valid dataset config with in_features and out_features to use this dataset"
             )
         super().__init__(config)
 
+    @self_auto_batch
     def predict(
         self, input_t: torch.Tensor, future_size: int, *args, **kwargs
     ) -> torch.Tensor:
-        unbatch = False
-        if not is_tensor_is_batched(input_t):
-            unbatch = True
-            input_t = input_t.unsqueeze(0)
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         input_t_vel_at_last_frame = get_relative_tensor_from(
             input_t[:, -1], input_t[:, -2], self.config.dataset_config.out_features
         )
@@ -64,6 +71,4 @@ class ConstantDerivativePredictor(ConstantPredictor):
             self.config.dataset_config.in_features,
             self.config.dataset_config.out_features,
         )
-        if unbatch:
-            output_t = output_t.squeeze(0)
         return output_t

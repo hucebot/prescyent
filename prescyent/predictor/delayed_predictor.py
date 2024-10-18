@@ -14,7 +14,7 @@ from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
 class DelayedPredictor(BasePredictor):
-    """simple predictor that simply return the input"""
+    """simple predictor that simply returns the input"""
 
     def __init__(
         self,
@@ -34,7 +34,12 @@ class DelayedPredictor(BasePredictor):
         datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
     ):
-        """train predictor"""
+        """We don't need to train this baseline !
+
+        Args:
+            datamodule (LightningDataModule): instance of a TrajectoriesDataset
+            train_config (BaseModel, optional): configuration for the training. Defaults to None.
+        """
         logger.getChild(PREDICTOR).warning(
             "No training necessary for this predictor %s",
             self.__class__.__name__,
@@ -45,24 +50,31 @@ class DelayedPredictor(BasePredictor):
         datamodule: LightningDataModule,
         train_config: Optional[TrainingConfig] = None,
     ):
-        """finetune predictor"""
+        """We don't need to finetune this baseline !
+
+        Args:
+            datamodule (LightningDataModule): TrajectoriesDataset
+            train_config (BaseModel, optional): config for the training. Defaults to None.
+        """
         logger.getChild(PREDICTOR).warning(
             "No training necessary for this predictor %s",
             self.__class__.__name__,
         )
 
-    def save(self, save_path: str):
-        """train predictor"""
-        logger.getChild(PREDICTOR).warning(
-            "No save necessary for this predictor %s",
-            self.__class__.__name__,
-        )
-
     @self_auto_batch
-    @BasePredictor.use_scaler
     def predict(
         self, input_t: torch.Tensor, future_size: int, *args, **kwargs
     ) -> torch.Tensor:
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         input_t = torch.transpose(input_t, 0, 1)
         if future_size > len(input_t):
             new_inputs = [

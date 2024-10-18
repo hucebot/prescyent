@@ -22,6 +22,16 @@ class SequencePredictor(LightningPredictor):
         future_size: int = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         with torch.no_grad():
             self.model.eval()
             list_outputs = []

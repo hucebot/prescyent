@@ -3,8 +3,9 @@ The predictor can be trained and predict
 """
 import copy
 import functools
+import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from torch.utils.data import DataLoader
@@ -22,6 +23,7 @@ from prescyent.dataset.features.feature_manipulation import (
 from prescyent.evaluator.eval_summary import EvaluationSummary
 from prescyent.predictor.config import PredictorConfig
 from prescyent.scaler.scaler import Scaler
+from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.dataset_manipulation import update_parent_ids
 from prescyent.utils.tensor_manipulation import (
@@ -33,7 +35,7 @@ from prescyent.utils.tensor_manipulation import (
 class BasePredictor:
     """base class for any predictor
     methods _build_from_config, train, predict, save must be overridden by a child class
-    This class initialize a tensorboard logger and, a test loop and a default run loop
+    This class initialize a tensorboard logger, an optionnal scaler, a test loop and a default run loop
     """
 
     config: Optional[PredictorConfig]
@@ -111,13 +113,27 @@ class BasePredictor:
 
     def __call__(
         self,
-        input_tensor,
+        input_tensor: torch.Tensor,
         future_size: int = None,
         history_size: int = None,
         history_step: int = 1,
         input_tensor_features: Optional[Features] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
+        """Call on the predictor calls the run() method
+
+        Args:
+            input_tensor (torch.Tensor): Input for the predictor's model. Can be batched or unbatched
+            future_size (int, optional): Defines the output sequence size of the model.
+                Defaults to predictor's value from config if None.
+            history_size (int, optional): The input batch will be splitted sequences of len == history_size. Defaults to predictor's value from config if None.
+            history_step (int, optional): When splitting the input_tensor (history_step != None)
+                defines the step of the iteration over the input_tensor's frames. Defaults to 1.
+            input_tensor_features: (Features, optional) Features describing the input_tensor. If not None, it is used to convert input to self.config.in_features. Defaults to None,
+            context: (Dict[str, torch.Tensor], optional) Additional context alongside input_tensor. Defaults to None,
+        Returns:
+            List[torch.Tensor]: the list of model predictions
+        """
         return self.run(
             input_tensor=input_tensor,
             future_size=future_size,
@@ -141,17 +157,22 @@ class BasePredictor:
         datamodule: LightningDataModule,
         train_config: BaseModel = None,
     ):
-        """train predictor"""
+        """train scaler in base class, you'll need to train specific predictors into child classes
+
+        Args:
+            datamodule (LightningDataModule): instance of a TrajectoriesDataset
+            train_config (BaseModel, optional): configuration for the training. Defaults to None.
+        """
         if self.scaler:
             logger.getChild(PREDICTOR).info("Training Scaler")
             self.train_scaler(datamodule)
             logger.getChild(PREDICTOR).info("Scaler Trained")
 
     def train_scaler(self, datamodule: LightningDataModule):
-        """_summary_
+        """train the scaler given a dataloader over all train trajectories and the predictor config
 
         Args:
-            datamodule (_type_): _description_
+            datamodule (LightningDataModule): instance of a TrajectoriesDataset
         """
         # cat all dataset's frames
         dataset_tensor = torch.cat(
@@ -171,7 +192,15 @@ class BasePredictor:
         datamodule: LightningDataModule,
         train_config: BaseModel = None,
     ):
-        """finetune predictor"""
+        """finetune predictor
+
+        Args:
+            datamodule (LightningDataModule): TrajectoriesDataset
+            train_config (BaseModel, optional): config for the training. Defaults to None.
+
+        Raises:
+            NotImplementedError: override this method in predictors that can be finetuned
+        """
         raise NotImplementedError(
             "This method must be overriden by the inherited predictor"
         )
@@ -182,33 +211,80 @@ class BasePredictor:
         future_size: int,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ) -> torch.Tensor:
-        """run the model / algorithm for one input"""
+        """run the model / algorithm for one input
+
+        Args:
+            input_t (torch.Tensor): tensor to predict over
+            future_size (int): number of the expected predicted frames
+            context (Optional[Dict[str, torch.Tensor]], optional): additional context. Defaults to None.
+
+        Raises:
+            NotImplementedError: must ovveride in child predictor classes
+
+        Returns:
+            torch.Tensor: predicted tensor
+        """
         raise NotImplementedError(
             "This method must be overriden by the inherited predictor"
         )
 
-    def save(self, save_path: str):
-        """save predictor"""
-        raise NotImplementedError(
-            "This method must be overriden by the inherited predictor"
-        )
+    def save(
+        self,
+        save_path: Union[str, Path, None] = None,
+        rm_log_path: bool = True,
+    ):
+        """save predictor, must be rewriten for more complex classes, here we just move the logs if any
+
+        Args:
+            save_path (Union[str, Path, None]): save path
+            rm_log_path (bool) if True, remove previous log files after copy:
+        """
+        if (
+            save_path is None
+            or Path(self.log_path).resolve() == Path(save_path).resolve()
+        ):
+            return
+        save_path = str(save_path)
+        while True:
+            try:
+                shutil.copytree(
+                    self.log_path,
+                    save_path,
+                    ignore=shutil.ignore_patterns("checkpoints"),
+                )
+                break
+            except FileExistsError:
+                # do not erase previous logs, add "_" to name instead
+                save_path += "_"
+            except FileNotFoundError:
+                # Nothing to copy
+                break
+        if rm_log_path:
+            shutil.rmtree(self.log_path, ignore_errors=True)
 
     def test(self, datamodule: LightningDataModule) -> Dict[str, torch.Tensor]:
-        """test predictor"""
-        # log in tensorboard
+        """test predictor over the datamodule's test set
+
+        Args:
+            datamodule (LightningDataModule): TrajectoryDataset instance
+
+        Raises:
+            NotImplementedError: if the predictor hasn't config attribute we may not perform a fair evaluation
+
+        Returns:
+            Dict[str, torch.Tensor]: dict with metric name and value
+        """
         if self.config is None:
             raise NotImplementedError(
                 "We cannot perform a fair evaluation of this predictor without the config"
             )
         distances = list()
         features = self.config.dataset_config.out_features
-        pbar = tqdm(
+        for sample, context, truth in tqdm(
             datamodule.test_dataloader(),
-            desc="Iterate over test_dataloader",
+            desc=f"Testing {self}:",
             colour="yellow",
-        )
-        pbar.set_description(f"Testing {self}:")
-        for sample, context, truth in pbar:
+        ):
             # eval step
             feat2distances = dict()
             pred = self.predict(sample, self.config.dataset_config.future_size, context)
@@ -261,12 +337,11 @@ class BasePredictor:
             input_tensor (torch.Tensor): Input for the predictor's model. Can be batched or unbatched
             future_size (int, optional): Defines the output sequence size of the model.
                 Defaults to predictor's value from config if None.
-            history_size (int, optional): If an history_size is provided, the input batch will
-                be splitted sequences of len == history_size. Defaults to predictor's value from config if None.
-            history_step (int, optional): When splitting the input_tensor (history_size != None)
-                defines the step of the iteration. Defaults to 1.
-            input_tensor_features: (Features, optional). Defaults to None,
-            context: (Dict[str, torch.Tensor], optional). Defaults to None,
+            history_size (int, optional): The input batch will be splitted sequences of len == history_size. Defaults to predictor's value from config if None.
+            history_step (int, optional): When splitting the input_tensor (history_step != None)
+                defines the step of the iteration over the input_tensor's frames. Defaults to 1.
+            input_tensor_features: (Features, optional) Features describing the input_tensor. If not None, it is used to convert input to self.config.in_features. Defaults to None,
+            context: (Dict[str, torch.Tensor], optional) Additional context alongside input_tensor. Defaults to None,
         Returns:
             List[torch.Tensor]: the list of model predictions
         """
@@ -304,6 +379,21 @@ class BasePredictor:
             if not self.config.dataset_config.loop_over_traj
             else input_len
         )
+        # If we don't step over input, output only last pred
+        if history_step is None:
+            input_sub_batch = input_tensor[:, -history_size:]
+            if context:  # If context we iterate over it along the input
+                context_sub_batch = {
+                    c_name: c_tensor[:, -history_size:]
+                    for c_name, c_tensor in context.items()
+                }
+            prediction = self.predict(
+                input_sub_batch, future_size=future_size, context=context_sub_batch
+            )
+            if unbatch:
+                prediction = prediction.squeeze(0)
+            prediction_list.append(prediction)
+            return prediction_list
         for i in tqdm(
             range(0, max_iter, history_step),
             desc=f"{self} iterating over input_tensor",
@@ -338,6 +428,8 @@ class BasePredictor:
                         c_name: c_tensor[:, i : i + history_size]
                         for c_name, c_tensor in context.items()
                     }
+            if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+                future_size = 1
             prediction = self.predict(
                 input_sub_batch, future_size=future_size, context=context_sub_batch
             )
@@ -347,6 +439,11 @@ class BasePredictor:
         return prediction_list
 
     def log_evaluation_summary(self, evaluation_summary: EvaluationSummary):
+        """save evaluation summary to tensorboard
+
+        Args:
+            evaluation_summary (EvaluationSummary): results of an evaluation
+        """
         for feat in evaluation_summary.features:
             self.tb_logger.experiment.add_scalar(
                 f"Eval/{feat.name}/average_prediction_error",
@@ -367,6 +464,12 @@ class BasePredictor:
         self.tb_logger.save()
 
     def log_metrics(self, metrics: dict, pre_key=""):
+        """log dict metrics to tensorboard, even nested values
+
+        Args:
+            metrics (dict): dict of metrics
+            pre_key (str, optional): key to add as a prefix to each logged metric. Defaults to "".
+        """
         for key, value in metrics.items():
             if isinstance(value, dict):
                 self.log_metrics(value, pre_key=pre_key + key)
@@ -380,7 +483,16 @@ class BasePredictor:
     def predict_trajectory(
         self, traj: Trajectory, future_size=None
     ) -> Tuple[Trajectory, int]:
-        """Returns new traj with predicted tensor and offset that can be used to compare new traj and base traj"""
+        """Returns new traj with predicted tensor and offset that can be used to compare new traj and base traj
+            Behavior here is to run the predictor with a history_step of 1 over the input
+            and turn the list of predictions into one predicted trajectory from latest frame predicted at each prediction
+        Args:
+            traj (Trajectory): the trajectory to predict over
+            future_size (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            Tuple[Trajectory, int]: Predicted Trajectory and the offset between the input traj and predicted traj to perform some evaluation
+        """
         list_pred_tensor = self.run(
             input_tensor=traj.tensor,
             future_size=future_size,

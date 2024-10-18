@@ -7,6 +7,8 @@ from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalRigidDistanc
 
 
 class MeanTotalRigidDistanceAndVelocityLoss(MeanTotalRigidDistanceLoss):
+    """Get feature wise distance foreach point as a torch loss class mixed with feature's velocity"""
+
     def __init__(
         self,
         config: ModuleConfig,
@@ -19,6 +21,15 @@ class MeanTotalRigidDistanceAndVelocityLoss(MeanTotalRigidDistanceLoss):
         )
 
     def forward(self, input_tensor: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """forward method computing the loss
+
+        Args:
+            input_tensor (torch.Tensor): traj_tensor to compare with truth
+            target (torch.Tensor): truth traj tensor
+
+        Returns:
+            torch.Tensor: mean feature wise distance + velocity
+        """
         dloss = super().forward(input_tensor, target)
         target_vel = get_relative_tensor_from(
             target[:, 1:], target[:, :-1], self.out_features

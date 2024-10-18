@@ -1,8 +1,9 @@
-import numpy as np
 import torch
 
 
 class GeodesicLoss(torch.nn.modules.loss._Loss):
+    """Compute the geodesic loss between two sets of rotation matrices."""
+
     def __init__(
         self, size_average=None, reduce=None, reduction: str = "mean", eps: float = 1e-7
     ) -> None:
@@ -13,8 +14,14 @@ class GeodesicLoss(torch.nn.modules.loss._Loss):
     def forward(
         self, rotmatrix_inputs: torch.Tensor, rotmatrix_targets: torch.Tensor
     ) -> torch.Tensor:
-        """
-        Compute the geodesic loss between two sets of rotation matrices.
+        """forward method computing the loss
+
+        Args:
+            rotmatrix_inputs (torch.Tensor): rotation_matrix to compare with truth
+            rotmatrix_targets (torch.Tensor): truth rotation matrix
+
+        Returns:
+            torch.Tensor: geodesic distance bewteen tensors
         """
         # Compute the trace of the product of the two matrices
         # This computes the sum of the diagonal elements of the matrix product for each pair of matrices
