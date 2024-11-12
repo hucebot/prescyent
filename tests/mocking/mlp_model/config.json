@@ -1,14 +1,16 @@
 {
     "model_config": {
         "activation": "relu",
-        "context_size": null,
+        "context_size": 3,
         "dataset_config": {
             "batch_size": 256,
-            "context_keys": [],
+            "context_keys": [
+                "center_of_mass"
+            ],
             "convert_trajectories_beforehand": true,
-            "frequency": 10,
-            "future_size": 10,
-            "history_size": 10,
+            "frequency": 24,
+            "future_size": 12,
+            "history_size": 24,
             "in_features": [
                 {
                     "distance_unit": "m",
@@ -26,10 +28,10 @@
                 1,
                 2
             ],
-            "learning_type": "sequence_2_sequence",
+            "learning_type": "sequence_2_one",
             "loop_over_traj": false,
             "name": "TeleopIcub",
-            "num_workers": 4,
+            "num_workers": 1,
             "out_features": [
                 {
                     "distance_unit": "m",
@@ -50,14 +52,14 @@
             "pin_memory": true,
             "reverse_pair_ratio": 0,
             "save_samples_on_disk": true,
-            "seed": 389054121
+            "seed": 974690156
         },
         "deriv_on_last_frame": true,
         "deriv_output": false,
         "do_lipschitz_continuation": false,
         "dropout_value": null,
         "hidden_size": 128,
-        "loss_fn": null,
+        "loss_fn": "mtdloss",
         "name": "MlpPredictor",
         "num_layers": 4,
         "save_path": "data/models",
@@ -67,23 +69,23 @@
             "scaler": "standardization",
             "scaling_axis": "[1]"
         },
-        "version": 72
+        "version": 5
     },
     "training_config": {
         "accelerator": "auto",
         "accumulate_grad_batches": 1,
         "devices": "auto",
         "early_stopping_mode": "min",
-        "early_stopping_patience": 15,
+        "early_stopping_patience": 10,
         "early_stopping_value": "Val/loss",
         "gradient_clip_algorithm": null,
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
-        "lr": 0.0005,
-        "max_epochs": 300,
+        "lr": 0.0001,
+        "max_epochs": 100,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 865997167,
+        "seed": 185460831,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

@@ -5,9 +5,5 @@
     The International Journal of Robotics Research, 2019, 38 (14), pp.1529-1537. ff10.1177/0278364919882089ff.ffhal-02289107`
 """
 
-from prescyent.dataset.datasets.andydataset.dataset import (
-    Dataset as AndyDataset,
-)
-from prescyent.dataset.datasets.andydataset.config import (
-    DatasetConfig as AndyDatasetConfig,
-)
+from .dataset import AndyDataset
+from .config import AndyDatasetConfig

@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 import tempfile
-from typing import List, Union, Dict
+from typing import Dict, Union
 
 import h5py
 import numpy as np
@@ -14,24 +14,24 @@ from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 from prescyent.dataset.dataset import TrajectoriesDataset
 from prescyent.dataset.trajectories.trajectories import Trajectories
-from prescyent.dataset.trajectories.trajectory import Trajectory
 from prescyent.utils.dataset_manipulation import (
     expmap2rotmat_torch,
     rotmat2xyz_torch,
 )
-import prescyent.dataset.datasets.human36m.metadata as metadata
-from prescyent.dataset.datasets.human36m.config import DatasetConfig
+
+from . import metadata
+from .config import H36MDatasetConfig
 
 
-class Dataset(TrajectoriesDataset):
+class H36MDataset(TrajectoriesDataset):
     """Class for data loading et preparation before the TrajectoriesDataset sampling"""
 
     DATASET_NAME = "H36M"
 
     def __init__(
         self,
-        config: Union[Dict, DatasetConfig] = None,
-        config_class=DatasetConfig,
+        config: Union[Dict, H36MDatasetConfig] = None,
+        config_class=H36MDatasetConfig,
     ) -> None:
         self._init_from_config(config, config_class)
         super().__init__(name=self.DATASET_NAME)

@@ -1,24 +1,25 @@
 """Subset of h36m with arms only"""
-from typing import List, Union, Dict
+from typing import Dict, Union
 
 import torch
 
-import prescyent.dataset.datasets.human36m.h36m_arm.metadata as metadata
-from prescyent.dataset.datasets.human36m.h36m_arm.config import DatasetConfig
-from prescyent.dataset.datasets.human36m.dataset import Dataset as H36MDataset
+from prescyent.dataset.datasets.human36m.dataset import H36MDataset
 from prescyent.dataset.features import Coordinate
 from prescyent.utils.dataset_manipulation import update_parent_ids
 
+from . import metadata
+from .config import H36MArmDatasetConfig
 
-class Dataset(H36MDataset):
+
+class H36MArmDataset(H36MDataset):
     """Class for data loading et preparation before the TrajectoriesDataset sampling"""
 
     DATASET_NAME = "H36MArm"
 
-    def __init__(self, config: Union[Dict, DatasetConfig] = None) -> None:
+    def __init__(self, config: Union[Dict, H36MArmDatasetConfig] = None) -> None:
         if config is None:
-            config = DatasetConfig()
-        super().__init__(config=config, config_class=DatasetConfig)
+            config = H36MArmDatasetConfig()
+        super().__init__(config=config, config_class=H36MArmDatasetConfig)
 
     def prepare_data(self):
         """generates self.trajectories from dataset's file"""

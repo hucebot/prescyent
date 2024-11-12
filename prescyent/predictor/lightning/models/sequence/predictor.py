@@ -19,7 +19,7 @@ class SequencePredictor(LightningPredictor):
     def predict(
         self,
         input_t: torch.Tensor,
-        future_size: int = None,
+        future_size: Optional[int] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """run the model / algorithm for one input

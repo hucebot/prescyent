@@ -2,14 +2,14 @@
 import os
 from typing import List, Optional
 
-from pydantic import field_validator, ValidationError
+from pydantic import field_validator
 
 from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
 
-class DatasetConfig(TrajectoriesDatasetConfig):
+class TeleopIcubDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
     hdf5_path: str = os.path.join(

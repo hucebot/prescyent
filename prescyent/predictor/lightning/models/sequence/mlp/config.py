@@ -6,7 +6,7 @@ from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.enums import ActivationFunctions
 
 
-class Config(ModuleConfig):
+class MlpConfig(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
     hidden_size: int = 64

@@ -114,8 +114,8 @@ class BasePredictor:
     def __call__(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
-        history_size: int = None,
+        future_size: Optional[int] = None,
+        history_size: Optional[int] = None,
         history_step: int = 1,
         input_tensor_features: Optional[Features] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
@@ -298,6 +298,11 @@ class BasePredictor:
         losses = dict()
         mean_loss = torch.stack([x["mse_loss"] for x in distances]).mean().detach()
         losses["Test/mse_loss_epoch"] = mean_loss
+        output_seq_size = (
+            self.config.dataset_config.future_size
+            if self.config.dataset_config.learning_type != LearningTypes.SEQ2ONE
+            else 1
+        )
         for feat in features:
             batch_feat_distances = torch.cat(
                 [feat2distances[feat.name] for feat2distances in distances]
@@ -306,7 +311,7 @@ class BasePredictor:
             fde = batch_feat_distances[:, -1].mean()
             mpjpe = (
                 batch_feat_distances.transpose(0, 1)
-                .reshape(self.config.dataset_config.future_size, -1)
+                .reshape(output_seq_size, -1)
                 .mean(-1)
             )
             losses[f"Test/{feat.name}/ADE"] = ade

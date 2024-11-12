@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Type, Union
 
 import pytorch_lightning as pl
 import torch
+from lightning_fabric.utilities.types import _MAP_LOCATION_TYPE
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.tuner import Tuner
 from pytorch_lightning.profilers import (
@@ -90,11 +91,14 @@ class LightningPredictor(BasePredictor):
             self.config.name = self.name
 
     @classmethod
-    def load_pretrained(cls, model_dir: Union[Path, str]) -> object:
+    def load_pretrained(
+        cls, model_dir: Union[Path, str], device: Optional[_MAP_LOCATION_TYPE] = None
+    ) -> object:
         """loads a predictor from a saved status at given path
 
         Args:
             model_dir (Union[Path, str]): path where the model is saved
+            device (Optional[_MAP_LOCATION_TYPE], optional): device where to load checkpoint. Defaults to None.
 
         Returns:
             LightningPredictor: loaded instance of the predictor
@@ -105,7 +109,7 @@ class LightningPredictor(BasePredictor):
         model_dir = model_dir if model_dir.is_dir() else model_dir.parent
         config = cls._load_config(model_dir / "config.json")
         predictor = cls(config, skip_build=True)
-        predictor.model = predictor._load_from_path(model_dir)
+        predictor.model = predictor._load_from_path(model_dir, device)
         # Load scaler if any
         if config.scaler_config:
             try:
@@ -152,15 +156,25 @@ class LightningPredictor(BasePredictor):
         # -- Build from Scratch
         return LightningModule(self.module_class, config)
 
-    def _load_from_path(self, path: str) -> LightningModule:
+    def _load_from_path(
+        self, path: str, device: Optional[_MAP_LOCATION_TYPE] = None
+    ) -> LightningModule:
         """load a module from a checkpoint
 
         Args:
             path (str): path to a checkpoint or directory containing one
+            device (Optional[_MAP_LOCATION_TYPE], optional): device where to load checkpoint. Defaults to None.
 
         Returns:
             LightningModule: load a lightniong module from its checkpoint
         """
+        if (
+            device is None
+        ):  # Default behavior is loading model on cuda if available, else cpu
+            if torch.cuda.is_available():
+                device = torch.device("cuda")
+            else:
+                device = torch.device("cpu")
         supported_extentions = [".ckpt"]
         model_path = Path(path)
         if model_path.name == "config.json":
@@ -183,14 +197,7 @@ class LightningPredictor(BasePredictor):
             model_path = found_model
         logger.getChild(PREDICTOR).info(f"Loading model from {model_path}")
         if model_path.suffix == ".ckpt":
-            try:
-                return LightningModule.load_from_checkpoint(
-                    model_path, map_location=torch.device("gpu")
-                )
-            except RuntimeError:
-                return LightningModule.load_from_checkpoint(
-                    model_path, map_location=torch.device("cpu")
-                )
+            return LightningModule.load_from_checkpoint(model_path, map_location=device)
         else:
             raise NotImplementedError(
                 f"Given file extention {model_path.suffix} "
@@ -377,7 +384,9 @@ class LightningPredictor(BasePredictor):
             logger.getChild(PREDICTOR).info(
                 f"Reloading best model from checkpoints {self.checkpoint_callback.best_model_path}"
             )
-            self.model = self._load_from_path(self.checkpoint_callback.best_model_path)
+            self.model = self._load_from_path(
+                self.checkpoint_callback.best_model_path, self.model.device
+            )
             shutil.copy(
                 self.checkpoint_callback.best_model_path,
                 Path(self.log_path) / MODEL_CHECKPOINT_NAME,

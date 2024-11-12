@@ -10,6 +10,7 @@ from prescyent.dataset.features.feature_relative import (
 )
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.constant_predictor import ConstantPredictor
+from prescyent.utils.enums import LearningTypes
 from prescyent.utils.tensor_manipulation import self_auto_batch
 
 
@@ -71,4 +72,6 @@ class ConstantDerivativePredictor(ConstantPredictor):
             self.config.dataset_config.in_features,
             self.config.dataset_config.out_features,
         )
+        if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+            output_t = output_t[:, -1].unsqueeze(1)
         return output_t

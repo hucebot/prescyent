@@ -4,9 +4,7 @@ from typing import List
 
 from pydantic import model_validator
 
-from prescyent.dataset.datasets.human36m.config import (
-    DatasetConfig as H36MDatasetConfig,
-)
+from prescyent.dataset.datasets.human36m.config import H36MDatasetConfig
 
 
 class Arms(str, Enum):
@@ -14,7 +12,7 @@ class Arms(str, Enum):
     RIGHT = "right"
 
 
-class DatasetConfig(H36MDatasetConfig):
+class H36MArmDatasetConfig(H36MDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
     bimanual: bool = True
