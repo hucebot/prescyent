@@ -19,7 +19,10 @@ DEFAULT_EXP_PATH = str(Path("data") / "models" / "exp")
 
 
 def train_from_config(
-    config_path: Path, rm_config: bool = False, dataset: TrajectoriesDataset = None, exp_path: str = DEFAULT_EXP_PATH
+    config_path: Path,
+    rm_config: bool = False,
+    dataset: TrajectoriesDataset = None,
+    exp_path: str = DEFAULT_EXP_PATH,
 ):
     """Start a training for a predictor instanciated through a config file
 

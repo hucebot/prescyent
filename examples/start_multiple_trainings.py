@@ -28,13 +28,13 @@ VARIATIONS = {
         "MlpPredictor",
         "Seq2SeqPredictor",
         "siMLPe",
-        "SARLSTMPredictor",  # Warning ! Canno't be used in all conditions
+        "SARLSTMPredictor",  # Warning ! Can't be used in all conditions
     ],
     "model_config.loss_fn": [
         LossFunctions.MTRDLOSS,
     ],
     "model_config.deriv_on_last_frame": [
-        True
+        False
     ],  # Warning ! Canno't be used in all conditions
     # ...
     # TRAINING

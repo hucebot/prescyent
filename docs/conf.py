@@ -18,13 +18,47 @@ extensions = ["myst_parser", 'sphinx_markdown', 'sphinx.ext.autodoc']
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
 
+html_logo = 'https://raw.githubusercontent.com/hucebot/prescyent/main/assets/banner.png'
+html_favicon = 'https://raw.githubusercontent.com/hucebot/prescyent/main/assets/favicon.ico'
+
+html_logo = "/home/abiver/repositories/hucebot/prescyent/assets/banner.png"
+html_favicon = "/home/abiver/repositories/hucebot/prescyent/assets/favicon.ico"
+
+html_theme_options = {
+    'logo_only': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': False,
+    'style_nav_header_background': 'orange',
+    "display_version": True,
+    # Toc options
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
+}
 
 import importlib
 
@@ -41,7 +75,7 @@ def add_default_values(app, what, name, obj, options, lines):
             module = importlib.import_module(module_name)
             cls = getattr(module, class_name)
             default_value = getattr(cls, attribute_name, None)
-            # If dfefault wasn't found, get it from BaseModel.model_fields
+            # If default wasn't found, get it from BaseModel.model_fields
             if default_value is None:
                 pydantic_fiels_infos = cls.model_fields.get(attribute_name)
                 required = pydantic_fiels_infos.is_required()
