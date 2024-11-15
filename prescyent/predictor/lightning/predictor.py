@@ -34,7 +34,7 @@ from prescyent.predictor.lightning.callbacks.progress_bar import LightningProgre
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.scaler.scaler import Scaler
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched, self_auto_batch
 from prescyent.predictor.lightning.layers.reshaping_layer import ReshapingLayer
 
 
@@ -517,6 +517,7 @@ class LightningPredictor(BasePredictor):
         if self.scaler is not None:
             self.scaler.save(save_path / "scaler.pkl")
 
+    @self_auto_batch
     @BasePredictor.use_scaler
     def predict(
         self,

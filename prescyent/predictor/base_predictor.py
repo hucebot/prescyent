@@ -536,6 +536,10 @@ class BasePredictor:
         def scale(self, input_t, *args, **kwargs):
             if not self.scaler:
                 return function(self, input_t, *args, **kwargs)
+            unbatched = False
+            if len(input_t.shape) == 3:
+                unbatched = True
+                input_t = input_t.unsqueeze(0)
             input_t = self.scaler.scale(
                 input_t.clone(),
                 self.config.dataset_config.in_points,
@@ -547,6 +551,8 @@ class BasePredictor:
                 self.config.dataset_config.out_points,
                 self.config.dataset_config.out_features,
             )
+            if unbatched:
+                return output_t.squeeze(0)
             return output_t
 
         return scale

@@ -7,7 +7,7 @@ from prescyent.predictor.lightning.predictor import LightningPredictor
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.utils.enums.learning_types import LearningTypes
 from prescyent.utils.logger import logger, PREDICTOR
-from prescyent.utils.tensor_manipulation import is_tensor_is_batched
+from prescyent.utils.tensor_manipulation import is_tensor_is_batched, self_auto_batch
 
 
 class SequencePredictor(LightningPredictor):
@@ -15,6 +15,7 @@ class SequencePredictor(LightningPredictor):
     We reimplement here the predict function to pass a future_size arg to the model
     """
 
+    @self_auto_batch
     @BasePredictor.use_scaler
     def predict(
         self,
