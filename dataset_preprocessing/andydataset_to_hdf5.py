@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from prescyent.dataset import AndyDataset
 
 
-DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson/xsens_mvnx"
+DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson/xens_mnvx"
 DEFAULT_GLOB_PATERN = "*.mvnx"
 DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-onePerson.hdf5"
 

@@ -10,6 +10,7 @@ from prescyent.predictor.lightning.configs.training_config import TrainingConfig
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.delayed_predictor import DelayedPredictor
 from prescyent.predictor.constant_predictor import ConstantPredictor
+from prescyent.predictor.constant_derivative_predictor import ConstantDerivativePredictor
 from prescyent.predictor.lightning.models.sequence.seq2seq import (
     Seq2SeqConfig,
     Seq2SeqPredictor,
