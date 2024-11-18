@@ -535,11 +535,23 @@ class LightningPredictor(BasePredictor):
         Returns:
             torch.Tensor: predicted tensor
         """
+        if context is None:
+            context = {}
         with torch.no_grad():
             self.model.eval()
+            device = None
+            if input_t.device != self.model.device:
+                device = input_t.device
+                input_t = input_t.to(self.model.device)
+                context = {
+                    c_key: c_tensor.to(self.model.device)
+                    for c_key, c_tensor in context.items()
+                }
             output = self.model.torch_model(
                 input_t, future_size=future_size, context=context
             )
+            if device:
+                output = output.to(device)
             if is_tensor_is_batched(output):
                 return output[:, -future_size:]
             return output[-future_size:]

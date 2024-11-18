@@ -1,4 +1,6 @@
 # for a more complete implementation : https://pypi.org/project/mp-pytorch/
+from typing import Any, List
+
 import math
 import torch
 import matplotlib.pyplot as plt
@@ -45,7 +47,7 @@ class SinglePromp:
     # make all the sequences the same length and put them in a 2-dimensional tensor
     # in the tensor, each row is a demonstration
     # we use np.interp to interpolate (actually to resample the trajectory)
-    def normalize(self, trajs: list, length: int) -> torch.Tensor:
+    def normalize(self, trajs: List[Any], length: int) -> torch.Tensor:
         data_normalized = torch.Tensor(len(trajs), length)
         new_x = np.linspace(0, 1, length)
         for i, d in enumerate(trajs):
@@ -116,7 +118,7 @@ class SinglePromp:
         fig.savefig(prefix + "mean.pdf")
         plt.close()
 
-    def train(self, trajs: list[torch.Tensor]):
+    def train(self, trajs: List[torch.Tensor]):
         # data pre-processing
         mean_length = math.floor(
             functools.reduce(lambda x, y: x + y.size(0), trajs, 0) / float(len(trajs))

@@ -33,6 +33,8 @@ class SequencePredictor(LightningPredictor):
         Returns:
             torch.Tensor: predicted tensor
         """
+        if context is None:
+            context = {}
         with torch.no_grad():
             self.model.eval()
             list_outputs = []
@@ -72,12 +74,20 @@ class SequencePredictor(LightningPredictor):
                 or context
             ):
                 raise AttributeError(
-                    f"We cannot predict a futur_size bigger than "
+                    f"We cannot predict a future_size bigger than "
                     f"{self.config.dataset_config.future_size} if we cannot recurse"
                     " on the model's output or with a context! "
                     " Please check your inputs and outputs'"
                     " in_features and out_features or in_points and out_points"
                 )
+            device = None
+            if input_t.device != self.model.device:
+                device = input_t.device
+                input_t = input_t.to(self.model.device)
+                context = {
+                    c_key: c_tensor.to(self.model.device)
+                    for c_key, c_tensor in context.items()
+                }
             for i in range(0, future_size, self.config.dataset_config.future_size):
                 prediction = self.model.torch_model(
                     input_t, future_size=future_size, context=context
@@ -90,6 +100,8 @@ class SequencePredictor(LightningPredictor):
                         ]
                     else:
                         input_t = torch.cat((input_t, prediction))[-history_size:]
+            if device:
+                list_outputs = [pred.to(device) for pred in list_outputs]
             if is_tensor_is_batched(input_t):
                 if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
                     return torch.cat(list_outputs, dim=1)[:, -1].unsqueeze(1)
