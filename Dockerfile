@@ -17,5 +17,6 @@ COPY tests tests
 COPY examples examples
 
 RUN python3 -m pip install -e .
+RUN python3 -m unittest
 
 CMD ["bash", "-l"]

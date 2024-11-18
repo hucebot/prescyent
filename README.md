@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="PreScyent" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/banner.png">
+    <img alt="PreScyent" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/banner.png" width="50%">
 </p>
 
 <h2 style="text-align: center;">
