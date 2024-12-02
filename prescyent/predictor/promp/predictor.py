@@ -1,5 +1,5 @@
 # for a more complete implementation : https://pypi.org/project/mp-pytorch/
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from tqdm import tqdm
 
 import torch
@@ -69,7 +69,7 @@ class PrompPredictor(BasePredictor):
 
     def predict_by_conditioning(
         self, input_t: torch.Tensor, future_size: int
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         t = input_t.size(0) + future_size  # how much in the future do we predict
         result_mean = torch.zeros(input_t.size(1), input_t.size(2))
         result_std = torch.zeros_like(result_mean)

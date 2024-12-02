@@ -19,10 +19,10 @@ from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 
 from . import metadata
-from .config import DatasetConfig
+from .config import TeleopIcubDatasetConfig
 
 
-class Dataset(TrajectoriesDataset):
+class TeleopIcubDataset(TrajectoriesDataset):
     """
     https://zenodo.org/record/5913573#.Y75xK_7MIaw
     Dataset is not splitted into test / train / val
@@ -31,8 +31,8 @@ class Dataset(TrajectoriesDataset):
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(self, config=DatasetConfig()) -> None:
-        self._init_from_config(config, DatasetConfig)
+    def __init__(self, config=TeleopIcubDatasetConfig()) -> None:
+        self._init_from_config(config, TeleopIcubDatasetConfig)
         super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):

@@ -9,6 +9,7 @@ from prescyent.dataset.features import convert_tensor_features_to
 from prescyent.predictor.base_predictor import BasePredictor
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.lightning.configs.training_config import TrainingConfig
+from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import self_auto_batch
 
@@ -102,4 +103,6 @@ class DelayedPredictor(BasePredictor):
                 self.config.dataset_config.in_features,
                 self.config.dataset_config.out_features,
             )
+            if self.config.dataset_config.learning_type == LearningTypes.SEQ2ONE:
+                output_t = output_t[:, -1].unsqueeze(1)
         return output_t

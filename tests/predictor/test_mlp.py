@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 
-from prescyent.dataset import DatasetConfig
+from prescyent.dataset import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Any, Features
 from prescyent.predictor import MlpPredictor, MlpConfig
 from prescyent.predictor.lightning.predictor import MODEL_CHECKPOINT_NAME
@@ -9,7 +9,7 @@ from prescyent.predictor.lightning.predictor import MODEL_CHECKPOINT_NAME
 from tests.custom_test_case import CustomTestCase
 
 features = Features([Any(range(1))])
-dataset_config = DatasetConfig(
+dataset_config = TrajectoriesDatasetConfig(
     frequency=10,
     history_size=10,
     future_size=10,

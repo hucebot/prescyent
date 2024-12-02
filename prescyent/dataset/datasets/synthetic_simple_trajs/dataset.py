@@ -17,7 +17,7 @@ from prescyent.utils.logger import logger, DATASET
 from prescyent.utils.interpolate import update_tensor_frequency
 
 from . import metadata
-from .config import DatasetConfig
+from .config import SSTDatasetConfig
 
 
 SEQ = "zyx"
@@ -29,19 +29,19 @@ def clamp_vect_norm(vect, limit):
     return axis * min(norm, limit)
 
 
-class Dataset(TrajectoriesDataset):
+class SSTDataset(TrajectoriesDataset):
     """Simple dataset with generated trajectories from a starting and ending pose"""
 
     DATASET_NAME = "SST"
 
     def __init__(
         self,
-        config: Union[Dict, DatasetConfig, str, Path] = None,
+        config: Union[Dict, SSTDatasetConfig, str, Path] = None,
     ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
         )
-        self._init_from_config(config, DatasetConfig)
+        self._init_from_config(config, SSTDatasetConfig)
         super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):

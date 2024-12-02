@@ -71,6 +71,8 @@ def render_3d_trajectories(
     if isinstance(save_dir, str) and save_file_format is not None:
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
+    if save_file_format and not Path(save_dir).exists():
+        Path(save_dir).mkdir(exist_ok=True)
     elevation = 20.0
     rot_colors = ("#FF6666", "#005533", "#1199EE")  # Colorblind-safe RGB
     test_frames = [traj.tensor[0].transpose(0, 1).tolist() for traj in trajs]
@@ -212,7 +214,7 @@ def render_3d_trajectories(
     if not save_file_format:
         pass
     elif save_file_format == "mp4":
-        title = f"{trajs[0]}_animation.mp4"
+        title = f"{trajs[0].title.replace('/', '_')}_animation.mp4"
         anim.save(
             str(save_dir / title),
             fps=trajs[0].frequency,

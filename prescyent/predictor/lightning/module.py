@@ -154,7 +154,7 @@ class LightningModule(pl.LightningModule):
             return [optimizer], [{"scheduler": lr_scheduler, "interval": "step"}]
         return [optimizer]
 
-    def predict(
+    def predict_torch(
         self,
         batch: Tuple[torch.Tensor, Dict[str, torch.Tensor], torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -295,7 +295,7 @@ class LightningModule(pl.LightningModule):
         get data from batch, predict, compute metrics
         """
         batch = args[0]
-        pred, truth = self.predict(batch)
+        pred, truth = self.predict_torch(batch)
         res = self.compute_metrics(pred, truth, "Train", loss_only=True)
         self.train_output.append(res)
         return res
@@ -306,7 +306,7 @@ class LightningModule(pl.LightningModule):
         """
         with torch.no_grad():
             batch = args[0]
-            pred, truth = self.predict(batch)
+            pred, truth = self.predict_torch(batch)
             res = self.compute_metrics(pred, truth, "Test")
             self.test_output.append(res)
             return res
@@ -317,7 +317,7 @@ class LightningModule(pl.LightningModule):
         """
         with torch.no_grad():
             batch = args[0]
-            pred, truth = self.predict(batch)
+            pred, truth = self.predict_torch(batch)
             res = self.compute_metrics(pred, truth, "Val")
             self.val_output.append(res)
             return res

@@ -7,7 +7,7 @@ from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 from prescyent.utils.enums import TrajectoryDimensions
 
 
-class Config(ModuleConfig):
+class SiMLPeConfig(ModuleConfig):
     """Pydantic Basemodel for MLP Module configuration"""
 
     num_layers: int = Field(48, gt=0)

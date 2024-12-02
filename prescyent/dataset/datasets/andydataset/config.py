@@ -9,7 +9,7 @@ from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
 
-class DatasetConfig(TrajectoriesDatasetConfig):
+class AndyDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for AndyDataset configuration"""
 
     hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "AndyData-lab-onePerson.hdf5")

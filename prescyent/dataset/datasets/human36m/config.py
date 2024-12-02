@@ -9,7 +9,7 @@ from prescyent.dataset.features import Features
 from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 
 
-class DatasetConfig(TrajectoriesDatasetConfig):
+class H36MDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
     hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m.hdf5")

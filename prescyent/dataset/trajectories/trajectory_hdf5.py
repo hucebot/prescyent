@@ -64,7 +64,7 @@ class TrajectoryHDF5(Trajectory):
                     key: torch.FloatTensor(np.array(traj_group[f"{key}"]))
                     for key in self.context_keys
                 }
-            return None
+            return {}
 
     @context.setter
     def context(self, new_context):

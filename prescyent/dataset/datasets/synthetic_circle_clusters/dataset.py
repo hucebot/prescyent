@@ -13,7 +13,6 @@ from scipy.interpolate import splrep, BSpline
 from tqdm.auto import tqdm
 
 from prescyent.dataset.dataset import TrajectoriesDataset
-from prescyent.dataset.datasets.synthetic_circle_clusters.config import DatasetConfig
 from prescyent.dataset.hdf5_utils import write_metadata
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.trajectories.trajectory import Trajectory
@@ -21,21 +20,22 @@ from prescyent.utils.interpolate import update_tensor_frequency
 from prescyent.utils.logger import logger, DATASET
 
 from . import metadata
+from .config import SCCDatasetConfig
 
 
-class Dataset(TrajectoriesDataset):
+class SCCDataset(TrajectoriesDataset):
     """Simple dataset generating n 2D circles"""
 
     DATASET_NAME = "SCC"
 
     def __init__(
         self,
-        config: Union[Dict, DatasetConfig, str, Path] = None,
+        config: Union[Dict, SCCDatasetConfig, str, Path] = None,
     ) -> None:
         logger.getChild(DATASET).info(
             f"Initializing {self.DATASET_NAME} Dataset",
         )
-        self._init_from_config(config, DatasetConfig)
+        self._init_from_config(config, SCCDatasetConfig)
         super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):

@@ -16,11 +16,13 @@ from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import self_auto_batch
 
+from .config import SARLSTMConfig
 
-class TorchModule(BaseTorchModule):
+
+class SARLSTMTorchModule(BaseTorchModule):
     """Torch implementation of a LSTM autoregressive model"""
 
-    def __init__(self, config):
+    def __init__(self, config: SARLSTMConfig):
         super().__init__(config)
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers

@@ -18,14 +18,15 @@ from prescyent.utils.dataset_manipulation import (
     split_array_with_ratios,
 )
 from prescyent.utils.interpolate import update_tensor_frequency
-import prescyent.dataset.datasets.andydataset.metadata as metadata
-from prescyent.dataset.datasets.andydataset.config import DatasetConfig
 from prescyent.dataset.features import Coordinate
 from prescyent.dataset.trajectories.trajectories import Trajectories
 from prescyent.dataset.dataset import TrajectoriesDataset
 
+from . import metadata
+from .config import AndyDatasetConfig
 
-class Dataset(TrajectoriesDataset):
+
+class AndyDataset(TrajectoriesDataset):
     """
     https://andydataset.loria.fr/
     Dataset is not splitted into test / train / val
@@ -36,9 +37,9 @@ class Dataset(TrajectoriesDataset):
 
     def __init__(
         self,
-        config: Union[Dict, DatasetConfig, str, Path] = None,
+        config: Union[Dict, AndyDatasetConfig, str, Path] = None,
     ) -> None:
-        self._init_from_config(config, DatasetConfig)
+        self._init_from_config(config, AndyDatasetConfig)
         super().__init__(name=self.DATASET_NAME)
 
     def prepare_data(self):

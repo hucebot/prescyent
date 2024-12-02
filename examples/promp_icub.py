@@ -26,7 +26,7 @@ if __name__ == "__main__":
         batch_size=batch_size,  # not used
         in_features=features,
         out_features=features,
-        glob_dir="datasetMultipleTasks/BottleTable/p*.csv",  # modified from default
+        subsets=["datasetMultipleTasks/BottleTable"],  # modified from default
     )
     print("OK")
 

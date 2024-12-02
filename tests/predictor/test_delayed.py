@@ -2,7 +2,7 @@ import shutil
 import torch
 
 from prescyent.dataset import (
-    DatasetConfig,
+    TrajectoriesDatasetConfig,
     CustomDataset,
     Trajectories,
     Trajectory,
@@ -16,7 +16,7 @@ class DelayedPredictorTests(CustomTestCase):
     def test_prediction(self):
         features = Features([Any(range(6))])
         points = list(range(7))
-        dataset_config = DatasetConfig(
+        dataset_config = TrajectoriesDatasetConfig(
             batch_size=20,
             frequency=10,
             history_size=10,
@@ -44,7 +44,7 @@ class DelayedPredictorTests(CustomTestCase):
     def test_test_loop(self):
         features = Features([Any(range(7))])
         points = list(range(9))
-        dataset_config = DatasetConfig(
+        dataset_config = TrajectoriesDatasetConfig(
             batch_size=64,
             frequency=10,
             history_size=10,

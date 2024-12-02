@@ -8,9 +8,9 @@ from torch import nn
 
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.enums import ActivationFunctions
-from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.utils.tensor_manipulation import self_auto_batch
-from .config import Config as MlpConfig
+
+from .config import MlpConfig
 
 
 ACT_FUNCTION_MAP = {
@@ -20,7 +20,7 @@ ACT_FUNCTION_MAP = {
 }
 
 
-class TorchModule(BaseTorchModule):
+class MlpTorchModule(BaseTorchModule):
     """Simple Multi-Layer Perceptron with flatten input"""
 
     def __init__(self, config: MlpConfig):
@@ -58,7 +58,7 @@ class TorchModule(BaseTorchModule):
     def forward(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
+        future_size: Optional[int] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """mlp's forward method

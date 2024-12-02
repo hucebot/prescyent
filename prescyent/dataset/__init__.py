@@ -26,7 +26,7 @@ from prescyent.dataset.datasets.andydataset import (
     AndyDatasetConfig,
 )
 from prescyent.dataset.trajectories import Trajectories, Trajectory
-from prescyent.dataset.config import TrajectoriesDatasetConfig as DatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.datasets.custom_dataset import CustomDataset
 
 

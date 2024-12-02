@@ -24,13 +24,13 @@ if __name__ == "__main__":
     # we load with the same config as for the training
     print("Loading the dataset...")
     dataset = AutoDataset.build_from_config(path)
-    print("Dataset OK")
+    print("Dataset loaded !")
 
     # load a pretrained model
     print("Loading the predictor...")
     predictor = AutoPredictor.load_pretrained(path)
     predictor.describe()
-    print("Predictor OK")
+    print("Predictor loaded !")
 
     # predict the trajectories
     print(
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     history_size = dataset.config.history_size
     future_size = dataset.config.future_size
 
-    # # Uncomment this section if you want to mannualy iterate over your trajectory instead for some reason
+    # # Uncomment this section if you want to manually iterate over your trajectory instead for some reason
     # all_preds = []
     # import
     # with .no_grad():

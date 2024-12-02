@@ -13,11 +13,13 @@ from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.tensor_manipulation import self_auto_batch
 from prescyent.utils.logger import logger, PREDICTOR
 
+from .config import Seq2SeqConfig
 
-class TorchModule(BaseTorchModule):
+
+class Seq2SeqTorchModule(BaseTorchModule):
     """torch implementation of the Seq2Seq model"""
 
-    def __init__(self, config):
+    def __init__(self, config: Seq2SeqConfig):
         """
         feature_size - The number of dimensions to predict in parrallel
         hidden_size - Can be chosen to dictate how much hidden "long term memory" the network will have
@@ -53,7 +55,7 @@ class TorchModule(BaseTorchModule):
     def forward(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
+        future_size: Optional[int] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """seq2seq's forward method

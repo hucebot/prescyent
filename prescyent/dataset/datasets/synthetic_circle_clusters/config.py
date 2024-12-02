@@ -8,7 +8,7 @@ from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS
 
 
-class DatasetConfig(TrajectoriesDatasetConfig):
+class SCCDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for SCCDataset configuration"""
 
     ratio_train: float = 0.7

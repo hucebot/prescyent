@@ -4,7 +4,7 @@ from pydantic import Field
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 
-class Config(ModuleConfig):
+class Seq2SeqConfig(ModuleConfig):
     """Pydantic Basemodel for Seq2Seq Module configuration"""
 
     hidden_size: int = 128

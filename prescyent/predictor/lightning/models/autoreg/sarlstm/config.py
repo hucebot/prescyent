@@ -4,7 +4,7 @@ from pydantic import field_validator
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 
-class Config(ModuleConfig):
+class SARLSTMConfig(ModuleConfig):
     """Pydantic Basemodel for SARLSTM configuration"""
 
     hidden_size: int = 128

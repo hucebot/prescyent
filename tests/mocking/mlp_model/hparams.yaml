@@ -1,20 +1,21 @@
 accelerator: auto
 accumulate_grad_batches: 1
 activation: RELU
-config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config.Config
+config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config.MlpConfig
   __dict__:
     activation: !!python/object/apply:prescyent.utils.enums.activation_functions.ActivationFunctions
     - relu
-    context_size: null
-    dataset_config: !!python/object:prescyent.dataset.datasets.teleop_icub.config.DatasetConfig
+    context_size: 3
+    dataset_config: !!python/object:prescyent.dataset.datasets.teleop_icub.config.TeleopIcubDatasetConfig
       __dict__:
         batch_size: 256
-        context_keys: []
+        context_keys:
+        - center_of_mass
         convert_trajectories_beforehand: true
-        frequency: 10
-        future_size: 10
-        hdf5_path: /home/abiver/ros2_ws/src/ros2_prescyent/prescyent/data/datasets/AndyData-lab-prescientTeleopICub.hdf5
-        history_size: 10
+        frequency: 24
+        future_size: 12
+        hdf5_path: /home/abiver/repositories/hucebot/prescyent/data/datasets/AndyData-lab-prescientTeleopICub.hdf5
+        history_size: 24
         in_features: !!python/object/new:prescyent.dataset.features.features.Features
           listitems:
           - &id001 !!python/object/new:prescyent.dataset.features.feature.coordinate.CoordinateXYZ
@@ -31,10 +32,10 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         - 1
         - 2
         learning_type: !!python/object/apply:prescyent.utils.enums.learning_types.LearningTypes
-        - sequence_2_sequence
+        - sequence_2_one
         loop_over_traj: false
         name: TeleopIcub
-        num_workers: 4
+        num_workers: 1
         out_features: !!python/object/new:prescyent.dataset.features.features.Features
           listitems:
           - *id001
@@ -48,28 +49,32 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         ratio_val: 0.1
         reverse_pair_ratio: 0
         save_samples_on_disk: true
-        seed: 389054121
+        seed: 974690156
         shuffle_data_files: true
-        subsets: null
+        subsets:
+        - BottleTable
       __pydantic_extra__: null
       __pydantic_fields_set__: !!set
         batch_size: null
+        context_keys: null
         frequency: null
         future_size: null
         history_size: null
         in_features: null
+        learning_type: null
         name: null
-        num_workers: null
         out_features: null
         out_points: null
         seed: null
+        subsets: null
       __pydantic_private__: null
     deriv_on_last_frame: true
     deriv_output: false
     do_lipschitz_continuation: false
     dropout_value: null
     hidden_size: 128
-    loss_fn: null
+    loss_fn: !!python/object/apply:prescyent.utils.enums.loss_functions.LossFunctions
+    - mtdloss
     name: null
     num_layers: 4
     save_path: data/models
@@ -90,20 +95,23 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
     version: null
   __pydantic_extra__: null
   __pydantic_fields_set__: !!set
+    context_size: null
     dataset_config: null
     deriv_on_last_frame: null
     hidden_size: null
+    loss_fn: null
     num_layers: null
     scaler_config: null
   __pydantic_private__: null
-context_size: null
+context_size: 3
 dataset_config:
   batch_size: 256
-  context_keys: []
+  context_keys:
+  - center_of_mass
   convert_trajectories_beforehand: true
-  frequency: 10
-  future_size: 10
-  history_size: 10
+  frequency: 24
+  future_size: 12
+  history_size: 24
   in_features:
   - distance_unit: m
     feature_class: CoordinateXYZ
@@ -117,10 +125,10 @@ dataset_config:
   - 1
   - 2
   learning_type: !!python/object/apply:prescyent.utils.enums.learning_types.LearningTypes
-  - sequence_2_sequence
+  - sequence_2_one
   loop_over_traj: false
   name: TeleopIcub
-  num_workers: 4
+  num_workers: 1
   out_features:
   - distance_unit: m
     feature_class: CoordinateXYZ
@@ -136,22 +144,22 @@ dataset_config:
   pin_memory: true
   reverse_pair_ratio: 0
   save_samples_on_disk: true
-  seed: 389054121
+  seed: 974690156
 deriv_on_last_frame: true
 deriv_output: false
 devices: auto
 do_lipschitz_continuation: false
 dropout_value: null
 early_stopping_mode: min
-early_stopping_patience: 15
+early_stopping_patience: 10
 early_stopping_value: Val/loss
 gradient_clip_algorithm: null
 gradient_clip_val: null
 hidden_size: 128
 log_every_n_steps: 1
-loss_fn: null
-lr: 0.0005
-max_epochs: 300
+loss_fn: MTRDLOSS
+lr: 0.0001
+max_epochs: 100
 max_lr: 0.01
 max_steps: -1
 name: MlpPredictor
@@ -164,8 +172,8 @@ scaler_config:
   - standardization
   scaling_axis: !!python/object/apply:prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
   - '[1]'
-seed: 865997167
-torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.mlp.module.TorchModule ''
+seed: 185460831
+torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.mlp.module.MlpTorchModule ''
 use_auto_lr: false
 use_deterministic_algorithms: true
 use_scheduler: false

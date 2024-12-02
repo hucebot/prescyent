@@ -332,14 +332,13 @@ def convert_rotation_tensor_to(
         new_tensor = convert_to_euler(tensor)
     elif isinstance(rotation_rep, RotationQuat):
         new_tensor = convert_to_quat(tensor)
+        new_tensor = rotation_rep.post_process(new_tensor)
     elif isinstance(rotation_rep, RotationRotMat):
         new_tensor = convert_to_rotmatrix(tensor)
     elif isinstance(rotation_rep, RotationRep6D):
         new_tensor = convert_to_rep6d(tensor)
     else:
         raise AttributeError(f"{rotation_rep} is not an handled Rotation Feature")
-    if rotation_rep.must_post_process:
-        new_tensor = rotation_rep.post_process(new_tensor)
     return new_tensor
 
 

@@ -8,15 +8,11 @@ Welcome to PreScyent's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
    get_started
-   guide
+   user_guide
+   configuration_files
    references
 
-
-Indices and tables
-==================
-
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

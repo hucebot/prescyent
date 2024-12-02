@@ -1,7 +1,9 @@
 """Module with functions and AutoPredictor class to init any predictor from prescyent.predictor from its config file"""
 import json
 from pathlib import Path
-from typing import Any, Dict, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union
+
+from lightning_fabric.utilities.types import _MAP_LOCATION_TYPE
 
 from prescyent.predictor.config import PredictorConfig
 from prescyent.predictor.constant_predictor import ConstantPredictor
@@ -13,11 +15,14 @@ from prescyent.utils.logger import logger, PREDICTOR
 from prescyent.predictor import PREDICTOR_MAP
 
 
-def get_predictor_from_path(predictor_path: str):
+def get_predictor_from_path(
+    predictor_path: str, device: Optional[_MAP_LOCATION_TYPE] = None
+):
     """helper function to create common baselines or autopredictor given string
 
     Args:
         predictor_path (str): path to a predictor or id of a baseline to load
+        device (Optional[_MAP_LOCATION_TYPE], optional): device where to load checkpoint. Defaults to None.
 
     Returns:
         Any: instance of a predictor
@@ -27,7 +32,7 @@ def get_predictor_from_path(predictor_path: str):
         return ConstantPredictor(None)
     if predictor_path == "DelayedPredictor":
         return DelayedPredictor(None)
-    return AutoPredictor.load_pretrained(predictor_path)
+    return AutoPredictor.load_pretrained(predictor_path, device)
 
 
 def get_predictor_infos(config: Dict[str, Any]) -> Type[BasePredictor]:
@@ -101,12 +106,15 @@ class AutoPredictor:
 
     @classmethod
     def load_pretrained(
-        cls, config: Union[str, Path, dict, ModuleConfig]
+        cls,
+        config: Union[str, Path, dict, ModuleConfig],
+        device: Optional[_MAP_LOCATION_TYPE] = None,
     ) -> BasePredictor:
         """load a predictor previously saved to disk, given its path
 
         Args:
             config (Union[str, Path, dict, ModuleConfig]): path to the predictor
+            device (Optional[_MAP_LOCATION_TYPE], optional): device where to load checkpoint. Defaults to None.
 
         Returns:
             BasePredictor: loaded instance of a trained Predictor
@@ -122,7 +130,7 @@ class AutoPredictor:
             predictor_class.PREDICTOR_NAME,
             config_path,
         )
-        return predictor_class.load_pretrained(model_dir=config_path)
+        return predictor_class.load_pretrained(model_dir=config_path, device=device)
 
     @classmethod
     def build_from_config(

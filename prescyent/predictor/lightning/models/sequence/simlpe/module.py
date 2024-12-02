@@ -13,13 +13,15 @@ from prescyent.predictor.lightning.layers.transpose_layer import TransposeLayer
 from prescyent.predictor.lightning.torch_module import BaseTorchModule
 from prescyent.utils.tensor_manipulation import self_auto_batch
 from prescyent.utils.logger import logger, PREDICTOR
+
 from .mlp import TransMLP
+from .config import SiMLPeConfig
 
 
-class TorchModule(BaseTorchModule):
+class SiMLPeTorchModule(BaseTorchModule):
     """siMLPe implementation"""
 
-    def __init__(self, config):
+    def __init__(self, config: SiMLPeConfig):
         super().__init__(config)
         self.config = config
         if self.config.out_sequence_size > self.config.in_sequence_size:
@@ -81,7 +83,7 @@ class TorchModule(BaseTorchModule):
     def forward(
         self,
         input_tensor: torch.Tensor,
-        future_size: int = None,
+        future_size: Optional[int] = None,
         context: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """simlpe's forward method

@@ -19,18 +19,22 @@ if __name__ == "__main__":
     # -- Init dataset
     print("Initializing dataset...", end=" ")
     frequency: int = 24  # target frequency
-    history_size = 24  # 10 frames at 10Hz => 1 seconds as history
-    future_size = 12  # 10 frames at 10Hz => 1 seconds as future
+    history_size = 24  # 24 frames at 24Hz => 1 seconds as history
+    future_size = 12  # 12 frames at 24Hz => 0.5 seconds as future
     features = Features([CoordinateXYZ(range(3))])
-    points_ids = [1, 2]  # ids of the hands
+    points_ids = [1, 2]  # ids of the left and right hands
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
-        context_keys=["center_of_mass"],
-        subsets=["BottleTable"],
-        learning_type=LearningTypes.SEQ2ONE,
+        context_keys=[
+            "center_of_mass"
+        ],  # Using center of mass of the robot as additional context input
+        subsets=[
+            "BottleTable"
+        ],  # training and evaluating only on this subset task of the dataset
+        learning_type=LearningTypes.SEQ2SEQ,
         history_size=history_size,
         future_size=future_size,
-        frequency=frequency,  # subsampling default -> 100 Hz to 10Hz
+        frequency=frequency,  # subsampling default -> 100 Hz to 24Hz
         batch_size=batch_size,
         in_features=features,  # we have x,y,z coordinates for each points as input (this is also the default value)
         out_features=features,  # we have x,y,z coordinates for each points as output (this is also the default value)
@@ -67,6 +71,8 @@ if __name__ == "__main__":
         lr=0.0001,  # The learning rate
         early_stopping_patience=10,  # We'll stop the training before max_epochs if the validation loss doesn't improve for 10 epochs
     )
+
+    # Scaler is also trained by the rpedictor's method !
     predictor.train(dataset, training_config)
 
     # Save the predictor
@@ -80,11 +86,12 @@ if __name__ == "__main__":
     model_dir = xp_dir / f"{predictor.name}" / f"version_{predictor.version}"
     print("Model directory:", model_dir)
     predictor.save(model_dir, rm_log_path=False)
-    # We save also the dataset config so that we can load it later if needed
+    # We can save also the dataset config so that we can load it later if needed
     dataset.save_config(model_dir / "dataset_config.json")
 
-    # Test so that we know how good we are
+    # Test predictor over the test set so that we know how good we are
     predictor.test(dataset)
+
     # Compare with delayed baseline
     delayed_config = PredictorConfig(
         dataset_config=dataset_config, save_path=f"{xp_dir}"
