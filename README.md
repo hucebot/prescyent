@@ -6,9 +6,8 @@
 Data-driven trajectory forecasting library built in python
 </h2>
 
-<p align="center" width="100%">
-    <img alt="Trajectory plot" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/mlp_icub_test_plot.png" width="48%" >
-    <img alt="Trajectory visualization" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/S5_greeting_1_animation.gif" width="40%">
+<p align="center">
+    <img alt="Trajectory visualization" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/render_andy_dataset_positions_with_siMLPe_predictions_at_500ms.gif" width="40%">
 </p>
 
 # Get Started
