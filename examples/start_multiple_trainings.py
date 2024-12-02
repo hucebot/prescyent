@@ -7,13 +7,20 @@ import json
 import os
 from pathlib import Path
 
+from prescyent.utils.enums import (
+    LearningTypes,
+    LossFunctions,
+    Scalers,
+    TrajectoryDimensions,
+)
+
 from examples.train_from_config import train_from_config
-from prescyent.utils.enums import LearningTypes, TrajectoryDimensions
-from prescyent.utils.enums.loss_functions import LossFunctions
-from prescyent.utils.enums.scalers import Scalers
+
 
 DEFAULT_CONFIG_DIR = Path("data") / "configs"
-
+FREQUENCY = 24
+HISTORY_SIZE = 24
+FUTURE_SIZE = 12
 VARIATIONS = {
     "training_config.number_of_repetition": range(1),
     # SCALER
@@ -39,14 +46,14 @@ VARIATIONS = {
     # ...
     # TRAINING
     "training_config.max_epochs": [200],
-    "training_config.devices": ["auto"],
-    # "training_config.accelerator": ["cpu"],
-    "training_config.early_stopping_patience": [15],
+    # "training_config.devices": [1],
+    # "training_config.accelerator": ["gpu"],
+    "training_config.early_stopping_patience": [20],
     "training_config.use_auto_lr": [True],
     # DATASET
-    "dataset_config.frequency": [24],
-    "dataset_config.history_size": [24],
-    "dataset_config.future_size": [12],
+    "dataset_config.frequency": [FREQUENCY],
+    "dataset_config.history_size": [HISTORY_SIZE],
+    "dataset_config.future_size": [FUTURE_SIZE],
     "dataset_config.name": ["TeleopIcub"],
     "dataset_config.subsets": [["BottleTable"]],
     "dataset_config.batch_size": [256],
@@ -108,7 +115,10 @@ if __name__ == "__main__":
                 config_dict[key1][key2] = value
             config_paths.append(config_base_dir / f"exp_config_{config_number}.json")
             config_dict["model_config"]["version"] = config_number
-            config_dict["model_config"]["scaler_config"] = config_dict["scaler_config"]
+            if config_dict["scaler_config"]:
+                config_dict["model_config"]["scaler_config"] = config_dict[
+                    "scaler_config"
+                ]
             del config_dict["scaler_config"]
             if config_dict["model_config"]["name"] in AUTO_REGRESSIVE_MODELS:
                 config_dict["dataset_config"]["learning_type"] = LearningTypes.AUTOREG
@@ -121,14 +131,13 @@ if __name__ == "__main__":
         / "data"
         / "models"
         / "TeleopIcub"
-        / "24Hz_24in_12out"
+        / f"{FREQUENCY}Hz_{HISTORY_SIZE}in_{FUTURE_SIZE}out"
     )
     for i, config_path in enumerate(config_paths):
         print(f"Training {i} starting...")
         train_from_config(config_path, rm_config=True, exp_path=exp_path)
         print(f"Training {i} ended.")
 
-    # There is no notion of multithreading inside the script as we
     # want lightning trainer to use multiple devices for one training
     # and it added unnecessary confusing behavior
-    # For parrallel training, you can call this script multiple times with different config_dir
+    # For parallel training, you can call this script multiple times with different config_dir

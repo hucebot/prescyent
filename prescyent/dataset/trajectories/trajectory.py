@@ -73,12 +73,14 @@ class Trajectory:
             point_names (List[str], optional): List of a label to give to each point. Defaults to None.
         """
         self.tensor = tensor
-        self.context = context
+        if context is None:
+            context = {}
         if context:
             # All context tensors must have the same frequency as the base tensor and a shape like (num_frames, feat_dim). For context, we consider we have one dict entry per "point"
             assert all(
                 [c_tensor.shape[0] == tensor.shape[0] for c_tensor in context.values()]
             )
+        self.context = context
         self.frequency = frequency
         self.file_path = file_path
         self.title = title

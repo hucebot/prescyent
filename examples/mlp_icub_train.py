@@ -25,8 +25,12 @@ if __name__ == "__main__":
     points_ids = [1, 2]  # ids of the left and right hands
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
-        context_keys=["center_of_mass"],  # Using center of mass of the robot as additional context input
-        subsets=["BottleTable"],  # training and evaluating only on this subset task of the dataset
+        context_keys=[
+            "center_of_mass"
+        ],  # Using center of mass of the robot as additional context input
+        subsets=[
+            "BottleTable"
+        ],  # training and evaluating only on this subset task of the dataset
         learning_type=LearningTypes.SEQ2SEQ,
         history_size=history_size,
         future_size=future_size,
