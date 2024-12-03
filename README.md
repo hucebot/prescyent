@@ -11,6 +11,9 @@ Data-driven trajectory forecasting library built in python
 </p>
 
 # Get Started
+
+Find the user documentation here: https://hucebot.github.io/prescyent/  
+
 PreScyent is a trajectory forecasting library, built upon pytorch_lightning  
 It comes with datasets such as:
 - [AndyData-lab-onePerson](https://zenodo.org/records/3254403#.Y_9fwBeZMVk)  
@@ -75,6 +78,8 @@ Alongside each trajectory tensor, some dataset provide some additional "context"
 ### Downloads
 We use HDF5 file format to load a dataset internally. Please get the original data and pre process them using the scripts in `/datapreprocessing` to match the library's format.  
 Then when creating an instance of a Dataset, make sure you pass the path to the newly generated hdf5 file to the dataset's config attribute `hdf5_path`.  
+The hdf5 versions of theses datasets have also been uploaded here: https://gitlab.inria.fr/hucebot/datasets/
+
 
 #### TeleopIcubDataset
 Download AndyData-lab-prescientTeleopICub's data [here](https://zenodo.org/record/5913573/)
@@ -107,6 +112,8 @@ and unzip it, it should be following this structure:
 │           │   ├── ...
 
 ```
+Then run the script `dataset_preprocessing/teleopicubdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+
 
 #### H36MDataset
 For [Human3.6M](http://vision.imar.ro/human3.6m/description.php) you need to download the zip [here](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip) and prepare your data following this directory structure:  
@@ -118,6 +125,8 @@ For [Human3.6M](http://vision.imar.ro/human3.6m/description.php) you need to dow
 |   ├── ...
 |   ├── S11
 ```
+Then run the script `dataset_preprocessing/h36mdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+
 
 #### AndyDataset
 For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [here](https://zenodo.org/records/3254403/files/xens_mnvx.zip?download=1) and prepare your data following this directory structure:  
@@ -130,6 +139,8 @@ For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [h
 |       ├── ...
 |       ├── Participant_9875
 ```
+Then run the script `dataset_preprocessing/andydataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+
 
 ## Predictors
 The trajectory prediction methods are organized as Predictor classes.  
