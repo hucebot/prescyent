@@ -1,3 +1,4 @@
+import importlib<
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -13,10 +14,18 @@ author = 'Alexis Biver'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", 'sphinx_markdown', 'sphinx.ext.autodoc']
-
+extensions = [
+    "myst_parser",
+    'sphinx_markdown',
+    'sphinx.ext.autodoc',
+    "sphinx.ext.githubpages",
+]
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store'
+]
 
 myst_enable_extensions = [
     "amsmath",
@@ -43,9 +52,6 @@ html_theme = 'sphinx_rtd_theme'
 html_logo = 'https://raw.githubusercontent.com/hucebot/prescyent/main/assets/banner.png'
 html_favicon = 'https://raw.githubusercontent.com/hucebot/prescyent/main/assets/favicon.ico'
 
-html_logo = "/home/abiver/repositories/hucebot/prescyent/assets/banner.png"
-html_favicon = "/home/abiver/repositories/hucebot/prescyent/assets/favicon.ico"
-
 html_theme_options = {
     'logo_only': True,
     'prev_next_buttons_location': 'bottom',
@@ -60,7 +66,6 @@ html_theme_options = {
     'titles_only': False
 }
 
-import importlib
 
 def add_default_values(app, what, name, obj, options, lines):
     # only process attributes for pydantic configs autodocs
@@ -87,6 +92,7 @@ def add_default_values(app, what, name, obj, options, lines):
         except (ImportError, AttributeError) as e:
             print(f"Error loading {module_name}.{class_name}: {e}")
 
+
 def skip_member(app, what, name, obj, skip, options):
     # Skip inherited members if they are from a certain base class
     if what == "class" and "BaseConfig." in str(obj):
@@ -96,6 +102,7 @@ def skip_member(app, what, name, obj, skip, options):
     if obj.__class__.__name__ == "property":
         return True  # Skip all properties
     return skip
+
 
 def setup(app):
     print("Connecting event handlers...")

@@ -38,3 +38,26 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+
+
+  version_check:
+    name: check version number
+    needs: tests
+    runs-on: ubuntu-22.04
+    if: ${{ github.ref == 'refs/heads/main' }}
+    outputs:
+      output1: ${{ steps.bump_version.outputs.exitcode }}
+    steps:
+      - id: bump_version
+        run: |
+          set +e
+          python3 check_version.py
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+      - id: commit_version_bump
+        if: "${{ steps.bump_version.outputs.exitcode == '1' }}"
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: alexisbiver
+          author_email: biver.alexis@proton.me
+          message: '🔖 bump version number'
+          add: 'prescyent/__init__.py'
