@@ -15,9 +15,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
     # Ensure it's on the 'main' branch and the test workflow was successful
     environment: pypi
-    permissions:
-      id-token: write
-      contents: read
+    permissions: write-all
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,15 +26,6 @@ jobs:
 
       - name: Build python package
         run: python -m build
-
-      # Test the workflow with testpypi here: (update environment to testpypi)
-      # - name: Publish package distributions to TestPyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     repository-url: https://test.pypi.org/legacy/
-
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Get the current version
         id: extract_version
@@ -62,6 +51,8 @@ jobs:
       - name: Create GitHub Release
         uses: actions/create-release@v1
         id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ env.VERSION }}
           release_name: Release v${{ env.VERSION }}
@@ -69,8 +60,6 @@ jobs:
             Automatic release for version v${{ env.VERSION }}.
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Python Wheel to Release
         uses: actions/upload-release-asset@v1
@@ -96,8 +85,18 @@ jobs:
       #     asset_name: prescyent-${{ env.VERSION }}.tar
       #     asset_content_type: application/x-tar
 
+      # Test the workflow with testpypi here: (update environment to testpypi)
+      # - name: Publish package distributions to TestPyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     repository-url: https://test.pypi.org/legacy/
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
 
   pages:
+    # needs: create_release
     name: Build doc and publish it as github page
     runs-on: ubuntu-22.04
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
@@ -108,5 +107,5 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - id: deployment
-        uses: sphinx-notes/pages@v3
+    - id: deployment
+      uses: sphinx-notes/pages@v3
