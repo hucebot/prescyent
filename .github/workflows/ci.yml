@@ -48,6 +48,7 @@ jobs:
     outputs:
       output1: ${{ steps.bump_version.outputs.exitcode }}
     steps:
+      - uses: actions/checkout@v4
       - id: bump_version
         run: |
           set +e
@@ -59,5 +60,5 @@ jobs:
         with:
           author_name: alexisbiver
           author_email: biver.alexis@proton.me
-          message: '🔖 bump version number'
+          message: '🔖 autobump version number'
           add: 'prescyent/__init__.py'
