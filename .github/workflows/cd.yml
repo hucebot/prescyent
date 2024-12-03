@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.whl
+          asset_path: dist/*.whl
           asset_name: prescyent-${{ env.VERSION }}.whl
           asset_content_type: application/octet-stream
 
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.tar.gz
+          asset_path: dist/*.tar.gz
           asset_name: prescyent-${{ env.VERSION }}.tar.gz
           asset_content_type: application/gzip
 
