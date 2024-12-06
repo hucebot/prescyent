@@ -1,10 +1,11 @@
 """Module for trajectories classes"""
 import csv
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
-from scipy.spatial.transform import Rotation as ScipyRotation
 import torch
+from scipy.spatial.transform import Rotation as ScipyRotation
+from torch.serialization import MAP_LOCATION
 
 from prescyent.utils.dataset_manipulation import update_parent_ids
 from prescyent.utils.interpolate import update_tensor_frequency
@@ -321,3 +322,49 @@ class Trajectory:
         )
         subtraj.convert_tensor_features(features)
         return subtraj
+
+    @staticmethod
+    def from_pt(
+        pt_path: str,
+        frequency: float,
+        device: MAP_LOCATION = torch.device("cpu"),
+        tensor_features: Features = None,
+        context: Dict[str, torch.Tensor] = {},
+        point_parents: List[int] = None,
+        point_names: List[str] = None,
+    ) -> object:
+        """load a trajectory from a torch .pt file
+
+        Args:
+            pt_path (str): path of the saved tensor
+            frequency (float): frequency of the trajectory
+            device (MAP_LOCATION, optional): device where to load the tensor. Defaults to torch.device("cpu").
+            tensor_features (Features, optional): Description of the features of the tensor with corresponding ids. Defaults to None.
+            context (Dict[str, torch.Tensor], optional): Additionnal data about the trajectory.
+                    Allows some flexibility over the inputs and the way it will be passed to predictors
+                    The tensors must have the same frequency as the base tensor. Default's to None
+            point_parents (List[int], optional): List with the ids of the parent of each points, used to draw bones. -1 if no parent. Defaults to None.
+            point_names (List[str], optional): List of a label to give to each point. Defaults to None.
+
+        Returns:
+            Trajectory: _description_
+        """
+        tensor = torch.load(pt_path, map_location=device)
+        return Trajectory(
+            tensor,
+            frequency=frequency,
+            tensor_features=tensor_features,
+            context=context,
+            file_path=pt_path,
+            title="_".join((Path(pt_path).parts)),
+            point_parents=point_parents,
+            point_names=point_names,
+        )
+
+    def to_pt(self, pt_path: str):
+        """save the trajectory's tensor to .pt file
+
+        Args:
+            pt_path (str): path where to save the tensor
+        """
+        torch.save(self.tensor, pt_path)
