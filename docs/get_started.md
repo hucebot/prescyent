@@ -1,13 +1,13 @@
 
 # Get Started
 PreScyent is a trajectory forecasting library, built upon pytorch_lightning  
-It comes with datasets such as:
+It comes with [datasets](datasets.md) such as:
 - [AndyData-lab-onePerson](https://zenodo.org/records/3254403#.Y_9fwBeZMVk)  
 - [AndyData-lab-onePersonTeleoperatingICub](https://zenodo.org/record/5913573)  
 - [Human3.6M](http://vision.imar.ro/human3.6m/description.php)  
 - And synthetics dataset to test simple properties of our predictors.  
 
-It come also with baselines to run over theses datasets, referred in the code as Predictors, such as:
+It come also with baselines to run over theses datasets, referred in the code as [Predictors](predictors.md), such as:
 - [SiMLPe](https://arxiv.org/abs/2207.01567) a MultiLayer Perceptron (MLP) with Discrete Cosine Transform (DCT), shown as a strong baseline achieving SOTA results against bigger and more complicated models.  
 - [Seq2Seq](https://arxiv.org/abs/1409.3215), an architecture mapping an input sequence to an output sequence, that originated from NLP and grew in popularity for time series predictions. Here we implemented an RNN Encoder and RNN Decoder.  
 - Probabilistic Movement Primitives (ProMPs), an approach commonly used in robotics to model movements by learning from demonstrations and generating smooth, adaptable trajectories under uncertainty.  
@@ -22,8 +22,6 @@ It come also with baselines to run over theses datasets, referred in the code as
 - With **X** the points and features used as input​  
 - With **Y** the points and features produced as output​  
 We define **P** our predictor such as, at a given time step **T** we have:​  
-
-
 
 $P(X_{T-H}, \dots, X_T) = Y_{T+1}, \dots, Y_{T+F}$
 
@@ -123,7 +121,7 @@ For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [h
 ## Predictors
 The trajectory prediction methods are organized as Predictor classes.  
 For example, the MlpPredictor class is the implementation of a configurable MLP as a baseline for the task of Trajectory prediction.  
-Relying on the PytorchLightning Framework, it instantiates or load an existing torch Module, with a generic predictor wrapper for saving, loading, iterations over a sample and logging.  
+Relying on the PytorchLightning Framework, it instantiates or load an existing torch Module, with a generic predictor wrapper for saving, loading, iterations over a trajectory and logging.  
 Feel free to add some new predictor implementations following the example of this simple class, inheriting at least from the BasePredictor class.  
 
 ## Evaluator

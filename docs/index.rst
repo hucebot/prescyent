@@ -12,6 +12,8 @@ Welcome to PreScyent's documentation!
 
    get_started
    user_guide
+   datasets
+   predictors
    configuration_files
    references
 
