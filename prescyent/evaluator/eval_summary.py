@@ -11,11 +11,20 @@ class EvaluationSummary:
     """class to store a list of evaluation results, and summarize metrics"""
 
     results: List[EvaluationResult]
+    predictor_name: str
+    predicted_future: float
 
-    def __init__(self, results: List[EvaluationResult] = None) -> None:
+    def __init__(
+        self,
+        results: List[EvaluationResult] = None,
+        predictor_name: str = None,
+        predicted_future: float = None,
+    ) -> None:
         if results is None:
             results = []
         self.results = results
+        self.predictor_name = predictor_name
+        self.predicted_future = predicted_future
 
     @property
     def features(self):
@@ -29,11 +38,35 @@ class EvaluationSummary:
 
     def __str__(self) -> str:
         return (
-            f"\n- **Average Prediction Error**: {self.average_prediction_error}"
-            + f"\n- **Max Prediction Error**: {self.max_prediction_error}"
-            + f"\n- **Mean Real Time Factor (process time for one second)**: {self.mean_rtf:.6f}"
-            + f"\n- **Max Real Time Factor (process time for one second)**: {self.max_rtf:.6f}"
+            f"\n- **Result Metrics over test set for {self.predictor_name} prediction at {self.predicted_future}s **: "
+            + f"\n\t- **Average Prediction Error**: {self.average_prediction_error}"
+            + f"\n\t- **Max Prediction Error**: {self.max_prediction_error}"
+            + f"\n\t- **Mean Real Time Factor (process time for one second)**: {self.mean_rtf:.6f}"
+            + f"\n\t- **Max Real Time Factor (process time for one second)**: {self.max_rtf:.6f}"
         )
+
+    @property
+    def headers(self) -> List[str]:
+        headers = ["Predictor"]
+        for feat in self.features:
+            headers.append(
+                f"Average {feat.name} error [{feat.distance_unit}] at {self.predicted_future}s"
+            )
+            headers.append(
+                f"Max {feat.name} error [{feat.distance_unit}] at {self.predicted_future}s"
+            )
+        headers.append("Mean RTF")
+        headers.append("Max RTF")
+        return headers
+
+    def as_array(self) -> List[str]:
+        result_array = [self.predictor_name]
+        for feat in self.features:
+            result_array.append(str(self.average_prediction_error[feat.name]))
+            result_array.append(str(self.max_prediction_error[feat.name]))
+        result_array.append(f"{self.mean_rtf:.6f}")
+        result_array.append(f"{self.max_rtf:.6f}")
+        return result_array
 
     @property
     def average_prediction_error(self) -> Dict[str, float]:

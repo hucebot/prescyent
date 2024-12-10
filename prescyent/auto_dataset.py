@@ -57,12 +57,12 @@ class AutoDataset:
         Returns:
             Dict[str, Any]: the config data
         """
-
+        # try to load a dataset_config.json
         if config_path.is_dir():
-            dir_path = config_path
             config_path = config_path / "dataset_config.json"
+        # else try to load a config.json and retrieve dataset config of the predictor
         if not config_path.exists():
-            config_path = dir_path / "config.json"
+            config_path = config_path.parent / "config.json"
             if not config_path.exists():
                 raise FileNotFoundError(f"No file or directory at {config_path}")
         try:

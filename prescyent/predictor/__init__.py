@@ -26,8 +26,9 @@ from prescyent.predictor.lightning.models.autoreg.sarlstm import (
     SARLSTMConfig,
     SARLSTMPredictor,
 )
-
+from prescyent.predictor.promp import PrompConfig, PrompPredictor
 from prescyent.utils.logger import logger, PREDICTOR
+
 
 # No more experimental predictor for now, kept logic for later use
 # try:

@@ -145,7 +145,7 @@ Then run the script `dataset_preprocessing/andydataset_to_hdf5.py` to generate t
 ## Predictors
 The trajectory prediction methods are organized as Predictor classes.  
 For example, the MlpPredictor class is the implementation of a configurable MLP as a baseline for the task of Trajectory prediction.  
-Relying on the PytorchLightning Framework, it instantiates or load an existing torch Module, with a generic predictor wrapper for saving, loading, iterations over a sample and logging.  
+Relying on the PytorchLightning Framework, it instantiates or load an existing torch Module, with a generic predictor wrapper for saving, loading, iterations over a trajectory and logging.  
 Feel free to add some new predictor implementations following the example of this simple class, inheriting at least from the BasePredictor class.  
 
 ## Evaluator

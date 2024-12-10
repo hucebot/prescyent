@@ -25,6 +25,7 @@ if __name__ == "__main__":
     points_ids = [1, 2]  # ids of the left and right hands
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
+        hdf5_path="data/datasets/AndyData-lab-prescientTeleopICub.hdf5",
         context_keys=[
             "center_of_mass"
         ],  # Using center of mass of the robot as additional context input
@@ -34,7 +35,7 @@ if __name__ == "__main__":
         learning_type=LearningTypes.SEQ2SEQ,
         history_size=history_size,
         future_size=future_size,
-        frequency=frequency,  # subsampling default -> 100 Hz to 24Hz
+        frequency=frequency,  # subsample -> 100 Hz to 24Hz
         batch_size=batch_size,
         in_features=features,  # we have x,y,z coordinates for each points as input (this is also the default value)
         out_features=features,  # we have x,y,z coordinates for each points as output (this is also the default value)
@@ -65,14 +66,14 @@ if __name__ == "__main__":
 
     # Train
     training_config = TrainingConfig(
-        max_epochs=200,  # Maximum number of trainin epochs
-        devices="auto",  # Chose the best avaible devices (see lightning documentation for more)
-        accelerator="auto",  # Chose the best avaible accelerator (see lightning documentation for more)
+        max_epochs=200,  # Maximum number of training epochs
+        devices="auto",  # Chose the best available devices (see lightning documentation for more)
+        accelerator="auto",  # Chose the best available accelerator (see lightning documentation for more)
         lr=0.0001,  # The learning rate
         early_stopping_patience=10,  # We'll stop the training before max_epochs if the validation loss doesn't improve for 10 epochs
     )
 
-    # Scaler is also trained by the rpedictor's method !
+    # Scaler is also trained by the predictor's method !
     predictor.train(dataset, training_config)
 
     # Save the predictor

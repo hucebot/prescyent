@@ -112,7 +112,10 @@ def eval_predictors(
 
     if future_size is None:
         future_size = dataset_config.future_size
-    evaluation_results = [EvaluationSummary() for _ in predictors]
+    evaluation_results = [
+        EvaluationSummary([], str(p), future_size / trajectories[0].frequency)
+        for p in predictors
+    ]
     logger.getChild(EVAL).info(
         f"Running evaluation for {len(predictors)} predictors"
         f" on {len(trajectories)} trajectories",
@@ -150,6 +153,7 @@ def eval_predictors(
                     prediction,
                     elapsed / trajectory.duration,
                     dataset_config.out_features,
+                    traj_name=trajectory.title,
                 )
             )
             # we plot a file per (predictor, trajectory) pair

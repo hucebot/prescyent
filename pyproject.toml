@@ -36,7 +36,8 @@ dependencies = [
 
 
 [project.urls]
-Homepage = "https://github.com/hucebot/prescyent"
+Documentation = "https://hucebot.github.io/prescyent/"
+Repository = "https://github.com/hucebot/prescyent"
 Issues = "https://github.com/hucebot/prescyent/issues"
 
 [tool.setuptools.packages.find]

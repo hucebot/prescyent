@@ -31,7 +31,7 @@ class TeleopIcubDataset(TrajectoriesDataset):
 
     DATASET_NAME = "TeleopIcub"
 
-    def __init__(self, config=TeleopIcubDatasetConfig()) -> None:
+    def __init__(self, config) -> None:
         self._init_from_config(config, TeleopIcubDatasetConfig)
         super().__init__(name=self.DATASET_NAME)
 

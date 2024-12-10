@@ -17,6 +17,7 @@ from prescyent.dataset.features import (
 from prescyent.utils.enums import LearningTypes
 
 
+DEFAULT_DATA_PATH = "data/datasets/h36m.hdf5"
 NO_DATA_WARNING = "H36MArm dataset is not installed, please refer to the README if you intend to use it"
 
 
@@ -24,7 +25,9 @@ class InitH36MArmDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = H36MArmDataset(
-                H36MArmDatasetConfig(save_samples_on_disk=False),
+                H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH, save_samples_on_disk=False
+                ),
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -34,6 +37,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -48,6 +52,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -65,6 +70,7 @@ class InitH36MArmDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -86,6 +92,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -124,6 +131,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -148,6 +156,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -171,6 +180,7 @@ class H36MArmRotationsDatasetTest(CustomTestCase):
         try:
             dataset = H36MArmDataset(
                 H36MArmDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],

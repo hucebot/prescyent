@@ -1,10 +1,9 @@
 """Config elements for TeleopIcub dataset usage"""
-import os
 from typing import List, Optional
 
 from pydantic import field_validator
 
-from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
@@ -12,9 +11,7 @@ from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 class TeleopIcubDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for TeleopIcubDataset configuration"""
 
-    hdf5_path: str = os.path.join(
-        DEFAULT_DATA_PATH, "AndyData-lab-prescientTeleopICub.hdf5"
-    )
+    hdf5_path: str
     """Path to the hdf5 data file"""
     subsets: Optional[List[str]] = None
     """Pattern used to find the list of files using a rglob method"""

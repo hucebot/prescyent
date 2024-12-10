@@ -10,10 +10,6 @@ from prescyent.base_config import BaseConfig
 from prescyent.utils.enums import LearningTypes
 
 
-root_dir = Path(__file__).parent.parent.parent
-DEFAULT_DATA_PATH = str(root_dir / "data" / "datasets")
-
-
 class TrajectoriesDatasetConfig(BaseConfig):
     """Pydantic Basemodel for TrajectoriesDatasets configuration"""
 

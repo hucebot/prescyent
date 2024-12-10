@@ -16,6 +16,7 @@ class EvaluationResult:
     truth: torch.Tensor
     pred: torch.Tensor
     features: Features
+    traj_name: str
 
     def __init__(
         self,
@@ -23,11 +24,13 @@ class EvaluationResult:
         pred: torch.Tensor,
         rtf: float,
         features: Features,
+        traj_name: str,
     ) -> None:
         self.rtf = rtf
         self.truth = truth
         self.pred = pred
         self.features = features
+        self.traj_name = traj_name
 
     @property
     def prediction_error(self) -> Dict[str, torch.Tensor]:

@@ -11,6 +11,7 @@ from prescyent.dataset.features import CoordinateX, Features, RotationRotMat
 from prescyent.utils.enums import LearningTypes
 
 
+DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson.hdf5"
 NO_DATA_WARNING = "Data for AndyDataset are not installed or found, please refer to the README if you intend to use it"
 
 
@@ -18,7 +19,9 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(save_samples_on_disk=False),
+                AndyDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH, save_samples_on_disk=False
+                ),
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -28,7 +31,9 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
-                    learning_type=LearningTypes.SEQ2SEQ, participants=["909"]
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    learning_type=LearningTypes.SEQ2SEQ,
+                    participants=["909"],
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -39,7 +44,9 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
-                    learning_type=LearningTypes.AUTOREG, participants=["909"]
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    learning_type=LearningTypes.AUTOREG,
+                    participants=["909"],
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -55,7 +62,9 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
-                    learning_type=LearningTypes.SEQ2ONE, participants=["909"]
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    learning_type=LearningTypes.SEQ2ONE,
+                    participants=["909"],
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -69,6 +78,7 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 AndyDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     in_features=Features([RotationRotMat(range(9))]),
                     out_features=Features([CoordinateX([0])]),
                     participants=["909"],
@@ -90,7 +100,7 @@ class InitAndyDatasetTest(CustomTestCase):
     def test_load_from_path(self):
         try:
             dataset = AndyDataset(
-                AndyDatasetConfig(participants=["909"]),
+                AndyDatasetConfig(hdf5_path=DEFAULT_DATA_PATH, participants=["909"]),
             )
             dataset.save_config("tmp/test.json")
             _ = dataset._load_config("tmp/test.json")
@@ -105,6 +115,7 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             dataset = AndyDataset(
                 config=AndyDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     context_keys=["centerOfMass"],
                     participants=["909"],
                 ),
@@ -134,6 +145,7 @@ class InitAndyDatasetTest(CustomTestCase):
         try:
             with self.assertRaises(ValidationError):
                 AndyDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     context_keys=["bad_key", "centerOfMass"],
                 )
         except FileNotFoundError:
