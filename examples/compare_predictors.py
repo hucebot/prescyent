@@ -55,11 +55,29 @@ def dump_eval_summary_list(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('dataset_config', help="Path to the config of the dataset (or to the predictor with the dataset_config you want to load)")
-    parser.add_argument('predictors_folder', help="Path where all found predictors will be loaded and compared")
-    parser.add_argument('--delayed_baseline', action='store_true', help="if true add the delayed_baseline to the tested predictors")
-    parser.add_argument('--constant_baseline', action='store_true', help="if true add the constant_baseline to the tested predictors")
-    parser.add_argument('--constant_derivative_baseline', action='store_true', help="if true add the constant_derivative_baseline to the tested predictors")
+    parser.add_argument(
+        "dataset_config",
+        help="Path to the config of the dataset (or to the predictor with the dataset_config you want to load)",
+    )
+    parser.add_argument(
+        "predictors_folder",
+        help="Path where all found predictors will be loaded and compared",
+    )
+    parser.add_argument(
+        "--delayed_baseline",
+        action="store_true",
+        help="if true add the delayed_baseline to the tested predictors",
+    )
+    parser.add_argument(
+        "--constant_baseline",
+        action="store_true",
+        help="if true add the constant_baseline to the tested predictors",
+    )
+    parser.add_argument(
+        "--constant_derivative_baseline",
+        action="store_true",
+        help="if true add the constant_derivative_baseline to the tested predictors",
+    )
 
     args = parser.parse_args()
 

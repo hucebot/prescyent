@@ -37,7 +37,7 @@ class AndyDataset(TrajectoriesDataset):
 
     def __init__(
         self,
-        config: Union[Dict, AndyDatasetConfig, str, Path] = None,
+        config: Union[Dict, AndyDatasetConfig, str, Path],
     ) -> None:
         self._init_from_config(config, AndyDatasetConfig)
         super().__init__(name=self.DATASET_NAME)

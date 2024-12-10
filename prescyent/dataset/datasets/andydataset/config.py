@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import field_validator, ValidationError
 
-from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 
@@ -12,7 +12,7 @@ from .metadata import DEFAULT_FEATURES, POINT_LABELS, CONTEXT_KEYS
 class AndyDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for AndyDataset configuration"""
 
-    hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "AndyData-lab-onePerson.hdf5")
+    hdf5_path: str
     """Path to the hdf5 data file"""
     shuffle_data_files: bool = True
     participants: List[str] = []

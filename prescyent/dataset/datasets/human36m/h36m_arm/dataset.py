@@ -16,9 +16,7 @@ class H36MArmDataset(H36MDataset):
 
     DATASET_NAME = "H36MArm"
 
-    def __init__(self, config: Union[Dict, H36MArmDatasetConfig] = None) -> None:
-        if config is None:
-            config = H36MArmDatasetConfig()
+    def __init__(self, config: Union[Dict, H36MArmDatasetConfig]) -> None:
         super().__init__(config=config, config_class=H36MArmDatasetConfig)
 
     def prepare_data(self):

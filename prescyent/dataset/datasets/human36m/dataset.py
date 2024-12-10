@@ -30,7 +30,7 @@ class H36MDataset(TrajectoriesDataset):
 
     def __init__(
         self,
-        config: Union[Dict, H36MDatasetConfig] = None,
+        config: Union[Dict, H36MDatasetConfig, str, Path],
         config_class=H36MDatasetConfig,
     ) -> None:
         self._init_from_config(config, config_class)

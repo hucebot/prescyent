@@ -8,6 +8,7 @@ from prescyent.dataset import H36MDataset, H36MDatasetConfig
 from prescyent.utils.enums import LearningTypes
 
 
+DEFAULT_DATA_PATH = "data/datasets/h36m.hdf5"
 NO_DATA_WARNING = (
     "H36M dataset is not installed, please refer to the README if you intend to use it"
 )
@@ -17,7 +18,9 @@ class InitH36MDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
             dataset = H36MDataset(
-                H36MDatasetConfig(save_samples_on_disk=False),
+                H36MDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH, save_samples_on_disk=False
+                ),
             )
             self.assertGreater(len(dataset), 0)
         except FileNotFoundError:
@@ -27,6 +30,7 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -41,6 +45,7 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -60,6 +65,7 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             dataset = H36MDataset(
                 H36MDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subjects_train=[],
                     subjects_val=[],
                     actions=["directions"],
@@ -77,6 +83,7 @@ class InitH36MDatasetTest(CustomTestCase):
         try:
             with self.assertRaises(ValidationError):
                 H36MDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     context_keys=["any_key"],
                 )
         except FileNotFoundError:

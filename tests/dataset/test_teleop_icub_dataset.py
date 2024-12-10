@@ -10,13 +10,16 @@ from prescyent.dataset.features import CoordinateXY, Features
 from prescyent.utils.enums import LearningTypes
 
 
+DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"
 NO_DATA_WARNING = "TeleopIcub dataset is not installed, please refer to the README if you intend to use it"
 
 
 class InitTeleopIcubDatasetTest(CustomTestCase):
     def test_load_default(self):
         try:
-            dataset = TeleopIcubDataset()
+            dataset = TeleopIcubDataset(
+                TeleopIcubDatasetConfig(hdf5_path=DEFAULT_DATA_PATH)
+            )
             self.assertGreater(len(dataset), 0)
             sample, context, truth = dataset.test_datasample[0]
             self.assertEqual(context, {})
@@ -33,7 +36,9 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 TeleopIcubDatasetConfig(
-                    subsets=["BottleTable"], learning_type=LearningTypes.SEQ2SEQ
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    subsets=["BottleTable"],
+                    learning_type=LearningTypes.SEQ2SEQ,
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -44,7 +49,9 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 TeleopIcubDatasetConfig(
-                    subsets=["BottleTable"], learning_type=LearningTypes.AUTOREG
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    subsets=["BottleTable"],
+                    learning_type=LearningTypes.AUTOREG,
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -60,7 +67,9 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 TeleopIcubDatasetConfig(
-                    subsets=["BottleTable"], learning_type=LearningTypes.SEQ2ONE
+                    hdf5_path=DEFAULT_DATA_PATH,
+                    subsets=["BottleTable"],
+                    learning_type=LearningTypes.SEQ2ONE,
                 ),
             )
             self.assertGreater(len(dataset), 0)
@@ -74,6 +83,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 TeleopIcubDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subsets=["BottleTable"],
                     out_features=Features([CoordinateXY(range(2))]),
                 ),
@@ -93,20 +103,28 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
 
     def test_impossible_configs(self):
         try:
-            config = TeleopIcubDatasetConfig(future_size=200)
+            config = TeleopIcubDatasetConfig(
+                hdf5_path=DEFAULT_DATA_PATH, future_size=200
+            )
             dataset = TeleopIcubDataset(config)
             self.assertRaises(ValueError, dataset.setup)
-            config = TeleopIcubDatasetConfig(future_size=100, history_size=100)
+            config = TeleopIcubDatasetConfig(
+                hdf5_path=DEFAULT_DATA_PATH, future_size=100, history_size=100
+            )
             dataset = TeleopIcubDataset(config)
             self.assertRaises(ValueError, dataset.setup)
-            config = TeleopIcubDatasetConfig(history_size=100)
+            config = TeleopIcubDatasetConfig(
+                hdf5_path=DEFAULT_DATA_PATH, history_size=100
+            )
             TeleopIcubDataset(config)  # this is ok
         except FileNotFoundError:
             warnings.warn(NO_DATA_WARNING)
 
     def test_load_from_path(self):
         try:
-            dataset = TeleopIcubDataset()
+            dataset = TeleopIcubDataset(
+                config=TeleopIcubDatasetConfig(hdf5_path=DEFAULT_DATA_PATH)
+            )
             dataset.save_config("tmp/test.json")
             _ = dataset._load_config("tmp/test.json")
             TeleopIcubDataset(
@@ -120,6 +138,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             dataset = TeleopIcubDataset(
                 config=TeleopIcubDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     subsets=["BottleTable"],
                     context_keys=["center_of_mass", "icub_dof"],
                 ),
@@ -150,6 +169,7 @@ class InitTeleopIcubDatasetTest(CustomTestCase):
         try:
             with self.assertRaises(ValidationError):
                 TeleopIcubDatasetConfig(
+                    hdf5_path=DEFAULT_DATA_PATH,
                     context_keys=["bad_key", "icub_dof"],
                 )
         except FileNotFoundError:

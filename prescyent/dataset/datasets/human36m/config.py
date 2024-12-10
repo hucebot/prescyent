@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import field_validator
 
-from prescyent.dataset.config import DEFAULT_DATA_PATH, TrajectoriesDatasetConfig
+from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Features
 from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 
@@ -12,7 +12,7 @@ from .metadata import DEFAULT_ACTIONS, DEFAULT_FEATURES, DEFAULT_USED_JOINTS
 class H36MDatasetConfig(TrajectoriesDatasetConfig):
     """Pydantic Basemodel for Dataset configuration"""
 
-    hdf5_path: str = os.path.join(DEFAULT_DATA_PATH, "h36m.hdf5")
+    hdf5_path: str
     """Path to the hdf5 data file"""
     actions: List[str] = DEFAULT_ACTIONS
     """List of the H36M Actions to consider"""
