@@ -4,7 +4,7 @@ from prescyent.dataset.features.feature_manipulation import cal_distance_for_fea
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
 
 
-class MeanFinalRigidDistanceLoss(torch.nn.modules.loss._Loss):
+class MeanFinalDistanceLoss(torch.nn.modules.loss._Loss):
     """Get feature wise distance foreach point of last frame as a torch loss class."""
 
     def __init__(
@@ -14,9 +14,7 @@ class MeanFinalRigidDistanceLoss(torch.nn.modules.loss._Loss):
         reduce=None,
         reduction: str = "mean",
     ) -> None:
-        super(MeanFinalRigidDistanceLoss, self).__init__(
-            size_average, reduce, reduction
-        )
+        super(MeanFinalDistanceLoss, self).__init__(size_average, reduce, reduction)
         self.out_features = config.dataset_config.out_features
 
     def forward(self, input_tensor: torch.Tensor, target: torch.Tensor) -> torch.Tensor:

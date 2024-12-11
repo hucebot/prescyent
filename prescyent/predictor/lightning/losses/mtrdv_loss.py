@@ -3,10 +3,10 @@ import torch
 
 from prescyent.dataset.features.feature_relative import get_relative_tensor_from
 from prescyent.predictor.lightning.configs.module_config import ModuleConfig
-from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalRigidDistanceLoss
+from prescyent.predictor.lightning.losses.mtrd_loss import MeanTotalDistanceLoss
 
 
-class MeanTotalRigidDistanceAndVelocityLoss(MeanTotalRigidDistanceLoss):
+class MeanTotalDistanceAndVelocityLoss(MeanTotalDistanceLoss):
     """Get feature wise distance foreach point as a torch loss class mixed with feature's velocity"""
 
     def __init__(
@@ -16,7 +16,7 @@ class MeanTotalRigidDistanceAndVelocityLoss(MeanTotalRigidDistanceLoss):
         reduce=None,
         reduction: str = "mean",
     ) -> None:
-        super(MeanTotalRigidDistanceAndVelocityLoss, self).__init__(
+        super(MeanTotalDistanceAndVelocityLoss, self).__init__(
             config, size_average, reduce, reduction
         )
 

@@ -1,4 +1,4 @@
-"""Use this script to train variations of your models"""
+"""Use this script generate and train variations of predictors"""
 
 import argparse
 import glob
@@ -16,11 +16,22 @@ from prescyent.utils.enums import (
 
 from examples.train_from_config import train_from_config
 
-
+# Some constants you can override
 DEFAULT_CONFIG_DIR = Path("data") / "configs"
 FREQUENCY = 24
 HISTORY_SIZE = 24
 FUTURE_SIZE = 12
+
+# Here the VARIATION dict is used to generate variations of a config file,
+# used to train a new predictor from a dataset
+# VARIATIONS' keys are generated the configuration key,
+# VARIATIONS' values is an array of possible value for this config key
+# We then generate a json file for each possible combination of values
+# (this scales fast, you can check the number of generated json in terminal or config dir)
+
+# Bellow is an example of variations to train the default architecture of each of our ML Predictors
+# With a Scaler performing Standardization of the data,
+# over the TeleopIcubDataset BottleTable subset, at 24Hz with H=24 and F=12
 VARIATIONS = {
     "training_config.number_of_repetition": range(1),
     # SCALER
@@ -38,11 +49,11 @@ VARIATIONS = {
         "SARLSTMPredictor",  # Warning ! Can't be used in all conditions
     ],
     "model_config.loss_fn": [
-        LossFunctions.MTRDLOSS,
+        LossFunctions.MTDLOSS,
     ],
     "model_config.deriv_on_last_frame": [
         False
-    ],  # Warning ! Canno't be used in all conditions
+    ],  # Warning ! Cannot be used in all conditions
     # ...
     # TRAINING
     "training_config.max_epochs": [200],
@@ -55,6 +66,7 @@ VARIATIONS = {
     "dataset_config.history_size": [HISTORY_SIZE],
     "dataset_config.future_size": [FUTURE_SIZE],
     "dataset_config.name": ["TeleopIcub"],
+    "dataset_config.hdf5_path": ["data/datasets/AndyData-lab-prescientTeleopICub.hdf5"],
     "dataset_config.subsets": [["BottleTable"]],
     "dataset_config.batch_size": [256],
 }
@@ -137,7 +149,3 @@ if __name__ == "__main__":
         print(f"Training {i} starting...")
         train_from_config(config_path, rm_config=True, exp_path=exp_path)
         print(f"Training {i} ended.")
-
-    # want lightning trainer to use multiple devices for one training
-    # and it added unnecessary confusing behavior
-    # For parallel training, you can call this script multiple times with different config_dir

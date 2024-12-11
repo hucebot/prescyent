@@ -157,7 +157,7 @@ gradient_clip_algorithm: null
 gradient_clip_val: null
 hidden_size: 128
 log_every_n_steps: 1
-loss_fn: MTRDLOSS
+loss_fn: MTDLOSS
 lr: 0.0001
 max_epochs: 100
 max_lr: 0.01
