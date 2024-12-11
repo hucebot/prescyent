@@ -443,6 +443,7 @@ class TrajectoriesDataset(LightningDataModule):
         """getter for trajectories allowing to init this value when needed if it wasn"t"""
         if not hasattr(self, "_trajectories"):
             self.prepare_data()
+            self.update_trajectories_frequency(self.config.frequency)
         return self._trajectories
 
     @trajectories.setter
