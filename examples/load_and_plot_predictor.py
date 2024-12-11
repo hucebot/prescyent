@@ -1,6 +1,7 @@
-# Script to run evaluation over a predictor loaded from a path.
-# Evaluation is performed on the test set of the dataset used to train the predictor
-# We load everything from the predictor's config path.
+"""Script to run evaluation over a predictor loaded from a path.
+Evaluation is performed on the test set of the dataset used to train the predictor
+We load everything from the predictor's config path."""
+
 from argparse import ArgumentParser
 from pathlib import Path
 

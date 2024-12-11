@@ -1,4 +1,5 @@
-"""use this script to compare multiple predictors over the same trajectories, plot and save the results"""
+"""use this script to compare multiple predictors over the same trajectories,
+   plot and save the results"""
 
 from argparse import ArgumentParser
 from pathlib import Path
@@ -38,7 +39,7 @@ def dump_eval_summary_list(
         csv_file.write(",".join(headers) + "\n")
         for eval_summary in eval_summaries:
             csv_file.write(",".join(eval_summary.as_array()) + "\n")
-        print(f"Saved Evaluation Summary here: {csv_file}")
+        print(f"Saved Evaluation Summary here: {dump_dir / 'eval_summary.csv'}")
     if dump_prediction:
         for traj_id, _ in enumerate(eval_summaries[0].results):
             traj_dir = dump_dir / eval_summaries[0].results[traj_id].traj_name
@@ -120,17 +121,19 @@ if __name__ == "__main__":
     # use this huge method that runs each predictor over the passed trajectories
     # and save each result as EvaluationResult into EvaluationSummary for each predictor.
     # there are options to change future size and to plot each result
-    eval_summaries = eval_predictors(
+    eval_folder = predictors_folder / "evaluation"
+    eval_summary_list = eval_predictors(
         predictors=predictor_list,
         trajectories=dataset.trajectories.test,
         dataset_config=dataset.config,
         future_size=None,  # will default to the future size in dataset_config
         run_method="step_every_timestamp",  # we run the predictor at each frame and retain the last predicted frame to create the predicted trajectory
         do_plotting=True,  # you may want to disable theses or update the plotting function used as it is mainly made for low dim features (like Coordinates) and not too many points to plot
-        saveplot_dir_path=predictors_folder / "plots",
+        saveplot_dir_path=eval_folder / "plots",
     )
 
     # use our function to save the multiple EvalSummaries
     dump_eval_summary_list(
-        eval_summaries, dump_dir=predictors_folder / "plots", dump_prediction=True
+        eval_summary_list, dump_dir=eval_folder, dump_prediction=True
     )
+    print(f"Find evaluation summary and plots in:\n\t{eval_folder}")

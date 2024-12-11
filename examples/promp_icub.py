@@ -1,5 +1,9 @@
-# this example shows how to learn a set of ProMPs (Probabilistic Motion Primitives)
-#  on the TeleopIcubDataset
+"""this example shows how to learn a set of ProMPs (Probabilistic Motion Primitives)
+on the TeleopIcubDataset
+You need to download and preprocess the TeleopIcubDataset beforehand
+Please check the README or Doc to do so.
+"""
+from argparse import ArgumentParser
 from tqdm import tqdm
 import torch
 import numpy as np
@@ -11,7 +15,19 @@ from prescyent.dataset.features import CoordinateXYZ
 import matplotlib.pyplot as plt
 
 
+DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"
+
+
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--hdf5_path",
+        default=DEFAULT_HDF5_PATH,
+        help="filepath to the hdf5 of the TeleopIcub dataset",
+    )
+    args = parser.parse_args()
+    hdf5_path = args.hdf5_path
+
     print("Initializing dataset...", end=" ")
     frequency: int = 10  # subsampling -> 100 Hz to 10Hz
     history_size = 10  # 1 second
@@ -20,6 +36,7 @@ if __name__ == "__main__":
     features = CoordinateXYZ(range(3))
     batch_size = 256
     dataset_config = TeleopIcubDatasetConfig(
+        hdf5_path=hdf5_path,
         history_size=history_size,  # not used
         future_size=future_size,  # not used
         frequency=frequency,
