@@ -18,7 +18,7 @@ from prescyent.utils.enums import LearningTypes
 
 
 DEFAULT_DATA_PATH = "data/datasets/h36m.hdf5"
-NO_DATA_WARNING = "H36MArm dataset is not installed, please refer to the README if you intend to use it"
+NO_DATA_WARNING = "H36MArm dataset are not installed or found at default path, please refer to the README if you intend to use it, or move the hdf5_file to default path to test it"
 
 
 class InitH36MArmDatasetTest(CustomTestCase):

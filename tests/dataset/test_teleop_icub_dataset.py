@@ -11,7 +11,7 @@ from prescyent.utils.enums import LearningTypes
 
 
 DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"
-NO_DATA_WARNING = "TeleopIcub dataset is not installed, please refer to the README if you intend to use it"
+NO_DATA_WARNING = "TeleopIcub dataset is not installed or found at default path, please refer to the README if you intend to use it, or move the hdf5_file to default path to test it"
 
 
 class InitTeleopIcubDatasetTest(CustomTestCase):

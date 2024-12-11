@@ -48,7 +48,9 @@ class AndyDataset(TrajectoriesDataset):
             return
         if not Path(self.config.hdf5_path).exists():
             raise FileNotFoundError(
-                "Dataset file not found at %s" % self.config.hdf5_path
+                'Dataset file not found at "%s", please make sure a valid path '
+                "is set in the dataset's config `hdf5_path` attribute"
+                % self.config.hdf5_path
             )
         self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
