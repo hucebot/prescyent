@@ -498,6 +498,8 @@ class BasePredictor:
         Returns:
             Tuple[Trajectory, int]: Predicted Trajectory and the offset between the input traj and predicted traj to perform some evaluation
         """
+        if future_size is None:
+            future_size = self.config.dataset_config.future_size
         list_pred_tensor = self.run(
             input_tensor=traj.tensor,
             future_size=future_size,
@@ -509,7 +511,7 @@ class BasePredictor:
         pred_tensor = cat_list_with_seq_idx(list_pred_tensor, -1)
         offset = (
             self.config.dataset_config.history_size
-            + self.config.dataset_config.future_size
+            + future_size
             - 1
         )
         pred_traj = Trajectory(

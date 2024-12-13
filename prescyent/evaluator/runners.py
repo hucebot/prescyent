@@ -11,7 +11,7 @@ from prescyent.dataset.config import TrajectoriesDatasetConfig
 from prescyent.evaluator.eval_result import EvaluationResult
 from prescyent.evaluator.eval_summary import EvaluationSummary
 
-from prescyent.evaluator.plotting import plot_trajectory_prediction
+from prescyent.evaluator.plotting import plot_prediction_feature_wise
 from prescyent.utils.logger import logger, EVAL
 from prescyent.utils.tensor_manipulation import cat_list_with_seq_idx
 
@@ -145,11 +145,10 @@ def eval_predictors(
                 dataset_config.out_points, dataset_config.out_features
             )
             # we generate new evaluation results with the task metrics
+            offset = dataset_config.history_size + dataset_config.future_size - 1
             evaluation_results[p].results.append(
                 EvaluationResult(
-                    truth_traj.tensor[
-                        dataset_config.history_size + dataset_config.future_size - 1 :
-                    ],
+                    truth_traj.tensor[offset:],
                     prediction,
                     elapsed / trajectory.duration,
                     dataset_config.out_features,
@@ -162,14 +161,8 @@ def eval_predictors(
                     Path(saveplot_dir_path) / (saveplot_pattern % (t, predictor))
                 )
                 trajectory.convert_tensor_features(dataset_config.out_features)
-                plot_trajectory_prediction(
-                    truth_traj,
-                    truth_traj.tensor[
-                        dataset_config.history_size + dataset_config.future_size - 1 :
-                    ],
-                    prediction,
-                    overprediction=dataset_config.future_size,
-                    savefig_path=savefig_path,
+                plot_prediction_feature_wise(
+                    truth_traj, prediction, offset=offset, savefig_path=savefig_path
                 )
             predictions.append(prediction)
     for p, predictor in enumerate(predictors):

@@ -132,7 +132,7 @@ class SCCDataset(TrajectoriesDataset):
         )
         return tensor
 
-    def plot_trajs(
+    def plot_trajectories_dim_wise(
         self,
         list_trajs: List[Trajectory],
         title="SCC Trajectories",
