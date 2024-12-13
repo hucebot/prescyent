@@ -146,7 +146,7 @@ You may want all of your custom torch.nn.Module to inherit from this TorchModule
 
 ### LossFunctions
 
-We implemented here some custom loss functions, such as MeanTotalRigidDistanceLoss (and its variations), making use of our Feature objects, calculating the mean feature.distance over each predicted time frame of each predicted point.  
+We implemented here some custom loss functions, such as MeanTotalDistanceLoss (and its variations), making use of our Feature objects, calculating the mean feature.distance over each predicted time frame of each predicted point.  
 Feel free to add your own loss functions here also and make it available to the PredictorConfig through a new valid option in the enum's in `prescyent/utils/enums/loss_functions.py and to the predictors in the CRITERION_MAPPING in `prescyent/predictor/lightning/module.py`.  
 
 
