@@ -132,11 +132,7 @@ class HDF5TrajectoryDataSamples:
             out_tensor = convert_tensor_features_to(
                 out_tensor, traj.tensor_features, self.config.out_features
             )
-            for j in tqdm(
-                range(len(traj) - frames_per_pair + 1),
-                desc="Iterating over frames",
-                colour="green",
-            ):
+            for j in range(len(traj) - frames_per_pair + 1):
                 samples[i] = in_tensor[j : j + self.config.history_size]
                 for c_key in self.config.context_keys:
                     context[c_key][i] = traj.context[c_key][
