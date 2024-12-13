@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from prescyent.auto_predictor import AutoPredictor
 from prescyent.auto_dataset import AutoDataset
-from prescyent.evaluator.plotting import plot_trajs, plot_mpjpe
+from prescyent.evaluator.plotting import plot_trajectories_dim_wise, plot_mpjpe
 
 
 if __name__ == "__main__":
@@ -86,12 +86,12 @@ if __name__ == "__main__":
         )
         title = f"{predictor}_over_{truth_traj.title}"
         # plot prediction along truth and delayed truth
-        plot_trajs(
+        plot_trajectories_dim_wise(
             [truth_traj, predicted_traj, truth_traj],
             offsets=[0, offset, future_size],
             title=title,
             savefig_path=path / f"test_plots/{title}.pdf",
-            legend_labels=[
+            trajectory_labels=[
                 "Truth",
                 predictor,
                 f"Delayed ({future_size/truth_traj.frequency}s)",

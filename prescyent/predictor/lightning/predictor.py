@@ -5,7 +5,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import pytorch_lightning as pl
 import torch
@@ -107,9 +107,10 @@ class LightningPredictor(BasePredictor):
             model_dir = Path(model_dir)
         # ensure we have the folder and not the file
         model_dir = model_dir if model_dir.is_dir() else model_dir.parent
-        config = cls._load_config(model_dir / "config.json")
+        config, training_config = cls._load_config(model_dir / "config.json")
         predictor = cls(config, skip_build=True)
         predictor.model = predictor._load_from_path(model_dir, device)
+        predictor._init_training_config(training_config)
         # Load scaler if any
         if config.scaler_config:
             try:
@@ -121,7 +122,7 @@ class LightningPredictor(BasePredictor):
         return predictor
 
     @classmethod
-    def _load_config(cls, config_path: Path) -> ModuleConfig:
+    def _load_config(cls, config_path: Path) -> Tuple[ModuleConfig]:
         """load the specific config class of a predictor from a json file
 
         Args:
@@ -131,14 +132,16 @@ class LightningPredictor(BasePredictor):
             FileNotFoundError: config file not found
 
         Returns:
-            ModuleConfig: isntance of a predictor config
+            Tuple[ModuleConfig, TrainingConfig]: isntance of a predictor config
         """
         if not config_path.exists():
             raise FileNotFoundError(f"No file or directory at {config_path}")
         with config_path.open(encoding="utf-8") as conf_file:
             config_data = json.load(conf_file)
         config = cls.config_class(**config_data.get("model_config", {}))
-        return config
+        training_config = TrainingConfig(**config_data.get("training_config", {}))
+        return config, training_config
+
 
     def _build_from_config(self, config: Union[Dict, ModuleConfig]):
         """build a new predictor from a config

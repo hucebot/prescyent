@@ -15,8 +15,7 @@ from prescyent.predictor import (
     PredictorConfig,
 )
 from prescyent.scaler import ScalerConfig
-from prescyent.utils.enums import LossFunctions, Scalers, TrajectoryDimensions
-from prescyent.utils.enums.learning_types import LearningTypes
+from prescyent.utils.enums import LearningTypes, LossFunctions, Scalers, TrajectoryDimensions
 
 
 DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"
@@ -71,7 +70,7 @@ if __name__ == "__main__":
     dataset = TeleopIcubDataset(dataset_config)
     print("OK")
 
-    # -- Init scaler
+    # -- Configure a scaler
     scaler_config = ScalerConfig(
         do_feature_wise_scaling=True,
         scaler=Scalers.STANDARDIZATION,

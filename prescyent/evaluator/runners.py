@@ -168,3 +168,37 @@ def eval_predictors(
     for p, predictor in enumerate(predictors):
         predictor.log_evaluation_summary(evaluation_results[p])
     return evaluation_results
+
+
+def dump_eval_summary_list(
+    eval_summaries: List[EvaluationSummary],
+    dump_dir: Union[Path, str] = "data/eval/",
+    dump_prediction: bool = False,
+):
+    """method to create a csv file to summarize multiple eval summaries
+
+    Args:
+        eval_summaries (List[EvaluationSummary]): list of the evaluation summaries of each predictor
+        dump_dir (Union[Path, str], optional): folder where the files are created. Defaults to "data/eval/".
+        dump_prediction (bool, optional): if true, saves the predictions and truth under .pt format. Defaults to False.
+    """
+    if isinstance(dump_dir, str):
+        dump_dir = Path(dump_dir)
+    with (dump_dir / "eval_summary.csv").open("w", encoding="utf-8") as csv_file:
+        headers = eval_summaries[0].headers
+        csv_file.write(",".join(headers) + "\n")
+        for eval_summary in eval_summaries:
+            csv_file.write(",".join(eval_summary.as_array()) + "\n")
+        print(f"Saved Evaluation Summary here: {dump_dir / 'eval_summary.csv'}")
+    if dump_prediction:
+        for traj_id, _ in enumerate(eval_summaries[0].results):
+            traj_dir = dump_dir / eval_summaries[0].results[traj_id].traj_name
+            traj_dir.mkdir(parents=True, exist_ok=True)
+            print(f"Saving prediction dumps here: {traj_dir}")
+            torch.save(eval_summaries[0].results[traj_id].truth, traj_dir / "truth.pt")
+            for pred_id, _ in enumerate(eval_summaries):
+                torch.save(
+                    eval_summaries[pred_id].results[traj_id].pred,
+                    traj_dir
+                    / f"{eval_summaries[pred_id].predictor_name}_future_{eval_summaries[pred_id].predicted_future}.pt",
+                )

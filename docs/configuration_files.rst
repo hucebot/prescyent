@@ -1,6 +1,6 @@
-########################
-API Configurations Files
-########################
+######################
+Configurations Classes
+######################
 
 .. toctree::
    :maxdepth: 1

@@ -15,6 +15,7 @@ Welcome to PreScyent's documentation!
    datasets
    predictors
    configuration_files
+   enums
    references
 
 * :ref:`genindex`

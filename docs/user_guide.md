@@ -118,10 +118,11 @@ If the option `save_on_disk` is True in the `TrajectoriesDataset.config`, then w
 
 This module contains the main Scalers class that initializes, trains and calls the configured scaling methods. 
 Depending on the configuration you'll run 0 or n instance of a Scaler from the Scalers class.  
-We have Normalization and Standardization as scaling methods.  
-Scalers main class and Scaler instances all have their own train method that is called along the predictor's .train method giving a dataloader over the train_trajectories.  
+We have **Normalization** and **Standardization** as scaling methods.  
+Scalers main class and Scaler instances all have their own train method that is called along the predictor's `.train` method giving a dataloader over the train_trajectories.  
 The Scalers method allow to have a feature-wise scaling, instantiating and training scaling methods for given features on given dimensions (note that we are always scaling over the batch and temporal dimensions + the one chosen in the config).  
-scale and unscale methods are called in Predictor.predict as a decorator of the function, and inside the LightningModule.predict method that is called at each train_ test_ and val_ epochs during lightning functions so it is seamless for most high end usages.  
+`scale` and `unscale` methods are called in `Predictor.predict` as a decorator of the function, and inside the `LightningModule.predict_torch` method that is called at each train_ test_ and val_ epochs during Lightning's functions, so it is seamless for most high end usages.  
+Just as the predictor class, Scalers can save and load their trained tensors from disk using pickle. Theses methods are also included into the Predictor's load and save methods.  
 
 ## Predictor module
 
@@ -133,7 +134,8 @@ Each predictor must inherit from this class.
 
 ### LightningPredictor
 
-This class defines base behavior for all machine learning predictors, instantiating the LightningModule and lightning.Trainer to train and test them, and it defines also function to save and load models.  
+This class defines base behavior for all machine learning predictors, instantiating the `LightningModule` and `lightning.Trainer`, with methods to `train` and `test` them.  
+It defines also function to save and load models.  
 
 ### LightningModule
 
@@ -142,17 +144,17 @@ Here we define which loss function will be used to train the model based on the 
 
 ### TorchModule
 
-You may want all of your custom torch.nn.Module to inherit from this TorchModule as it comes with a decorator for the forward method to enables the features `deriv_on_last_frame`, `deriv_output` and `dropout_value`.
+You may want all of your custom `torch.nn.Module` to inherit from this **TorchModule** as it comes with a decorator for the forward method to enables the features `deriv_on_last_frame`, `deriv_output` and `dropout_value`.
 
 ### LossFunctions
 
-We implemented here some custom loss functions, such as MeanTotalDistanceLoss (and its variations), making use of our Feature objects, calculating the mean feature.distance over each predicted time frame of each predicted point.  
-Feel free to add your own loss functions here also and make it available to the PredictorConfig through a new valid option in the enum's in `prescyent/utils/enums/loss_functions.py and to the predictors in the CRITERION_MAPPING in `prescyent/predictor/lightning/module.py`.  
+We implemented here some custom loss functions, such as **MeanTotalDistanceLoss** (and its variations), making use of our Feature objects, calculating the mean feature.distance over each predicted time frame of each predicted point.  
+Feel free to add your own loss functions here also and make it available to the `PredictorConfig` through a new valid option in the enum's in `prescyent/utils/enums/loss_functions.py and to the predictors in the `CRITERION_MAPPING` in `prescyent/predictor/lightning/module.py`.  
 
 
 ## Evaluator module
 
-In this module you'll find plots that we use to evaluate our models, such as "plot_mpjpe" or its multi predictor variant "plot_mpjpes" that is called after a module is trained in "train_from_config.py".  
+In this module you'll find plots that we use to evaluate our models, such as `plot_mpjpe` or its multi predictor variant `plot_mpjpes` that is called after a module is trained in "train_from_config.py".  
 We also implemented a 3d rendering of trajectories that have Coordinates and optionally Rotation as Features (Such as Andy or H36M datasets).  
 Finally we created some "runners" that show some logic to run a predictor over a whole trajectory and the ways to feed the input to the predictors.
 

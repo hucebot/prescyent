@@ -448,7 +448,7 @@ def legend_plot(
 def plot_mpjpe(
     predictor: Callable,
     dataset: TrajectoriesDataset,
-    savefig_dir_path: str,
+    savefig_dir_path: Optional[str] = None,
     log_x=False,
 ):
     """Plot the MPJPE evaluation of the predictor
@@ -504,13 +504,16 @@ def plot_mpjpe(
         if log_x:
             plt.gca().set_xscale("log")
         logger.getChild(EVAL).info(f"MPJPE: {y_values}")
-        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
+        if savefig_dir_path is None:
+            plt.show()
+        else:
+            save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
 
 
 def plot_mpjpes(
     predictors: List[Callable],
     dataset: TrajectoriesDataset,
-    savefig_dir_path: str,
+    savefig_dir_path: Optional[str] = None,
     log_x=False,
 ):
     """Plot the MPJPE evaluation of the predictor
@@ -574,4 +577,7 @@ def plot_mpjpes(
         frame.set_edgecolor("0.9")
         if log_x:
             plt.gca().set_xscale("log")
-        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
+        if savefig_dir_path is None:
+            plt.show()
+        else:
+            save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")

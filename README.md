@@ -112,7 +112,11 @@ and unzip it, it should be following this structure:
 │           │   ├── ...
 
 ```
-Then run the script `dataset_preprocessing/teleopicubdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+Then run the script `dataset_preprocessing/teleopicubdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional).  
+For example something like:
+```bash
+python dataset_preprocessing/teleopicubdataset_to_hdf5.py --data_path AndyData-lab-prescientTeleopICub/ --hdf5_path AndyData-lab-prescientTeleopICub.hdf5
+```
 
 
 #### H36MDataset
@@ -125,7 +129,11 @@ For [Human3.6M](http://vision.imar.ro/human3.6m/description.php) you need to dow
 |   ├── ...
 |   ├── S11
 ```
-Then run the script `dataset_preprocessing/h36mdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+Then run the script `dataset_preprocessing/h36mdataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional).  
+For example something like:
+```bash
+python dataset_preprocessing/h36mdataset_to_hdf5.py --data_path h36m/ --hdf5_path h36m.hdf5
+```
 
 
 #### AndyDataset
@@ -139,7 +147,11 @@ For [AndyDataset](https://andydataset.loria.fr/) you need to download the zip [h
 |       ├── ...
 |       ├── Participant_9875
 ```
-Then run the script `dataset_preprocessing/andydataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional)
+Then run the script `dataset_preprocessing/andydataset_to_hdf5.py` to generate the dataset in the lib's format, with `--data_path` argument providing the path to the downloaded dataset, and the `--hdf5_path` argument giving the path and name of the generated hdf5 file (optional).  
+For example something like:
+```bash
+python dataset_preprocessing/andydataset_to_hdf5.py --data_path AndyData-lab-onePerson/ --hdf5_path AndyData-lab-onePerson.hdf5
+```
 
 
 ## Predictors
