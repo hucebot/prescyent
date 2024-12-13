@@ -509,11 +509,7 @@ class BasePredictor:
             context=traj.context,
         )
         pred_tensor = cat_list_with_seq_idx(list_pred_tensor, -1)
-        offset = (
-            self.config.dataset_config.history_size
-            + future_size
-            - 1
-        )
+        offset = self.config.dataset_config.history_size + future_size - 1
         pred_traj = Trajectory(
             tensor=pred_tensor,
             tensor_features=self.config.dataset_config.out_features,

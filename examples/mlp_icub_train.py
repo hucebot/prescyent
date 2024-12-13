@@ -15,7 +15,12 @@ from prescyent.predictor import (
     PredictorConfig,
 )
 from prescyent.scaler import ScalerConfig
-from prescyent.utils.enums import LearningTypes, LossFunctions, Scalers, TrajectoryDimensions
+from prescyent.utils.enums import (
+    LearningTypes,
+    LossFunctions,
+    Scalers,
+    TrajectoryDimensions,
+)
 
 
 DEFAULT_HDF5_PATH = "data/datasets/AndyData-lab-prescientTeleopICub.hdf5"

@@ -42,18 +42,20 @@ class AndyDatasetConfig(TrajectoriesDatasetConfig):
     """Ids of the points used as input."""
     out_points: List[int] = list(range(len(POINT_LABELS)))
     """Ids of the points used as output."""
-    context_keys: List[Literal[
-        "velocity",
-        "acceleration",
-        "angularVelocity",
-        "angularAcceleration",
-        "sensorFreeAcceleration",
-        "sensorMagneticField",
-        "sensorOrientation",
-        "jointAngle",
-        "jointAngleXZY",
-        "centerOfMass",
-    ]] = []
+    context_keys: List[
+        Literal[
+            "velocity",
+            "acceleration",
+            "angularVelocity",
+            "angularAcceleration",
+            "sensorFreeAcceleration",
+            "sensorMagneticField",
+            "sensorOrientation",
+            "jointAngle",
+            "jointAngleXZY",
+            "centerOfMass",
+        ]
+    ] = []
     """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
 
     @field_validator("context_keys")

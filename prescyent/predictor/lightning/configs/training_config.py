@@ -10,6 +10,7 @@ from prescyent.utils.enums.profilers import Profilers
 
 class TrainingConfig(BaseConfig):
     """Pydantic Basemodel for Pytorch Lightning Training configuration"""
+
     lr: float = 1e-3
     """The learning rate used by the Optimizer during training"""
     weight_decay: float = 1e-2

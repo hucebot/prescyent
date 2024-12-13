@@ -142,7 +142,6 @@ class LightningPredictor(BasePredictor):
         training_config = TrainingConfig(**config_data.get("training_config", {}))
         return config, training_config
 
-
     def _build_from_config(self, config: Union[Dict, ModuleConfig]):
         """build a new predictor from a config
 
