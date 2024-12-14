@@ -27,6 +27,9 @@ class SCCDataset(TrajectoriesDataset):
     """Simple dataset generating n 2D circles"""
 
     DATASET_NAME = "SCC"
+    """name identifier for the dataset, saved in config and used by AutoDataset"""
+    tmp_hdf5_name: str
+    """path to generated hdf5 temporary file"""
 
     def __init__(
         self,
@@ -42,9 +45,11 @@ class SCCDataset(TrajectoriesDataset):
         """create a list of Trajectories from config variables"""
         if hasattr(self, "_trajectories"):
             return
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        tmp_hdf5 = tempfile.NamedTemporaryFile(delete=False, suffix=".hdf5")
+        self.tmp_hdf5_name = tmp_hdf5.name
+        tmp_hdf5.close()
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5_name, "w")
         frequency = metadata.DEFAULT_FREQ
-        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
         write_metadata(
             tmp_hdf5_data,
             frequency=frequency,
@@ -90,7 +95,7 @@ class SCCDataset(TrajectoriesDataset):
                     data=tensor,
                 )
                 traj_id += 1
-        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5_name)
         tmp_hdf5_data.close()
         np.random.seed()
 

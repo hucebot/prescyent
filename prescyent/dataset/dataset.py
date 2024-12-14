@@ -1,5 +1,6 @@
 """Standard class for motion datasets"""
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Literal, Union, Tuple, Type
 
@@ -90,6 +91,13 @@ class TrajectoriesDataset(LightningDataModule):
 
     def __str__(self) -> str:
         return self.name
+
+    def __del__(self):
+        """if a tmp_hdf5 attribute exist and is open, we try to close it before gc"""
+        try:
+            os.unlink(self.tmp_hdf5_name)
+        except:
+            pass
 
     def prepare_data(self):
         """Method to generates the dataset.trajectories"""
