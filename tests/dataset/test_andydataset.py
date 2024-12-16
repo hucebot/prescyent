@@ -12,7 +12,7 @@ from prescyent.utils.enums import LearningTypes
 
 
 DEFAULT_DATA_PATH = "data/datasets/AndyData-lab-onePerson.hdf5"
-NO_DATA_WARNING = "Data for AndyDataset are not installed or found, please refer to the README if you intend to use it"
+NO_DATA_WARNING = "Data for AndyDataset are not installed or found at default path, please refer to the README if you intend to use it, or move the hdf5_file to default path to test it"
 
 
 class InitAndyDatasetTest(CustomTestCase):

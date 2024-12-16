@@ -1,5 +1,7 @@
 """Util functions for plots"""
 
+import copy
+import itertools
 from math import pi as math_pi
 from pathlib import Path
 from typing import Callable, List, Optional, Union
@@ -20,80 +22,226 @@ from prescyent.utils.enums import LearningTypes
 from prescyent.utils.logger import logger, EVAL
 
 
-def plot_trajectory_prediction(
-    trajectory: Trajectory, truth, pred, overprediction: int, savefig_path: str
-):
-    """Kinda naive plotting that can become messy if there is a lot of features or points
-    Truth and pred's frame must already be aligned,
-    and the amount of frames predicted that aren't in truth must appear in overprediction
-    """
-
-    # we turn shape(seq_len, features) to shape(features, seq_len) to plot the pred by feature
-    truth = torch.transpose(truth, 0, 1)
-    pred = torch.transpose(pred, 0, 1)
-
-    pred_last_idx = max(len(pred[0]), len(truth[0])) + overprediction
-
-    time_steps = range(pred_last_idx)
-    fig, axes = plt.subplots(
-        pred.shape[0], sharex=True
-    )  # we do one subplot per feature
-    if pred.shape[0] == 1:
-        axes = [axes]
-    for i, axe in enumerate(axes):
-        axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=2)
-        axe.plot(
-            time_steps[: len(pred[i])],
-            pred[i],
-            linewidth=1,
-            linestyle="--",
-        )
-        axe.grid(color="grey", linestyle="--", lw=0.3)
-        axe.set_axisbelow(True)
-        axe.spines["top"].set_visible(False)
-        axe.spines["right"].set_visible(False)
-        axe.spines["left"].set_visible(False)
-        for spine in axe.spines.values():
-            spine.set_position(("outward", 5))
-        axe.get_xaxis().tick_bottom()
-        axe.get_yaxis().tick_left()
-        axe.tick_params(axis="x", direction="out")
-        axe.tick_params(axis="y", length=0)
-        axe.tick_params(which="minor", axis="y", length=0)
-        axe.spines["bottom"].set_linewidth(2)
-        if i != len(axes) - 1:
-            axe.spines["bottom"].set_visible(False)
-            axe.xaxis.set_ticks_position("none")
-    legend_plot(
-        axes,
-        trajectory.dim_names,
-        ylabels=trajectory.point_names,
-    )
-    fig.set_size_inches(
-        trajectory.tensor.shape[1] * 2 + 5, len(trajectory.point_names) + 5
-    )
-    fig.suptitle(trajectory.title)
-    fig.subplots_adjust(right=0.7)
-    fig.tight_layout()
-    save_plot_and_close(savefig_path)
+# UPDATE THIS LINE IF YOU TRY TO PLOT MORE THAN 40 LINE STYLES ON ONE PLOT
+LINE_STYLE = ["-", "--", "-.", ":"] * 10
 
 
-def plot_trajs(
-    trajectories: List[Trajectory],
-    offsets: List[int],
-    savefig_path: str,
+def plot_trajectory_feature_wise(
+    trajectory: Trajectory,
+    savefig_path: Optional[str] = None,
     title: Optional[str] = None,
-    legend_labels: Optional[List[str]] = None,
+    trajectory_labels: Optional[List[str]] = ["Truth"],
     rot_to_euler: bool = True,
 ):
-    """plot a list of trajectories
+    """plot a single trajectory, with an axis for each feature of each point
+
+    Args:
+        trajectory (Trajectory): the trajectory to plot
+        offsets (List[int]): list of N offsets to shift trajectories[N] over offsets[N] frames
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
+        title (Optional[str], optional): title of the plot. If none, the title is the title of trajectories[0]. Defaults to None.
+        trajectory_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+    plot_trajectories_feature_wise(
+        [trajectory],
+        [0],
+        savefig_path=savefig_path,
+        title=title,
+        trajectory_labels=trajectory_labels,
+        rot_to_euler=rot_to_euler,
+    )
+
+
+def plot_prediction_feature_wise(
+    truth_traj: Trajectory,
+    prediction: Union[torch.Tensor, Trajectory],
+    offset: int,
+    savefig_path: Optional[str] = None,
+    rot_to_euler: bool = True,
+):
+    """plot a prediction tensor or traj along with the truth trajectory, with an axis for each feature of each point
+
+    Args:
+        truth_traj (Trajectory): the truth trajectory
+        prediction (Union[torch.Tensor, Trajectory]): predicted tensor or trajectory
+        offset (int): predicted offsets to shift prediction tensor over offset frames
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+    if isinstance(prediction, torch.Tensor):
+        pred_traj = copy.deepcopy(truth_traj)
+        pred_traj.tensor = prediction.detach().clone()
+        prediction = pred_traj
+    plot_trajectories_feature_wise(
+        trajectories=[truth_traj, prediction],
+        offsets=[0, offset],
+        savefig_path=savefig_path,
+        title=f"Prediction_over_{truth_traj.title}",
+        trajectory_labels=["Truth", "Prediction"],
+        rot_to_euler=rot_to_euler,
+    )
+
+
+def plot_prediction_dim_wise(
+    truth_traj: Trajectory,
+    prediction: Union[torch.Tensor, Trajectory],
+    offset: int,
+    savefig_path: Optional[str] = None,
+    rot_to_euler: bool = True,
+):
+    """plot a prediction tensor or traj along with the truth trajectory, with an axis for each dim of each point
+
+    Args:
+        truth_traj (Trajectory): the truth trajectory
+        prediction (Union[torch.Tensor, Trajectory]): predicted tensor or trajectory
+        offset (int): predicted offsets to shift prediction tensor over offset frames
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+    if isinstance(prediction, torch.Tensor):
+        pred_traj = copy.deepcopy(truth_traj)
+        pred_traj.tensor = prediction.detach().clone()
+        prediction = pred_traj
+    plot_trajectories_dim_wise(
+        trajectories=[truth_traj, prediction],
+        offsets=[0, offset],
+        savefig_path=savefig_path,
+        title=f"Prediction_over_{truth_traj.title}",
+        trajectory_labels=["Truth", "Prediction"],
+        rot_to_euler=rot_to_euler,
+    )
+
+
+def plot_trajectories_feature_wise(
+    trajectories: List[Trajectory],
+    offsets: List[int],
+    savefig_path: Optional[str] = None,
+    title: Optional[str] = None,
+    trajectory_labels: Optional[List[str]] = ["Truth"],
+    rot_to_euler: bool = True,
+):
+    """plot a list of trajectories, with an axis for each dim of each point
 
     Args:
         trajectories (List[Trajectory]): list of N trajectories
         offsets (List[int]): list of N offsets to shift trajectories[N] over offsets[N] frames
-        savefig_path (str): path where to save the plot
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
         title (Optional[str], optional): title of the plot. If none, the title is the title of trajectories[0]. Defaults to None.
-        legend_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
+        trajectory_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+    assert len(trajectories) >= 1
+    feats = trajectories[0].tensor_features
+    num_points = trajectories[0].tensor.shape[1]
+    assert all(
+        [traj.tensor_features == feats for traj in trajectories]
+    )  # Plotted trajs must have same feats
+    assert all(
+        [traj.tensor.shape[1] == num_points for traj in trajectories]
+    )  # Plotted trajs must have number of points
+    pred_last_idx = max([len(traj) for traj in trajectories]) + max(offsets)
+    num_feats = len(trajectories[0].tensor_features)
+    time_steps = np.linspace(
+        0,
+        (pred_last_idx + 1) / trajectories[0].frequency,
+        pred_last_idx,
+        endpoint=False,
+    )
+    fig, axes = plt.subplots(
+        num_feats * num_points, sharex=True
+    )  # we do one subplot per feat and per point
+    if num_feats * num_points == 1:
+        axes = [axes]
+    axe_id = 0
+    ylabels = []
+    for point in range(num_points):
+        for feat in feats:
+            for t, (offset, traj) in enumerate(zip(offsets, trajectories)):
+                if isinstance(feat, Rotation) and rot_to_euler:
+                    feat_tensor = convert_to_euler(traj.tensor[:, point, feat.ids])
+                else:
+                    feat_tensor = traj.tensor[:, point, feat.ids]
+                axes[axe_id].plot(
+                    time_steps[offset : len(feat_tensor) + offset],
+                    feat_tensor,
+                    ls=LINE_STYLE[t],
+                    linewidth=0.75,
+                )
+            axe_id += 1
+        ylabels += [
+            f"{trajectories[0].point_names[point]}_{feat.name}" for feat in feats
+        ]
+    w = min(
+        pred_last_idx * 0.05 + 5, 2**16 / 100 - 1
+    )  # calculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    h = min(
+        len(axes) * 5 + 5, 2**16 / 100 - 1
+    )  # calculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
+    fig.set_size_inches(w, h)
+    if title is None:
+        title = trajectories[0].title
+    fig.suptitle(title)
+    # fig.subplots_adjust(right=0.7)
+    fig.tight_layout(pad=10)
+    legend_names = []
+    for feat in feats:
+        if isinstance(feat, Rotation) and rot_to_euler:
+            feat_dim_names = ["roll", "pitch", "yaw"]
+        else:
+            feat_dim_names = feat.dims_names
+        legend_names.append(
+            [f"{l}_{d}" for l in trajectory_labels for d in feat_dim_names]
+        )
+    legend_plot(axes, names=legend_names, xlabel="time (s)", ylabels=ylabels)
+    if savefig_path is None:
+        plt.show()
+    save_plot_and_close(savefig_path)
+
+
+def plot_trajectory_dim_wise(
+    trajectory: Trajectory,
+    savefig_path: Optional[str] = None,
+    title: Optional[str] = None,
+    trajectory_labels: Optional[List[str]] = ["Truth"],
+    rot_to_euler: bool = True,
+):
+    """plot a single trajectory, with an axis for each dim of each point
+
+    Args:
+        trajectory (Trajectory): the trajectory to plot
+        offsets (List[int]): list of N offsets to shift trajectories[N] over offsets[N] frames
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
+        title (Optional[str], optional): title of the plot. If none, the title is the title of trajectories[0]. Defaults to None.
+        trajectory_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
+        rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
+    """
+    plot_trajectories_dim_wise(
+        [trajectory],
+        [0],
+        savefig_path=savefig_path,
+        title=title,
+        trajectory_labels=trajectory_labels,
+        rot_to_euler=rot_to_euler,
+    )
+
+
+def plot_trajectories_dim_wise(
+    trajectories: List[Trajectory],
+    offsets: List[int],
+    savefig_path: Optional[str] = None,
+    title: Optional[str] = None,
+    trajectory_labels: Optional[List[str]] = ["Truth"],
+    rot_to_euler: bool = True,
+):
+    """plot a list of trajectories, with an axis for each dim of each point
+
+    Args:
+        trajectories (List[Trajectory]): list of N trajectories
+        offsets (List[int]): list of N offsets to shift trajectories[N] over offsets[N] frames
+        savefig_path (Optional[str]): path where to save the plot, if none, use plt.show
+        title (Optional[str], optional): title of the plot. If none, the title is the title of trajectories[0]. Defaults to None.
+        trajectory_labels (Optional[List[str]], optional): labels that will serve as the legend of the plot. If None, No legend. Defaults to None.
         rot_to_euler (bool, optional): if true, convert any rotation to euler for plotting with 3D. Defaults to True.
     """
 
@@ -142,7 +290,7 @@ def plot_trajs(
                     axes[axe_id + dim_id].plot(
                         time_steps[offset : len(dim_tensor) + offset],
                         dim_tensor,
-                        linewidth=0.5,
+                        linewidth=0.75,
                     )
             ylabels += [
                 f"{trajectories[0].point_names[point]}_{dim_name}"
@@ -150,19 +298,24 @@ def plot_trajs(
             ]
             axe_id += len(feat_tensor)  # add dim size to used axes
     w = min(
-        pred_last_idx * 0.025 + 5, 2**16 / 100 - 1
+        pred_last_idx * 0.05 + 5, 2**16 / 100 - 1
     )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
     h = min(
-        len(axes) * 5 + 5, 2**16 / 100 - 1
+        len(axes) * 10 + 5, 2**16 / 100 - 1
     )  # caculated values or max value accepted by matplotlib (max is 2¹⁶ pxl and default dpi is 100)
     fig.set_size_inches(w, h)
     if title is None:
         title = f"Trajectory and predictions on {trajectories[0].title}"
     fig.suptitle(title)
-    # fig.subplots_adjust(right=0.7)
     fig.tight_layout(pad=10)
-    legend_plot(axes, names=legend_labels, xlabel="time (s)", ylabels=ylabels)
+    legend_plot(axes, names=trajectory_labels, xlabel="time (s)", ylabels=ylabels)
+    if savefig_path is None:
+        plt.show()
     save_plot_and_close(savefig_path)
+
+
+plot_trajectories = plot_trajectories_feature_wise  # create aliases
+plot_trajectory = plot_trajectory_feature_wise  # create aliases
 
 
 def plot_multiple_predictors(
@@ -199,12 +352,12 @@ def plot_multiple_predictors(
         traj, offset = predictor.predict_trajectory(input_traj)
         trajs.append(traj)
         offsets.append(offset)
-    plot_trajs(
+    plot_trajectories_dim_wise(
         trajectories=[truth] + trajs,
         offsets=[0] + offsets,
         savefig_path=savefig_path,
         title=trajectory.title,
-        legend_labels=["Truth"] + [str(p) for p in predictors],
+        trajectory_labels=["Truth"] + [str(p) for p in predictors],
         rot_to_euler=True,
     )
 
@@ -227,12 +380,12 @@ def plot_multiple_future(
     if preds[0].shape[0] == 1:
         axes = [axes]
     for i, axe in enumerate(axes):
-        axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=2)
+        axe.plot(time_steps[: len(truth[i])], truth[i], linewidth=27)
         for pred in preds:
             axe.plot(
                 time_steps[step : step + len(pred[i])],
                 pred[i],
-                linewidth=1,
+                linewidth=17,
                 linestyle="--",
             )
     legend_plot(
@@ -257,7 +410,7 @@ def save_plot_and_close(savefig_path, dpi=100):
 
 def legend_plot(
     axes: List[Axes],
-    names: List[str],
+    names: List[Union[str, List[str]]],
     xlabel: str = "time",
     ylabels: Union[List[str], str] = "pos",
 ):
@@ -265,15 +418,23 @@ def legend_plot(
 
     Args:
         axes (List[Axes]): axes to describe
-        names (List[str]): legend names of the plot
+        names (List[Union[str, List[str]]]): legend names of the plot, or list of legend name for each axis
         xlabel (str, optional): label for x. x axis are shared in our plots. Defaults to "time".
         ylabels (List[str], optional): labels for y. Defaults to ["pos"].
     """
     if names is not None:
-        legend = axes[-1].legend(labels=names, loc="best")
-        frame = legend.get_frame()
-        frame.set_facecolor("0.9")
-        frame.set_edgecolor("0.9")
+        if isinstance(names[0], str):
+            legend = axes[-1].legend(labels=names, loc="best")
+            frame = legend.get_frame()
+            frame.set_facecolor("0.9")
+            frame.set_edgecolor("0.9")
+        else:
+            names.reverse()
+            for i in range(min(len(axes), len(names))):
+                legend = axes[-(i + 1)].legend(labels=names[i], loc="best")
+                frame = legend.get_frame()
+                frame.set_facecolor("0.9")
+                frame.set_edgecolor("0.9")
     axes[-1].set_xlabel(xlabel)
     for i, axe in enumerate(axes):
         if isinstance(ylabels, list) and len(ylabels) >= len(axes):
@@ -287,7 +448,7 @@ def legend_plot(
 def plot_mpjpe(
     predictor: Callable,
     dataset: TrajectoriesDataset,
-    savefig_dir_path: str,
+    savefig_dir_path: Optional[str] = None,
     log_x=False,
 ):
     """Plot the MPJPE evaluation of the predictor
@@ -343,13 +504,16 @@ def plot_mpjpe(
         if log_x:
             plt.gca().set_xscale("log")
         logger.getChild(EVAL).info(f"MPJPE: {y_values}")
-        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
+        if savefig_dir_path is None:
+            plt.show()
+        else:
+            save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
 
 
 def plot_mpjpes(
     predictors: List[Callable],
     dataset: TrajectoriesDataset,
-    savefig_dir_path: str,
+    savefig_dir_path: Optional[str] = None,
     log_x=False,
 ):
     """Plot the MPJPE evaluation of the predictor
@@ -413,4 +577,7 @@ def plot_mpjpes(
         frame.set_edgecolor("0.9")
         if log_x:
             plt.gca().set_xscale("log")
-        save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")
+        if savefig_dir_path is None:
+            plt.show()
+        else:
+            save_plot_and_close(f"{savefig_dir_path}/MPJE_{feat.name}.pdf")

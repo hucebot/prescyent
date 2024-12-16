@@ -27,6 +27,9 @@ class H36MDataset(TrajectoriesDataset):
     """Class for data loading et preparation before the TrajectoriesDataset sampling"""
 
     DATASET_NAME = "H36M"
+    """name identifier for the dataset, saved in config and used by AutoDataset"""
+    tmp_hdf5_name: str
+    """path to generated hdf5 temporary file"""
 
     def __init__(
         self,
@@ -42,11 +45,15 @@ class H36MDataset(TrajectoriesDataset):
             return
         if not Path(self.config.hdf5_path).exists():
             raise FileNotFoundError(
-                "Dataset file not found at %s" % self.config.hdf5_path
+                'Dataset file not found at "%s", please make sure a valid path '
+                "is set in the dataset's config `hdf5_path` attribute"
+                % self.config.hdf5_path
             )
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        tmp_hdf5 = tempfile.NamedTemporaryFile(delete=False, suffix=".hdf5")
+        self.tmp_hdf5_name = tmp_hdf5.name
+        tmp_hdf5.close()
         hdf5_data = h5py.File(self.config.hdf5_path, "r")
-        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5_name, "w")
         trajectory_names = self.get_trajnames_from_hdf5(hdf5_data)
         self.copy_attributes_from_hdf5(hdf5_data, tmp_hdf5_data)
         # keep only given actions
@@ -96,7 +103,7 @@ class H36MDataset(TrajectoriesDataset):
                             data=context_tensor,
                         )
         tmp_hdf5_data.attrs["frequency"] = self.config.frequency
-        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5_name)
         tmp_hdf5_data.close()
         hdf5_data.close()
 

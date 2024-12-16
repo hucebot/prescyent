@@ -1,4 +1,7 @@
-"""script to train a model from args using auto_predictor"""
+"""script to build and train a predictor given a generated config.json file
+and using the AutoPredictor and AutoDataset architecture
+We also perform a test run and mpjpe plot over the trained predictor
+"""
 
 import json
 from argparse import ArgumentParser

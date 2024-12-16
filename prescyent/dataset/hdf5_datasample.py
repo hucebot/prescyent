@@ -1,4 +1,5 @@
 """Data pair of sample and truth for motion data in ML"""
+import os
 import tempfile
 from typing import Dict, List, Tuple, Union
 
@@ -19,8 +20,8 @@ class HDF5TrajectoryDataSamples:
 
     config: TrajectoriesDatasetConfig
     """The dataset configuration used to create the TrajectoryDataSamples"""
-    tmp_hdf5: tempfile._TemporaryFileWrapper
-    """generated hdf5 temporary file"""
+    tmp_hdf5_name: str
+    """path to generated hdf5 temporary file"""
     size: int
     """len of the class"""
 
@@ -42,6 +43,13 @@ class HDF5TrajectoryDataSamples:
         self.create_data_pairs_to_hdf5(trajectories)
         if self.config.reverse_pair_ratio:
             np.random.seed(seed=self.config.seed)
+
+    def __del__(self):
+        """if a tmp_hdf5 attribute exist and is open, we try to close it before gc"""
+        try:
+            os.unlink(self.tmp_hdf5_name)
+        except:
+            pass
 
     def create_data_pairs_to_hdf5(self, trajectories: List[Trajectory]):
         """generate samples, context and truth into a new tmp hdf5 file from given list of Trajectory
@@ -68,8 +76,10 @@ class HDF5TrajectoryDataSamples:
                 f"in samples of sizes {frames_per_pair}"
             )
         num_pairs = sum(valid_frames_per_traj)
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
-        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
+        tmp_hdf5 = tempfile.NamedTemporaryFile(delete=False, suffix=".hdf5")
+        self.tmp_hdf5_name = tmp_hdf5.name
+        tmp_hdf5.close()
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5_name, "w")
         if not trajectories:
             samples = tmp_hdf5_data.create_dataset("samples", data=[])
             truths = tmp_hdf5_data.create_dataset("truths", data=[])
@@ -132,11 +142,7 @@ class HDF5TrajectoryDataSamples:
             out_tensor = convert_tensor_features_to(
                 out_tensor, traj.tensor_features, self.config.out_features
             )
-            for j in tqdm(
-                range(len(traj) - frames_per_pair + 1),
-                desc="Iterating over frames",
-                colour="green",
-            ):
+            for j in range(len(traj) - frames_per_pair + 1):
                 samples[i] = in_tensor[j : j + self.config.history_size]
                 for c_key in self.config.context_keys:
                     context[c_key][i] = traj.context[c_key][
@@ -172,7 +178,7 @@ class HDF5TrajectoryDataSamples:
         if isinstance(index, int):
             index = [index]
         index = sorted(index)
-        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "r")
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5_name, "r")
         samples = tmp_hdf5_data["samples"]
         _in = torch.FloatTensor(np.array(samples[index]))
         _in_context = {

@@ -19,7 +19,7 @@ class ConstantPredictor(BasePredictor):
 
     def __init__(
         self,
-        config: Optional[PredictorConfig] = None,
+        config: PredictorConfig,
     ) -> None:
         super().__init__(config)
 

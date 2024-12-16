@@ -33,6 +33,9 @@ class SSTDataset(TrajectoriesDataset):
     """Simple dataset with generated trajectories from a starting and ending pose"""
 
     DATASET_NAME = "SST"
+    """name identifier for the dataset, saved in config and used by AutoDataset"""
+    tmp_hdf5_name: str
+    """path to generated hdf5 temporary file"""
 
     def __init__(
         self,
@@ -48,9 +51,11 @@ class SSTDataset(TrajectoriesDataset):
         """create a list of Trajectories from config variables"""
         if hasattr(self, "_trajectories"):
             return
-        self.tmp_hdf5 = tempfile.NamedTemporaryFile(suffix=".hdf5")
+        tmp_hdf5 = tempfile.NamedTemporaryFile(delete=False, suffix=".hdf5")
+        self.tmp_hdf5_name = tmp_hdf5.name
+        tmp_hdf5.close()
+        tmp_hdf5_data = h5py.File(self.tmp_hdf5_name, "w")
         frequency = 1 / self.config.dt
-        tmp_hdf5_data = h5py.File(self.tmp_hdf5.name, "w")
         write_metadata(
             tmp_hdf5_data,
             frequency=frequency,
@@ -102,7 +107,7 @@ class SSTDataset(TrajectoriesDataset):
                 context,
             )
             tmp_hdf5_data.create_dataset(f"val/synthetic_traj_{i}/traj", data=tensor)
-        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5.name)
+        self.trajectories = Trajectories.__init_from_hdf5__(self.tmp_hdf5_name)
         tmp_hdf5_data.close()
         np.random.seed()
 

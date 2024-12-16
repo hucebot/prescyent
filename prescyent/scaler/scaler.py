@@ -44,7 +44,7 @@ class Scaler:
             return f"Scaler with {self.scalers['feature'].__class__.__name__} on dim {self.scalers['feature'].dim}"
         _str = "Feature Wise Scaler with:"
         for feat_name, scaler in self.scalers.items():
-            _str += "\n" + 5 * "    "
+            _str += "\n\t"
             _str += (
                 f"{scaler.__class__.__name__} on dim {scaler.dim} for Feat {feat_name}"
             )

@@ -10,11 +10,12 @@
             "convert_trajectories_beforehand": true,
             "frequency": 24,
             "future_size": 12,
+            "hdf5_path": "data/datasets/AndyData-lab-prescientTeleopICub.hdf5",
             "history_size": 24,
             "in_features": [
                 {
                     "distance_unit": "m",
-                    "feature_class": "CoordinateXYZ",
+                    "feature_class": "prescyent.dataset.features.feature.coordinate.CoordinateXYZ",
                     "ids": [
                         0,
                         1,
@@ -28,14 +29,14 @@
                 1,
                 2
             ],
-            "learning_type": "sequence_2_one",
+            "learning_type": "sequence_2_sequence",
             "loop_over_traj": false,
             "name": "TeleopIcub",
             "num_workers": 1,
             "out_features": [
                 {
                     "distance_unit": "m",
-                    "feature_class": "CoordinateXYZ",
+                    "feature_class": "prescyent.dataset.features.feature.coordinate.CoordinateXYZ",
                     "ids": [
                         0,
                         1,
@@ -50,9 +51,16 @@
             ],
             "persistent_workers": true,
             "pin_memory": true,
+            "ratio_test": 0.2,
+            "ratio_train": 0.7,
+            "ratio_val": 0.1,
             "reverse_pair_ratio": 0,
             "save_samples_on_disk": true,
-            "seed": 974690156
+            "seed": 486957251,
+            "shuffle_data_files": true,
+            "subsets": [
+                "BottleTable"
+            ]
         },
         "deriv_on_last_frame": true,
         "deriv_output": false,
@@ -62,14 +70,14 @@
         "loss_fn": "mtdloss",
         "name": "MlpPredictor",
         "num_layers": 4,
-        "save_path": "data/models",
+        "save_path": "/home/abiver/repositories/hucebot/prescyent/examples/data/models/TeleopIcub/h24_f12_24hz/MlpPredictor/version_10",
         "scaler_config": {
             "do_feature_wise_scaling": true,
             "scale_rotations": false,
             "scaler": "standardization",
             "scaling_axis": "[1]"
         },
-        "version": 5
+        "version": 10
     },
     "training_config": {
         "accelerator": "auto",
@@ -82,10 +90,10 @@
         "gradient_clip_val": null,
         "log_every_n_steps": 1,
         "lr": 0.0001,
-        "max_epochs": 100,
+        "max_epochs": 200,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 185460831,
+        "seed": 899290585,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

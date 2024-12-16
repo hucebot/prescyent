@@ -1,11 +1,13 @@
 """Common config elements for motion datasets usage"""
+import importlib
 import random
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import model_validator
+from pydantic import model_validator, ConfigDict
 
 import prescyent.dataset.features as tensor_features
+from prescyent.dataset.features import Features, Feature
 from prescyent.base_config import BaseConfig
 from prescyent.utils.enums import LearningTypes
 
@@ -39,9 +41,9 @@ class TrajectoriesDatasetConfig(BaseConfig):
     """Number of timesteps as input"""
     future_size: int
     """Number of timesteps predicted as output"""
-    in_features: Optional[tensor_features.Features]
+    in_features: Optional[Features]
     """List of features used as input, if None, use default from the dataset"""
-    out_features: Optional[tensor_features.Features]
+    out_features: Optional[Features]
     """List of features used as output, if None, use default from the dataset"""
     in_points: Optional[List[int]]
     """Ids of the points used as input."""
@@ -55,6 +57,8 @@ class TrajectoriesDatasetConfig(BaseConfig):
     """Make the trajectory loop over itself where generating training pairs"""
     reverse_pair_ratio: float = 0
     """Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1"""
+
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
     @property
     def num_out_features(self) -> int:
@@ -122,43 +126,45 @@ class TrajectoriesDatasetConfig(BaseConfig):
     def unserialize_features(self):
         """turns features dict from json data into the Features object"""
         if self.get("out_features", None):
-            if isinstance(self["out_features"], tensor_features.Feature):
-                self["out_features"] = tensor_features.Features(
+            if isinstance(self["out_features"], Feature):
+                self["out_features"] = Features(
                     [self["out_features"]], index_name=False
                 )
-            if not isinstance(self["out_features"][0], tensor_features.Feature):
-                self["out_features"] = tensor_features.Features(
-                    [
-                        getattr(tensor_features, feature["feature_class"])(
-                            feature["ids"], name=feature["name"]
+            if not isinstance(self["out_features"][0], Feature):
+                feat_list = []
+                for feature in self["out_features"]:
+                    module_name, class_name = feature["feature_class"].rsplit(".", 1)
+                    module = importlib.import_module(module_name)
+                    feat_cls = getattr(module, class_name)
+                    feat_list.append(
+                        feat_cls(
+                            feature["ids"],
+                            name=feature["name"],
+                            distance_unit=feature["distance_unit"],
                         )
-                        for feature in self["out_features"]
-                    ],
-                    index_name=False,
-                )
+                    )
+                self["out_features"] = Features(feat_list, index_name=False)
             if isinstance(self["out_features"], list):
-                self["out_features"] = tensor_features.Features(
-                    self["out_features"], index_name=False
-                )
+                self["out_features"] = Features(self["out_features"], index_name=False)
         if self.get("in_features", None):
-            if isinstance(self["in_features"], tensor_features.Feature):
-                self["in_features"] = tensor_features.Features(
-                    [self["in_features"]], index_name=False
-                )
-            if not isinstance(self["in_features"][0], tensor_features.Feature):
-                self["in_features"] = tensor_features.Features(
-                    [
-                        getattr(tensor_features, feature["feature_class"])(
-                            feature["ids"], name=feature["name"]
+            if isinstance(self["in_features"], Feature):
+                self["in_features"] = Features([self["in_features"]], index_name=False)
+            if not isinstance(self["in_features"][0], Feature):
+                feat_list = []
+                for feature in self["in_features"]:
+                    module_name, class_name = feature["feature_class"].rsplit(".", 1)
+                    module = importlib.import_module(module_name)
+                    feat_cls = getattr(module, class_name)
+                    feat_list.append(
+                        feat_cls(
+                            feature["ids"],
+                            name=feature["name"],
+                            distance_unit=feature["distance_unit"],
                         )
-                        for feature in self["in_features"]
-                    ],
-                    index_name=False,
-                )
+                    )
+                self["in_features"] = Features(feat_list, index_name=False)
             if isinstance(self["in_features"], list):
-                self["in_features"] = tensor_features.Features(
-                    self["in_features"], index_name=False
-                )
+                self["in_features"] = Features(self["in_features"], index_name=False)
         return self
 
     @model_validator(mode="after")

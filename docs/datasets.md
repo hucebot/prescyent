@@ -6,10 +6,12 @@ Import all of theses datasets and their configs from `prescyent.dataset`.
 
 ## Downloadable Datasets
 
+Preprocess the dataset downloaded from source to turn it into the hdf5_file that prescyent is reading.
+
 ### AndyDataset
 
 This in-house dataset includes measurements of human movements and forces during the execution of different manual tasks.  
-For the HDF5 dataset we only extracted the information from xsens' .mvnx files  
+For the HDF5 dataset we only extracted the information from xsens' .mvnx files.  
 Further descriptions, original data and additional data for this dataset can be found [here](https://zenodo.org/records/3254403#.Y_9fwBeZMVk).  
 
 This hdf5 dataset contains the following features from the xsens motion capture, at each time frame at 240Hz:
@@ -30,11 +32,10 @@ This hdf5 dataset contains the following features from the xsens motion capture,
 Subset of the [h36m dataset](http://vision.imar.ro/human3.6m/description.php) used in [numerous benchmarks](https://paperswithcode.com/dataset/human3-6m), such as in Human Pose Forecasting.  
 This subsets contains only the exponential maps for all joints of the actors.  
 It was originally downloaded from a [stanford backup](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip) (down now)  
+Uploaded [here](https://drive.google.com/file/d/15OAOUrva1S-C_BV8UgPORcwmWG2ul4Rk/view) by the SiMLPe's team.  
 
 The HDF5 file includes all of the trajectories into one single file, following the concepts used in the prescyent library.  
 For each traj, we have the coordinates and rotations for the 32 joints, inferred from the expmap and skeleton infos at 50Hz, as in [siMLPe's implementation](https://github.com/dulucas/siMLPe)  
-
-To use it in the [PreScyent library](https://github.com/hucebot/prescyent/), simply download the .hdf5 file and place it in your data folder (described in your DatasetConfig, default is "data/datasets/")  
 
 [Config](configuration_files.rst#h36mdatasetconfig)
 
@@ -58,6 +59,7 @@ Some datasets are created by the library and do not require to download a file. 
 ### SCCDataset
 
 Synthetic Dataset generating circular 2D trajectories with more or less noise given the configuration parameters.  
+Given starting (x, y) pairs, and variations to the circle radius, and amount of noise in the circle, we generate trajectories with different starting points and slight variations, that can be rendered as a set of 2D circular trajectories.  
 
 [Config](configuration_files.rst#sccdatasetconfig)
 

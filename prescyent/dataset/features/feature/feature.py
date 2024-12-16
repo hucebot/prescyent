@@ -27,7 +27,7 @@ class Feature(dict):
                 f"{self.num_dims} for feature {self.__class__.__name__}"
             )
         self.distance_unit = distance_unit
-        self["feature_class"] = self.__class__.__name__
+        self["feature_class"] = f"{self.__class__.__module__}.{self.__class__.__name__}"
 
     @property
     def name(self):

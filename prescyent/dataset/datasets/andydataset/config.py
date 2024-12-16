@@ -1,6 +1,6 @@
 """Config elements for AndyData-lab-onePerson dataset usage"""
 import os
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import field_validator, ValidationError
 
@@ -42,6 +42,21 @@ class AndyDatasetConfig(TrajectoriesDatasetConfig):
     """Ids of the points used as input."""
     out_points: List[int] = list(range(len(POINT_LABELS)))
     """Ids of the points used as output."""
+    context_keys: List[
+        Literal[
+            "velocity",
+            "acceleration",
+            "angularVelocity",
+            "angularAcceleration",
+            "sensorFreeAcceleration",
+            "sensorMagneticField",
+            "sensorOrientation",
+            "jointAngle",
+            "jointAngleXZY",
+            "centerOfMass",
+        ]
+    ] = []
+    """List of the key of the tensors we'll pass as context to the predictor. Must be a subset of the existing context keys in the Dataset's Trajectories"""
 
     @field_validator("context_keys")
     def check_context_keys(cls, value):

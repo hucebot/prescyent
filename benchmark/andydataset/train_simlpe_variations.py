@@ -36,7 +36,7 @@ VARIATIONS = {
     "model_config.name": [
         "siMLPe",
     ],
-    "model_config.loss_fn": [LossFunctions.MTRDLOSS, LossFunctions.MSELOSS],
+    "model_config.loss_fn": [LossFunctions.MTDLOSS, LossFunctions.MSELOSS],
     # "model_config.num_layers": [48],                 # commented out to leave default model values here instead
     # "model_config.spatial_fc_only": [True, False],   # commented out to leave default model values here instead
     # "model_config.dct": [True, False],               # commented out to leave default model values here instead

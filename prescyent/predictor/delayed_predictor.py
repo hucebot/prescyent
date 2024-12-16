@@ -19,7 +19,7 @@ class DelayedPredictor(BasePredictor):
 
     def __init__(
         self,
-        config: Optional[PredictorConfig],
+        config: PredictorConfig,
     ) -> None:
         super().__init__(config)
 

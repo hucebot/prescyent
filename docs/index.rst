@@ -10,11 +10,13 @@ Welcome to PreScyent's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   get_started
+   getting_started
    user_guide
    datasets
    predictors
+   features
    configuration_files
+   enums
    references
 
 * :ref:`genindex`

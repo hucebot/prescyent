@@ -4,13 +4,22 @@ from typing import List, Optional, Union
 
 from pydantic import model_validator
 
-from prescyent.predictor.lightning.configs.optimizer_config import OptimizerConfig
+from prescyent.base_config import BaseConfig
 from prescyent.utils.enums.profilers import Profilers
 
 
-class TrainingConfig(OptimizerConfig):
+class TrainingConfig(BaseConfig):
     """Pydantic Basemodel for Pytorch Lightning Training configuration"""
 
+    lr: float = 1e-3
+    """The learning rate used by the Optimizer during training"""
+    weight_decay: float = 1e-2
+    """The weight decay used by the Optimizer during training"""
+    use_scheduler: bool = False  # Used for Scheduler
+    """If True, will use a OneCycleLR scheduler for the Learning rate
+    See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html"""
+    max_lr: float = 1e-2  # Used for Scheduler
+    """Serve as the upper limit for the learning rate if the Scheduler is used"""
     max_epochs: int = 100
     """See https://lightning.ai/docs/pytorch/stable/common/trainer.html#max-epochs"""
     max_steps: int = -1
