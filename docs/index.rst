@@ -14,6 +14,7 @@ Welcome to PreScyent's documentation!
    user_guide
    datasets
    predictors
+   features
    configuration_files
    enums
    references

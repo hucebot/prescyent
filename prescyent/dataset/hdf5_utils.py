@@ -1,5 +1,6 @@
 """utils functions for hdf5 files and datasets"""
 
+import importlib
 from typing import List
 import h5py
 
@@ -18,8 +19,11 @@ def load_features(h_file: h5py.File) -> p_features.Features:
     features = []
     for feat_name in h_file["tensor_features"].keys():
         feat = h_file["tensor_features"][feat_name]
+        module_name, class_name = feat.attrs["feature_class"].rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        feat_cls = getattr(module, class_name)
         features.append(
-            getattr(p_features, feat.attrs["feature_class"])(
+            feat_cls(
                 ids=list(feat),
                 name=feat_name,
                 distance_unit=feat.attrs["distance_unit"],
@@ -53,7 +57,7 @@ def write_metadata(
             feat.name, data=feat.ids, compression="gzip"
         )
         hdf_feat.attrs["distance_unit"] = feat.distance_unit
-        hdf_feat.attrs["feature_class"] = feat.__class__.__name__
+        hdf_feat.attrs["feature_class"] = f"{feat.__class__.__module__}.{feat.__class__.__name__}"
 
 
 def get_dataset_keys(h_group: h5py.Group) -> List[str]:
