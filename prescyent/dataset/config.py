@@ -4,7 +4,7 @@ import random
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import model_validator
+from pydantic import model_validator, ConfigDict
 
 import prescyent.dataset.features as tensor_features
 from prescyent.dataset.features import Features, Feature
@@ -57,6 +57,8 @@ class TrajectoriesDatasetConfig(BaseConfig):
     """Make the trajectory loop over itself where generating training pairs"""
     reverse_pair_ratio: float = 0
     """Do data augmentation by reversing some trajectories' sequence with given ratio as chance of occuring between 0 and 1"""
+
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
     @property
     def num_out_features(self) -> int:
@@ -136,20 +138,17 @@ class TrajectoriesDatasetConfig(BaseConfig):
                     feat_cls = getattr(module, class_name)
                     feat_list.append(
                         feat_cls(
-                            feature["ids"], name=feature["name"],
+                            feature["ids"],
+                            name=feature["name"],
                             distance_unit=feature["distance_unit"],
                         )
                     )
                 self["out_features"] = Features(feat_list, index_name=False)
             if isinstance(self["out_features"], list):
-                self["out_features"] = Features(
-                    self["out_features"], index_name=False
-                )
+                self["out_features"] = Features(self["out_features"], index_name=False)
         if self.get("in_features", None):
             if isinstance(self["in_features"], Feature):
-                self["in_features"] = Features(
-                    [self["in_features"]], index_name=False
-                )
+                self["in_features"] = Features([self["in_features"]], index_name=False)
             if not isinstance(self["in_features"][0], Feature):
                 feat_list = []
                 for feature in self["in_features"]:
@@ -158,15 +157,14 @@ class TrajectoriesDatasetConfig(BaseConfig):
                     feat_cls = getattr(module, class_name)
                     feat_list.append(
                         feat_cls(
-                            feature["ids"], name=feature["name"],
+                            feature["ids"],
+                            name=feature["name"],
                             distance_unit=feature["distance_unit"],
                         )
                     )
                 self["in_features"] = Features(feat_list, index_name=False)
             if isinstance(self["in_features"], list):
-                self["in_features"] = Features(
-                    self["in_features"], index_name=False
-                )
+                self["in_features"] = Features(self["in_features"], index_name=False)
         return self
 
     @model_validator(mode="after")

@@ -19,7 +19,7 @@ class ConstantDerivativePredictor(ConstantPredictor):
 
     def __init__(
         self,
-        config: Optional[PredictorConfig],
+        config: PredictorConfig,
     ) -> None:
         if config is None:
             raise AttributeError(

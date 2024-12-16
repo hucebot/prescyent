@@ -7,6 +7,7 @@ from prescyent.dataset.features.feature import Feature
 
 class Any(Feature):
     """Default feature without specific constraints and conversions"""
+
     def __init__(self, ids: Union[List, range], distance_unit="_", name="Any") -> None:
         self.name = name
         super().__init__(ids, distance_unit)

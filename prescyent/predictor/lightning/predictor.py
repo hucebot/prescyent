@@ -73,15 +73,17 @@ class LightningPredictor(BasePredictor):
             skip_build (bool, optional): flag used when a lightning module is loaded instead of instanciated. Defaults to False.
         """
         self.config = config
+        if self.config.name is None:  # Default name if none in self.config
+            self.config.name = name
         if not skip_build:
             if config is None:
                 raise AttributeError("We cannot build a new predictor without a config")
             self.model = self._build_from_config(config)
-        if self.config.name is None:  # Default name if none in self.config
-            self.config.name = name
-        super().__init__(
-            self.config,
-        )
+            super().__init__(
+                self.config,
+            )
+        else:
+            super().__init__(self.config, no_sub_dir_log=True)
         # -- Init trainer related args
         if not hasattr(self, "training_config"):
             self.training_config = None
@@ -108,6 +110,7 @@ class LightningPredictor(BasePredictor):
         # ensure we have the folder and not the file
         model_dir = model_dir if model_dir.is_dir() else model_dir.parent
         config, training_config = cls._load_config(model_dir / "config.json")
+        config.save_path = str(model_dir)
         predictor = cls(config, skip_build=True)
         predictor.model = predictor._load_from_path(model_dir, device)
         predictor._init_training_config(training_config)
@@ -328,6 +331,9 @@ class LightningPredictor(BasePredictor):
             res["model_config"] = self.config.model_dump(exclude_defaults=False)
         res["model_config"]["name"] = self.name
         res["model_config"]["version"] = self.version
+        res["model_config"]["dataset_config"] = self.config.dataset_config.model_dump(
+            exclude_defaults=False
+        )
         with (save_path).open("w", encoding="utf-8") as conf_file:
             json.dump(res, conf_file, indent=4, sort_keys=True)
 
@@ -477,13 +483,13 @@ class LightningPredictor(BasePredictor):
     def save(
         self,
         save_path: Union[str, Path, None] = None,
-        rm_log_path: bool = True,
+        rm_log_path: bool = False,
     ):
         """save the lightning module, logs and scaler to given path
 
         Args:
             save_path (Union[str, Path, None], optional): path to save in. If None, we save in self.log_path. Defaults to None.
-            rm_log_path (bool, optional): if True, we remove the previous log path after a copy. Defaults to True.
+            rm_log_path (bool, optional): if True, we remove the previous log path after a copy. Defaults to False.
         """
         if save_path is None:
             save_path = self.log_path
@@ -509,6 +515,7 @@ class LightningPredictor(BasePredictor):
         logger.getChild(PREDICTOR).info(
             "Saving config at %s", (save_path / "config.json")
         )
+        self.config.save_path = str(save_path)
         self._save_config(save_path / "config.json")
         if rm_log_path and Path(self.log_path).resolve() != save_path.resolve():
             shutil.rmtree(self.log_path, ignore_errors=True)

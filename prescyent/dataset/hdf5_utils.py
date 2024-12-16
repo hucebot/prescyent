@@ -57,7 +57,9 @@ def write_metadata(
             feat.name, data=feat.ids, compression="gzip"
         )
         hdf_feat.attrs["distance_unit"] = feat.distance_unit
-        hdf_feat.attrs["feature_class"] = f"{feat.__class__.__module__}.{feat.__class__.__name__}"
+        hdf_feat.attrs[
+            "feature_class"
+        ] = f"{feat.__class__.__module__}.{feat.__class__.__name__}"
 
 
 def get_dataset_keys(h_group: h5py.Group) -> List[str]:

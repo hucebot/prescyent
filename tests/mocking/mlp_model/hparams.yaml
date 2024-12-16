@@ -49,11 +49,11 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
         ratio_val: 0.1
         reverse_pair_ratio: 0
         save_samples_on_disk: true
-        seed: 8091284
+        seed: 486957251
         shuffle_data_files: true
         subsets:
         - BottleTable
-      __pydantic_extra__: null
+      __pydantic_extra__: {}
       __pydantic_fields_set__: !!set
         batch_size: null
         context_keys: null
@@ -76,7 +76,7 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
     hidden_size: 128
     loss_fn: !!python/object/apply:prescyent.utils.enums.loss_functions.LossFunctions
     - mtdloss
-    name: null
+    name: MlpPredictor
     num_layers: 4
     save_path: data/models
     scaler_config: !!python/object:prescyent.scaler.config.ScalerConfig
@@ -101,6 +101,7 @@ config: !!python/object:prescyent.predictor.lightning.models.sequence.mlp.config
     deriv_on_last_frame: null
     hidden_size: null
     loss_fn: null
+    name: null
     num_layers: null
     scaler_config: null
   __pydantic_private__: null
@@ -145,7 +146,7 @@ dataset_config:
   pin_memory: true
   reverse_pair_ratio: 0
   save_samples_on_disk: true
-  seed: 8091284
+  seed: 486957251
 deriv_on_last_frame: true
 deriv_output: false
 devices: auto
@@ -173,7 +174,7 @@ scaler_config:
   - standardization
   scaling_axis: !!python/object/apply:prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
   - '[1]'
-seed: 367888717
+seed: 899290585
 torch_model_class: !!python/name:prescyent.predictor.lightning.models.sequence.mlp.module.MlpTorchModule ''
 use_auto_lr: false
 use_deterministic_algorithms: true

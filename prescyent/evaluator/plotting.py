@@ -191,7 +191,7 @@ def plot_trajectories_feature_wise(
         else:
             feat_dim_names = feat.dims_names
         legend_names.append(
-            [f"{l}_{d}" for d in feat_dim_names for l in trajectory_labels]
+            [f"{l}_{d}" for l in trajectory_labels for d in feat_dim_names]
         )
     legend_plot(axes, names=legend_names, xlabel="time (s)", ylabels=ylabels)
     if savefig_path is None:

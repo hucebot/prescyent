@@ -72,11 +72,11 @@ class BasePredictor:
             self._init_scaler()
 
     def describe(self):
-        _str = f"""\n{2*"    "}Predictor {self} is initialized with the following parameters:
-            - Log path: {self.log_path}\n"""
+        _str = f"Predictor {self} is initialized with the following parameters:\n- Log path: {self.log_path}\n"
         if self.scaler:
-            _str += f"""{3*"    "}- Scaler:
-                {self.scaler.describe()}\n"""
+            _str += f"- Scaler:\n{self.scaler.describe()}\n"
+        if hasattr(self, "model"):
+            _str += f"- Model:\n{self.model}\n"
         logger.getChild(PREDICTOR).info(_str)
 
     def _init_scaler(self):
