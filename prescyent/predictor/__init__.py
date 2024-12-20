@@ -38,19 +38,5 @@ from prescyent.utils.logger import logger, PREDICTOR
 # except ModuleNotFoundError:
 #     use_experimental = False
 #     logger.getChild(PREDICTOR).warning(
-#         "modules from experimental package will not be instanciable"
+#         "modules from experimental package will not be imported"
 #     )
-
-
-PREDICTOR_LIST = [
-    SARLSTMPredictor,
-    Seq2SeqPredictor,
-    MlpPredictor,
-    SiMLPePredictor,
-]
-# if use_experimental:
-#     PREDICTOR_LIST.append(SiMLPePredictor)
-
-
-# Map used for AutoPredictor
-PREDICTOR_MAP = {p.PREDICTOR_NAME: p for p in PREDICTOR_LIST}

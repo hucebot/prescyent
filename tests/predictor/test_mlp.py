@@ -1,5 +1,6 @@
 from pydantic import ValidationError
 
+from prescyent.auto_predictor import AutoPredictor
 from prescyent.dataset import TrajectoriesDatasetConfig
 from prescyent.dataset.features import Any, Features
 from prescyent.predictor import MlpPredictor, MlpConfig
@@ -51,6 +52,7 @@ class MlpInitTests(CustomTestCase):
     # -- INIT FROM STATE
     def test_init_with_pathname(self):
         MlpPredictor.load_pretrained("tests/mocking/mlp_model")
+        AutoPredictor.load_pretrained("tests/mocking/mlp_model")
         MlpPredictor.load_pretrained(f"tests/mocking/mlp_model/{MODEL_CHECKPOINT_NAME}")
         with self.assertRaises(FileNotFoundError) as context:
             MlpPredictor.load_pretrained("tests/mocking/non_existing/")

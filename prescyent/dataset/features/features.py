@@ -23,5 +23,12 @@ class Features(list):
             ids += feat.ids
         return ids
 
+    @property
+    def dims_names(self):
+        dims_names = []
+        for feat in self:
+            dims_names += feat.dims_names
+        return dims_names
+
     def __hash__(self):
         return hash(str(self))

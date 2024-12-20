@@ -8,7 +8,7 @@ import importlib
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'PreScyent'
-copyright = '2024, Alexis Biver'
+copyright = '2024, Inria Nancy, Larsen Team'
 author = 'Alexis Biver'
 
 # -- General configuration ---------------------------------------------------

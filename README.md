@@ -185,8 +185,11 @@ python examples/train_from_config.py examples/configs/mlp_teleopicub_with_center
 
 The script `start_multiple_trainings.py` is an example of how to generate variations of configuration files and running them using methods from `train_from_config.py`  
 
-Also for evaluation purposes, you can see an example running tests and plots using AutoPredictor and AutoDataset in `load_and_plot_predictors.py`  
+Also for evaluation purposes, you can see an example running tests and plots using AutoPredictor and AutoDataset in `load_and_plot_predictors.py`  or animations such as in `plot_pred_over_time.py`  
 
+<p align="center">
+    <img alt="Trajectory prediction animation" src="https://raw.githubusercontent.com/hucebot/prescyent/main/assets/test_datasetMultipleTasks_BottleTable_12_animation.gif" width="80%">
+</p>
 
 ### Extend the lib with a custom dataset or predictor
 Predictors inherit from the BasePredictor class, which define interfaces and core methods to keep consistency between each new implementation.  
@@ -195,13 +198,12 @@ If you want to implement a new ML predictor using PyTorch follow the structure o
 - in `module.py` you create your torch.nn.Module and forward method as you would usually do, you may want to inherit from BaseTorchModule instead of just torch.nn.Module and decorate your forward method with `@self_auto_batch` and `@BaseTorchModule.deriv_tensor` to benefit from some of the lib's features.  
 - in `config.py` create your [pydantic BaseModel](https://docs.pydantic.dev/latest/) inheriting from `ModuleConfig` to ensure your predictor's config has all the needed variables, and add any new values you want as variables in your model's architecture.  
 - finally `predictor.py` simply connects the above two by declaring both classes as class attributes for this specific predictor. Most of the magic happens in the parent classes using pytorch_lightning with your torch module.  
-If you want your predictor to be able to be loaded by AutoPredictor, you must add it to the PREDICTOR_MAP and PREDICTOR_LIST in `prescyent.predictor.__init__.py`.  
 
 In the same way you can extend the dataset module with a new Dataset inheriting from TrajectoriesDataset with its own DatasetConfig. Again taking examples on one of our implementation as TeleopIcubDataset, you must:  
 - in `dataset.py`, inherit from the TrajectoriesDataset class and implement a `prepare_data` method where you must init `self.trajectories` with a `Trajectories` instance built from your data/files.  
 - in `config.py` create your [pydantic BaseModel](https://docs.pydantic.dev/latest/) inheriting from `TrajectoriesDatasetConfig` to ensure you have all variables for the dataset processes, and add any new value you want as variables in your dataset's architecture.  
 - optionally use `metadata.py` as we did to store some constant describing your dataset.  
-All the logic creating the datasamples and dataloaders is handled in the parent class as long as self.trajectories is defined and the config is valid. If you want your dataset to be able to be loaded by AutoDataset, you must add it to the DATASET_MAP and DATASET_LIST in `prescyent.dataset.__init__.py`.  
+All the logic creating the datasamples and dataloaders is handled in the parent class as long as self.trajectories is defined and the config is valid.  
 If you simply want to test a Predictor over some data, you can create an instance of CustomDataset. As long as you turned your lists of episodes into Trajectories, the CustomDataset allows you to split them into training samples using a generic DatasetConfig and use all the functionalities of the library as usual (except that a CustomDataset cannot be loaded using AutoDataset)...  
 
 ## Ros2

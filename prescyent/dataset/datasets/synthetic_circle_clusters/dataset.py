@@ -61,16 +61,12 @@ class SCCDataset(TrajectoriesDataset):
         traj_id = 0
         for c in tqdm(
             range(self.config.num_clusters),
-            desc="Iterating on clusters",
-            colour="green",
+            desc="Generating trajectories on clusters",
+            colour="blue",
         ):
             cluster_counter = 0
             context = {}
-            for cluster_counter in tqdm(
-                range(self.config.num_trajs[c]),
-                desc=f"Creating trajs in cluster {c}",
-                colour="blue",
-            ):
+            for cluster_counter in range(self.config.num_trajs[c]):
                 tensor = self.generate_traj(c)
                 tensor, context = update_tensor_frequency(
                     tensor,

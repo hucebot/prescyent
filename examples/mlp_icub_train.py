@@ -130,7 +130,7 @@ if __name__ == "__main__":
     )
     delayed = DelayedPredictor(config=delayed_config)
     delayed.test(dataset)
-    print(f"Your predictor is saved in: {model_dir}")
+    print(f"Your predictor is saved in: {predictor.log_root_path}")
     print(
         "You can visualize all logs from this script at xp_dir using tensorboard like this:"
     )

@@ -491,7 +491,7 @@ def plot_mpjpe(
             .mean(-1)
         )
         y_values = mpjpe.numpy()
-        x_max = dataset.config.future_size / dataset.frequency
+        x_max = dataset.config.future_size / dataset.config.frequency
         x_values = np.flip(np.linspace(x_max, 0, len(y_values), endpoint=False))
         distance_unit = feat.distance_unit
         if distance_unit == "rad":
@@ -547,7 +547,7 @@ def plot_mpjpes(
         predictors_distances.append(distances)
     # Plot mean MPJPE per feature
     for feat in features:
-        x_max = dataset.config.future_size / dataset.frequency
+        x_max = dataset.config.future_size / dataset.config.frequency
         x_values = np.flip(
             np.linspace(x_max, 0, dataset.config.future_size, endpoint=False)
         )

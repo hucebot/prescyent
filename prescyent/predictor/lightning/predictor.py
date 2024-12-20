@@ -72,6 +72,8 @@ class LightningPredictor(BasePredictor):
             name (str, optional): name of the predictor, instanciated by child class. Defaults to None.
             skip_build (bool, optional): flag used when a lightning module is loaded instead of instanciated. Defaults to False.
         """
+        if isinstance(config, dict):
+            config = self.config_class(**config)
         self.config = config
         if self.config.name is None:  # Default name if none in self.config
             self.config.name = name
@@ -141,6 +143,8 @@ class LightningPredictor(BasePredictor):
             raise FileNotFoundError(f"No file or directory at {config_path}")
         with config_path.open(encoding="utf-8") as conf_file:
             config_data = json.load(conf_file)
+            if config_data.get("model_config", {}).get("predictor_class"):
+                del config_data["model_config"]["predictor_class"]
         config = cls.config_class(**config_data.get("model_config", {}))
         training_config = TrainingConfig(**config_data.get("training_config", {}))
         return config, training_config
@@ -331,6 +335,9 @@ class LightningPredictor(BasePredictor):
             res["model_config"] = self.config.model_dump(exclude_defaults=False)
         res["model_config"]["name"] = self.name
         res["model_config"]["version"] = self.version
+        res["model_config"][
+            "predictor_class"
+        ] = f"{self.__class__.__module__}.{self.__class__.__name__}"
         res["model_config"]["dataset_config"] = self.config.dataset_config.model_dump(
             exclude_defaults=False
         )
@@ -520,7 +527,7 @@ class LightningPredictor(BasePredictor):
         if rm_log_path and Path(self.log_path).resolve() != save_path.resolve():
             shutil.rmtree(self.log_path, ignore_errors=True)
         # reload logger at new location
-        self.log_root_path = save_path
+        self.log_root_path = str(save_path)
         super()._init_logger(no_sub_dir_log=True)
         # save scaler instance if any
         if self.scaler is not None:

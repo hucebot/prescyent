@@ -6,67 +6,61 @@ Enums
    :maxdepth: 1
 
 
-**ActivationFunctions**
+ActivationFunctions
 =======================
 .. autoclass:: prescyent.utils.enums.activation_functions.ActivationFunctions
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:
 
 ----
 
 
-**LearningTypes**
+LearningTypes
 =================
 .. autoclass:: prescyent.utils.enums.learning_types.LearningTypes
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:
 
 ----
 
-**LossFunctions**
+LossFunctions
 =================
 .. autoclass:: prescyent.utils.enums.loss_functions.LossFunctions
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:
 
 ----
 
-**Profilers**
+Profilers
 =============
 .. autoclass:: prescyent.utils.enums.profilers.Profilers
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:
 
 ----
 
-**Scalers**
+Scalers
 ===========
 .. autoclass:: prescyent.utils.enums.scalers.Scalers
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:
 
 
 
-**TrajectoryDimensions**
+TrajectoryDimensions
 ========================
 .. autoclass:: prescyent.utils.enums.trajectory_dimensions.TrajectoryDimensions
    :members:
    :exclude-members:
    :undoc-members:
-   :inherited-members:
    :show-inheritance:

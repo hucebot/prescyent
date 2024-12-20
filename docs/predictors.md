@@ -49,11 +49,14 @@ An architecture mapping an input sequence to an output sequence, that originated
 [Config](configuration_files.rst#seq2seqconfiguration_files.rst#sarlstmconfig)  
 
 ### MLP
-Simple ML Baselines consisting of a configurable Fully Connected MultiLayer Perceptron  
+Simple ML Baselines consisting of a configurable Fully Connected MultiLayer Perceptron.  
+It's a simple architecture you can use as an example for sequence to sequence training and quick tests.  
 
 [Config](configuration_files.rst#mlpconfig)
 
 ### SARLSTM
-Simple ML Baselines consisting of an autoregressive architecture with LSTMs  
+Simple ML Baselines consisting of an autoregressive architecture with LSTMs.  
+It's an architecture you can use as an example for an auto regressive training.  
+This model requires x, y pairs that differ from classical sequence to sequence training, build your dataset using an auto regressive [LearningType](enums.rst#learningtypes).  
 
-[Config](config)  
+[Config](configuration_files.rst#sarlstmconfig)  

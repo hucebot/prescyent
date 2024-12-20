@@ -6,7 +6,7 @@ Features
    :maxdepth: 1
 
 
-**Any**
+Any
 =======
 .. autoclass:: prescyent.dataset.features.feature.any.Any
    :members: get_distance
@@ -14,7 +14,7 @@ Features
    :undoc-members:
    :show-inheritance:
 
-**Coordinate**
+Coordinate
 ==============
 
 .. automodule:: prescyent.dataset.features.feature.coordinate
@@ -55,7 +55,7 @@ Features
 ------
 
 
-**Rotation**
+Rotation
 ==============
 
 .. automodule:: prescyent.dataset.features.feature.rotation

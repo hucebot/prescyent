@@ -1,17 +1,16 @@
 {
     "model_config": {
         "activation": "relu",
-        "context_size": 3,
+        "context_size": null,
         "dataset_config": {
             "batch_size": 256,
-            "context_keys": [
-                "center_of_mass"
-            ],
+            "context_keys": [],
             "convert_trajectories_beforehand": true,
-            "frequency": 24,
-            "future_size": 12,
+            "dataset_class": "prescyent.dataset.datasets.teleop_icub.dataset.TeleopIcubDataset",
+            "frequency": 10,
+            "future_size": 10,
             "hdf5_path": "data/datasets/AndyData-lab-prescientTeleopICub.hdf5",
-            "history_size": 24,
+            "history_size": 10,
             "in_features": [
                 {
                     "distance_unit": "m",
@@ -56,7 +55,7 @@
             "ratio_val": 0.1,
             "reverse_pair_ratio": 0,
             "save_samples_on_disk": true,
-            "seed": 486957251,
+            "seed": 577848278,
             "shuffle_data_files": true,
             "subsets": [
                 "BottleTable"
@@ -70,14 +69,15 @@
         "loss_fn": "mtdloss",
         "name": "MlpPredictor",
         "num_layers": 4,
-        "save_path": "/home/abiver/repositories/hucebot/prescyent/examples/data/models/TeleopIcub/h24_f12_24hz/MlpPredictor/version_10",
+        "predictor_class": "prescyent.predictor.lightning.models.sequence.mlp.predictor.MlpPredictor",
+        "save_path": "/home/abiver/repositories/hucebot/prescyent/examples/data/models/TeleopIcub/h10_f10_10hz/MlpPredictor/version_11",
         "scaler_config": {
             "do_feature_wise_scaling": true,
             "scale_rotations": false,
             "scaler": "standardization",
             "scaling_axis": "[1]"
         },
-        "version": 10
+        "version": 11
     },
     "training_config": {
         "accelerator": "auto",
@@ -93,7 +93,7 @@
         "max_epochs": 200,
         "max_lr": 0.01,
         "max_steps": -1,
-        "seed": 899290585,
+        "seed": 183438734,
         "use_auto_lr": false,
         "use_deterministic_algorithms": true,
         "use_scheduler": false,

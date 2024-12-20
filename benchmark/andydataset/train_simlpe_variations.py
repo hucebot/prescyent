@@ -33,17 +33,14 @@ VARIATIONS = {
         TrajectoryDimensions.FEATURE,
     ],
     # MODEL
-    "model_config.name": [
-        "siMLPe",
+    "model_config.predictor_class": [
+        "prescyent.predictor.lightning.models.sequence.simlpe.predictor.SiMLPePredictor",
     ],
     "model_config.loss_fn": [LossFunctions.MTDLOSS, LossFunctions.MSELOSS],
     # "model_config.num_layers": [48],                 # commented out to leave default model values here instead
     # "model_config.spatial_fc_only": [True, False],   # commented out to leave default model values here instead
     # "model_config.dct": [True, False],               # commented out to leave default model values here instead
-    "model_config.deriv_on_last_frame": [
-        True,
-        False
-    ],
+    "model_config.deriv_on_last_frame": [True, False],
     # ...
     # TRAINING
     "training_config.max_epochs": [200],
@@ -117,7 +114,10 @@ if __name__ == "__main__":
                     "scaler_config"
                 ]
             del config_dict["scaler_config"]
-            if config_dict["model_config"]["name"] in AUTO_REGRESSIVE_MODELS:
+            if (
+                "prescyent.predictor.lightning.models.autoreg"
+                in config_dict["model_config"]["predictor_class"]
+            ):
                 config_dict["dataset_config"]["learning_type"] = LearningTypes.AUTOREG
             with open(config_paths[-1], "w", encoding="utf-8") as config_file:
                 json.dump(config_dict, config_file, indent=4)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     dataset = AndyDataset(dataset_config)
     exp_path = (
         f"data/models/{dataset.DATASET_NAME}_ee"
-        f"/h{dataset_config.history_size}_f{dataset_config.future_size}_{dataset.frequency}hz"
+        f"/h{dataset_config.history_size}_f{dataset_config.future_size}_{dataset.config.frequency}hz"
         f"/i_All_{''.join([feat.__class__.__name__ for feat in  dataset_config.in_features])}_o_RightHand_{''.join([feat.__class__.__name__ for feat in  dataset_config.in_features])}"
     )
     # train and test a baseline first to compare with

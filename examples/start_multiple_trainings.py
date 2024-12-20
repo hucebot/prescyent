@@ -42,11 +42,11 @@ VARIATIONS = {
         TrajectoryDimensions.FEATURE,
     ],
     # MODEL
-    "model_config.name": [
-        "MlpPredictor",
-        "Seq2SeqPredictor",
-        "siMLPe",
-        "SARLSTMPredictor",  # Warning ! Can't be used in all conditions
+    "model_config.predictor_class": [
+        "prescyent.predictor.lightning.models.sequence.mlp.predictor.MlpPredictor",
+        "prescyent.predictor.lightning.models.sequence.seq2seq.predictor.Seq2SeqPredictor",
+        "prescyent.predictor.lightning.models.sequence.simlpe.predictor.SiMLPePredictor",
+        "prescyent.predictor.lightning.models.autoreg.sarlstm.predictor.SARLSTMPredictor",  # Warning ! Can't be used in all conditions
     ],
     "model_config.loss_fn": [
         LossFunctions.MTDLOSS,
@@ -56,7 +56,7 @@ VARIATIONS = {
     ],  # Warning ! Cannot be used in all conditions
     # ...
     # TRAINING
-    "training_config.max_epochs": [200],
+    "training_config.max_epochs": [1],
     # "training_config.devices": [1],
     # "training_config.accelerator": ["gpu"],
     "training_config.early_stopping_patience": [20],
@@ -65,13 +65,14 @@ VARIATIONS = {
     "dataset_config.frequency": [FREQUENCY],
     "dataset_config.history_size": [HISTORY_SIZE],
     "dataset_config.future_size": [FUTURE_SIZE],
-    "dataset_config.name": ["TeleopIcub"],
+    "dataset_config.dataset_class": [
+        "prescyent.dataset.datasets.teleop_icub.dataset.TeleopIcubDataset"
+    ],
     "dataset_config.hdf5_path": ["data/datasets/AndyData-lab-prescientTeleopICub.hdf5"],
     "dataset_config.subsets": [["BottleTable"]],
     "dataset_config.batch_size": [256],
 }
 
-AUTO_REGRESSIVE_MODELS = ["SARLSTMPredictor"]
 DATASET_IS_STATIC = True
 MAX_WORKERS = 1
 
@@ -132,7 +133,10 @@ if __name__ == "__main__":
                     "scaler_config"
                 ]
             del config_dict["scaler_config"]
-            if config_dict["model_config"]["name"] in AUTO_REGRESSIVE_MODELS:
+            if (
+                "prescyent.predictor.lightning.models.autoreg"
+                in config_dict["model_config"]["predictor_class"]
+            ):
                 config_dict["dataset_config"]["learning_type"] = LearningTypes.AUTOREG
             with open(config_paths[-1], "w", encoding="utf-8") as config_file:
                 json.dump(config_dict, config_file, indent=4)
@@ -142,7 +146,7 @@ if __name__ == "__main__":
         Path(__file__).parent.resolve()
         / "data"
         / "models"
-        / "TeleopIcub"
+        / "TeleopIcubDataset"
         / f"{FREQUENCY}Hz_{HISTORY_SIZE}in_{FUTURE_SIZE}out"
     )
     for i, config_path in enumerate(config_paths):

@@ -82,6 +82,9 @@ class TrajectoriesDataset(LightningDataModule):
         self.name = name
         if self.config.name is None:
             self.config.name = self.name
+        self.config.dataset_class = (
+            f"{self.__class__.__module__}.{self.__class__.__name__}"
+        )
 
     def __getitem__(self, index) -> Trajectory:
         return self.trajectories[index]
